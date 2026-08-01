@@ -1,0 +1,101 @@
+---
+title: "Custom Fields"
+description: "Custom Fields let you extend Bindbee's unified models with additional fields specific to your use case. They make it possible to surface any value from a third-party API response — alongside the standard unified schema — by mapping it through a JMESPath expression."
+---
+
+## Overview
+
+A unified model has a fixed schema (e.g. an `employee` always exposes `first_name`, `email`, etc.). Custom Fields let you extend that schema with extra attributes — for example `guardian_mobile` — and tell Bindbee how to populate them by pointing a [JMESPath](https://jmespath.org/) expression at the raw upstream payload.
+
+## Scopes
+
+Every Custom Field mapping is attached to one of two scopes:
+
+- **Connector Level**: Applied to a specific connector instance.
+- **Organization Level**: Applied to all connectors of a specific integration type.
+
+<Info>
+  When a mapping exists at both levels for the same field, the
+  **connector-level** mapping takes precedence and overrides the
+  organization-level one for that connector.
+</Info>
+
+## Choosing how to manage Custom Fields
+
+You can manage Custom Fields in two ways. Both create the same underlying configuration and can coexist — pick whichever fits the task.
+
+<CardGroup cols={2}>
+  <Card title="Dashboard Configuration" icon="app-window" href="/custom-fields/dashboard">
+    Visual flow inside the Bindbee Dashboard. Best for ad-hoc setup,
+    exploring upstream payloads interactively, and one-off field changes.
+  </Card>
+  <Card title="API Configuration" icon="code" href="/custom-fields/api-workflow">
+    Programmatic flow for automation, infrastructure-as-code, replicating
+    configuration across environments, or syncing with internal admin tools.
+  </Card>
+</CardGroup>
+
+<Note>
+  Fields created from the API are tagged with `source: "API"`. Fields created
+  from the dashboard are tagged with `source: "DASHBOARD"`. Both behave
+  identically once created and appear together in lookups and responses.
+</Note>
+
+## Using Custom Fields in Responses
+
+Once a field has at least one mapping that resolves on a connector, you can request it back in the unified API response by adding `include_custom_fields=true` to your request.
+
+For example, to fetch employees with custom fields populated:
+
+```http
+GET https://api.bindbee.dev/api/hris/v1/employees?include_custom_fields=true
+```
+
+Example response with custom fields:
+
+```json
+{
+  "id": "emp_123",
+  "name": "John Doe",
+  "custom_fields": {
+    "guardian_mobile": "+1-555-123-4567",
+    "cost_center_name": "Engineering-NA",
+    "hourly_rate": 45.0
+  }
+}
+```
+
+<Warning>
+  If a JMESPath expression is invalid or fails to resolve, the response will
+  contain `"INVALID_JSON_PATH"` in place of the value for that field rather
+  than raising an error. Validate your expression before saving — via the
+  dashboard's preview button or the API's
+  [`/custom-fields/preview`](/custom-fields/api-workflow#step-3-validate-the-jmespath-optional-but-recommended)
+  endpoint.
+</Warning>
+
+## Best Practices
+
+1. **Naming Conventions**
+
+   - Use clear, descriptive names.
+   - Follow snake_case formatting.
+   - Avoid generic names like `custom1`, `custom2`.
+
+2. **JMESPath Expressions**
+
+   - Always preview an expression before saving it.
+   - Consider data type consistency across connectors of the same integration.
+
+3. **Organization vs Connector Level Mapping**
+
+   - Use **Organization Level** mappings for data that's consistent across all connectors of an integration.
+   - Use **Connector Level** mappings for connector-specific overrides.
+   - Review existing **Organization Level** mappings before creating connector-level duplicates.
+
+4. **Automation**
+
+   - Use the [API Configuration](/custom-fields/api-workflow) flow to keep custom field configuration in version control or replicate it across environments (dev → staging → prod).
+   - The `configuration` endpoint is a good health check — run it after provisioning a new connector to confirm every expected field has a mapping.
+
+For more details on writing JMESPath expressions, see the [JMESPath Documentation](https://jmespath.org/).

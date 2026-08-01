@@ -1,0 +1,224 @@
+---
+title: "Use Passthrough Requests"
+description: "Call a third-party API directly through Bindbee's stored credentials, and isolate the per-vendor code so it doesn't spread."
+---
+
+Passthrough forwards your request to the connector's underlying system using the credentials Bindbee already holds. You never handle vendor credentials yourself.
+
+<Info>
+  Before building on passthrough, read
+  [Passthrough: When & Why](/explanation/passthrough-when-and-why). Every
+  passthrough call is per-vendor code — the thing Bindbee exists to remove. It is
+  often the right choice; it is never the free one.
+</Info>
+
+## Check you actually need it
+
+Most passthrough attempts are solving a problem a custom field solves more cheaply.
+
+```bash
+# Is the value already in the synced payload?
+curl -G "https://api.bindbee.dev/api/hris/v1/employees" \
+  -H "Authorization: Bearer $BINDBEE_API_KEY" \
+  -H "X-Connector-Token: $CONNECTOR_TOKEN" \
+  --data-urlencode "include_raw_data=true" \
+  --data-urlencode "page_size=1"
+```
+
+| Found in `raw_data`? | Use |
+| --- | --- |
+| Yes | [Custom field](/how-to/map-custom-fields) — no per-vendor code, no vendor rate limit |
+| No | Passthrough |
+
+## Making a request
+
+```bash
+curl -X POST "https://api.bindbee.dev/api/v1/passthrough" \
+  -H "Authorization: Bearer $BINDBEE_API_KEY" \
+  -H "X-Connector-Token: $CONNECTOR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "method": "GET",
+    "path": "/employees/1234/custom_report",
+    "headers": {},
+    "params": { "format": "detailed" }
+  }'
+```
+
+Both auth headers are required — the connector token determines which system and which customer's credentials are used.
+
+<Warning>
+  The body's `headers` field is **required**, even when you have nothing to add. Send
+  `"headers": {}`. Omitting it returns `422`.
+</Warning>
+
+`params` carries the query string, `data` the body, and `timeout` the seconds to wait for the
+vendor. For XML or SOAP systems, set `request_format` / `response_format`. Full schema:
+[Make Passthrough Request](/api-reference/passthrough/make-passthrough-request).
+
+<Warning>
+  The `path` is **vendor-specific**. `/v1/employees/1234/custom_report` is
+  meaningful for one vendor and meaningless for every other. You are writing
+  against their API from here on — consult their documentation, not Bindbee's.
+</Warning>
+
+## Isolate it behind an interface
+
+The difference between passthrough being manageable and being a maintenance problem is entirely structural. Put every vendor-specific detail in one place.
+
+```python
+class CustomReportProvider:
+    """One implementation per integration. Business logic never sees a slug."""
+
+    def fetch(self, connector_token, employee_remote_id):
+        raise NotImplementedError
+
+
+class BambooHrCustomReport(CustomReportProvider):
+    def fetch(self, connector_token, employee_remote_id):
+        return passthrough(
+            connector_token,
+            method="GET",
+            path=f"/v1/employees/{employee_remote_id}/custom_report",
+        )
+
+
+REGISTRY = {
+    "bamboohr": BambooHrCustomReport(),
+    # add integrations deliberately, one at a time
+}
+
+
+def custom_report(connection, employee):
+    provider = REGISTRY.get(connection.integration_slug)
+    if provider is None:
+        raise FeatureUnavailable(connection.integration_slug)   # degrade
+    return provider.fetch(connection.connector_token,
+                          employee["remote_id"])
+```
+
+<Tip>
+  Note `employee["remote_id"]`, not `employee["id"]`. Vendor APIs know nothing
+  about Bindbee's UUIDs. `remote_id` is the source system's own identifier —
+  this is its main purpose.
+</Tip>
+
+## Feature-flag by connector
+
+```python
+def supports_custom_reports(connection):
+    return connection.integration_slug in REGISTRY
+```
+
+```jsx
+{supportsCustomReports && <CustomReportPanel />}
+```
+
+<Warning>
+  Degrade, don't fail. A customer on an unsupported connector should see the
+  feature absent, not an error. Adding an integration to `REGISTRY` should be the
+  only change needed to enable it.
+</Warning>
+
+## Respect the vendor's limits
+
+Bindbee's 200/min/connector does not apply here — you are hitting the vendor directly, and their limits are frequently much tighter.
+
+```python
+from time import monotonic, sleep
+
+class VendorThrottle:
+    """Conservative client-side limiter. Assume the vendor's ceiling is low."""
+
+    def __init__(self, per_minute=30):
+        self.interval = 60.0 / per_minute
+        self.last = 0.0
+
+    def wait(self):
+        elapsed = monotonic() - self.last
+        if elapsed < self.interval:
+            sleep(self.interval - elapsed)
+        self.last = monotonic()
+```
+
+Cache aggressively. If the data changes daily, do not fetch it per page view — passthrough is a live call, and its latency is the vendor's latency.
+
+## Expect vendor-shaped failures
+
+Passthrough surfaces the vendor's errors, which follow no common contract.
+
+```python
+def passthrough_safely(connection, **kwargs):
+    try:
+        return passthrough(connection.connector_token, **kwargs)
+
+    except requests.HTTPError as exc:
+        log.warning(
+            "passthrough failed",
+            extra={
+                "integration_slug": connection.integration_slug,   # essential
+                "connector_id": connection.connector_id,
+                "status": exc.response.status_code,
+                "path": kwargs.get("path"),
+            },
+        )
+        return None            # feature degrades; the page still renders
+
+    except requests.Timeout:
+        log.warning("passthrough timeout",
+                    extra={"integration_slug": connection.integration_slug})
+        return None
+```
+
+<Warning>
+  Always log `integration_slug`. When a vendor silently changes a response shape,
+  this is the field that turns "some customers see errors" into "Workday
+  customers see errors" — usually the difference between an hour and a day of
+  debugging.
+</Warning>
+
+Never let a passthrough failure take down a page that would otherwise render. Vendor endpoints change without notice.
+
+## Don't persist vendor shapes
+
+```python
+# Fragile — a vendor field rename corrupts your schema
+save(raw_vendor_response)
+
+# Robust — normalize at the boundary
+save(CustomReport(
+    employee_id=employee["id"],          # Bindbee's ID
+    total=parse_money(raw["reportTotal"]),
+    generated_at=parse_date(raw["genDate"]),
+))
+```
+
+Normalize into your own model at the adapter boundary. Everything downstream then works with one shape regardless of connector.
+
+## Writes through passthrough
+
+Everything from the [write guidance](/get-started/tutorials/write-data-back) applies, plus:
+
+<Warning>
+  Passthrough writes are not idempotent and Bindbee does not deduplicate them.
+  A retried request creates a duplicate in your customer's system. Record a
+  request key before submitting and never blind-retry on timeout — resolve
+  unknown outcomes by reading the data back.
+</Warning>
+
+Confirm the write via the vendor's own read endpoint, or wait for the next sync if it maps to a unified model.
+
+## Track it as debt
+
+Keep a visible list of what you passthrough and for which connectors. When the same concept appears across several vendors, tell Bindbee — `support@bindbee.dev`. Unified support removes the adapter for you and for everyone else.
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="When & Why" icon="circle-help" href="/explanation/passthrough-when-and-why">
+    The trade-off in full.
+  </Card>
+  <Card title="Map Custom Fields" icon="git-fork" href="/how-to/map-custom-fields">
+    The cheaper alternative, where it applies.
+  </Card>
+</CardGroup>

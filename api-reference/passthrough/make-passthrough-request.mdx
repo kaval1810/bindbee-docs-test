@@ -1,0 +1,237 @@
+---
+title: "Make Passthrough Request"
+description: "Call a third-party API directly through Bindbee, using the credentials already stored for that connector. Bindbee handles auth and routing; the request and response are the vendor's own."
+openapi: post /api/v1/passthrough
+---
+
+## What this endpoint does
+
+Passthrough forwards your request to the connector's underlying system. Bindbee attaches the
+stored credentials and routes to the correct base URL — you never handle vendor credentials
+yourself.
+
+```mermaid
+flowchart LR
+    A["Your request"] --> B["Bindbee<br/>(adds auth, resolves base URL)"]
+    B --> C["Vendor API"]
+    C -.->|raw vendor response| A
+
+    classDef node fill:#F9F9F8,stroke:#E06D10,stroke-width:1.5px,color:#111,rx:8,ry:8
+    class A,B,C node
+```
+
+Use it when the unified models don't carry what you need. Everything else about the request —
+the path, the body, the response shape, the errors — belongs to the vendor.
+
+<Warning>
+  The `path` you send is **vendor-specific**. `/employees` means something different on BambooHR
+  and Workday, and nothing at all on a connector that doesn't have that endpoint. From here on
+  you are writing against the vendor's API, so consult their documentation, not Bindbee's.
+</Warning>
+
+Before using this, check whether a [custom field](/how-to/map-custom-fields) solves it more
+cheaply — if the value is already in `raw_data`, it does. Full trade-off:
+[Passthrough: When & Why](/explanation/passthrough-when-and-why).
+
+## Authentication
+
+Both headers are required. The connector token is what selects the target system **and** the
+customer whose credentials get used.
+
+```http
+Authorization: Bearer YOUR_BINDBEE_API_KEY
+X-Connector-Token: END_USER_CONNECTOR_TOKEN
+Content-Type: application/json
+```
+
+## Request body
+
+| Field | Type | Required | Default | Notes |
+| --- | --- | --- | --- | --- |
+| `method` | enum | **Yes** | — | `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `HEAD`, `OPTIONS`, `CONNECT`, `TRACE` |
+| `path` | string | **Yes** | — | Vendor path, relative to their base URL. e.g. `/employees` |
+| `headers` | object | **Yes** | — | Extra headers for the vendor. Send `{}` if you have none |
+| `params` | object | No | `{}` | Query string parameters |
+| `data` | object / array / string | No | `null` | Request body |
+| `request_format` | enum | No | `JSON` | `JSON`, `XML`, `MULTIPART` |
+| `response_format` | enum | No | `JSON` | `JSON`, `XML`, `MULTIPART`, `BINARY` |
+| `timeout` | number | No | — | Seconds to wait for the vendor |
+
+<Warning>
+  `headers` is **required** even when empty — send `"headers": {}`. Omitting it returns
+  `422 Validation Error`. This is the most common mistake on this endpoint.
+</Warning>
+
+<Note>
+  Do **not** put vendor credentials in `headers`. Bindbee injects those. Use `headers` only for
+  things like `Accept` or a vendor-specific content negotiation header.
+</Note>
+
+## Examples
+
+<CodeGroup>
+
+```bash GET with query params
+curl -X POST "https://api.bindbee.dev/api/v1/passthrough" \
+  -H "Authorization: Bearer $BINDBEE_API_KEY" \
+  -H "X-Connector-Token: $CONNECTOR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "method": "GET",
+    "path": "/employees",
+    "headers": {},
+    "params": { "limit": 50, "includeInactive": false }
+  }'
+```
+
+```bash POST with a body
+curl -X POST "https://api.bindbee.dev/api/v1/passthrough" \
+  -H "Authorization: Bearer $BINDBEE_API_KEY" \
+  -H "X-Connector-Token: $CONNECTOR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "method": "POST",
+    "path": "/time_off/requests",
+    "headers": { "Content-Type": "application/json" },
+    "data": {
+      "employeeId": "3235005483341316245",
+      "start": "2026-08-10",
+      "end": "2026-08-14"
+    }
+  }'
+```
+
+```python Python
+import os, requests
+
+def passthrough(connector_token, method, path, *,
+                headers=None, params=None, data=None, timeout=None):
+    body = {
+        "method": method,
+        "path": path,
+        "headers": headers or {},          # required, even if empty
+    }
+    if params is not None:  body["params"] = params
+    if data is not None:    body["data"] = data
+    if timeout is not None: body["timeout"] = timeout
+
+    resp = requests.post(
+        "https://api.bindbee.dev/api/v1/passthrough",
+        headers={
+            "Authorization": f"Bearer {os.environ['BINDBEE_API_KEY']}",
+            "X-Connector-Token": connector_token,
+            "Content-Type": "application/json",
+        },
+        json=body, timeout=60,
+    )
+    resp.raise_for_status()
+    return resp.json()
+
+
+passthrough(token, "GET", "/employees", params={"limit": 50})
+```
+
+```javascript Node
+async function passthrough(connectorToken, body) {
+  const res = await fetch("https://api.bindbee.dev/api/v1/passthrough", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.BINDBEE_API_KEY}`,
+      "X-Connector-Token": connectorToken,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ headers: {}, ...body }), // headers is required
+  });
+  if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+  return res.json();
+}
+
+await passthrough(token, {
+  method: "GET",
+  path: "/employees",
+  params: { limit: 50 },
+});
+```
+
+</CodeGroup>
+
+<Tip>
+  Use `remote_id`, not `id`, when referencing records. Vendor APIs know nothing about Bindbee's
+  UUIDs — `remote_id` is the source system's own identifier, and this is its main purpose.
+</Tip>
+
+## Non-JSON vendors
+
+Some systems — particularly older enterprise HR platforms — speak XML or return files.
+
+| Situation | Set |
+| --- | --- |
+| Vendor expects an XML body | `"request_format": "XML"` |
+| Vendor returns XML | `"response_format": "XML"` |
+| Downloading a document or export | `"response_format": "BINARY"` |
+| File upload | `"request_format": "MULTIPART"` |
+
+```json
+{
+  "method": "POST",
+  "path": "/soap/EmployeeService",
+  "headers": { "SOAPAction": "getEmployees" },
+  "request_format": "XML",
+  "response_format": "XML",
+  "data": "<soapenv:Envelope>…</soapenv:Envelope>",
+  "timeout": 120
+}
+```
+
+## Timeouts
+
+`timeout` is the number of seconds Bindbee waits for the vendor. Set it explicitly for endpoints
+you know are slow — report generation and bulk exports on enterprise systems routinely take
+minutes.
+
+<Warning>
+  A long `timeout` holds your own connection open for the same duration. Run slow passthrough
+  calls from a background job, not from a request a user is waiting on.
+</Warning>
+
+## Responses
+
+A `200` returns the vendor's response as-is. There is no unified envelope, no `cursor`, no
+`items` — the shape is entirely the vendor's.
+
+A `422` means **your passthrough request** failed validation before Bindbee called the vendor —
+almost always a missing `headers` or `method`.
+
+<Warning>
+  A `200` from this endpoint means Bindbee reached the vendor. It does **not** mean the vendor
+  succeeded. Many APIs return `200` with an error object in the body. Always inspect the payload
+  rather than trusting the status code.
+</Warning>
+
+## What changes when you use this
+
+| | Unified endpoints | Passthrough |
+| --- | --- | --- |
+| Rate limit | Bindbee's, 200/min/connector | **The vendor's**, often far tighter |
+| Latency | Served from Bindbee's store | A live vendor call |
+| Vendor outage | Unaffected | Fails |
+| Response shape | Normalized, identical everywhere | Vendor-specific |
+| Errors | Consistent status codes | Whatever the vendor does |
+| Pagination | `cursor` / `page_size` | The vendor's scheme |
+
+<Warning>
+  Bindbee's rate limit does not protect you here — you are hitting the vendor directly. A loop
+  that is harmless against the unified API can get a customer's connector throttled upstream.
+  Throttle yourself conservatively and cache results.
+</Warning>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Using Passthrough" icon="wrench" href="/how-to/use-passthrough">
+    Isolating per-vendor code behind an adapter.
+  </Card>
+  <Card title="When & Why" icon="circle-help" href="/explanation/passthrough-when-and-why">
+    Whether you should use it at all.
+  </Card>
+</CardGroup>

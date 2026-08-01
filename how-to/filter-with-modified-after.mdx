@@ -1,0 +1,167 @@
+---
+title: "Filter with modified_after"
+description: "The incremental read pattern — plus the watermark discipline that stops it from silently losing records."
+---
+
+`modified_after` returns only records Bindbee synced after a given timestamp. It is how you avoid re-importing an entire directory on every run.
+
+```bash
+curl -G "https://api.bindbee.dev/api/hris/v1/employees" \
+  -H "Authorization: Bearer $BINDBEE_API_KEY" \
+  -H "X-Connector-Token: $CONNECTOR_TOKEN" \
+  --data-urlencode "modified_after=2026-07-21T00:00:00.000Z"
+```
+
+Format is ISO 8601: `2026-07-21T09:49:30.478Z`.
+
+## What it actually filters on
+
+<Warning>
+  `modified_after` filters on **when Bindbee synced the record** — the
+  `modified_at` field — not on when the third-party system changed it.
+</Warning>
+
+A sync rewrites the records it processes, so `modified_at` can advance even when no business field changed. That makes this filter:
+
+- **Safe** — you will not miss changes.
+- **Not minimal** — you will receive records that look identical to what you already have.
+
+Design accordingly: **upsert, always; act, only on a real diff.**
+
+Background: [Field semantics](/explanation/field-semantics).
+
+## The watermark pattern
+
+```python
+def incremental_sync(connector_token, tenant_id):
+    watermark = load_watermark(tenant_id)     # last successful run's start time
+    started   = utcnow_iso()                  # capture BEFORE the run
+
+    for employee in paginate("/api/hris/v1/employees", connector_token,
+                             modified_after=watermark):
+        upsert(employee)                      # keyed on employee["id"]
+
+    save_watermark(tenant_id, started)        # only after the whole run succeeds
+```
+
+Three rules, each preventing a specific data-loss bug:
+
+<Warning>
+  **1. Capture the timestamp *before* the run, not after.** Records modified
+  while your run is in flight fall between the two times. Saving the end time
+  skips them permanently.
+</Warning>
+
+<Warning>
+  **2. Save the watermark only on complete success.** A partial run that saves
+  its watermark loses everything it hadn't processed. Leaving it unchanged makes
+  the retry safe.
+</Warning>
+
+<Warning>
+  **3. Store one watermark per connector**, not one globally. Connectors sync on
+  independent schedules; a shared watermark advanced by one connector will skip
+  records on another.
+</Warning>
+
+Use Bindbee's own clock, not your server's, to avoid skew:
+
+```python
+# Prefer the connector's reported sync time over your local clock
+connector = get_connector(connector_token)
+started = connector["last_sync_start_time"]
+```
+
+## Overlap deliberately
+
+A small backward overlap costs a handful of duplicate upserts and protects against clock skew and boundary conditions.
+
+```python
+from datetime import datetime, timedelta, timezone
+
+def with_overlap(watermark_iso, minutes=5):
+    ts = datetime.fromisoformat(watermark_iso.replace("Z", "+00:00"))
+    return (ts - timedelta(minutes=minutes)).isoformat().replace("+00:00", "Z")
+```
+
+Since your writes are idempotent upserts, the overlap is free.
+
+## Diff before acting
+
+Duplicates are harmless for storage and dangerous for side effects. Don't send an email, provision an account or fire a notification just because a record came back.
+
+```python
+WATCHED = ("employment_status", "designation", "manager",
+           "work_email", "termination_date", "department")
+
+def meaningfully_changed(incoming, stored):
+    if stored is None:
+        return True
+    return any(incoming.get(f) != stored.get(f) for f in WATCHED)
+
+for employee in fetch(modified_after=watermark):
+    stored = load(employee["id"])
+    upsert(employee)                            # always
+    if meaningfully_changed(employee, stored):
+        trigger_downstream(employee)            # only when real
+```
+
+## First run
+
+There is no watermark on the first run. Omit the parameter entirely to get everything:
+
+```python
+watermark = load_watermark(tenant_id)
+filters = {"modified_after": watermark} if watermark else {}
+```
+
+<Warning>
+  Do not fake a first-run watermark with an arbitrary old date. Omitting the
+  parameter is unambiguous; a guessed date can silently exclude records.
+</Warning>
+
+## Combining with other filters
+
+`modified_after` composes with everything else:
+
+```bash
+curl -G "https://api.bindbee.dev/api/hris/v1/employees" \
+  -H "Authorization: Bearer $BINDBEE_API_KEY" \
+  -H "X-Connector-Token: $CONNECTOR_TOKEN" \
+  --data-urlencode "modified_after=2026-07-21T00:00:00.000Z" \
+  --data-urlencode "employment_status=ACTIVE" \
+  --data-urlencode "expand=manager,company" \
+  --data-urlencode "page_size=200"
+```
+
+<Warning>
+  Adding `employment_status=ACTIVE` to an incremental read means you never see
+  terminations — a leaver flips to `INACTIVE` and disappears from your results
+  rather than arriving as a change. If you track offboarding, run the
+  incremental read **without** a status filter and branch on the value.
+</Warning>
+
+## Triggering it
+
+| Trigger | Notes |
+| --- | --- |
+| `connector_synced` webhook | Lowest latency; run the read as the handler |
+| Scheduled sweep | Correctness net for events lost in the retry gap |
+| User clicks "Refresh" | Resync first, then read after `sync_status` is `Done` |
+
+Run both of the first two. They share the same code path, and the sweep costs almost nothing when webhooks are healthy. See [Webhooks vs Polling](/explanation/webhooks-vs-polling).
+
+## Which models support it
+
+`modified_after` is available across the unified list endpoints — HRIS, ATS and LMS. If a particular endpoint does not accept it, the parameter is ignored rather than erroring, so confirm against the endpoint's reference page when building a critical path.
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Paginate Through Results" icon="list-ordered" href="/how-to/paginate">
+    The loop this pattern runs inside.
+  </Card>
+  <Card title="Field Semantics" icon="circle-help" href="/explanation/field-semantics">
+    Why modified_at moves when nothing changed.
+  </Card>
+</CardGroup>

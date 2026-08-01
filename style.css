@@ -1,0 +1,64 @@
+:root {
+  --rounded-sm: 4px;
+  --rounded-md: 4px;
+  --rounded-lg: 4px;
+  --rounded-xl: 4px;
+  --rounded-2xl: 4px;
+  --rounded-3xl: 4px;
+  --rounded-search: 4px;
+}
+
+#navbar .ml-auto:has(.nav-tabs) {
+  margin-left: 0 !important;
+  flex: 1 1 auto;
+  justify-content: space-between !important;
+}
+
+#sidebar-content {
+  width: 17rem !important;
+}
+
+#content-area {
+  margin-left: max(0px, calc(50vw - 348px - 17rem)) !important;
+}
+
+accordion,
+callout,
+card,
+card-group,
+columns,
+code-block,
+code-block *,
+code-group,
+expandable,
+frame,
+step,
+steps,
+tabs,
+tile,
+tooltip,
+panel,
+nav-dropdown-content,
+nav-dropdown-item,
+nav-tag-pill,
+nav-tabs-item,
+mobile-nav-tabs-item,
+navbar-link,
+#navbar,
+#sidebar,
+#table-of-contents,
+#search-input,
+#search-bar-entry,
+#chat-assistant-sheet,
+#assistant-entry,
+button,
+a.link,
+input,
+select,
+img,
+[data-badge],
+.nav-tabs-item,
+#navbar a.rounded-full,
+#navbar button.rounded-full {
+  border-radius: 4px !important;
+}

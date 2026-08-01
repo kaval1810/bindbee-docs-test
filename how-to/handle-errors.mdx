@@ -1,0 +1,192 @@
+---
+title: "Handle Errors"
+description: "What each status code means in Bindbee, which are retryable, and how to build a client that fails safely — especially on writes."
+---
+
+## Status codes
+
+| Status | Meaning | Retry? | First thing to check |
+| --- | --- | --- | --- |
+| `400` | Malformed request | No | Query parameters, JSON body |
+| `401` | Authentication failed | No | `Bearer ` prefix, environment, key freshness |
+| `403` | Not authorized for this resource | No | `X-Connector-Token` present and matching environment |
+| `404` | Not found | No | Category path (`hris`/`ats`/`lms`), record ID |
+| `422` | Validation failed | No | Re-read the [Meta schema](/get-started/tutorials/write-data-back) |
+| `429` | Rate limited | **Yes** | `Retry-After` header |
+| `500` | Server error | **Yes** | Retry with backoff; escalate if persistent |
+| `501` | Meta API not implemented for this integration | No | [Handle explicitly](/explanation/meta-api-schema-discovery#handling-501-not-implemented) |
+| `502` / `503` / `504` | Upstream or gateway issue | **Yes** | Retry with backoff |
+
+<Warning>
+  Retry `429` and `5xx`. Never retry `4xx` other than `429` — the request will
+  fail identically every time, and retrying a write can create duplicates.
+</Warning>
+
+## Validation errors
+
+Validation failures return a `detail` array identifying the offending field:
+
+```json
+{
+  "detail": [
+    {
+      "loc": ["body", "integration_params", "policy_id"],
+      "msg": "field required",
+      "type": "value_error.missing"
+    }
+  ]
+}
+```
+
+`loc` is the path to the field. Surface it — "missing `integration_params.policy_id`" is actionable; "validation failed" is not.
+
+Missing `integration_params` is the most common cause on writes. Re-read the Meta schema for that connector.
+
+## Rate limits
+
+200 requests per minute **per connector**. Every response carries the state:
+
+| Header | Meaning |
+| --- | --- |
+| `X-RateLimit-Limit` | The ceiling — `200` |
+| `X-RateLimit-Remaining` | Requests left this window |
+| `X-RateLimit-Reset` | Unix seconds when the window resets |
+| `Retry-After` | Seconds to wait — on `429` only |
+
+Honour `Retry-After` rather than guessing:
+
+```python
+import time, requests
+
+RETRYABLE = {429, 500, 502, 503, 504}
+
+def request_with_retry(session, method, url, max_attempts=5, **kwargs):
+    for attempt in range(max_attempts):
+        resp = session.request(method, url, timeout=30, **kwargs)
+
+        if resp.status_code not in RETRYABLE:
+            resp.raise_for_status()
+            return resp
+
+        if resp.status_code == 429:
+            delay = int(resp.headers.get("Retry-After", 60))
+        else:
+            delay = min(2 ** attempt, 30)      # exponential, capped
+
+        if attempt == max_attempts - 1:
+            resp.raise_for_status()
+
+        time.sleep(delay)
+
+    raise RuntimeError("exhausted retries")
+```
+
+<Tip>
+  Rate limits are per connector, so parallel work across different customers
+  doesn't contend. Bound concurrency for your own infrastructure's sake, not for
+  Bindbee's limits.
+</Tip>
+
+Full detail: [Rate Limits](/api-reference/basics/rate-limits).
+
+## Writes are not idempotent
+
+<Warning>
+  **Bindbee does not deduplicate repeated create requests.** Retrying a `POST`
+  that timed out can create a duplicate employee or a duplicate time-off request
+  in your customer's HRIS. A timeout is not evidence the write failed — it may
+  have succeeded and the response been lost.
+</Warning>
+
+Safe pattern:
+
+```python
+def create_time_off(connector_token, request_key, body):
+    if already_submitted(request_key):
+        return load_result(request_key)
+
+    mark_in_flight(request_key)               # BEFORE the call
+    try:
+        resp = session.post(
+            f"{BASE}/api/hris/v1/time-off",
+            headers=auth_headers(connector_token),
+            json=body, timeout=30,
+        )
+        resp.raise_for_status()
+        mark_succeeded(request_key, resp.json())
+        return resp.json()
+
+    except requests.Timeout:
+        # Unknown outcome — do NOT retry blind
+        mark_unknown(request_key)
+        raise WriteOutcomeUnknown(request_key)
+```
+
+Resolve `unknown` states by reading the data back after the next sync, not by retrying.
+
+## Errors that aren't error codes
+
+Some of the most confusing failures return `200`.
+
+| Symptom | Not an error because | Check |
+| --- | --- | --- |
+| `items: []` | Sync hasn't run, or genuinely no records | `sync_status` on the connector |
+| A field is `null` | Source didn't provide it, or permissions | [Field semantics](/explanation/field-semantics) |
+| Data looks stale | Last sync is old, or `RELINK_NEEDED` | `last_sync_start_time`, `status` |
+| An enum has an unexpected value | Unmapped vendor value passed through | [Field semantics](/explanation/field-semantics) |
+
+<Warning>
+  A `200` with an empty list is the single most misread response in the API.
+  Before treating it as "this customer has no employees", read the connector's
+  `sync_status` and `status`.
+</Warning>
+
+## Log what makes triage possible
+
+```python
+log.error(
+    "bindbee request failed",
+    extra={
+        "status": resp.status_code,
+        "path": path,
+        "integration_slug": connection.integration_slug,
+        "connector_id": connection.connector_id,   # NOT the token
+        "origin_id": connection.tenant_id,
+        "detail": safe_json(resp),
+    },
+)
+```
+
+<Warning>
+  Never log the `Authorization` or `X-Connector-Token` headers. Redact them in
+  your HTTP client's logging and in your error tracker's request capture.
+</Warning>
+
+`integration_slug` is the field that turns "some writes fail" into "writes fail on Workday" — include it everywhere.
+
+## Surfacing errors to your customer
+
+| Condition | Show them |
+| --- | --- |
+| `RELINK_NEEDED` | "Reconnect your HRIS" — prominent, actionable |
+| Repeated sync failures | "We're having trouble syncing. We're on it." |
+| Single transient failure | Nothing |
+| `429` | Nothing — retry silently |
+| Validation failure on their input | The specific field from `loc` |
+| `501` on a write | "Not supported for your HR system yet" |
+
+<Tip>
+  `RELINK_NEEDED` is the only state where doing nothing guarantees the problem
+  persists. Everything else may self-heal; this cannot.
+</Tip>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Monitor Sync Status" icon="gauge-circle" href="/how-to/monitor-sync-status">
+    Detecting the failures that don't return an error code.
+  </Card>
+  <Card title="Rate Limits" icon="gauge" href="/api-reference/basics/rate-limits">
+    Headers, policy, and backoff.
+  </Card>
+</CardGroup>

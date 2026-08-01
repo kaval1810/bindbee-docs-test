@@ -1,0 +1,127 @@
+---
+title: "Core Concepts"
+description: "The seven ideas you need before writing any Bindbee code: environments, API keys, connectors, connector tokens, syncs, unified models, and custom fields."
+---
+
+Read this once and the rest of the documentation will make sense.
+
+## 1. Environment
+
+Bindbee has two fully isolated environments: **Development** and **Production**.
+
+| | Development | Production |
+| --- | --- | --- |
+| API key | `dev_api_key` | `prod_api_key` |
+| Automatic syncs | No — trigger manually | Yes — every 24 hours by default |
+| Connector limit | Unlimited | Per your plan |
+| Data | Test connections | Real customer data |
+
+Keys are not interchangeable. A Development key cannot read Production data and vice versa. Connectors and data never cross between them.
+
+See [Development](/features/environments/development) and [Production](/features/environments/production).
+
+## 2. API key — proves who *you* are
+
+One key per environment, issued to your organization. It goes in the `Authorization` header on every request.
+
+```http
+Authorization: Bearer YOUR_BINDBEE_API_KEY
+```
+
+Manage it at [app.bindbee.dev/settings/keys](https://app.bindbee.dev/settings/keys).
+
+## 3. Connector — one customer's connection to one system
+
+A connector is a single link between **your customer** and **one third-party system**. If Acme Corp connects BambooHR, that is one connector. If Acme also connects Greenhouse, that is a second connector.
+
+A connector carries:
+
+| Field | Meaning |
+| --- | --- |
+| `id` | Bindbee's ID for the connection |
+| `integration_slug` | Which system, e.g. `bamboohr`, `workday`, `ukg-pro` |
+| `category` | `HRIS`, `ATS` or `LMS` |
+| `status` | `COMPLETE`, `INCOMPLETE`, or `RELINK_NEEDED` |
+| `sync_status` | `Syncing`, `Done`, or `Failed` |
+| `connector_token` | The credential you use to read that customer's data |
+| `origin_id` | *Your* ID for the customer — you set this |
+
+<Tip>
+  Always set `origin_id` to your own internal customer/tenant ID when you create
+  a connection. It is the only reliable way to map a Bindbee connector back to a
+  row in your database.
+</Tip>
+
+## 4. Connector token — proves *which customer's data* you want
+
+The API key alone is not enough to read employee data. You also need the `connector_token` for the specific connector, in the `X-Connector-Token` header.
+
+```http
+Authorization: Bearer YOUR_BINDBEE_API_KEY
+X-Connector-Token: END_USER_CONNECTOR_TOKEN
+```
+
+This two-header model is the single most common source of day-one confusion:
+
+- **API key only** → organization-scoped endpoints (list connectors, list integrations, custom field definitions).
+- **API key + connector token** → any endpoint that reads or writes a customer's data.
+
+See [Authenticate a request](/how-to/authenticate) for the step-by-step.
+
+## 5. Sync — how data gets into Bindbee
+
+Bindbee does not proxy your request to the third-party system in real time. A background **sync job** pulls from the source system, normalizes the result, and stores it. Your API call reads that stored copy.
+
+Consequences worth internalising now:
+
+- Data is as fresh as the last successful sync — by default, up to 24 hours old in Production.
+- Development connectors **do not** sync automatically. Trigger a sync yourself.
+- The first sync after linking takes longer than subsequent ones. Until it finishes, `GET /employees` legitimately returns an empty list.
+
+See [How syncing works](/explanation/how-syncing-works).
+
+## 6. Unified model — one schema across every connector
+
+Every record Bindbee returns shares a common envelope:
+
+| Field | Meaning |
+| --- | --- |
+| `id` | Bindbee's stable UUID for the record |
+| `remote_id` | The third-party system's own ID for the same record |
+| `modified_at` | When **Bindbee** last updated this record — not when the HRIS did |
+| `raw_data` | The original upstream payload, when `include_raw_data=true` |
+| `custom_fields` | Your mapped extra fields, when `include_custom_fields=true` |
+
+<Warning>
+  `modified_at` is a *Bindbee* timestamp. It moves when a sync rewrites the
+  record, which can happen even if no business field changed. See
+  [Field semantics](/explanation/field-semantics).
+</Warning>
+
+List responses are cursor-paginated:
+
+```json
+{
+  "cursor": "MDE4YjE4ZWYtYzk5Yy03YTg2LTk5NDYtN2I3YzlkNTQzM2U1",
+  "page_size": 50,
+  "items": [ ... ]
+}
+```
+
+## 7. Custom fields — when the unified model isn't enough
+
+If your customer's system holds a value that Bindbee's unified schema does not carry, define a **custom field** and point a JMESPath expression at the raw upstream payload. Request it back with `include_custom_fields=true`.
+
+If you need a whole endpoint that has no unified equivalent, use [passthrough](/explanation/passthrough-when-and-why) instead.
+
+## Quick glossary
+
+| Term | One line |
+| --- | --- |
+| **Magic Link** | Hosted page your customer uses to authorize a connection |
+| **Bindbee Embed** | The same flow, embedded in your own frontend |
+| **`link_token`** | Short-lived token that initializes an Embed session |
+| **`temporary_token`** | Returned on successful link; exchanged for a `connector_token` |
+| **`connector_token`** | Long-lived credential for reading one customer's data |
+| **Meta API** | Returns the JSON Schema for a write operation on a given integration |
+| **Passthrough** | Authenticated proxy to the third-party API |

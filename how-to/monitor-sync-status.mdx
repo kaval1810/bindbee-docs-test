@@ -1,0 +1,207 @@
+---
+title: "Monitor Sync Status"
+description: "Build a connection-health surface: know which customers are syncing, which are stale, and which need to reconnect — before they tell you."
+---
+
+Silent staleness is the worst failure mode in a unified API integration. A connector that stops syncing keeps serving plausible data, and nobody notices until a customer spots a missing new hire.
+
+## The one request that tells you everything
+
+```bash
+curl "https://api.bindbee.dev/api/hris/v1/connectors" \
+  -H "Authorization: Bearer $BINDBEE_API_KEY"
+```
+
+API key only — no connector token. One call covers every connector in the environment.
+
+```json
+{
+  "id": "018b18ef-c487-703c-afd9-0ca478ccd9d6",
+  "integration_slug": "bamboohr",
+  "category": "HRIS",
+  "origin_id": "tenant_9f2c1b40",
+  "status": "COMPLETE",
+  "sync_status": "Done",
+  "sync_progress": null,
+  "last_sync_start_time": "2026-07-22T09:49:30.478384+00:00",
+  "next_sync_start_time": "2026-07-23T09:49:30.478384+00:00",
+  "avg_sync_duration": "15 min 30 sec",
+  "relink_needed_at": null,
+  "is_active": true,
+  "is_test_connector": false,
+  "total_employees": 412,
+  "active_employees": 389,
+  "completed_at": "2026-06-02T11:14:02.100000+00:00"
+}
+```
+
+<Warning>
+  Connectors are category-scoped. `/api/hris/v1/connectors` returns HRIS
+  connectors only. Poll `/api/ats/v1/connectors` and `/api/lms/v1/connectors`
+  too if you use those products.
+</Warning>
+
+## Read both status fields
+
+| Field | Question | Values |
+| --- | --- | --- |
+| `status` | Credentials valid? | `COMPLETE`, `INCOMPLETE`, `RELINK_NEEDED` |
+| `sync_status` | Data current? | `Syncing`, `Done`, `Failed` |
+
+They move independently. `COMPLETE` + `Failed` is a transient sync problem. `RELINK_NEEDED` + `Done` is frozen data that looks fine.
+
+Detail: [Connector States & Lifecycle](/explanation/connector-lifecycle).
+
+## Derive a health status
+
+Turn raw fields into something your product can act on:
+
+```python
+from datetime import datetime, timezone, timedelta
+
+STALE_AFTER = timedelta(hours=36)   # 24h schedule + headroom
+
+def health(connector):
+    if not connector["is_active"]:
+        return "inactive"
+
+    if connector["status"] == "RELINK_NEEDED":
+        return "action_required"        # only the customer can fix this
+
+    if connector["status"] == "INCOMPLETE":
+        return "setup_incomplete"
+
+    if connector["sync_status"] == "Syncing":
+        return "syncing"
+
+    last = connector.get("last_sync_start_time")
+    if not last:
+        return "never_synced"
+
+    age = datetime.now(timezone.utc) - datetime.fromisoformat(last)
+    if age > STALE_AFTER:
+        return "stale"
+
+    if connector["sync_status"] == "Failed":
+        return "degraded"               # recent data, last run failed
+
+    return "healthy"
+```
+
+<Tip>
+  Set the staleness threshold above the sync interval plus typical duration. With
+  24-hour syncs, 36 hours avoids alerting on ordinary jitter while still catching
+  a genuinely stuck connector within a day and a half.
+</Tip>
+
+## What to show, and when to alert
+
+| Health | Show the customer | Page your team? |
+| --- | --- | --- |
+| `healthy` | "Connected · synced 4 hours ago" | No |
+| `syncing` | "Importing…" + `sync_progress` | No |
+| `degraded` | Nothing on first occurrence | Only if repeated |
+| `stale` | "Data may be out of date" | Yes |
+| `action_required` | "Reconnect your HRIS" — blocking | Yes |
+| `setup_incomplete` | "Finish connecting" + resume link | No |
+| `never_synced` | "Setting up your data…" | If older than a day |
+| `inactive` | Connection removed | No |
+
+<Warning>
+  Do not alert on a single `Failed`. Transient vendor errors are routine and
+  usually clear on the next scheduled run. Alert on consecutive failures, or on
+  data age crossing your threshold — those are the signals that mean something.
+</Warning>
+
+## Show data age everywhere
+
+The highest-value thing on this page.
+
+```jsx
+<ConnectionCard>
+  <Badge status={health}>{label}</Badge>
+  <Muted>Last synced {formatRelative(connector.last_sync_start_time)}</Muted>
+  {connector.next_sync_start_time && (
+    <Muted>Next update {formatRelative(connector.next_sync_start_time)}</Muted>
+  )}
+</ConnectionCard>
+```
+
+A user who can see "synced 6 hours ago" reasons about missing data themselves. A user looking at an undated list files a ticket.
+
+## React immediately with webhooks
+
+Polling gives you a floor; webhooks give you latency.
+
+| Event | Do |
+| --- | --- |
+| `connector_sync_started` | Set state to `syncing` |
+| `connector_synced` | Set `healthy`, stamp sync time, trigger your incremental read |
+| `connector_sync_error` | Increment a failure counter; alert on consecutive failures |
+
+```python
+def on_sync_error(payload):
+    tenant = payload["connector"]["origin_id"]
+    error  = payload["error"]
+
+    count = increment_failure_count(tenant)
+    log.warning("sync failed", extra={
+        "tenant": tenant,
+        "integration": payload["connector"]["integration_slug"],
+        "failed_at": error["failed_at"],
+        "message": error["message"],
+    })
+
+    if count >= 3:
+        alert_team(tenant, error["message"])
+```
+
+<Warning>
+  Webhook deliveries retry only 4 times within 60 seconds before being dropped.
+  Webhooks alone will miss state changes that occur while your endpoint is down.
+  Keep the scheduled connector poll as your safety net.
+</Warning>
+
+## Recommended cadence
+
+| Mechanism | Frequency | Purpose |
+| --- | --- | --- |
+| `connector_sync_*` webhooks | Real time | Latency |
+| Connector list poll | Every 15–60 min | Catch `RELINK_NEEDED` and missed events |
+| Staleness sweep | Hourly | Age-based alerting across all tenants |
+
+Polling the connector list is cheap — one request per category regardless of how many customers you have. There is no reason to do it rarely.
+
+## Give the customer a way to act
+
+Two controls turn a status page into something useful:
+
+**"Sync now"** — trigger a resync, show `sync_progress`, re-read when `Done`. See [Force a resync](/how-to/force-a-resync).
+
+**"Reconnect"** — for `RELINK_NEEDED`, create a new `link_token` for the same `origin_id` and integration, and send them through the same connect UI. Re-linking updates the existing connector, so the `connector_token` you stored keeps working.
+
+## Also worth watching
+
+| Signal | Meaning |
+| --- | --- |
+| `total_employees` drops sharply | Permission change or upstream data problem — investigate before propagating deletions |
+| `avg_sync_duration` climbing | Growing dataset or degrading vendor API |
+| `sync_progress` stuck | Sync may be wedged |
+| `relink_needed_at` set | Exactly when credentials broke — useful for the customer conversation |
+
+<Warning>
+  A large drop in `total_employees` should gate any deletion logic in your own
+  system. Mirroring a bad sync's absent records as terminations is a very
+  expensive mistake.
+</Warning>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Connector States & Lifecycle" icon="network" href="/explanation/connector-lifecycle">
+    What each state means.
+  </Card>
+  <Card title="Force a Resync" icon="rotate-cw" href="/how-to/force-a-resync">
+    When triggering a sync is appropriate.
+  </Card>
+</CardGroup>

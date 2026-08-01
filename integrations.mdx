@@ -1,0 +1,322 @@
+---
+title: "Integrations & Coverage"
+description: "Every supported system, its slug, its connection type, and how to check exactly which models and fields a given connector returns."
+---
+
+Use your browser's find (`Ctrl`/`⌘` + `F`) to search this page for a system name or slug.
+
+<Info>
+  **Slugs** are the identifiers you pass as `integration` when creating a
+  `link_token`. **Model and field support varies by connector** — and, on SFTP
+  connectors, by the individual customer's export template. To determine exactly
+  what a *specific* connector returns, see
+  [Check a connector's actual coverage](#check-a-connectors-actual-coverage).
+</Info>
+
+## Connection types
+
+| Type | How data arrives | Typical freshness | Writes |
+| --- | --- | --- | --- |
+| **API** | Bindbee calls the vendor's API | Bindbee's sync schedule | Often supported |
+| **SFTP** | The customer's system exports a file on a schedule | The customer's export schedule | Generally not |
+
+Slugs ending in `_sftp`, plus file-export variants like `workday_raas` and `paychex_flock`, are file-based. See [SFTP vs API](/explanation/sftp-vs-api).
+
+---
+
+## HRIS, Payroll & Directory
+
+Base path `/api/hris/v1/` · category `HRIS`
+
+| System | Slug | Type |
+| --- | --- | --- |
+| 7Shifts | `seven_shifts` | API |
+| ADP Workforce Now | `adp` | API |
+| ADP Workforce Now (SFTP) | `adp_sftp` | SFTP |
+| BambooHR | `bamboohr` | API |
+| BreatheHR | `breathehr` | API |
+| BSwift (SFTP) | `bswift_sftp` | SFTP |
+| CharlieHR | `charliehr` | API |
+| Darwin Box | `darwin_box` | API |
+| Dayforce | `dayforce` | API |
+| Deel | `deel` | API |
+| Deputy | `deputy` | API |
+| Ease (SFTP) | `ease_sftp` | SFTP |
+| Employee Navigator (SFTP) | `employee_navigator_sftp` | SFTP |
+| Employment Hero | `employment_hero` | API |
+| Factorial | `factorial` | API |
+| Google Workspace | `google-workspace` | API |
+| Hibob | `hibob` | API |
+| HR Partner | `hrpartner` | API |
+| HRWorks | `hrworks` | API |
+| Humaans | `humaans` | API |
+| iSolved (SFTP) | `isolved_sftp` | SFTP |
+| Keka HR | `keka` | API |
+| Microsoft Entra ID | `microsoft_entra_id` | API |
+| Nmbrs | `nmbrs` | API |
+| Okta | `okta` | API |
+| Opportune HR | `opportunehr` | API |
+| Oracle HCM | `oracle_hcm` | API |
+| Paychex | `paychex` | API |
+| Paychex Flock (SFTP) | `paychex_flock` | SFTP |
+| Paycom | `paycom` | API |
+| Paycom (SFTP) | `paycom_sftp` | SFTP |
+| Paycor | `paycor` | API |
+| Paylocity | `paylocity` | API |
+| Paylocity (SFTP) | `paylocity_sftp` | SFTP |
+| PeopleStrong | `peoplestrong` | API |
+| Personio | `personio` | API |
+| Plansource (SFTP) | `plansource_sftp` | SFTP |
+| Prime | `prime` | API |
+| Prism | `prism` | API |
+| Quickbooks | `quickbooks` | API |
+| Rippling | `rippling_platform` | API |
+| Rippling (Legacy) | `rippling` | API |
+| Rippling (SFTP) | `rippling_sftp` | SFTP |
+| Sage HR | `sage-hr` | API |
+| SAP SuccessFactors | `sap-success-factors` | API |
+| Sesame | `sesame` | API |
+| TriNet HR | `trinet_hr` | API |
+| UKG Pro | `ukg-pro` | API |
+| UKG Ready | `ukg-ready` | API |
+| Workday | `workday` | API |
+| Workday RaaS | `workday_raas` | SFTP / file export |
+| Workline | `workline` | API |
+| Xero | `xero` | API |
+| Xero (AU) | `xero_au` | API |
+| Zoho People | `zoho-people` | API |
+
+### HRIS models
+
+| Group | Models |
+| --- | --- |
+| **Core** | Employee, Employment, Company, Group |
+| **Compensation** | Compensation, Pay Group, Payroll Run, Payroll Run Calendar, Employee Payroll Run |
+| **Benefits** | Benefit, Employer Benefit, Dependent, Dependent Benefit, Benefit Coverage |
+| **Time & Attendance** | Time Off, Time Off Balance, Timesheet Entry |
+| **Banking** | Bank Info |
+
+Writable models: Employee, Time Off, Timesheet Entry, Employee Payroll Run — subject to per-connector support. See [Write Data Back](/get-started/tutorials/write-data-back).
+
+---
+
+## Recruiting (ATS)
+
+Base path `/api/ats/v1/` · category `ATS`
+
+| System | Slug |
+| --- | --- |
+| Ashby | `ashby` |
+| BambooHR | `bamboohr` |
+| Greenhouse | `greenhouse` |
+| JazzHR | `jazzhr` |
+| JobScore | `jobscore` |
+| Jobvite | `jobvite` |
+| Lever | `lever` |
+| Paylocity Recruiting | `paylocity_recruiting` |
+| Recruitee | `recruitee` |
+| SAP SuccessFactors | `sap-success-factors` |
+| Teamtailor | `teamtailor` |
+| Workable | `workable` |
+| Workday | `workday` |
+
+### ATS models
+
+| Group | Models |
+| --- | --- |
+| **Talent Acquisition** | Candidate, Application, Job, Job Interview Stage, Scheduled Interview, Screening Question |
+| **Evaluation** | Activity, Scorecard, EEOC, Reject Reason, Attachment, Tag |
+| **Outcomes** | Offer |
+| **Organization** | Department, Office, Remote User |
+
+Most ATS models support create operations.
+
+---
+
+## Learning (LMS)
+
+Base path `/api/lms/v1/` · category `LMS`
+
+| System | Slug |
+| --- | --- |
+| SAP SuccessFactors | `sap_sf_lms` |
+| Workday | `workday` |
+
+### LMS models
+
+| Group | Models |
+| --- | --- |
+| **People** | Users |
+| **Content** | Courses, Contents, Skills, Categories |
+| **Progress** | Completions, Enrollments |
+
+LMS models are read-only.
+
+<Note>
+  The same vendor can appear under more than one category with a **different
+  slug** — SAP SuccessFactors is `sap-success-factors` for HRIS and ATS, but
+  `sap_sf_lms` for LMS. Always pair the slug with the matching `category`.
+</Note>
+
+---
+
+## Using a slug
+
+Pass `category` and `integration` together when creating a `link_token`:
+
+```json
+{
+  "end_user_data": {
+    "org_name": "Acme Corp.",
+    "origin_id": "tenant_9f2c1b40"
+  },
+  "category": "HRIS",
+  "integration": "bamboohr"
+}
+```
+
+<CodeGroup>
+
+```json HRIS · BambooHR
+{
+  "end_user_data": { "org_name": "Acme Corp.", "origin_id": "tenant_9f2c1b40" },
+  "category": "HRIS",
+  "integration": "bamboohr"
+}
+```
+
+```json ATS · Greenhouse
+{
+  "end_user_data": { "org_name": "Acme Corp.", "origin_id": "tenant_9f2c1b40" },
+  "category": "ATS",
+  "integration": "greenhouse"
+}
+```
+
+```json LMS · Workday
+{
+  "end_user_data": { "org_name": "Acme Corp.", "origin_id": "tenant_9f2c1b40" },
+  "category": "LMS",
+  "integration": "workday"
+}
+```
+
+</CodeGroup>
+
+Full flow: [Connect Your First Customer](/get-started/tutorials/connect-your-first-customer).
+
+<Tip>
+  Rather than hardcoding this list in your product, build your integration picker
+  from the live `/api/{category}/v1/integrations` endpoint below. It stays
+  correct as connectors are added and reflects what is actually enabled for your
+  organization.
+</Tip>
+
+---
+
+## Check a connector's actual coverage
+
+The tables above are the catalogue. For what a specific connector returns, ask the API.
+
+### Which integrations are enabled for your organization
+
+```bash
+curl "https://api.bindbee.dev/api/hris/v1/integrations" \
+  -H "Authorization: Bearer $BINDBEE_API_KEY"
+```
+
+```json
+{
+  "items": [
+    {
+      "integration_slug": "bamboohr",
+      "display_name": "BambooHR",
+      "category": ["HRIS"],
+      "integration_type": "API",
+      "is_enabled": true,
+      "icon_url": "https://…",
+      "description": "…"
+    }
+  ]
+}
+```
+
+Swap `hris` for `ats` or `lms`.
+
+### Which models a live connector returns
+
+The most reliable test is the connector itself. For a connected customer, request one record per model:
+
+```bash
+for model in employees employments compensations benefits employer-benefits \
+             dependents dependent-benefits benefit-coverages bank-info \
+             time-off time-off-balances timesheet-entry \
+             payroll-runs employee-payroll-runs pay-groups groups companies; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" -G \
+    "https://api.bindbee.dev/api/hris/v1/$model" \
+    -H "Authorization: Bearer $BINDBEE_API_KEY" \
+    -H "X-Connector-Token: $CONNECTOR_TOKEN" \
+    --data-urlencode "page_size=1")
+  echo "$model → $code"
+done
+```
+
+### Which fields are actually populated
+
+```bash
+curl -G "https://api.bindbee.dev/api/hris/v1/employees" \
+  -H "Authorization: Bearer $BINDBEE_API_KEY" \
+  -H "X-Connector-Token: $CONNECTOR_TOKEN" \
+  --data-urlencode "page_size=5" \
+| jq '[.items[] | to_entries[] | select(.value != null) | .key] | unique'
+```
+
+That returns the fields populated for that customer — usually the question you actually care about.
+
+<Warning>
+  A model returning zero records is not proof it is unsupported. It can also mean
+  the connection lacks permission for that scope, or the customer genuinely has
+  no such records. Benefits, compensation and bank details are commonly separate
+  permission scopes. See [Field semantics](/explanation/field-semantics).
+</Warning>
+
+### Exists vs populated
+
+`include_raw_data=true` settles it:
+
+| In `raw_data`? | In unified field? | Meaning |
+| --- | --- | --- |
+| No | No | Source system didn't send it |
+| Yes | No | Unmapped — use a [custom field](/how-to/map-custom-fields) |
+| Yes | Yes | Working as intended |
+
+---
+
+## Requesting a connector or a model
+
+Don't see a system, or need a model a connector doesn't currently return?
+
+Contact `support@bindbee.dev` with:
+
+- The system name and, if you know it, the API/product tier your customer is on
+- Which models and fields you need
+- Whether you need read, write, or both
+- How many customers this affects
+
+<Tip>
+  If you find yourself using [passthrough](/how-to/use-passthrough) for the same
+  concept across several connectors, that is a strong signal the concept belongs
+  in the unified model. Raising it removes the per-vendor code for you and for
+  everyone else.
+</Tip>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="SFTP vs API" icon="file-up" href="/explanation/sftp-vs-api">
+    Why file-based connectors behave differently.
+  </Card>
+  <Card title="Connect Your First Customer" icon="plug" href="/get-started/tutorials/connect-your-first-customer">
+    Using a slug end to end.
+  </Card>
+</CardGroup>

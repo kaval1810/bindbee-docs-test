@@ -1,0 +1,159 @@
+---
+title: "Meta API: Dynamic Schema Discovery"
+description: "Reads can be uniform because Bindbee controls the output. Writes cannot, because the target system controls the input. The Meta API is how Bindbee makes that tractable."
+---
+
+## Why writes are different
+
+Reading is a normalization problem, and Bindbee owns both ends: it fetches whatever the vendor sends and maps it into a shape it defines. Every connector produces the same `HrisEmployee`.
+
+Writing is a **validation** problem, and Bindbee owns neither end. The target system decides what is required, what values are legal, and what extra parameters it demands. Bindbee cannot normalize that away — if BambooHR requires a `policy_id` for a time-off request, no amount of unification removes that requirement.
+
+There are only two honest ways to handle this:
+
+1. **Lowest common denominator** — expose only fields every system accepts. Result: you cannot write most things.
+2. **Describe the requirements per connector** — let the client adapt. Result: writes work, and the client has to ask first.
+
+Bindbee takes the second approach. The Meta API is that description.
+
+## What a Meta endpoint returns
+
+A JSON Schema-compatible document describing the request body for **one operation on one connector**:
+
+```
+GET /api/hris/v1/time-off/meta/post
+GET /api/hris/v1/employees/meta/post
+GET /api/hris/v1/timesheet-entry/meta/post
+GET /api/hris/v1/employee-payroll-runs/meta/post
+```
+
+Same headers as any other request — API key plus `X-Connector-Token`. The connector token is what makes the response integration-specific.
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "request_type": {
+      "type": "string",
+      "isRequired": true,
+      "enum": ["VACATION", "SICK", "PERSONAL"],
+      "enumInformation": [
+        { "value": "VACATION", "description": "Paid vacation" },
+        { "value": "SICK", "description": "Sick leave" }
+      ]
+    },
+    "integration_params": {
+      "type": "object",
+      "isRequired": true,
+      "properties": { "policy_id": { "type": "string", "isRequired": true } },
+      "required": ["policy_id"]
+    }
+  },
+  "required": ["request_type"]
+}
+```
+
+Standard JSON Schema keywords, plus two Bindbee additions:
+
+| Keyword | Purpose |
+| --- | --- |
+| `isRequired` | Per-field requirement flag, readable without cross-referencing the `required` array |
+| `enumInformation` | Human-readable descriptions for each `enum` value — designed to be rendered in a UI |
+
+`enumInformation` exists because vendor enum values are frequently opaque IDs. `"51743768"` means nothing; `"Third-Party Sick"` means something. Show the description, submit the value.
+
+## `integration_params` vs `additional_attributes`
+
+Both carry vendor-specific data. They are not interchangeable, and mixing them up is the most common write bug.
+
+| | `integration_params` | `additional_attributes` |
+| --- | --- | --- |
+| Schema | Explicitly defined | Free-form |
+| Validated | Yes | No |
+| Can be required | Yes | No |
+| Purpose | Parameters the vendor **demands** | Vendor fields Bindbee's unified model doesn't carry |
+
+<Warning>
+  Putting a required integration parameter into `additional_attributes` does not
+  work. `additional_attributes` is forwarded as-is without validation, so the
+  value goes to the vendor in the wrong place — and you get an opaque vendor
+  error, or a silently incomplete record.
+</Warning>
+
+Rule of thumb: if the Meta response names the field under `integration_params`, it goes there. `additional_attributes` is only for fields the Meta response does **not** describe at all.
+
+## Build from the schema, not from a hardcoded shape
+
+The whole point is defeated by hardcoding a body and hoping.
+
+```python
+def required_fields(schema):
+    out = list(schema.get("required", []))
+    params = schema.get("properties", {}).get("integration_params", {})
+    out += [f"integration_params.{f}" for f in params.get("required", [])]
+    return out
+```
+
+<Tip>
+  If you render a form for end users, generate it from the Meta response:
+  `enum` → options, `enumInformation[].description` → labels, `description` →
+  help text, `format` → input type, `isRequired` → validation. The form then
+  stays correct across connectors and across changes, with no per-vendor UI code.
+</Tip>
+
+## Handling `501 Not Implemented`
+
+```json
+{
+  "detail": "Meta API is not implemented for Time Off in bamboohr. You can request this feature by contacting support@bindbee.dev."
+}
+```
+
+<Warning>
+  `501` means the **schema** is not published. It does not necessarily mean the
+  **write** is unsupported. These are different statements, and treating `501` as
+  "this connector can't do it" will make you disable features that work.
+</Warning>
+
+Reasonable responses:
+
+1. Attempt the write with documented unified fields and read the error.
+2. Request the schema from `support@bindbee.dev`.
+3. Use [passthrough](/explanation/passthrough-when-and-why) for that connector.
+
+Handle it as a distinct branch, not as a generic failure — and log it, because the set of unimplemented combinations shrinks over time and you want to know when to re-enable.
+
+## Two Meta endpoints for employees
+
+`Employee` creation has two:
+
+| Endpoint | Returns |
+| --- | --- |
+| `/api/hris/v1/employees/meta/post` | JSON Schema for the request body |
+| `/api/hris/v1/employees/create/meta` | Integration-specific creation metadata |
+
+Start with the schema endpoint — it is the one you build the body from.
+
+## Should you cache Meta responses?
+
+Yes, with care.
+
+Meta schemas are stable for a given `(integration, operation)` pair over short windows, and the response can be sizeable. Caching per `(integration_slug, operation)` — not per connector — is reasonable.
+
+<Warning>
+  Cache with a TTL, not forever. Schemas change when Bindbee improves an
+  integration or a vendor changes requirements, and a stale cached schema
+  produces write failures that look like your bug rather than a stale cache.
+  Hours, not weeks. Invalidate on unexpected `400`/`422`.
+</Warning>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Write Data Back" icon="square-pen" href="/get-started/tutorials/write-data-back">
+    The workflow in practice.
+  </Card>
+  <Card title="Meta API Reference" icon="book" href="/meta-apis-for-write-operations">
+    Every keyword and response structure.
+  </Card>
+</CardGroup>
