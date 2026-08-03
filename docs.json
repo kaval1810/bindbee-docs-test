@@ -3,7 +3,7 @@
   "theme": "luma",
   "name": "Bindbee Docs",
   "colors": {
-    "primary": "#F57E21",
+    "primary": "#f57e21",
     "light": "#E06D10",
     "dark": "#F48C3C"
   },
@@ -621,9 +621,9 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Changelog",
-          "href": "https://bindbee.userjot.com/updates",
-          "icon": "history"
+          "anchor": "Guides",
+          "href": "https://help.bindbee.dev/",
+          "icon": "book-open"
         },
         {
           "anchor": "Status",
