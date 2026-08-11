@@ -1,6 +1,6 @@
 ---
 title: "Filter with modified_after"
-description: "The incremental read pattern — plus the watermark discipline that stops it from silently losing records."
+description: "The incremental read pattern - plus the watermark discipline that stops it from silently losing records."
 ---
 
 `modified_after` returns only records Bindbee synced after a given timestamp. It is how you avoid re-importing an entire directory on every run.
@@ -17,14 +17,14 @@ Format is ISO 8601: `2026-07-21T09:49:30.478Z`.
 ## What it actually filters on
 
 <Warning>
-  `modified_after` filters on **when Bindbee synced the record** — the
-  `modified_at` field — not on when the third-party system changed it.
+  `modified_after` filters on **when Bindbee synced the record** - the
+  `modified_at` field - not on when the third-party system changed it.
 </Warning>
 
 A sync rewrites the records it processes, so `modified_at` can advance even when no business field changed. That makes this filter:
 
-- **Safe** — you will not miss changes.
-- **Not minimal** — you will receive records that look identical to what you already have.
+- **Safe** - you will not miss changes.
+- **Not minimal** - you will receive records that look identical to what you already have.
 
 Design accordingly: **upsert, always; act, only on a real diff.**
 
@@ -136,7 +136,7 @@ curl -G "https://api.bindbee.dev/api/hris/v1/employees" \
 
 <Warning>
   Adding `employment_status=ACTIVE` to an incremental read means you never see
-  terminations — a leaver flips to `INACTIVE` and disappears from your results
+  terminations - a leaver flips to `INACTIVE` and disappears from your results
   rather than arriving as a change. If you track offboarding, run the
   incremental read **without** a status filter and branch on the value.
 </Warning>
@@ -153,7 +153,7 @@ Run both of the first two. They share the same code path, and the sweep costs al
 
 ## Which models support it
 
-`modified_after` is available across the unified list endpoints — HRIS, ATS and LMS. If a particular endpoint does not accept it, the parameter is ignored rather than erroring, so confirm against the endpoint's reference page when building a critical path.
+`modified_after` is available across the unified list endpoints - HRIS, ATS and LMS. If a particular endpoint does not accept it, the parameter is ignored rather than erroring, so confirm against the endpoint's reference page when building a critical path.
 
 ## Related
 

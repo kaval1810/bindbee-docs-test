@@ -7,7 +7,7 @@ openapi: post /api/v1/passthrough
 ## What this endpoint does
 
 Passthrough forwards your request to the connector's underlying system. Bindbee attaches the
-stored credentials and routes to the correct base URL — you never handle vendor credentials
+stored credentials and routes to the correct base URL - you never handle vendor credentials
 yourself.
 
 ```mermaid
@@ -20,8 +20,8 @@ flowchart LR
     class A,B,C node
 ```
 
-Use it when the unified models don't carry what you need. Everything else about the request —
-the path, the body, the response shape, the errors — belongs to the vendor.
+Use it when the unified models don't carry what you need. Everything else about the request -
+the path, the body, the response shape, the errors - belongs to the vendor.
 
 <Warning>
   The `path` you send is **vendor-specific**. `/employees` means something different on BambooHR
@@ -30,7 +30,7 @@ the path, the body, the response shape, the errors — belongs to the vendor.
 </Warning>
 
 Before using this, check whether a [custom field](/how-to/map-custom-fields) solves it more
-cheaply — if the value is already in `raw_data`, it does. Full trade-off:
+cheaply - if the value is already in `raw_data`, it does. Full trade-off:
 [Passthrough: When & Why](/explanation/passthrough-when-and-why).
 
 ## Authentication
@@ -48,17 +48,17 @@ Content-Type: application/json
 
 | Field | Type | Required | Default | Notes |
 | --- | --- | --- | --- | --- |
-| `method` | enum | **Yes** | — | `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `HEAD`, `OPTIONS`, `CONNECT`, `TRACE` |
-| `path` | string | **Yes** | — | Vendor path, relative to their base URL. e.g. `/employees` |
-| `headers` | object | **Yes** | — | Extra headers for the vendor. Send `{}` if you have none |
+| `method` | enum | **Yes** | - | `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `HEAD`, `OPTIONS`, `CONNECT`, `TRACE` |
+| `path` | string | **Yes** | - | Vendor path, relative to their base URL. e.g. `/employees` |
+| `headers` | object | **Yes** | - | Extra headers for the vendor. Send `{}` if you have none |
 | `params` | object | No | `{}` | Query string parameters |
 | `data` | object / array / string | No | `null` | Request body |
 | `request_format` | enum | No | `JSON` | `JSON`, `XML`, `MULTIPART` |
 | `response_format` | enum | No | `JSON` | `JSON`, `XML`, `MULTIPART`, `BINARY` |
-| `timeout` | number | No | — | Seconds to wait for the vendor |
+| `timeout` | number | No | - | Seconds to wait for the vendor |
 
 <Warning>
-  `headers` is **required** even when empty — send `"headers": {}`. Omitting it returns
+  `headers` is **required** even when empty - send `"headers": {}`. Omitting it returns
   `422 Validation Error`. This is the most common mistake on this endpoint.
 </Warning>
 
@@ -157,12 +157,12 @@ await passthrough(token, {
 
 <Tip>
   Use `remote_id`, not `id`, when referencing records. Vendor APIs know nothing about Bindbee's
-  UUIDs — `remote_id` is the source system's own identifier, and this is its main purpose.
+  UUIDs - `remote_id` is the source system's own identifier, and this is its main purpose.
 </Tip>
 
 ## Non-JSON vendors
 
-Some systems — particularly older enterprise HR platforms — speak XML or return files.
+Some systems - particularly older enterprise HR platforms - speak XML or return files.
 
 | Situation | Set |
 | --- | --- |
@@ -186,7 +186,7 @@ Some systems — particularly older enterprise HR platforms — speak XML or ret
 ## Timeouts
 
 `timeout` is the number of seconds Bindbee waits for the vendor. Set it explicitly for endpoints
-you know are slow — report generation and bulk exports on enterprise systems routinely take
+you know are slow - report generation and bulk exports on enterprise systems routinely take
 minutes.
 
 <Warning>
@@ -197,9 +197,9 @@ minutes.
 ## Responses
 
 A `200` returns the vendor's response as-is. There is no unified envelope, no `cursor`, no
-`items` — the shape is entirely the vendor's.
+`items` - the shape is entirely the vendor's.
 
-A `422` means **your passthrough request** failed validation before Bindbee called the vendor —
+A `422` means **your passthrough request** failed validation before Bindbee called the vendor -
 almost always a missing `headers` or `method`.
 
 <Warning>
@@ -220,7 +220,7 @@ almost always a missing `headers` or `method`.
 | Pagination | `cursor` / `page_size` | The vendor's scheme |
 
 <Warning>
-  Bindbee's rate limit does not protect you here — you are hitting the vendor directly. A loop
+  Bindbee's rate limit does not protect you here - you are hitting the vendor directly. A loop
   that is harmless against the unified API can get a customer's connector throttled upstream.
   Throttle yourself conservatively and cache results.
 </Warning>

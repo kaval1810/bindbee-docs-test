@@ -8,7 +8,7 @@ Passthrough forwards your request to the connector's underlying system using the
 <Info>
   Before building on passthrough, read
   [Passthrough: When & Why](/explanation/passthrough-when-and-why). Every
-  passthrough call is per-vendor code — the thing Bindbee exists to remove. It is
+  passthrough call is per-vendor code - the thing Bindbee exists to remove. It is
   often the right choice; it is never the free one.
 </Info>
 
@@ -27,7 +27,7 @@ curl -G "https://api.bindbee.dev/api/hris/v1/employees" \
 
 | Found in `raw_data`? | Use |
 | --- | --- |
-| Yes | [Custom field](/how-to/map-custom-fields) — no per-vendor code, no vendor rate limit |
+| Yes | [Custom field](/how-to/map-custom-fields) - no per-vendor code, no vendor rate limit |
 | No | Passthrough |
 
 ## Making a request
@@ -45,7 +45,7 @@ curl -X POST "https://api.bindbee.dev/api/v1/passthrough" \
   }'
 ```
 
-Both auth headers are required — the connector token determines which system and which customer's credentials are used.
+Both auth headers are required - the connector token determines which system and which customer's credentials are used.
 
 <Warning>
   The body's `headers` field is **required**, even when you have nothing to add. Send
@@ -59,7 +59,7 @@ vendor. For XML or SOAP systems, set `request_format` / `response_format`. Full 
 <Warning>
   The `path` is **vendor-specific**. `/v1/employees/1234/custom_report` is
   meaningful for one vendor and meaningless for every other. You are writing
-  against their API from here on — consult their documentation, not Bindbee's.
+  against their API from here on - consult their documentation, not Bindbee's.
 </Warning>
 
 ## Isolate it behind an interface
@@ -99,7 +99,7 @@ def custom_report(connection, employee):
 
 <Tip>
   Note `employee["remote_id"]`, not `employee["id"]`. Vendor APIs know nothing
-  about Bindbee's UUIDs. `remote_id` is the source system's own identifier —
+  about Bindbee's UUIDs. `remote_id` is the source system's own identifier -
   this is its main purpose.
 </Tip>
 
@@ -122,7 +122,7 @@ def supports_custom_reports(connection):
 
 ## Respect the vendor's limits
 
-Bindbee's 200/min/connector does not apply here — you are hitting the vendor directly, and their limits are frequently much tighter.
+Bindbee's 200/min/connector does not apply here - you are hitting the vendor directly, and their limits are frequently much tighter.
 
 ```python
 from time import monotonic, sleep
@@ -141,7 +141,7 @@ class VendorThrottle:
         self.last = monotonic()
 ```
 
-Cache aggressively. If the data changes daily, do not fetch it per page view — passthrough is a live call, and its latency is the vendor's latency.
+Cache aggressively. If the data changes daily, do not fetch it per page view - passthrough is a live call, and its latency is the vendor's latency.
 
 ## Expect vendor-shaped failures
 
@@ -173,7 +173,7 @@ def passthrough_safely(connection, **kwargs):
 <Warning>
   Always log `integration_slug`. When a vendor silently changes a response shape,
   this is the field that turns "some customers see errors" into "Workday
-  customers see errors" — usually the difference between an hour and a day of
+  customers see errors" - usually the difference between an hour and a day of
   debugging.
 </Warning>
 
@@ -182,10 +182,10 @@ Never let a passthrough failure take down a page that would otherwise render. Ve
 ## Don't persist vendor shapes
 
 ```python
-# Fragile — a vendor field rename corrupts your schema
+# Fragile - a vendor field rename corrupts your schema
 save(raw_vendor_response)
 
-# Robust — normalize at the boundary
+# Robust - normalize at the boundary
 save(CustomReport(
     employee_id=employee["id"],          # Bindbee's ID
     total=parse_money(raw["reportTotal"]),
@@ -202,7 +202,7 @@ Everything from the [write guidance](/how-to/write-data-back) applies, plus:
 <Warning>
   Passthrough writes are not idempotent and Bindbee does not deduplicate them.
   A retried request creates a duplicate in your customer's system. Record a
-  request key before submitting and never blind-retry on timeout — resolve
+  request key before submitting and never blind-retry on timeout - resolve
   unknown outcomes by reading the data back.
 </Warning>
 
@@ -210,7 +210,7 @@ Confirm the write via the vendor's own read endpoint, or wait for the next sync 
 
 ## Track it as debt
 
-Keep a visible list of what you passthrough and for which connectors. When the same concept appears across several vendors, tell Bindbee — `support@bindbee.dev`. Unified support removes the adapter for you and for everyone else.
+Keep a visible list of what you passthrough and for which connectors. When the same concept appears across several vendors, tell Bindbee - `support@bindbee.dev`. Unified support removes the adapter for you and for everyone else.
 
 ## Related
 

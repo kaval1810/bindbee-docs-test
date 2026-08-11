@@ -1,6 +1,6 @@
 ---
 title: "Authenticate a Request"
-description: "Which credential, which header, which endpoint — the complete step-by-step for authenticating against the Bindbee API, with a decision table and every failure mode."
+description: "Which credential, which header, which endpoint - the complete step-by-step for authenticating against the Bindbee API, with a decision table and every failure mode."
 ---
 
 Bindbee uses **two** credentials. Almost every day-one problem is a request carrying the wrong one, or only one of the two.
@@ -9,9 +9,9 @@ Bindbee uses **two** credentials. Almost every day-one problem is a request carr
 
 | Endpoint kind | `Authorization` | `X-Connector-Token` |
 | --- | --- | --- |
-| Organization-scoped — connectors, integrations, lookups, custom field definitions | Required | — |
-| Customer data — employees, benefits, payroll, candidates, courses | Required | **Required** |
-| Link token creation, token exchange | Required | — |
+| Organization-scoped - connectors, integrations, lookups, custom field definitions | Required | - |
+| Customer data - employees, benefits, payroll, candidates, courses | Required | **Required** |
+| Link token creation, token exchange | Required | - |
 | Resync a connector | Required | Required |
 
 <Info>
@@ -21,7 +21,7 @@ Bindbee uses **two** credentials. Almost every day-one problem is a request carr
 
 ---
 
-## Step 1 — Pick the right environment
+## Step 1 - Pick the right environment
 
 | Environment | Key | Reads |
 | --- | --- | --- |
@@ -32,13 +32,13 @@ They are not interchangeable in either direction. Using a Development key agains
 
 <Warning>
   The key you use when creating a `link_token` decides which environment the
-  resulting connector lives in — permanently. Connectors cannot be moved between
+  resulting connector lives in - permanently. Connectors cannot be moved between
   environments.
 </Warning>
 
 ---
 
-## Step 2 — Get your API key
+## Step 2 - Get your API key
 
 Go to [app.bindbee.dev/settings/keys](https://app.bindbee.dev/settings/keys) and copy the key for the environment you want.
 
@@ -48,7 +48,7 @@ Go to [app.bindbee.dev/settings/keys](https://app.bindbee.dev/settings/keys) and
   className="block"
 />
 
-Store it as a server-side secret — environment variable or secret manager.
+Store it as a server-side secret - environment variable or secret manager.
 
 <Warning>
   Never ship an API key to a browser, mobile app, or any client you don't
@@ -58,9 +58,9 @@ Store it as a server-side secret — environment variable or secret manager.
 
 ---
 
-## Step 3 — Send the API key
+## Step 3 - Send the API key
 
-Bearer token in the `Authorization` header. The `Bearer ` prefix — capital B, one space — is required.
+Bearer token in the `Authorization` header. The `Bearer ` prefix - capital B, one space - is required.
 
 ```http
 Authorization: Bearer YOUR_BINDBEE_API_KEY
@@ -94,11 +94,11 @@ if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
 
 </CodeGroup>
 
-A `200` confirms the key. Do this before debugging anything else — it isolates "bad key" from "bad request".
+A `200` confirms the key. Do this before debugging anything else - it isolates "bad key" from "bad request".
 
 ---
 
-## Step 4 — Get a connector token
+## Step 4 - Get a connector token
 
 The `connector_token` identifies one customer's connection. Three ways to obtain it:
 
@@ -123,7 +123,7 @@ The `connector_token` identifies one customer's connection. Three ways to obtain
     }
     ```
 
-    Match on `origin_id` — your own customer ID.
+    Match on `origin_id` - your own customer ID.
   </Tab>
   <Tab title="From the link flow">
     After a customer links via Bindbee Embed, exchange the `temporary_token`:
@@ -140,7 +140,7 @@ The `connector_token` identifies one customer's connection. Three ways to obtain
     }
     ```
 
-    This is a **server-side** call — it requires your API key.
+    This is a **server-side** call - it requires your API key.
   </Tab>
   <Tab title="From the dashboard">
     Open the connector and read the token from the **Overview** section.
@@ -157,12 +157,12 @@ The `connector_token` identifies one customer's connection. Three ways to obtain
 
 <Tip>
   Store the token against your customer record when you first receive it, rather
-  than looking it up on every request. Encrypt it at rest — it is a credential.
+  than looking it up on every request. Encrypt it at rest - it is a credential.
 </Tip>
 
 ---
 
-## Step 5 — Send both headers
+## Step 5 - Send both headers
 
 ```http
 Authorization: Bearer YOUR_BINDBEE_API_KEY
@@ -229,14 +229,14 @@ class BindbeeClient {
 
 ---
 
-## Step 6 — Pick the right region
+## Step 6 - Pick the right region
 
 | Region | Base URL |
 | --- | --- |
 | Default | `https://api.bindbee.dev` |
 | EU | `https://api-eu.bindbee.dev` |
 
-Use the same region everywhere for a given customer — backend calls, the SDK's `serverUrl`, and the token exchange. A connector created in one region is not visible from the other.
+Use the same region everywhere for a given customer - backend calls, the SDK's `serverUrl`, and the token exchange. A connector created in one region is not visible from the other.
 
 ---
 
@@ -244,14 +244,14 @@ Use the same region everywhere for a given customer — backend calls, the SDK's
 
 | Status | Cause | Fix |
 | --- | --- | --- |
-| `401` | Missing `Bearer ` prefix | `Authorization: Bearer <key>` — not the bare key |
+| `401` | Missing `Bearer ` prefix | `Authorization: Bearer <key>` - not the bare key |
 | `401` | Wrong environment key | Development key ↛ Production data |
 | `401` | Key regenerated | Copy the current key from settings |
 | `401` | Whitespace in the key | Trim; a trailing newline from `cat`/copy is common |
 | `403` | `X-Connector-Token` missing | Add it for any customer-data endpoint |
 | `403` | Token belongs to another environment | Match key and connector environment |
 | `404` on connector lookup | Wrong category path | `/api/hris/…` vs `/api/ats/…` vs `/api/lms/…` |
-| `429` | Rate limited | 200/min per connector — [Rate Limits](/api-reference/basics/rate-limits) |
+| `429` | Rate limited | 200/min per connector - [Rate Limits](/api-reference/basics/rate-limits) |
 | Empty `items`, `200` | Auth is fine; sync hasn't run | [How syncing works](/explanation/how-syncing-works) |
 
 ### Isolate the layer

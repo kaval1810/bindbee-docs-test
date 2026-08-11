@@ -12,7 +12,7 @@ Bindbee has two fully isolated environments: **Development** and **Production**.
 | | Development | Production |
 | --- | --- | --- |
 | API key | `dev_api_key` | `prod_api_key` |
-| Automatic syncs | No — trigger manually | Yes — every 24 hours by default |
+| Automatic syncs | No - trigger manually | Yes - every 24 hours by default |
 | Connector limit | Unlimited | Per your plan |
 | Data | Test connections | Real customer data |
 
@@ -20,7 +20,7 @@ Keys are not interchangeable. A Development key cannot read Production data and 
 
 See [Development](/how-to/environments/development) and [Production](/how-to/environments/production).
 
-## 2. API key — proves who *you* are
+## 2. API key - proves who *you* are
 
 One key per environment, issued to your organization. It goes in the `Authorization` header on every request.
 
@@ -30,7 +30,8 @@ Authorization: Bearer YOUR_BINDBEE_API_KEY
 
 Manage it at [app.bindbee.dev/settings/keys](https://app.bindbee.dev/settings/keys).
 
-## 3. Connector — one customer's connection to one system
+
+## 3. Connector - one customer's connection to one system
 
 A connector is a single link between **your customer** and **one third-party system**. If Acme Corp connects BambooHR, that is one connector. If Acme also connects Greenhouse, that is a second connector.
 
@@ -44,7 +45,7 @@ A connector carries:
 | `status` | `COMPLETE`, `INCOMPLETE`, or `RELINK_NEEDED` |
 | `sync_status` | `Syncing`, `Done`, or `Failed` |
 | `connector_token` | The credential you use to read that customer's data |
-| `origin_id` | *Your* ID for the customer — you set this |
+| `origin_id` | *Your* ID for the customer - you set this |
 
 <Tip>
   Always set `origin_id` to your own internal customer/tenant ID when you create
@@ -52,7 +53,7 @@ A connector carries:
   row in your database.
 </Tip>
 
-## 4. Connector token — proves *which customer's data* you want
+## 4. Connector token - proves *which customer's data* you want
 
 The API key alone is not enough to read employee data. You also need the `connector_token` for the specific connector, in the `X-Connector-Token` header.
 
@@ -68,19 +69,19 @@ This two-header model is the single most common source of day-one confusion:
 
 See [Authenticate a request](/how-to/authenticate) for the step-by-step.
 
-## 5. Sync — how data gets into Bindbee
+## 5. Sync - how data gets into Bindbee
 
 Bindbee does not proxy your request to the third-party system in real time. A background **sync job** pulls from the source system, normalizes the result, and stores it. Your API call reads that stored copy.
 
 Consequences worth internalising now:
 
-- Data is as fresh as the last successful sync — by default, up to 24 hours old in Production.
+- Data is as fresh as the last successful sync - by default, up to 24 hours old in Production.
 - Development connectors **do not** sync automatically. Trigger a sync yourself.
 - The first sync after linking takes longer than subsequent ones. Until it finishes, `GET /employees` legitimately returns an empty list.
 
 See [How syncing works](/explanation/how-syncing-works).
 
-## 6. Unified model — one schema across every connector
+## 6. Unified model - one schema across every connector
 
 Every record Bindbee returns shares a common envelope:
 
@@ -88,7 +89,7 @@ Every record Bindbee returns shares a common envelope:
 | --- | --- |
 | `id` | Bindbee's stable UUID for the record |
 | `remote_id` | The third-party system's own ID for the same record |
-| `modified_at` | When **Bindbee** last updated this record — not when the HRIS did |
+| `modified_at` | When **Bindbee** last updated this record - not when the HRIS did |
 | `raw_data` | The original upstream payload, when `include_raw_data=true` |
 | `custom_fields` | Your mapped extra fields, when `include_custom_fields=true` |
 
@@ -108,7 +109,7 @@ List responses are cursor-paginated:
 }
 ```
 
-## 7. Custom fields — when the unified model isn't enough
+## 7. Custom fields - when the unified model isn't enough
 
 If your customer's system holds a value that Bindbee's unified schema does not carry, define a **custom field** and point a JMESPath expression at the raw upstream payload. Request it back with `include_custom_fields=true`.
 

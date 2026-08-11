@@ -1,6 +1,6 @@
 ---
 title: "Monitor Sync Status"
-description: "Build a connection-health surface: know which customers are syncing, which are stale, and which need to reconnect — before they tell you."
+description: "Build a connection-health surface: know which customers are syncing, which are stale, and which need to reconnect - before they tell you."
 ---
 
 Silent staleness is the worst failure mode in a unified API integration. A connector that stops syncing keeps serving plausible data, and nobody notices until a customer spots a missing new hire.
@@ -12,7 +12,7 @@ curl "https://api.bindbee.dev/api/hris/v1/connectors" \
   -H "Authorization: Bearer $BINDBEE_API_KEY"
 ```
 
-API key only — no connector token. One call covers every connector in the environment.
+API key only - no connector token. One call covers every connector in the environment.
 
 ```json
 {
@@ -102,7 +102,7 @@ def health(connector):
 | `syncing` | "Importing…" + `sync_progress` | No |
 | `degraded` | Nothing on first occurrence | Only if repeated |
 | `stale` | "Data may be out of date" | Yes |
-| `action_required` | "Reconnect your HRIS" — blocking | Yes |
+| `action_required` | "Reconnect your HRIS" - blocking | Yes |
 | `setup_incomplete` | "Finish connecting" + resume link | No |
 | `never_synced` | "Setting up your data…" | If older than a day |
 | `inactive` | Connection removed | No |
@@ -110,7 +110,7 @@ def health(connector):
 <Warning>
   Do not alert on a single `Failed`. Transient vendor errors are routine and
   usually clear on the next scheduled run. Alert on consecutive failures, or on
-  data age crossing your threshold — those are the signals that mean something.
+  data age crossing your threshold - those are the signals that mean something.
 </Warning>
 
 ## Show data age everywhere
@@ -170,24 +170,24 @@ def on_sync_error(payload):
 | Connector list poll | Every 15–60 min | Catch `RELINK_NEEDED` and missed events |
 | Staleness sweep | Hourly | Age-based alerting across all tenants |
 
-Polling the connector list is cheap — one request per category regardless of how many customers you have. There is no reason to do it rarely.
+Polling the connector list is cheap - one request per category regardless of how many customers you have. There is no reason to do it rarely.
 
 ## Give the customer a way to act
 
 Two controls turn a status page into something useful:
 
-**"Sync now"** — trigger a resync, show `sync_progress`, re-read when `Done`. See [Force a resync](/how-to/force-a-resync).
+**"Sync now"** - trigger a resync, show `sync_progress`, re-read when `Done`. See [Force a resync](/how-to/force-a-resync).
 
-**"Reconnect"** — for `RELINK_NEEDED`, create a new `link_token` for the same `origin_id` and integration, and send them through the same connect UI. Re-linking updates the existing connector, so the `connector_token` you stored keeps working.
+**"Reconnect"** - for `RELINK_NEEDED`, create a new `link_token` for the same `origin_id` and integration, and send them through the same connect UI. Re-linking updates the existing connector, so the `connector_token` you stored keeps working.
 
 ## Also worth watching
 
 | Signal | Meaning |
 | --- | --- |
-| `total_employees` drops sharply | Permission change or upstream data problem — investigate before propagating deletions |
+| `total_employees` drops sharply | Permission change or upstream data problem - investigate before propagating deletions |
 | `avg_sync_duration` climbing | Growing dataset or degrading vendor API |
 | `sync_progress` stuck | Sync may be wedged |
-| `relink_needed_at` set | Exactly when credentials broke — useful for the customer conversation |
+| `relink_needed_at` set | Exactly when credentials broke - useful for the customer conversation |
 
 <Warning>
   A large drop in `total_employees` should gate any deletion logic in your own

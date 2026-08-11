@@ -1,6 +1,6 @@
 ---
 title: "Force a Resync"
-description: "Trigger a sync on demand — and, more importantly, know the four cases where you should and the several where you shouldn't."
+description: "Trigger a sync on demand - and, more importantly, know the four cases where you should and the several where you shouldn't."
 ---
 
 ```bash
@@ -17,18 +17,18 @@ The API reference tells you how. This page tells you when.
 | --- | --- | --- |
 | User clicked "Sync now" | **Yes** | Explicit intent; they are waiting |
 | You just wrote data back and want to read it | **Yes** | Writes aren't visible until a sync |
-| Development connector — you need any data at all | **Yes** | Dev connectors never sync automatically |
+| Development connector - you need any data at all | **Yes** | Dev connectors never sync automatically |
 | Customer says "I fixed permissions in the HRIS" | **Yes** | Confirms the fix without waiting a day |
 | Right after `RELINK_NEEDED` was resolved | **Yes** | Verifies the new credentials work |
 | On a cron/schedule | **No** | Production already syncs automatically |
 | Before every read | **No** | Syncs are not instant; you'd read stale data anyway |
-| Data looks stale | **No** — diagnose first | Check `status` and `last_sync_start_time` |
+| Data looks stale | **No** - diagnose first | Check `status` and `last_sync_start_time` |
 | Data looks wrong | **No** | A resync re-runs the same mapping and produces the same result |
 | To make data fresher than the schedule | **No** | See below |
 
 <Warning>
   **Resyncing does not bypass the vendor's rate limits.** Frequent resyncs can
-  get your customer's connector throttled or temporarily blocked upstream —
+  get your customer's connector throttled or temporarily blocked upstream -
   making their data *less* current, not more.
 </Warning>
 
@@ -82,7 +82,7 @@ def trigger_and_wait(connector_token, timeout_s=1800, interval_s=15):
 ```
 
 <Tip>
-  Set the user's expectation from `avg_sync_duration` on the connector — the
+  Set the user's expectation from `avg_sync_duration` on the connector - the
   measured average for *that* connection. "This usually takes about 15 minutes"
   beats an indefinite spinner.
 </Tip>
@@ -108,11 +108,11 @@ Three rules worth enforcing:
 
 1. **Disable while `sync_status` is `Syncing`.**
 2. **Cooldown of at least 15–30 minutes** between manual resyncs per connector.
-3. **Block on `RELINK_NEEDED`** — the sync will fail; offer reconnect instead.
+3. **Block on `RELINK_NEEDED`** - the sync will fail; offer reconnect instead.
 
 <Warning>
   Never resync from a page-load handler, a health check, or a retry loop. This is
-  the fastest route to a throttled connector, and the symptom — degraded data —
+  the fastest route to a throttled connector, and the symptom - degraded data -
   looks nothing like the cause.
 </Warning>
 
@@ -128,7 +128,7 @@ Frequently confused, entirely different:
 | Effect | New sync job | New credentials on the same connector |
 
 <Warning>
-  Resyncing a `RELINK_NEEDED` connector fails — the credentials are the problem.
+  Resyncing a `RELINK_NEEDED` connector fails - the credentials are the problem.
   It also produces a `Failed` sync that can pollute your alerting. Check
   `status` before triggering.
 </Warning>
@@ -149,7 +149,7 @@ trigger_resync(connector_token)            # make it readable sooner
 <Warning>
   A `2xx` from a write means the **source system** accepted it. The record is not
   readable from Bindbee's unified API until a sync brings it back. Show the write
-  optimistically in your own UI and let the sync reconcile — don't block the user
+  optimistically in your own UI and let the sync reconcile - don't block the user
   on a round trip.
 </Warning>
 

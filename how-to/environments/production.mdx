@@ -7,11 +7,13 @@ description: "Bindbee Production environment for live customer integrations."
 
 The Production environment is used for running live customer integrations. It handles real customer data and is intended for use with customers actively operating in production.
 
-This environment is completely isolated from the Development environment.
+Connectors, their data, and logs are isolated from Development - but scope and custom field configuration are shared across both environments.
 
 <Warning>
   Production API keys provide access to real customer data. Keep them secure and never expose them publicly.
 </Warning>
+
+See [Environments](/how-to/environments/overview) for what's shared vs. separate between Development and Production, plus how to manage and authenticate with your key.
 
 ## Production API Key
 
@@ -21,26 +23,6 @@ Your Production API key (`prod_api_key`) is used exclusively to access the Produ
   Only Production API keys can be used to access the Production environment.
   Development API keys are strictly limited to the Development environment.
  </Note>
-
-### Managing Your Production API Key
-
-You can view and regenerate your Production API key in the [API Keys](https://app.bindbee.dev/settings/keys) section of your Bindbee dashboard.
-
-<img
-  src="https://images.unifyx.dev/documentation_images/production-key.png"
-  alt="Production API Keys"
-  className="block"
-/>
-
-<Note>
-  Regenerating your Production API key will immediately invalidate the previous key. Ensure all dependent services are updated before regenerating.
-</Note>
-
-### Authentication
-
-Include your Production API key in the `Authorization` header for all requests:
-
-`Authorization: Bearer YOUR_PROD_API_KEY`
 
 ## Sync Behavior
 
@@ -58,10 +40,3 @@ The Production environment is designed for:
 - Stable, production-ready workflows
 
 It should only be used once integrations have been fully tested in the Development environment.
-
-## Environment Isolation
-
-The Production and Development environments are completely isolated:
-- Production API keys only access Production data
-- Development API keys only access Development data
-- Connectors and data do not transfer between environments

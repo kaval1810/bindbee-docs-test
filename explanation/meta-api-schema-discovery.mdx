@@ -7,12 +7,12 @@ description: "Reads can be uniform because Bindbee controls the output. Writes c
 
 Reading is a normalization problem, and Bindbee owns both ends: it fetches whatever the vendor sends and maps it into a shape it defines. Every connector produces the same `HrisEmployee`.
 
-Writing is a **validation** problem, and Bindbee owns neither end. The target system decides what is required, what values are legal, and what extra parameters it demands. Bindbee cannot normalize that away — if BambooHR requires a `policy_id` for a time-off request, no amount of unification removes that requirement.
+Writing is a **validation** problem, and Bindbee owns neither end. The target system decides what is required, what values are legal, and what extra parameters it demands. Bindbee cannot normalize that away - if BambooHR requires a `policy_id` for a time-off request, no amount of unification removes that requirement.
 
 There are only two honest ways to handle this:
 
-1. **Lowest common denominator** — expose only fields every system accepts. Result: you cannot write most things.
-2. **Describe the requirements per connector** — let the client adapt. Result: writes work, and the client has to ask first.
+1. **Lowest common denominator** - expose only fields every system accepts. Result: you cannot write most things.
+2. **Describe the requirements per connector** - let the client adapt. Result: writes work, and the client has to ask first.
 
 Bindbee takes the second approach. The Meta API is that description.
 
@@ -27,7 +27,7 @@ GET /api/hris/v1/timesheet-entry/meta/post
 GET /api/hris/v1/employee-payroll-runs/meta/post
 ```
 
-Same headers as any other request — API key plus `X-Connector-Token`. The connector token is what makes the response integration-specific.
+Same headers as any other request - API key plus `X-Connector-Token`. The connector token is what makes the response integration-specific.
 
 ```json
 {
@@ -58,7 +58,7 @@ Standard JSON Schema keywords, plus two Bindbee additions:
 | Keyword | Purpose |
 | --- | --- |
 | `isRequired` | Per-field requirement flag, readable without cross-referencing the `required` array |
-| `enumInformation` | Human-readable descriptions for each `enum` value — designed to be rendered in a UI |
+| `enumInformation` | Human-readable descriptions for each `enum` value - designed to be rendered in a UI |
 
 `enumInformation` exists because vendor enum values are frequently opaque IDs. `"51743768"` means nothing; `"Third-Party Sick"` means something. Show the description, submit the value.
 
@@ -76,7 +76,7 @@ Both carry vendor-specific data. They are not interchangeable, and mixing them u
 <Warning>
   Putting a required integration parameter into `additional_attributes` does not
   work. `additional_attributes` is forwarded as-is without validation, so the
-  value goes to the vendor in the wrong place — and you get an opaque vendor
+  value goes to the vendor in the wrong place - and you get an opaque vendor
   error, or a silently incomplete record.
 </Warning>
 
@@ -121,7 +121,7 @@ Reasonable responses:
 2. Request the schema from `support@bindbee.dev`.
 3. Use [passthrough](/explanation/passthrough-when-and-why) for that connector.
 
-Handle it as a distinct branch, not as a generic failure — and log it, because the set of unimplemented combinations shrinks over time and you want to know when to re-enable.
+Handle it as a distinct branch, not as a generic failure - and log it, because the set of unimplemented combinations shrinks over time and you want to know when to re-enable.
 
 ## Two Meta endpoints for employees
 
@@ -132,13 +132,13 @@ Handle it as a distinct branch, not as a generic failure — and log it, because
 | `/api/hris/v1/employees/meta/post` | JSON Schema for the request body |
 | `/api/hris/v1/employees/create/meta` | Integration-specific creation metadata |
 
-Start with the schema endpoint — it is the one you build the body from.
+Start with the schema endpoint - it is the one you build the body from.
 
 ## Should you cache Meta responses?
 
 Yes, with care.
 
-Meta schemas are stable for a given `(integration, operation)` pair over short windows, and the response can be sizeable. Caching per `(integration_slug, operation)` — not per connector — is reasonable.
+Meta schemas are stable for a given `(integration, operation)` pair over short windows, and the response can be sizeable. Caching per `(integration_slug, operation)` - not per connector - is reasonable.
 
 <Warning>
   Cache with a TTL, not forever. Schemas change when Bindbee improves an

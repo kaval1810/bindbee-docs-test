@@ -3,7 +3,7 @@ title: "The Unified Model and Raw Data"
 description: "What normalization actually promises, what it necessarily gives up, and why every record carries the original payload alongside the normalized one."
 ---
 
-The unified model is a translation, and every translation loses something. Knowing what it keeps and what it drops is what lets you decide when to reach past it — and when reaching past it is a mistake.
+The unified model is a translation, and every translation loses something. Knowing what it keeps and what it drops is what lets you decide when to reach past it - and when reaching past it is a mistake.
 
 ## What "unified" promises
 
@@ -23,7 +23,7 @@ That is the entire guarantee. It is narrower than it first sounds, and three thi
 | The same *values* for the same concept | An enum only normalizes where vendor values map cleanly. Where they don't, the original passes through. |
 | Every field the source system has | The unified model carries what is common across systems, not the union of everything any system offers. |
 
-The third is the one worth sitting with. A unified model that carried every vendor's every field would have thousands of columns and no stability — the thing you adopted it for. It is deliberately a **common denominator**, and the escape hatches below exist because a common denominator is not always enough.
+The third is the one worth sitting with. A unified model that carried every vendor's every field would have thousands of columns and no stability - the thing you adopted it for. It is deliberately a **common denominator**, and the escape hatches below exist because a common denominator is not always enough.
 
 ## What normalization does to a record
 
@@ -69,7 +69,7 @@ It has two legitimate jobs:
 
 <Warning>
   `raw_data` is not an API surface. Its shape is the vendor's, so it varies by
-  system, and it can change when the vendor changes their API — which is exactly
+  system, and it can change when the vendor changes their API - which is exactly
   the coupling the unified model removes. Reading production logic straight out
   of `raw_data` re-introduces per-vendor code, silently, in a place your type
   system won't catch.
@@ -86,10 +86,10 @@ They are not interchangeable. Each gives up something different.
 | **For** | A value that exists in synced data but has no unified field | A vendor capability Bindbee does not model at all | Discovering what a specific system requires on writes |
 | **Reads from** | Bindbee's normalized store | The vendor's API, live | The vendor's schema |
 | **Response shape** | Unified, plus your named field | The vendor's | The vendor's |
-| **Costs you** | Almost nothing — one mapping | Per-vendor code, vendor rate limits, vendor latency | Nothing; writes require it |
+| **Costs you** | Almost nothing - one mapping | Per-vendor code, vendor rate limits, vendor latency | Nothing; writes require it |
 | **Freshness** | As fresh as the last sync | Live | n/a |
 
-Custom fields are a **view over data Bindbee already synced**, not an extra fetch — which is why they cost so little and why they are exactly as stale as everything else. Reach for passthrough only when the value genuinely is not in the sync at all, and know that each use is a small piece of the integration work you adopted Bindbee to avoid.
+Custom fields are a **view over data Bindbee already synced**, not an extra fetch - which is why they cost so little and why they are exactly as stale as everything else. Reach for passthrough only when the value genuinely is not in the sync at all, and know that each use is a small piece of the integration work you adopted Bindbee to avoid.
 
 ## What this means when you build
 

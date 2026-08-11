@@ -1,11 +1,12 @@
 ---
 title: "6. Add a field the unified model doesn't have"
+sidebarTitle: "6. Add a custom field"
 description: "Find a value in raw_data, map it with a JMESPath expression, and read it back as a custom field on the unified object."
 ---
 
-The unified model covers what is common across systems. Every source system also carries fields that are its own — a cost centre code, a badge number, a locally defined employment type.
+The unified model covers what is common across systems. Every source system also carries fields that are its own - a cost centre code, a badge number, a locally defined employment type.
 
-**By the end of this lesson** you will have one such value appearing on the unified employee object. About 15 minutes.
+**By the end of this lesson** you will have one such value appearing on the unified employee object.
 
 ## Context
 
@@ -17,14 +18,30 @@ Mappings also have a scope:
 
 | Mapping scope | Applies to | Use when |
 | --- | --- | --- |
-| Organization | Every connector for that integration | The source system names the field consistently |
-| Connector | One connector only | One customer configured it differently |
+| Integration | Every connector for that integration | The source system names the field consistently |
+| Connector | Selected connector only | One customer configured it differently |
 
 Connector scope is fine for this tutorial.
 
-## Step 1 — Find the value in `raw_data`
+## Step 1 - Find the value in `raw_data`
 
 Look at the `raw_data` object on an employee record from lesson 5, or fetch the payload directly with [Get raw data](/custom-fields/api/get-raw-data). Pick one value that is not in the unified schema.
+
+<Warning>
+  **Your payload will look nothing like the example below.** Raw data is whatever
+  the source system sent, so its keys, casing, and nesting depend entirely on
+  which sandbox you linked. Do not try to reproduce this path - read your own
+  payload and pick a key out of it.
+</Warning>
+
+To tell whether a value is "not in the unified schema", compare it against the
+fields the unified `Employee` object carries - the full list is on [Get
+employees](/hris/employee/get-employees). Anything in `raw_data` without a
+counterpart there is a candidate. Codes and locally defined categories are
+usually the best ones: a cost centre, a badge number, an internal employment
+type.
+
+An illustrative payload:
 
 ```json
 {
@@ -36,9 +53,9 @@ Look at the `raw_data` object on an employee record from lesson 5, or fetch the 
 }
 ```
 
-**Result:** a concrete path to a concrete value.
+**Result:** a concrete path to a concrete value, taken from your own raw data.
 
-## Step 2 — Write the JMESPath expression
+## Step 2 - Write the JMESPath expression
 
 Mappings are [JMESPath](https://jmespath.org/) expressions evaluated against the raw payload. For the example above:
 
@@ -50,7 +67,7 @@ Dot notation for nested objects, `[0]` for list positions, `[?field=='value']` f
 
 **Result:** an expression ready to test.
 
-## Step 3 — Preview the expression
+## Step 3 - Preview the expression
 
 Dry-run it against real connector data with [Preview](/custom-fields/api/preview). This returns what the mapping would produce without persisting anything.
 
@@ -62,15 +79,15 @@ Dry-run it against real connector data with [Preview](/custom-fields/api/preview
 
 **Result:** the expected value, or a mismatch you can fix before saving.
 
-## Step 4 — Create the custom field and mapping
+## Step 4 - Create the custom field and mapping
 
-In the Dashboard, go to **Custom Fields**, create a field on the **HRIS / Employee** pair with a name your code will use — `cost_centre` — then attach your expression as a connector-scoped mapping.
+In the Dashboard, go to **Custom Fields**, create a field on the **HRIS / Employee** pair with a name your code will use - `cost_centre` - then attach your expression as a connector-scoped mapping.
 
 The Dashboard flow is documented at [Dashboard configuration](/how-to/configure-custom-fields-dashboard); the equivalent API calls at [API configuration](/how-to/configure-custom-fields-api).
 
-**Result:** the field exists with a mapping attached. Existing records populate on the next sync — in development, one you trigger.
+**Result:** the field exists with a mapping attached. Existing records populate on the next sync - in development, one you trigger.
 
-## Step 5 — Read it back
+## Step 5 - Read it back
 
 Custom fields are excluded from responses unless you ask for them.
 
@@ -110,7 +127,7 @@ You extended the unified model without breaking it. Your code reads a stable sch
 
 <AccordionGroup>
   <Accordion title="The field's value is INVALID_JSON_PATH">
-    The expression does not match the payload. Re-check the raw data — nesting
+    The expression does not match the payload. Re-check the raw data - nesting
     depth and exact key casing are the usual culprits. Preview the corrected
     expression before saving it.
   </Accordion>

@@ -1,19 +1,20 @@
 ---
 title: "5. Read employee data from the API"
+sidebarTitle: "5. Read employee data"
 description: "Make your first authenticated request, read the unified Employee schema, and page through results."
 ---
 
 This is the payoff: one request, both tokens, real records.
 
-**By the end of this lesson** you will be reading unified employee records in your own code, paging through them and filtering by what changed. About 10 minutes.
+**By the end of this lesson** you will be reading unified employee records in your own code, paging through them and filtering by what changed.
 
 ## Context
 
-You now hold both tokens — the API key from lesson 1 and the connector token from lesson 3. Every request below carries both.
+You now hold both tokens - the Development API key from [lesson 1](/get-started/tutorials/set-up-your-environment) and the connector token from [lesson 3](/get-started/tutorials/connect-a-test-account). Every request below carries both.
 
-## Step 1 — Fetch employees
+## Step 1 - Fetch employees
 
-`include_raw_data=true` asks for the original source-system payload alongside the normalized record. It is off by default; lesson 6 needs it, so turn it on now.
+`include_raw_data=true` asks for the original source-system payload alongside the normalized record. It is off by default; [lesson 6](/get-started/tutorials/add-a-custom-field) needs it, so turn it on now.
 
 <CodeGroup>
 
@@ -88,7 +89,7 @@ for (const employee of items) {
 }
 ```
 
-## Step 2 — Read the response envelope
+## Step 2 - Read the response envelope
 
 Every list response has the same three top-level keys.
 
@@ -100,24 +101,24 @@ Every list response has the same three top-level keys.
 
 Two identifiers appear on every record, and confusing them causes real bugs:
 
-- **`id`** — Bindbee's identifier. Stable, consistent in shape across every system. Store this one.
-- **`remote_id`** — the source system's own identifier. Useful for reconciliation and support conversations, but its format varies by system.
+- **`id`** - Bindbee's identifier. Stable, consistent in shape across every system. Store this one.
+- **`remote_id`** - the source system's own identifier. Useful for reconciliation and support conversations, but its format varies by system.
 
 **Result:** you know which field to key your own records against.
 
-## Step 3 — Page through results
+## Step 3 - Page through results
 
 ```bash
-curl "https://api.bindbee.dev/api/hris/v1/employees?page_size=100&cursor=YOUR_CURSOR" \
+curl "https://api.bindbee.dev/api/hris/v1/employees?page_size=200&cursor=YOUR_CURSOR" \
   --header "Authorization: Bearer $BINDBEE_API_KEY" \
   --header "X-Connector-Token: $CONNECTOR_TOKEN"
 ```
 
-Maximum `page_size` is 100. Keep requesting until a page returns no cursor. See [Pagination](/api-reference/basics/pagination).
+`page_size` defaults to 50 and maxes out at 200. Keep requesting until a page returns no cursor. See [Pagination](/api-reference/basics/pagination).
 
 **Result:** every record in the tenant, not just the first page.
 
-## Step 4 — Fetch only what changed
+## Step 4 - Fetch only what changed
 
 After the first full pull, most integrations only want deltas.
 
@@ -135,7 +136,7 @@ curl "https://api.bindbee.dev/api/hris/v1/employees?modified_after=2026-08-01T00
 
 You read normalized data that will keep the same shape regardless of which system is on the other end.
 
-Notice the `raw_data` object on every record — the original payload from the source system, before normalization. You are not meant to read your product's data out of it, since its shape changes by system and version, which is exactly what the unified model protects you from. It has one job: showing you what the source system actually sent, so you can find values the unified model does not carry.
+Notice the `raw_data` object on every record - the original payload from the source system, before normalization. You are not meant to read your product's data out of it, since its shape changes by system and version, which is exactly what the unified model protects you from. It has one job: showing you what the source system actually sent, so you can find values the unified model does not carry.
 
 That is lesson 6.
 
@@ -144,7 +145,7 @@ That is lesson 6.
 <AccordionGroup>
   <Accordion title="Empty items array">
     Almost always no completed sync. Development connectors do not sync
-    automatically — go back to [lesson 4](/get-started/tutorials/run-your-first-sync).
+    automatically - go back to [lesson 4](/get-started/tutorials/run-your-first-sync).
   </Accordion>
 
   <Accordion title="401 or 403">
@@ -155,7 +156,7 @@ That is lesson 6.
   <Accordion title="Records are there, but a field you expected is missing">
     Check in this order: is the field in [scope](/get-started/tutorials/scope-your-data);
     did the source system grant permission for it; does the unified model carry
-    it at all. Look in `raw_data` — if the value is there, it is the third case
+    it at all. Look in `raw_data` - if the value is there, it is the third case
     and lesson 6 solves it. If it is not there either, it is one of the first two.
   </Accordion>
 

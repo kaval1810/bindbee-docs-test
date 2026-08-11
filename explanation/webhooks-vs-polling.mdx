@@ -1,6 +1,6 @@
 ---
 title: "Webhooks vs Polling: Choosing Your Strategy"
-description: "Neither is universally better. This page frames the choice around what you actually need — freshness, reliability, or operational simplicity."
+description: "Neither is universally better. This page frames the choice around what you actually need - freshness, reliability, or operational simplicity."
 ---
 
 ## Start by separating two questions
@@ -13,7 +13,7 @@ Teams conflate these, and the conflation causes bad decisions:
 <Warning>
   Webhooks answer question 2 only. They cannot make data fresher than the sync
   schedule allows. If a customer needs hourly data, no delivery mechanism will
-  provide it — the sync frequency has to change. See
+  provide it - the sync frequency has to change. See
   [Data Freshness](/explanation/data-freshness).
 </Warning>
 
@@ -24,7 +24,7 @@ Teams conflate these, and the conflation causes bad decisions:
 | Latency after a sync | Seconds | Up to your poll interval |
 | Wasted requests | None | Most polls return nothing new |
 | Infrastructure | Public HTTPS endpoint, signature verification, queue | An HTTP client and a cron |
-| Failure mode | Silent — you don't know what you missed | Loud — the next poll retries |
+| Failure mode | Silent - you don't know what you missed | Loud - the next poll retries |
 | Missed events | Possible after 4 retries in 60s | Not possible |
 | Local development | Needs a tunnel | Just works |
 | Debugging | Delivery logs, replays | Read the response |
@@ -65,7 +65,7 @@ flowchart LR
     class A,B,C,D node
 ```
 
-The sweep runs the identical logic on a timer — daily is usually sufficient. It costs almost nothing when webhooks are working, and it is the only thing that saves you when they aren't.
+The sweep runs the identical logic on a timer - daily is usually sufficient. It costs almost nothing when webhooks are working, and it is the only thing that saves you when they aren't.
 
 Because the read is watermarked and the write is an idempotent upsert, running both is harmless. No deduplication logic beyond keying on `id`.
 
@@ -75,7 +75,7 @@ Because the read is watermarked and the write is an idempotent upsert, running b
 | --- | --- |
 | A read-through UI (fetch when a user opens a page) | **Neither.** Read on demand, cache briefly, show data age |
 | A mirrored database | **Both.** Webhook + daily sweep |
-| Joiner/leaver provisioning | **Both.** `employee_data_changed` for latency; sweep for correctness — missing a leaver is a security problem |
+| Joiner/leaver provisioning | **Both.** `employee_data_changed` for latency; sweep for correctness - missing a leaver is a security problem |
 | Nightly payroll/billing batch | **Polling only.** You run on a schedule anyway; webhooks add infrastructure for nothing |
 | Connection-health UI | **Both.** `connector_sync_error` for immediacy; connector list poll to catch `RELINK_NEEDED` |
 | A prototype | **Polling only.** Ship the feature; add webhooks when latency actually matters |
@@ -114,7 +114,7 @@ Non-negotiables:
 <Tip>
   Simplest robust handler: ignore the ID lists entirely. On `connector_synced`,
   run your `modified_after` read. Slightly more traffic, dramatically less state
-  to get wrong — and it is the same code path as your sweep.
+  to get wrong - and it is the same code path as your sweep.
 </Tip>
 
 ## Related

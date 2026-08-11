@@ -12,19 +12,19 @@ So in the worst case, a value you read is nearly 24 hours behind the source syst
 <Warning>
   Webhooks do not make data fresher. They tell you promptly *that a sync
   happened*. If the sync runs daily, you learn about yesterday's changes
-  promptly — but you still learn about them a day late.
+  promptly - but you still learn about them a day late.
 </Warning>
 
-If your product needs sub-daily freshness, that is a **sync frequency** conversation, not a delivery-mechanism one. Sync frequency is adjustable — contact `support@bindbee.dev` or your account manager.
+If your product needs sub-daily freshness, that is a **sync frequency** conversation, not a delivery-mechanism one. Sync frequency is adjustable - contact `support@bindbee.dev` or your account manager.
 
 ## What determines freshness
 
 Four things, in order of impact:
 
-1. **Sync schedule** — 24 hours by default in Production; adjustable.
-2. **Sync duration** — a large first sync can take a long time. `avg_sync_duration` on the connector tells you the typical figure for that specific connection.
-3. **Source-system latency** — the HRIS itself may not expose a change immediately. A payroll run can be finalized internally hours before it appears on the vendor's API.
-4. **Your ingest lag** — if you mirror into your own store, add however long your pipeline takes.
+1. **Sync schedule** - 24 hours by default in Production; adjustable.
+2. **Sync duration** - a large first sync can take a long time. `avg_sync_duration` on the connector tells you the typical figure for that specific connection.
+3. **Source-system latency** - the HRIS itself may not expose a change immediately. A payroll run can be finalized internally hours before it appears on the vendor's API.
+4. **Your ingest lag** - if you mirror into your own store, add however long your pipeline takes.
 
 Total staleness is the sum, not the maximum, of these. A "24-hour" figure is realistically "24 hours plus the tail".
 
@@ -44,7 +44,7 @@ Every connector reports its own timing:
 | Field | Use it for |
 | --- | --- |
 | `last_sync_start_time` | "Last updated *X* ago" in your UI |
-| `next_sync_start_time` | "Next update in *Y*" — sets expectations |
+| `next_sync_start_time` | "Next update in *Y*" - sets expectations |
 | `avg_sync_duration` | Estimating how long a triggered sync will take |
 
 <Tip>
@@ -53,7 +53,7 @@ Every connector reports its own timing:
   is missing. A user who sees an undated list does.
 </Tip>
 
-Per-record, `modified_at` tells you when **Bindbee** last wrote that record — not when the HRIS changed it. It is a sync timestamp, not a business-event timestamp. See [Field semantics](/explanation/field-semantics).
+Per-record, `modified_at` tells you when **Bindbee** last wrote that record - not when the HRIS changed it. It is a sync timestamp, not a business-event timestamp. See [Field semantics](/explanation/field-semantics).
 
 ## Choosing a strategy
 
@@ -64,7 +64,7 @@ Per-record, `modified_at` tells you when **Bindbee** last wrote that record — 
 | React to joiners/leavers | `employee_data_changed` webhook → fetch by ID |
 | Nightly batch (payroll, billing, reporting) | Scheduled `modified_after` sweep; no webhooks needed |
 | User clicked "Refresh now" | Trigger a resync, show progress, then re-read |
-| Sub-hourly freshness | Talk to Bindbee about sync frequency first — no client-side pattern fixes this |
+| Sub-hourly freshness | Talk to Bindbee about sync frequency first - no client-side pattern fixes this |
 
 ### The recommended default
 
@@ -80,7 +80,7 @@ flowchart TD
     class A,B,C,D node
 ```
 
-Plus a **daily reconciliation sweep** with the same `modified_after` logic, to cover events lost while your endpoint was down. Webhook retries stop after 4 attempts in 60 seconds — anything longer than a one-minute outage needs the sweep.
+Plus a **daily reconciliation sweep** with the same `modified_after` logic, to cover events lost while your endpoint was down. Webhook retries stop after 4 attempts in 60 seconds - anything longer than a one-minute outage needs the sweep.
 
 ## Anti-patterns
 
@@ -90,7 +90,7 @@ Plus a **daily reconciliation sweep** with the same `modified_after` logic, to c
 
 **Treating `modified_at` as a business timestamp.** It answers "when did Bindbee write this?", not "when did this change in the HRIS?".
 
-**Assuming a webhook means the data is different.** A sync that rewrites unchanged records can still produce change events. Diff before acting on anything expensive — notifications, provisioning, emails.
+**Assuming a webhook means the data is different.** A sync that rewrites unchanged records can still produce change events. Diff before acting on anything expensive - notifications, provisioning, emails.
 
 **Gating onboarding on rows existing.** Gate on `sync_status`. An empty directory mid-first-sync is indistinguishable from a genuinely empty one otherwise.
 

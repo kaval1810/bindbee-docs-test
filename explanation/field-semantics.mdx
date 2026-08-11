@@ -33,7 +33,7 @@ curl -G "https://api.bindbee.dev/api/hris/v1/employees" \
 
 **1. The source API does not expose the field.** Not every HRIS returns every attribute. The data may exist in the vendor's UI and simply not be available over their API. Nothing on Bindbee's side can recover it.
 
-**2. The connection lacks permission.** Compensation, SSN, bank details and benefits are commonly separate permission scopes. If the integration user wasn't granted them, those endpoints return nothing — often with no error, just absent data. This is the most common cause of "benefits are empty but I can see them in Workday".
+**2. The connection lacks permission.** Compensation, SSN, bank details and benefits are commonly separate permission scopes. If the integration user wasn't granted them, those endpoints return nothing - often with no error, just absent data. This is the most common cause of "benefits are empty but I can see them in Workday".
 
 **3. The field isn't populated for that record.** A `termination_date` on an active employee is correctly `null`. So is `manager` for the CEO. Check whether `null` is actually the right answer before treating it as missing.
 
@@ -43,7 +43,7 @@ curl -G "https://api.bindbee.dev/api/hris/v1/employees" \
 
 <Warning>
   Cause 2 is under-diagnosed. If an entire model is empty rather than a single
-  field, permissions are the first thing to check — not a Bindbee mapping issue.
+  field, permissions are the first thing to check - not a Bindbee mapping issue.
 </Warning>
 
 ### Design for null
@@ -51,7 +51,7 @@ curl -G "https://api.bindbee.dev/api/hris/v1/employees" \
 Every relation and nearly every non-identity field can be `null` on some connector.
 
 ```python
-# Fragile — breaks on the first connector that omits compensation
+# Fragile - breaks on the first connector that omits compensation
 annual = employee["compensation"]["pay_rate"] * 12
 
 # Robust
@@ -74,7 +74,7 @@ Because `modified_at` does not mean what the name suggests.
   to when the HRIS changed the record.
 </Warning>
 
-A sync rewrites the records it processes. If the rewrite happens to produce identical values, `modified_at` still moves — Bindbee touched the record.
+A sync rewrites the records it processes. If the rewrite happens to produce identical values, `modified_at` still moves - Bindbee touched the record.
 
 So this is expected and correct:
 
@@ -85,7 +85,7 @@ Sync #13 at 09:00 next day → same field values, modified_at = 09:00:11
 
 ### What this means for you
 
-**`modified_after` is inclusive, not minimal.** It will not miss changes — that is the guarantee that matters — but it may return records whose business fields are unchanged.
+**`modified_after` is inclusive, not minimal.** It will not miss changes - that is the guarantee that matters - but it may return records whose business fields are unchanged.
 
 **Your ingest must be an idempotent upsert.** Keyed on `id`. Never insert-only, never "if it came back it must be different".
 
@@ -107,7 +107,7 @@ for employee in fetch(modified_after=watermark):
         trigger_downstream(employee)         # only when it matters
 ```
 
-**If you need "when did the HRIS change this?"**, `modified_at` cannot give it to you. Look for a vendor timestamp inside `raw_data`, if the system exposes one — availability varies. `remote_created_at` on `Employee` gives the creation time in the source system.
+**If you need "when did the HRIS change this?"**, `modified_at` cannot give it to you. Look for a vendor timestamp inside `raw_data`, if the system exposes one - availability varies. `remote_created_at` on `Employee` gives the creation time in the source system.
 
 ---
 
@@ -142,14 +142,14 @@ def is_active(status):
     if status in KNOWN_INACTIVE:
         return False
     log.info("unmapped employment_status: %r", status)
-    return None          # unknown — do not guess
+    return None          # unknown - do not guess
 ```
 
 Returning `None` rather than defaulting to `False` matters: defaulting an unrecognised status to "inactive" can deprovision a real employee.
 
 ### The `"-"` value
 
-Several enums include `"-"` as a member. Read it as "the source system provided a value that maps to nothing meaningful" — closer to unknown than to a real category. Treat it like `null`.
+Several enums include `"-"` as a member. Read it as "the source system provided a value that maps to nothing meaningful" - closer to unknown than to a real category. Treat it like `null`.
 
 ### Enums that commonly carry passthrough values
 
@@ -170,7 +170,7 @@ Several enums include `"-"` as a member. Read it as "the source system provided 
 | `id` | Bindbee's UUID, stable across syncs | Foreign keys, `expand`, `ids=` filters |
 | `remote_id` | The source system's own ID | Reconciling against the customer's system, deep links into the vendor UI, support conversations |
 
-Key your database on `id`. `remote_id` is only unique within one connector — two customers on the same HRIS can share a `remote_id` value.
+Key your database on `id`. `remote_id` is only unique within one connector - two customers on the same HRIS can share a `remote_id` value.
 
 ---
 

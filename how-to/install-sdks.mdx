@@ -12,15 +12,15 @@ description: "What Bindbee ships as an SDK, and a production-shaped HTTP client 
 
 <Info>
   These are **frontend** packages. They render the connection flow your customer
-  uses to authorize their HR system — they are not clients for the unified data
+  uses to authorize their HR system - they are not clients for the unified data
   API.
 </Info>
 
-Everything else — reading employees, benefits, payroll, writing data back — is a plain REST API. Call it with your language's standard HTTP client. There is nothing to install.
+Everything else - reading employees, benefits, payroll, writing data back - is a plain REST API. Call it with your language's standard HTTP client. There is nothing to install.
 
 <Note>
   If you need a server-side SDK for your language, tell
-  `support@bindbee.dev` — demand shapes what gets built.
+  `support@bindbee.dev` - demand shapes what gets built.
 </Note>
 
 ---
@@ -52,7 +52,7 @@ function ConnectHrisButton({ linkToken, onConnected }) {
 | --- | --- | --- |
 | `linkToken` | Yes | Generated server-side; short-lived |
 | `serverUrl` | No | Set explicitly for the EU region |
-| `onSuccess` | Yes | Receives `temporary_token` — send it to your backend |
+| `onSuccess` | Yes | Receives `temporary_token` - send it to your backend |
 | `onClose` | No | Fires when the customer dismisses the flow |
 
 ## Frontend: any other framework
@@ -79,7 +79,7 @@ document.querySelector("#connect")
 // window.BindbeeEmbed.destroy() when unmounting
 ```
 
-Keep the `integrity` and `crossorigin` attributes — they enable Subresource Integrity, so a compromised CDN can't inject code into your page.
+Keep the `integrity` and `crossorigin` attributes - they enable Subresource Integrity, so a compromised CDN can't inject code into your page.
 
 <Warning>
   Only the `link_token` may reach the browser. Your API key and every
@@ -316,8 +316,8 @@ func (c *Client) Paginate(path, connectorToken string, q url.Values,
 
 | Setting | Value |
 | --- | --- |
-| Base URL | `https://api.bindbee.dev` — or `https://api-eu.bindbee.dev` for EU |
-| `Authorization` | `Bearer <api_key>` — prefix required |
+| Base URL | `https://api.bindbee.dev` - or `https://api-eu.bindbee.dev` for EU |
+| `Authorization` | `Bearer <api_key>` - prefix required |
 | `X-Connector-Token` | On every customer-data request |
 | Timeout | 30s is comfortable |
 | Retry | `429` and `5xx` only, with backoff |
@@ -325,7 +325,7 @@ func (c *Client) Paginate(path, connectorToken string, q url.Values,
 | TLS verification | Always on |
 
 <Warning>
-  Use the same region everywhere for a given customer — backend calls, the SDK's
+  Use the same region everywhere for a given customer - backend calls, the SDK's
   `serverUrl`, and the token exchange. A connector created in one region is
   invisible from the other.
 </Warning>

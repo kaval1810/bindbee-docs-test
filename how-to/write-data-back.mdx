@@ -1,6 +1,6 @@
 ---
 title: "Write Data Back"
-description: "Create employees, time off requests, timesheet entries and payroll runs in the source system — using Meta APIs to discover what each integration actually requires."
+description: "Create employees, time off requests, timesheet entries and payroll runs in the source system - using Meta APIs to discover what each integration actually requires."
 ---
 
 Reads are uniform. Writes are not: every HRIS demands a different set of required fields, different enum values, and different integration-specific parameters.
@@ -21,7 +21,7 @@ Bindbee's answer is the **Meta API**: ask what this integration requires *before
     Everything the source system will insist on is described in the response.
   </Step>
   <Step title="Build a conforming request body">
-    Validate locally if you like — the response is JSON Schema compatible.
+    Validate locally if you like - the response is JSON Schema compatible.
   </Step>
   <Step title="POST to the write endpoint">
     Same headers as any other request.
@@ -45,17 +45,17 @@ Bindbee's answer is the **Meta API**: ask what this integration requires *before
 | Create Timesheet Entry | `POST /api/hris/v1/timesheet-entry` | `GET /api/hris/v1/timesheet-entry/meta/post` |
 | Create Employee Payroll Run | `POST /api/hris/v1/employee-payroll-runs` | `GET /api/hris/v1/employee-payroll-runs/meta/post` |
 
-ATS supports writes across candidates, applications, jobs, offers, activities, attachments and more — see the [ATS API Reference](/ats/candidate/create-candidate).
+ATS supports writes across candidates, applications, jobs, offers, activities, attachments and more - see the [ATS API Reference](/ats/candidate/create-candidate).
 
 <Note>
   Write support varies by integration. An operation can be supported for a
-  connector even when its Meta schema is not yet implemented — see
+  connector even when its Meta schema is not yet implemented - see
   [Handling 501](#when-a-meta-schema-is-not-available) below.
 </Note>
 
 ---
 
-## Step 1 — Ask what this connector needs
+## Step 1 - Ask what this connector needs
 
 ```bash
 curl "https://api.bindbee.dev/api/hris/v1/time-off/meta/post" \
@@ -116,14 +116,14 @@ Read it like this:
 | `required` (array) | Every mandatory field at this level |
 | `isRequired` (boolean) | Whether this one field is mandatory |
 | `enum` | The only accepted values |
-| `enumInformation` | Human-readable meaning of each enum value — render these in your UI |
+| `enumInformation` | Human-readable meaning of each enum value - render these in your UI |
 | `format` | Extra constraint, e.g. `email`, `date-time`, `uuid` |
 | `integration_params` | **Validated** fields the source system demands |
 | `additional_attributes` | **Free-form** passthrough of vendor-specific values |
 
 <Warning>
   `integration_params` and `additional_attributes` are not interchangeable.
-  `integration_params` has a defined schema and is validated — often required.
+  `integration_params` has a defined schema and is validated - often required.
   `additional_attributes` is unvalidated and forwarded as-is. Putting a required
   integration parameter in `additional_attributes` will silently fail to apply.
 </Warning>
@@ -132,7 +132,7 @@ Full reference: [Meta APIs for write operations](/meta-apis-for-write-operations
 
 ---
 
-## Step 2 — Build the body from the schema
+## Step 2 - Build the body from the schema
 
 Do not hardcode the shape. Drive it from the response:
 
@@ -175,7 +175,7 @@ print(required_fields(meta))
 
 ---
 
-## Step 3 — Submit the write
+## Step 3 - Submit the write
 
 ```bash
 curl -X POST "https://api.bindbee.dev/api/hris/v1/time-off" \
@@ -209,18 +209,18 @@ Call the schema endpoint first and build from it exactly as above.
 
 ---
 
-## Step 4 — Confirm the write landed
+## Step 4 - Confirm the write landed
 
 <Warning>
   A `2xx` from Bindbee means the source system accepted the request. It does
-  **not** mean the record is readable from Bindbee's unified API yet — that
+  **not** mean the record is readable from Bindbee's unified API yet - that
   requires a sync.
 </Warning>
 
 Two ways to confirm:
 
 - **Wait for the next sync**, then read the record back. This is the correct behaviour to build around.
-- **Trigger a resync** when a user is watching and expects immediate feedback: `POST /api/embedded/v1/connectors/resync`. Do not do this on a timer — see [Force a resync](/how-to/force-a-resync).
+- **Trigger a resync** when a user is watching and expects immediate feedback: `POST /api/embedded/v1/connectors/resync`. Do not do this on a timer - see [Force a resync](/how-to/force-a-resync).
 
 Write the record optimistically in your own UI, and let the sync reconcile it.
 
@@ -240,7 +240,7 @@ If Bindbee has not implemented the Meta schema for that integration and operatio
 }
 ```
 
-This does **not** necessarily mean the write is unsupported — only that the schema is not published. Options:
+This does **not** necessarily mean the write is unsupported - only that the schema is not published. Options:
 
 1. Attempt the write with the documented unified fields and read the error.
 2. Contact `support@bindbee.dev` to request the schema.

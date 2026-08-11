@@ -19,15 +19,16 @@
         "tab": "Get Started",
         "groups": [
           {
-            "group": "Start here",
-            "icon": "flag",
+            "group": "Introduction",
+            "icon": "star",
             "pages": [
               "get-started/what-is-bindbee",
-              "get-started/before-you-begin"
+              "features/overview",
+              "get-started/quickstart"
             ]
           },
           {
-            "group": "Build your first integration",
+            "group": "Tutorials",
             "icon": "graduation-cap",
             "pages": [
               "get-started/tutorials/set-up-your-environment",
@@ -40,23 +41,16 @@
             ]
           },
           {
-            "group": "Integrations",
-            "icon": "plug",
-            "pages": [
-              "integrations"
-            ]
-          },
-          {
             "group": "Platform Tour",
             "icon": "compass",
             "pages": [
-              "features/overview",
               "features/dashboard",
               "features/connectors",
               "features/logs",
-              "features/issues"
+              "features/scoping"
             ]
           }
+          
         ]
       },
       {
@@ -123,6 +117,7 @@
               {
                 "group": "Environments",
                 "pages": [
+                  "how-to/environments/overview",
                   "how-to/environments/development",
                   "how-to/environments/production"
                 ]
@@ -164,7 +159,7 @@
             ]
           },
           {
-            "group": "Going to Production",
+            "group": "Go-Live",
             "icon": "rocket",
             "pages": [
               "how-to/go-live-checklist"
@@ -666,8 +661,8 @@
       "destination": "/integrations"
     },
     {
-      "source": "/get-started/quickstart",
-      "destination": "/get-started/before-you-begin"
+      "source": "/get-started/before-you-begin",
+      "destination": "/get-started/quickstart"
     },
     {
       "source": "/get-started/core-concepts",

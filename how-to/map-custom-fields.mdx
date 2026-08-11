@@ -1,15 +1,19 @@
 ---
 title: "Map Custom Fields"
-description: "Surface a value from the raw upstream payload as a named field on a unified model — validated before you save it, so it doesn't fail silently in production."
+description: "Surface a value from the raw upstream payload as a named field on a unified model - validated before you save it, so it doesn't fail silently in production."
 ---
 
 A custom field is a saved JMESPath expression that plucks a value out of data Bindbee already synced. No extra fetch, no extra latency.
 
 <Info>
-  Concepts — fields vs mappings, org vs connector scope, why it works this way —
+  Concepts - fields vs mappings, org vs connector scope, why it works this way -
   are in [Custom Fields: The Mental Model](/explanation/custom-fields-mental-model).
   This page is the procedure.
 </Info>
+
+Everything below uses the API. It's also available as a visual flow in the
+dashboard - see [Dashboard Configuration](/how-to/configure-custom-fields-dashboard)
+if you'd rather click through it, especially for one-off exploration.
 
 ## Before you start
 
@@ -35,7 +39,7 @@ Not there? You need [passthrough](/how-to/use-passthrough) instead.
     See exactly what your JMESPath will run against.
   </Step>
   <Step title="Validate the expression">
-    Dry-run it against real connector data — nothing is persisted.
+    Dry-run it against real connector data - nothing is persisted.
   </Step>
   <Step title="Create the field">
     Declare it on a `(category, model)` pair.
@@ -50,28 +54,17 @@ Not there? You need [passthrough](/how-to/use-passthrough) instead.
 
 ---
 
-## Step 1 — Discover valid targets
+## Step 1 - Discover valid targets
 
-```bash
-curl "https://api.bindbee.dev/api/v1/lookup/models" \
-  -H "Authorization: Bearer $BINDBEE_API_KEY"
+Fetch the exact `model` and `integration_slug` values from `/api/v1/lookup/models`
+and `/api/v1/lookup/integrations` - guessed names are rejected. Full requests:
+[API Configuration → Step 1](/how-to/configure-custom-fields-api#step-1-discover-models-and-integrations).
 
-curl "https://api.bindbee.dev/api/v1/lookup/integrations" \
-  -H "Authorization: Bearer $BINDBEE_API_KEY"
-```
+## Step 2 - Inspect the raw payload
 
-Use the exact values these return. Guessed model names are rejected.
-
-## Step 2 — Inspect the raw payload
-
-```bash
-curl -G "https://api.bindbee.dev/api/v1/custom-fields/raw-data" \
-  -H "Authorization: Bearer $BINDBEE_API_KEY" \
-  --data-urlencode "connector_token=$CONNECTOR_TOKEN" \
-  --data-urlencode "model=employee"
-```
-
-Read the structure carefully — this is the document your expression targets.
+Fetch a sample from `/api/v1/custom-fields/raw-data` and read the structure
+carefully - this is the document your expression targets. Full request/response:
+[API Configuration → Step 2](/how-to/configure-custom-fields-api#step-2-inspect-the-raw-upstream-payload).
 
 <Warning>
   Inspect payloads from **more than one employee**. Optional fields, empty
@@ -79,7 +72,7 @@ Read the structure carefully — this is the document your expression targets.
   single sample won't show you.
 </Warning>
 
-## Step 3 — Write and validate the expression
+## Step 3 - Write and validate the expression
 
 Bindbee uses [JMESPath](https://jmespath.org/).
 
@@ -94,7 +87,7 @@ Bindbee uses [JMESPath](https://jmespath.org/).
 
 <Warning>
   Avoid positional indexing like `contacts[0]`. Vendors do not promise array
-  order. When it is wrong it doesn't error — it silently returns the wrong
+  order. When it is wrong it doesn't error - it silently returns the wrong
   person's phone number, which is far worse than a failure.
 </Warning>
 
@@ -111,86 +104,57 @@ curl -X POST "https://api.bindbee.dev/api/v1/custom-fields/preview" \
   }'
 ```
 
+The response also carries the resolved value's type and where it came from -
+see [API Configuration → Step 3](/how-to/configure-custom-fields-api#step-3-validate-the-jmespath-optional-but-recommended)
+for the full response shape.
+
 <Tip>
   This step is optional and skipping it is the main cause of `INVALID_JSON_PATH`
   appearing in production responses. It costs one request.
 </Tip>
 
-## Step 4 — Create the custom field
+## Step 4 - Create the custom field
 
-```bash
-curl -X POST "https://api.bindbee.dev/api/v1/custom-fields" \
-  -H "Authorization: Bearer $BINDBEE_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "category": "HRIS",
-    "model": "employee",
-    "name": "guardian_mobile",
-    "description": "Emergency contact mobile number"
-  }'
-```
-
-Declaring the field creates the *name*. It does not yet return anything anywhere.
+`POST /api/v1/custom-fields` with a `category`, `model`, and `name` declares
+the field - the *name* your code will use. It does not yet return anything
+anywhere. `name` must be snake_case, 2-128 characters, and unique within the
+`(category, model)`. Full request/response: [API Configuration → Step 4](/how-to/configure-custom-fields-api#step-4-create-the-custom-field),
+or use [Dashboard Configuration → Step 1](/how-to/configure-custom-fields-dashboard#step-1-create-new-field).
 
 <Tip>
   Name fields the way your product thinks about them, not the way the vendor
   does. `guardian_mobile` stays stable while the underlying vendor path varies
-  per integration — that stability is the whole benefit.
+  per integration - that stability is the whole benefit.
 </Tip>
 
-## Step 5 — Create a mapping
+## Step 5 - Create a mapping
 
-Scope determines reach.
+`POST /api/v1/custom-fields/mapping` with the `custom_field_id` and a
+`json_path`, scoped by setting exactly one of:
 
-<Tabs>
-  <Tab title="Organization-scoped">
-    Applies to every connector of that integration in your org. Start here.
+- `integration_slug` - **organization-scoped**, applies to every connector of
+  that integration. Start here.
+- `connector_token` - **connector-scoped**, applies to and overrides the
+  org-level mapping for one connector. Use for customers whose HRIS is
+  configured unusually.
 
-    ```bash
-    curl -X POST "https://api.bindbee.dev/api/v1/custom-fields/mapping" \
-      -H "Authorization: Bearer $BINDBEE_API_KEY" \
-      -H "Content-Type: application/json" \
-      -d '{
-        "custom_field_id": "0192cc01-...",
-        "integration_slug": "bamboohr",
-        "json_path": "customFields.guardianMobile"
-      }'
-    ```
-  </Tab>
-  <Tab title="Connector-scoped">
-    Applies to one connector and **overrides** the org-level mapping for it.
-    Use for customers whose HRIS is configured unusually.
-
-    ```bash
-    curl -X POST "https://api.bindbee.dev/api/v1/custom-fields/mapping" \
-      -H "Authorization: Bearer $BINDBEE_API_KEY" \
-      -H "Content-Type: application/json" \
-      -d '{
-        "custom_field_id": "0192cc01-...",
-        "connector_token": "'"$CONNECTOR_TOKEN"'",
-        "json_path": "legacy_fields.emergency_no"
-      }'
-    ```
-  </Tab>
-</Tabs>
+Full request/response for both: [API Configuration → Step 5](/how-to/configure-custom-fields-api#step-5-create-a-mapping),
+or use [Dashboard Configuration → Step 2](/how-to/configure-custom-fields-dashboard#step-2-configure-field-mappings).
 
 <Warning>
   A custom field needs a mapping **per integration**. BambooHR and Workday store
   the same concept in entirely different places. One mapping covers one
-  integration — not all of them.
+  integration - not all of them.
 </Warning>
 
-## Step 6 — Verify the effective configuration
+## Step 6 - Verify the effective configuration
 
-```bash
-curl -G "https://api.bindbee.dev/api/v1/custom-fields/configuration" \
-  -H "Authorization: Bearer $BINDBEE_API_KEY" \
-  --data-urlencode "connector_token=$CONNECTOR_TOKEN"
-```
+`GET /api/v1/custom-fields/configuration` for a connector shows which mapping
+is winning and which fields remain unmapped - the fastest way to catch "I
+declared the field but never mapped it for this integration." Full
+request/response: [API Configuration → Step 6](/how-to/configure-custom-fields-api#step-6-verify-the-effective-configuration).
 
-This shows which mapping is winning per connector and which fields remain unmapped — the fastest way to catch "I declared the field but never mapped it for this integration".
-
-## Step 7 — Read it back
+## Step 7 - Read it back
 
 Opt in with `include_custom_fields=true`:
 
@@ -212,24 +176,19 @@ curl -G "https://api.bindbee.dev/api/hris/v1/employees" \
 }
 ```
 
-Read from `custom_fields`, never the root — that namespace is what keeps your fields safe from future unified-schema additions.
+Read from `custom_fields`, never the root - that namespace is what keeps your fields safe from future unified-schema additions.
 
 <Warning>
-  Mapping changes take effect on the **next read**, not the next sync — the
+  Mapping changes take effect on the **next read**, not the next sync - the
   expression re-runs against already-stored data. Changing a mapping is instant
   and requires no resync.
 </Warning>
 
-## Do it in the dashboard instead
+## Updating and deleting
 
-Everything above is available as a visual flow under **Custom Fields** in the dashboard, including interactive payload exploration. It creates identical configuration, tagged `source: "DASHBOARD"` rather than `"API"`.
-
-Use the dashboard for exploration and one-offs; use the API when configuration should be reproducible across environments. See [Dashboard Configuration](/how-to/configure-custom-fields-dashboard).
-
-<Warning>
-  If you manage custom fields as code, dashboard-created fields are drift. Pick
-  one source of truth and check the other for surprises.
-</Warning>
+Only a mapping's `json_path` is mutable - to change scope, delete the mapping
+and create a new one. Deleting a field cascades to all its mappings. Full
+endpoint table: [API Configuration → Updating and deleting](/how-to/configure-custom-fields-api#updating-and-deleting).
 
 ## Troubleshooting
 
@@ -244,7 +203,7 @@ Use the dashboard for exploration and one-offs; use the API when configuration s
 
 <Tip>
   Monitor for custom fields that were populated and stopped. This failure is
-  completely silent — nothing errors, the value simply becomes `null`.
+  completely silent - nothing errors, the value simply becomes `null`.
 </Tip>
 
 ## Related
@@ -253,7 +212,7 @@ Use the dashboard for exploration and one-offs; use the API when configuration s
   <Card title="The Mental Model" icon="brain" href="/explanation/custom-fields-mental-model">
     Why fields and mappings are separate.
   </Card>
-  <Card title="Custom Fields Reference" icon="book" href="/explanation/custom-fields">
-    Full endpoint reference.
+  <Card title="Custom Fields" icon="book" href="/explanation/custom-fields">
+    Where to configure fields, and best practices for naming and scope.
   </Card>
 </CardGroup>

@@ -1,11 +1,11 @@
 ---
 title: "SFTP vs API Connectors"
-description: "Some systems are integrated over a scheduled file feed rather than a live API. The unified models look the same — the operational characteristics do not."
+description: "Some systems are integrated over a scheduled file feed rather than a live API. The unified models look the same - the operational characteristics do not."
 ---
 
 ## Two ways in
 
-Not every HR and payroll system offers a usable API. Many enterprise systems — particularly in benefits administration and payroll — exchange data by **scheduled file feed** over SFTP instead.
+Not every HR and payroll system offers a usable API. Many enterprise systems - particularly in benefits administration and payroll - exchange data by **scheduled file feed** over SFTP instead.
 
 Bindbee supports both, and normalizes both into the same unified models. The `integration_slug` tells you which you have:
 
@@ -17,7 +17,7 @@ paylocity         API connector
 paylocity_sftp    SFTP connector
 ```
 
-Connectors whose slug ends in `_sftp` — and file-export variants like `workday_raas` and `paychex_flock` — are file-based. The full list is on the [Integrations](/integrations) page.
+Connectors whose slug ends in `_sftp` - and file-export variants like `workday_raas` and `paychex_flock` - are file-based. The full list is on the [Integrations](/integrations) page.
 
 <Info>
   **Your read code does not change.** `GET /api/hris/v1/employees` returns the
@@ -31,7 +31,7 @@ Connectors whose slug ends in `_sftp` — and file-export variants like `workday
 | --- | --- | --- |
 | How data arrives | Bindbee calls the vendor's API | The customer's system drops a file on a schedule |
 | Who controls timing | Bindbee's sync schedule | The **customer's** file export schedule |
-| Freshness ceiling | The sync schedule | The file schedule — often daily or weekly |
+| Freshness ceiling | The sync schedule | The file schedule - often daily or weekly |
 | Field availability | What the API exposes | **What the file contains** |
 | Write support | Often available | Generally not |
 | Setup | Customer authorizes | Customer's HR/IT configures a recurring export |
@@ -47,7 +47,7 @@ With an API connector, Bindbee decides when to fetch. With SFTP, Bindbee can onl
 <Warning>
   If the customer's payroll team exports weekly, the data is weekly-fresh no
   matter what Bindbee's sync schedule is. Triggering a resync does not produce a
-  new file. There is nothing on Bindbee's side, or yours, that improves it —
+  new file. There is nothing on Bindbee's side, or yours, that improves it -
   only the customer changing their export schedule.
 </Warning>
 
@@ -57,18 +57,18 @@ This is the most common misunderstanding: a resync on an SFTP connector re-proce
 
 An API connector can generally return any field the endpoint exposes. An SFTP connector can only return **columns present in the file**.
 
-If the customer's export template has 40 columns, those 40 columns are the ceiling. Fields outside them are `null` — not because of a mapping gap, but because the data was never delivered.
+If the customer's export template has 40 columns, those 40 columns are the ceiling. Fields outside them are `null` - not because of a mapping gap, but because the data was never delivered.
 
 Practical consequences:
 
 - Expect more `null` fields than on the API equivalent of the same vendor.
-- Deeply relational models — benefits enrolments, dependents, payroll line items — are often thinner or absent, because flat files struggle to represent them.
+- Deeply relational models - benefits enrolments, dependents, payroll line items - are often thinner or absent, because flat files struggle to represent them.
 - The fix, when there is one, is the customer adding columns to their export, not a Bindbee change.
 
 <Tip>
   Before diagnosing a `null` on an SFTP connector as a bug, check
   `include_raw_data=true`. On an SFTP connector, `raw_data` reflects the file
-  row — if the value isn't there, it wasn't in the file.
+  row - if the value isn't there, it wasn't in the file.
 </Tip>
 
 ### 3. Writes generally aren't available
@@ -79,7 +79,7 @@ If your product depends on writes, check write support per connector before prom
 
 ## Choosing, when there's a choice
 
-Several vendors appear in both forms — ADP, Paylocity, Paycom, Rippling. When a customer could use either:
+Several vendors appear in both forms - ADP, Paylocity, Paycom, Rippling. When a customer could use either:
 
 | Prefer API when | Prefer SFTP when |
 | --- | --- |
@@ -91,7 +91,7 @@ Several vendors appear in both forms — ADP, Paylocity, Paycom, Rippling. When 
 <Warning>
   The choice is usually made by the customer's IT and procurement, not by you.
   Design your product to work correctly on the narrower SFTP profile, and treat
-  richer API coverage as an enhancement — not the other way round.
+  richer API coverage as an enhancement - not the other way round.
 </Warning>
 
 ## Building for both
@@ -105,7 +105,7 @@ Several vendors appear in both forms — ADP, Paylocity, Paycom, Rippling. When 
 
 ## Field parity, connector by connector
 
-Exact field and model availability differs per connector and per customer file template. Check [Integrations & Coverage](/integrations) for what a specific integration supports, and confirm the customer's actual export template during onboarding — two customers on the same SFTP connector can deliver different columns.
+Exact field and model availability differs per connector and per customer file template. Check [Integrations & Coverage](/integrations) for what a specific integration supports, and confirm the customer's actual export template during onboarding - two customers on the same SFTP connector can deliver different columns.
 
 ## Related
 

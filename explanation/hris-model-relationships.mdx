@@ -63,7 +63,7 @@ Almost everything hangs off `Employee`. These models carry an `employee` field p
 
 <Warning>
   `manager` is a self-reference and hierarchies from real HRIS systems are not
-  always clean trees. Guard against cycles and orphans when you walk it —
+  always clean trees. Guard against cycles and orphans when you walk it -
   contractors, dotted-line reports and mid-transition records all produce
   surprises.
 </Warning>
@@ -80,7 +80,7 @@ The most common modelling mistake is collapsing these three.
 
 `Employee` carries identity and current-state convenience fields (`designation`, `department`, `division`, `employment_status`).
 
-`Employment` carries the **position**: `job_title`, `department`, `division`, `employment_type`, `effective_date`. A promotion creates a new `Employment` row — it does not overwrite the old one.
+`Employment` carries the **position**: `job_title`, `department`, `division`, `employment_type`, `effective_date`. A promotion creates a new `Employment` row - it does not overwrite the old one.
 
 `Compensation` carries the **rate**: `pay_rate`, `pay_period`, `pay_frequency`, `pay_currency`, `flsa_status`, `start_date`.
 
@@ -98,12 +98,12 @@ Not every connector returns history. Some expose only the current position, in w
 `Group` has a `parent_group` field, so groups nest. `type` distinguishes what kind of grouping it is, and `is_commonly_used_as_team` flags groups the source system treats as teams.
 
 <Warning>
-  "Group" means different things in different systems — departments, cost
+  "Group" means different things in different systems - departments, cost
   centres, locations, teams, custom segments. Read `type` before assuming
   semantics, and expect the meaning to vary by connector.
 </Warning>
 
-`Employee.groups` is an array — an employee can be in several.
+`Employee.groups` is an array - an employee can be in several.
 
 ## The payroll chain
 
@@ -132,11 +132,11 @@ flowchart LR
   separate array. Sum `deductions` **and** `taxes` when reconciling.
 </Warning>
 
-Use `check_date` — not `end_date` — for anything cash-flow related. `run_type` separates `REGULAR` runs from off-cycle bonus and correction runs; mixing them inflates any "typical pay" calculation.
+Use `check_date` - not `end_date` - for anything cash-flow related. `run_type` separates `REGULAR` runs from off-cycle bonus and correction runs; mixing them inflates any "typical pay" calculation.
 
 ## The benefits cluster
 
-This one deserves its own page — see [Benefits vs Employer Benefits vs Dependent Benefits](/explanation/benefits-models).
+This one deserves its own page - see [Benefits vs Employer Benefits vs Dependent Benefits](/explanation/benefits-models).
 
 The short version:
 
@@ -167,7 +167,7 @@ Note that `DependentBenefit` links to the **plan**, not to the employee's `Benef
 
 | Model | Answers |
 | --- | --- |
-| `TimeOff` | Requests and absences — dates, type, status |
+| `TimeOff` | Requests and absences - dates, type, status |
 | `TimeOffBalance` | Accrued and remaining entitlement |
 | `TimesheetEntry` | Hours worked |
 
@@ -207,7 +207,7 @@ Comma-separated, no spaces. Square brackets restrict which fields come back on t
     source system doesn't expose it.
   - **That history exists.** Some connectors return only current state.
   - **That `Group` means the same thing everywhere.**
-  - **That every model is supported.** Model availability is per connector —
+  - **That every model is supported.** Model availability is per connector -
     see [Integrations & Coverage](/integrations).
   - **That IDs referenced actually resolve.** A `manager` ID can point at an
     employee filtered out of your query, or not synced.

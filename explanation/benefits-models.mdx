@@ -1,9 +1,9 @@
 ---
 title: "Benefits vs Employer Benefits vs Dependent Benefits"
-description: "Five models, similar names, different jobs. This page explains which one answers which question — and why choosing wrong produces plausible but wrong numbers."
+description: "Five models, similar names, different jobs. This page explains which one answers which question - and why choosing wrong produces plausible but wrong numbers."
 ---
 
-Bindbee exposes five benefits models. Their names are similar enough that picking the wrong one is easy, and the failure mode is not an error — it is a number that looks reasonable and is wrong.
+Bindbee exposes five benefits models. Their names are similar enough that picking the wrong one is easy, and the failure mode is not an error - it is a number that looks reasonable and is wrong.
 
 ## One sentence each
 
@@ -11,11 +11,11 @@ Bindbee exposes five benefits models. Their names are similar enough that pickin
 | --- | --- |
 | `EmployerBenefit` | A plan the employer **offers**. |
 | `Benefit` | An employee is **enrolled** in a plan, and this is what they pay. |
-| `Dependent` | A person **attached** to an employee — spouse, child. |
+| `Dependent` | A person **attached** to an employee - spouse, child. |
 | `DependentBenefit` | A dependent is **enrolled** in a plan. |
 | `BenefitCoverage` | The **amount** of cover on an enrolment, and who it applies to. |
 
-The distinction that matters most: **`EmployerBenefit` is a catalogue entry. `Benefit` is an enrolment.** One `EmployerBenefit` has many `Benefit` rows pointing at it — one per enrolled employee.
+The distinction that matters most: **`EmployerBenefit` is a catalogue entry. `Benefit` is an enrolment.** One `EmployerBenefit` has many `Benefit` rows pointing at it - one per enrolled employee.
 
 ## The graph
 
@@ -47,7 +47,7 @@ flowchart TD
   and resolve the employee through `Dependent.employee`.
 </Warning>
 
-## `EmployerBenefit` — the catalogue
+## `EmployerBenefit` - the catalogue
 
 ```json
 {
@@ -64,16 +64,16 @@ flowchart TD
 }
 ```
 
-There is **no `employee` field** — that is the tell. This model describes the plan itself.
+There is **no `employee` field** - that is the tell. This model describes the plan itself.
 
 Two fields do real work:
 
-- **`coverage_tiers`** (plural) — the tiers the plan *offers*. Compare with `Benefit.coverage_tier` (singular) — the tier one employee *chose*.
-- **`deduction_code`** — the payroll code. This is your join key from a benefit to a payroll deduction line item. Not every system populates it.
+- **`coverage_tiers`** (plural) - the tiers the plan *offers*. Compare with `Benefit.coverage_tier` (singular) - the tier one employee *chose*.
+- **`deduction_code`** - the payroll code. This is your join key from a benefit to a payroll deduction line item. Not every system populates it.
 
 Use it for: plan pickers, open-enrolment UIs, "what does this employer offer?".
 
-## `Benefit` — the enrolment
+## `Benefit` - the enrolment
 
 ```json
 {
@@ -113,18 +113,18 @@ Three date fields, three meanings:
 | `effective_date` | When coverage actually takes effect |
 | `end_date` | When it ended. `null` = currently active |
 
-`start_date` and `effective_date` diverge with waiting periods — enrolled on hire, effective the first of the following month. Use `effective_date` for "is this person covered today".
+`start_date` and `effective_date` diverge with waiting periods - enrolled on hire, effective the first of the following month. Use `effective_date` for "is this person covered today".
 
 Filter `end_date IS NULL` for current coverage, or you will show lapsed plans alongside active ones.
 
 <Warning>
   `company_contribution` is `null` on many connectors. Plenty of systems expose
   only the employee-side deduction. Do not compute total cost as
-  `employee + company` without checking for `null` — you will silently
+  `employee + company` without checking for `null` - you will silently
   understate it.
 </Warning>
 
-## `Dependent` — the person
+## `Dependent` - the person
 
 ```json
 {
@@ -144,7 +144,7 @@ Filter `end_date IS NULL` for current coverage, or you will show lapsed plans al
 
 Existing as a `Dependent` does **not** mean enrolled in anything. Dependents can be on file without coverage. Enrolment lives in `DependentBenefit`.
 
-`relationship`, `date_of_birth` and `is_student` are the fields eligibility rules are typically written against — age-out thresholds, student status extensions.
+`relationship`, `date_of_birth` and `is_student` are the fields eligibility rules are typically written against - age-out thresholds, student status extensions.
 
 <Warning>
   `ssn` and `date_of_birth` are sensitive personal data covered by HIPAA and
@@ -152,7 +152,7 @@ Existing as a `Dependent` does **not** mean enrolled in anything. Dependents can
   accordingly. See [Security & Compliance](/explanation/security-and-compliance).
 </Warning>
 
-## `DependentBenefit` — the dependent's enrolment
+## `DependentBenefit` - the dependent's enrolment
 
 ```json
 {
@@ -165,7 +165,7 @@ Existing as a `Dependent` does **not** mean enrolled in anything. Dependents can
 }
 ```
 
-Deliberately thin. No contribution amounts — the dependent's cost is folded into the employee's `Benefit.employee_contribution` via the `coverage_tier`, not itemized here.
+Deliberately thin. No contribution amounts - the dependent's cost is folded into the employee's `Benefit.employee_contribution` via the `coverage_tier`, not itemized here.
 
 <Warning>
   Do not sum dependent costs separately and add them to the employee's
@@ -173,7 +173,7 @@ Deliberately thin. No contribution amounts — the dependent's cost is folded in
   `EMPLOYEE_AND_SPOUSE` already includes the spouse.
 </Warning>
 
-## `BenefitCoverage` — the amount
+## `BenefitCoverage` - the amount
 
 ```json
 {
@@ -186,11 +186,11 @@ Deliberately thin. No contribution amounts — the dependent's cost is folded in
 }
 ```
 
-This is "how much cover", not "how much it costs" — the benefit sum assured. Most relevant for life, AD&D and disability plans.
+This is "how much cover", not "how much it costs" - the benefit sum assured. Most relevant for life, AD&D and disability plans.
 
 `is_employee_covered` and `covered_dependents` together answer "who does this amount apply to". A plan can cover dependents without covering the employee.
 
-Availability varies significantly by connector — check [Integrations & Coverage](/integrations).
+Availability varies significantly by connector - check [Integrations & Coverage](/integrations).
 
 ## Which model answers which question
 
@@ -200,7 +200,7 @@ Availability varies significantly by connector — check [Integrations & Coverag
 | Which tiers can an employee pick? | `EmployerBenefit.coverage_tiers` |
 | What is this employee enrolled in? | `Benefit`, filtered `end_date IS NULL` |
 | What does the employee pay per period? | `Benefit.employee_contribution` + `frequency` |
-| What does the employer pay? | `Benefit.company_contribution` — often `null` |
+| What does the employer pay? | `Benefit.company_contribution` - often `null` |
 | Who are this employee's dependents? | `Dependent` |
 | Which dependents have coverage? | `DependentBenefit` |
 | How much life cover does someone have? | `BenefitCoverage.amount` |

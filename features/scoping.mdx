@@ -1,0 +1,18 @@
+---
+title: "Scoping"
+description: "The list of models and fields Bindbee requests from a connected system - configured once for your organization and applied to every connector."
+---
+
+Scope is the list of models and fields Bindbee requests from a connected system. You set it once for your organization, under **Configure → Scoping** in the Dashboard, and it applies to every connector you create afterwards.
+
+A field outside scope is never requested, so it never syncs and is absent from responses - not `null`, simply not there. Narrowing scope also narrows what your customer's admin has to grant access to.
+
+<Info>
+  Scope is **shared across environments**. What you configure in Development
+  applies in Production too.
+</Info>
+
+<Tip>
+  See [Scope the data you need](/get-started/tutorials/scope-your-data) for a
+  step-by-step walkthrough of setting it up.
+</Tip>

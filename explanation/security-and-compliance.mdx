@@ -22,7 +22,7 @@ Bindbee handles HR data, which means it routinely carries personal and sensitive
 | `ssn` | `Employee`, `Dependent` | Highly sensitive |
 | Bank account details | `BankInfo` | Highly sensitive |
 | Compensation, pay detail | `Compensation`, `EmployeePayrollRun` | Highly sensitive |
-| Benefits enrolment, dependents | Benefits models | Health-adjacent — HIPAA relevance |
+| Benefits enrolment, dependents | Benefits models | Health-adjacent - HIPAA relevance |
 | `gender`, `ethnicity`, `marital_status`, `tobacco_use` | `Employee` | Special category under GDPR |
 | EEOC data | ATS `EEOC` | Special category |
 
@@ -62,7 +62,7 @@ Development and Production are fully separate:
 
 - Development keys cannot read Production data, and vice versa
 - Connectors and data never move between them
-- Webhooks are environment-scoped — a Production webhook never fires for a Development connector
+- Webhooks are environment-scoped - a Production webhook never fires for a Development connector
 
 <Warning>
   Development keys are shareable within your team by design. Production keys are
@@ -85,7 +85,7 @@ The frontend SDKs take the same value via `serverUrl`.
 
 <Warning>
   Region is a data-residency decision. If you have EU customers with residency
-  requirements, use the EU endpoint consistently — in your backend, in your
+  requirements, use the EU endpoint consistently - in your backend, in your
   `serverUrl`, and in your token exchange. Mixing regions for one customer
   produces connectors you cannot see from the other region.
 </Warning>
@@ -105,7 +105,7 @@ See [Validate webhook signatures](/how-to/validate-webhook-signatures).
 
 ## Transport
 
-All API traffic is HTTPS. Do not disable certificate verification in any client — not in tests, not "temporarily". Requests carry credentials and personal data in every call.
+All API traffic is HTTPS. Do not disable certificate verification in any client - not in tests, not "temporarily". Requests carry credentials and personal data in every call.
 
 ## Raw data and custom fields
 
@@ -113,7 +113,7 @@ Two flags widen your exposure and should be used deliberately:
 
 | Flag | Effect |
 | --- | --- |
-| `include_raw_data=true` | Returns the full upstream payload — often far more personal data than the unified model |
+| `include_raw_data=true` | Returns the full upstream payload - often far more personal data than the unified model |
 | `include_custom_fields=true` | Returns your mapped fields |
 
 <Warning>
@@ -133,7 +133,7 @@ Two flags widen your exposure and should be used deliberately:
 | Environment and region isolation | Using the right key and region |
 | Certifications and audits | Your own compliance posture, DPAs, and end-customer notices |
 | | Access control within your product |
-| | Data minimization — reading only what you need |
+| | Data minimization - reading only what you need |
 | | Retention and deletion in your own systems |
 
 <Warning>

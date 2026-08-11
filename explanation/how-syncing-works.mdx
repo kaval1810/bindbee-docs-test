@@ -35,7 +35,7 @@ Almost every "why is Bindbee behaving strangely?" question resolves to a consequ
 <Steps>
   <Step title="Trigger">
     A sync starts on a schedule (Production), when the connector is first
-    linked, or because something explicitly requested one — a
+    linked, or because something explicitly requested one - a
     `POST /api/embedded/v1/connectors/resync`, or a manual sync in the dashboard.
     The `sync_type` field on webhook payloads reports which: `AUTOMATED` or
     `MANUAL`.
@@ -55,7 +55,7 @@ Almost every "why is Bindbee behaving strangely?" question resolves to a consequ
     set to the time **Bindbee** wrote it.
   </Step>
   <Step title="Notify">
-    Webhooks fire — `connector_synced` on success, `connector_sync_error` on
+    Webhooks fire - `connector_synced` on success, `connector_sync_error` on
     failure, plus data-change events listing the affected record IDs.
   </Step>
 </Steps>
@@ -81,7 +81,7 @@ Practical consequences:
 }
 ```
 
-`sync_progress` reports percentage while a sync runs, and is `null` when nothing is active. `total_employees`, `active_employees` and `avg_sync_duration` populate after the first successful sync — `avg_sync_duration` is the honest answer to "how long will this take next time?" for that specific connector.
+`sync_progress` reports percentage while a sync runs, and is `null` when nothing is active. `total_employees`, `active_employees` and `avg_sync_duration` populate after the first successful sync - `avg_sync_duration` is the honest answer to "how long will this take next time?" for that specific connector.
 
 ## Two different status fields
 
@@ -92,7 +92,7 @@ They answer different questions and you need both:
 | `status` | Are the credentials still good? | `COMPLETE`, `INCOMPLETE`, `RELINK_NEEDED` |
 | `sync_status` | Is the data ready? | `Syncing`, `Done`, `Failed` |
 
-A connector can be `status: COMPLETE` and `sync_status: Failed` — credentials fine, this particular sync broke. It can also be `status: RELINK_NEEDED` while old data remains readable — the last successful sync's results are still there; they are just going stale.
+A connector can be `status: COMPLETE` and `sync_status: Failed` - credentials fine, this particular sync broke. It can also be `status: RELINK_NEEDED` while old data remains readable - the last successful sync's results are still there; they are just going stale.
 
 <Warning>
   Never infer connection health from whether a data endpoint returned rows. Read
@@ -104,11 +104,11 @@ A connector can be `status: COMPLETE` and `sync_status: Failed` — credentials 
 
 | | Development | Production |
 | --- | --- | --- |
-| Automatic syncs | **No** | Yes — every 24 hours by default |
+| Automatic syncs | **No** | Yes - every 24 hours by default |
 | Trigger | Manual or `resync` API | Scheduled, plus on link |
 | Connector limit | Unlimited | Per plan |
 
-The Development difference catches nearly everyone: you link a test connector, call `/employees`, get an empty array, and conclude something is broken. Nothing is broken — nothing has synced. Trigger one.
+The Development difference catches nearly everyone: you link a test connector, call `/employees`, get an empty array, and conclude something is broken. Nothing is broken - nothing has synced. Trigger one.
 
 ## What a sync writes
 
@@ -119,7 +119,7 @@ A sync rewrites the records it processed, whether or not their business values c
   changed. It records when Bindbee last wrote the record.
 </Warning>
 
-This is why `modified_after` is an *inclusive* filter — safe for correctness (you will not miss changes) but not a promise of minimality (you may receive records that look identical). Your ingest path must be an idempotent upsert.
+This is why `modified_after` is an *inclusive* filter - safe for correctness (you will not miss changes) but not a promise of minimality (you may receive records that look identical). Your ingest path must be an idempotent upsert.
 
 See [Field semantics](/explanation/field-semantics) and [Filtering with `modified_after`](/how-to/filter-with-modified-after).
 
@@ -137,7 +137,7 @@ A failed sync fires `connector_sync_error` with a top-level `error` object:
 
 `detail` is `{}` when there is nothing further to report.
 
-A failed sync does **not** delete data. The last successful sync's results remain readable — they just stop advancing. This is usually what you want: degraded freshness beats an empty directory. But it means a customer can be looking at week-old data with no visible error unless you surface `sync_status` yourself.
+A failed sync does **not** delete data. The last successful sync's results remain readable - they just stop advancing. This is usually what you want: degraded freshness beats an empty directory. But it means a customer can be looking at week-old data with no visible error unless you surface `sync_status` yourself.
 
 ## Design consequences
 

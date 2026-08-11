@@ -9,11 +9,11 @@ npm i -g mint     # once
 mint dev          # serves on http://localhost:3000
 ```
 
-Run from the repo root — the folder containing `docs.json`. If the dev server misbehaves, `mint update` pulls the latest CLI.
+Run from the repo root - the folder containing `docs.json`. If the dev server misbehaves, `mint update` pulls the latest CLI.
 
 ## How this repo is organized
 
-Configuration lives in **`docs.json`** — navigation, theming, redirects, and the OpenAPI wiring. There is no `mint.json`.
+Configuration lives in **`docs.json`** - navigation, theming, redirects, and the OpenAPI wiring. There is no `mint.json`.
 
 In Mintlify **the file path is the URL**, so the directory tree is the URL tree. Content is organized on one rule:
 
@@ -21,7 +21,7 @@ In Mintlify **the file path is the URL**, so the directory tree is the URL tree.
 
 | Directory | Holds | Tab |
 | --- | --- | --- |
-| `get-started/` | Landing page, prerequisites, and `tutorials/` — the seven-lesson tutorial | Get Started |
+| `get-started/` | Landing page, prerequisites, and `tutorials/` - the seven-lesson tutorial | Get Started |
 | `explanation/` | Concepts: how syncing works, what the unified model guarantees, why data goes missing | Explanation |
 | `how-to/` | Task guides, each answering one question | How-To |
 | `api-reference/` | Auth, pagination, rate limits, and platform endpoints | API Reference |
@@ -34,7 +34,7 @@ Two directories are deliberate exceptions, documented rather than accidental: `i
 
 ## Conventions
 
-- **Endpoint paths must match `spec.json`.** Connector endpoints are category-scoped — `/api/hris/v1/connectors`, never `/api/v1/connectors`.
+- **Endpoint paths must match `spec.json`.** Connector endpoints are category-scoped - `/api/hris/v1/connectors`, never `/api/v1/connectors`.
 - **Shell variables**: `$BINDBEE_API_KEY` and `$CONNECTOR_TOKEN`. Use these names everywhere so examples remain copy-pasteable across pages.
 - **Moving or renaming a page changes its public URL.** Add an entry to `redirects` in `docs.json` in the same commit.
 - **Tutorial lessons** follow a fixed shape: an objective line, `Context`, three to five imperative steps each ending in a **Result**, `What you just did`, and `If this didn't work`.

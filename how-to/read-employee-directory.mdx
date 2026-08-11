@@ -1,6 +1,6 @@
 ---
 title: "Read Employee Data"
-description: "Page through a full employee directory, filter it, expand related records, and re-read only what changed — the four things every Bindbee integration does."
+description: "Page through a full employee directory, filter it, expand related records, and re-read only what changed - the four things every Bindbee integration does."
 ---
 
 You have a synced connector. This tutorial turns it into a directory sync you could actually ship.
@@ -16,7 +16,7 @@ X-Connector-Token: END_USER_CONNECTOR_TOKEN
 
 ---
 
-## Step 1 — Read one page
+## Step 1 - Read one page
 
 ```bash
 curl "https://api.bindbee.dev/api/hris/v1/employees?page_size=50" \
@@ -44,9 +44,9 @@ Every list endpoint returns the same envelope:
 
 ---
 
-## Step 2 — Page through everything
+## Step 2 - Page through everything
 
-The loop terminates when `cursor` comes back `null`. Do not try to guess a page count — there isn't one.
+The loop terminates when `cursor` comes back `null`. Do not try to guess a page count - there isn't one.
 
 <CodeGroup>
 
@@ -109,14 +109,14 @@ for await (const employee of iterEmployees({ employment_status: "ACTIVE" })) {
 
 <Warning>
   You get **200 requests per minute per connector**. At `page_size=200` that is
-  40,000 records a minute, so pagination alone will rarely hit it — but if you
+  40,000 records a minute, so pagination alone will rarely hit it - but if you
   fan out across many connectors in parallel, handle `429` with the `Retry-After`
   header. See [Rate Limits](/api-reference/basics/rate-limits).
 </Warning>
 
 ---
 
-## Step 3 — Filter server-side
+## Step 3 - Filter server-side
 
 Filter in the query string rather than pulling everything and discarding it.
 
@@ -125,11 +125,11 @@ Filter in the query string rather than pulling everything and discarding it.
 | `employment_status` | `ACTIVE`, `INACTIVE`, `PENDING`, `LEAVE`, `TERMINATED`-equivalents |
 | `company_id` | Employees at one company (multi-entity customers) |
 | `manager_id` | Direct reports of a manager |
-| `groups` | Employees in given groups — comma-separated IDs |
+| `groups` | Employees in given groups - comma-separated IDs |
 | `pay_group_id` | Employees in a pay group |
 | `employee_number` | Look up by the customer-facing employee number |
 | `remote_id` | Look up by the source system's own ID |
-| `ids` | Fetch specific Bindbee IDs — comma-separated |
+| `ids` | Fetch specific Bindbee IDs - comma-separated |
 | `modified_after` | Only records Bindbee synced after this time |
 
 ```bash
@@ -148,7 +148,7 @@ curl -G "https://api.bindbee.dev/api/hris/v1/employees" \
 
 ---
 
-## Step 4 — Expand relations instead of N+1
+## Step 4 - Expand relations instead of N+1
 
 By default, relations come back as IDs:
 
@@ -179,7 +179,7 @@ expand=manager[first_name,last_name,work_email],company
 
 ---
 
-## Step 5 — Read only what changed
+## Step 5 - Read only what changed
 
 Re-importing the whole directory on every run is wasteful. `modified_after` returns only records Bindbee touched after a given ISO 8601 timestamp.
 
@@ -193,7 +193,7 @@ curl -G "https://api.bindbee.dev/api/hris/v1/employees" \
 <Warning>
   `modified_after` filters on **when Bindbee synced the record**, not when the
   HRIS changed it. A sync that rewrites an unchanged record still moves
-  `modified_at`, so this filter is *inclusive* — you may receive records whose
+  `modified_at`, so this filter is *inclusive* - you may receive records whose
   business fields are identical. Make your write path idempotent.
 
   Full explanation: [Filtering with `modified_after`](/how-to/filter-with-modified-after).
@@ -219,7 +219,7 @@ save_watermark(started)              # only after the whole run succeeds
 
 ---
 
-## Step 6 — Get raw data when you need to debug
+## Step 6 - Get raw data when you need to debug
 
 When a unified field is `null` and you want to know whether the source system had the value at all, ask for the upstream payload:
 
@@ -230,7 +230,7 @@ curl -G "https://api.bindbee.dev/api/hris/v1/employees" \
   --data-urlencode "include_raw_data=true"
 ```
 
-If the value is present in `raw_data` but absent from the unified field, that is a mapping question — and usually a [custom field](/how-to/map-custom-fields). If it is absent from `raw_data` too, the source system did not return it.
+If the value is present in `raw_data` but absent from the unified field, that is a mapping question - and usually a [custom field](/how-to/map-custom-fields). If it is absent from `raw_data` too, the source system did not return it.
 
 Add `include_custom_fields=true` to get your mapped custom fields in the response.
 

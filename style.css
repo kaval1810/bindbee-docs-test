@@ -26,6 +26,11 @@
   font-weight: 600 !important;
 }
 
+#content-area h1, #content-area h2, #content-area h3,
+#content-area h4, #content-area h5, #content-area h6 {
+  font-weight: 600 !important;
+}
+
 accordion,
 callout,
 card,

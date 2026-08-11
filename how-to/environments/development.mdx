@@ -5,12 +5,14 @@ description: "Bindbee Development environment for building and testing integrati
 
 ## Overview
 
-The Development environment is a sandbox designed for building and testing your Bindbee integrations. It is intended strictly for non-production use and is completely isolated from the Production environment.
+The Development environment is a sandbox designed for building and testing your Bindbee integrations. It is intended strictly for non-production use. Connectors, their data, and logs are isolated from Production - but scope and custom field configuration are shared across both environments.
 
 <Info>
   The Development environment allows unrestricted testing without impacting live
   production data.
 </Info>
+
+See [Environments](/how-to/environments/overview) for what's shared vs. separate between Development and Production, plus how to manage and authenticate with your key.
 
 ## Development API Key
 
@@ -25,12 +27,6 @@ Your Development API key (`dev_api_key`) is used exclusively to access the Devel
 
 Development API keys are intended for testing purposes only and can be safely shared within your team for development and testing workflows.
 
-## Authentication
-
-When making requests to the Bindbee API in the Development environment, include your Development API key in the `Authorization` header using the **Bearer** prefix:
-
-`Authorization: Bearer YOUR_DEV_API_KEY`
-
 ## Connector Behavior
 
 ### Sync Configuration
@@ -44,23 +40,3 @@ Connectors created using Development API keys do not resync automatically. You c
 ### Connector Limits
 
 There is no limit on the number of connectors you can create in the Development environment, allowing you to test multiple integrations without restrictions.
-
-## Managing Your Development API Key
-
-You can view and regenerate your Development API key from the **API Keys** section of your Bindbee dashboard:
-
-https://app.bindbee.dev/settings/keys
-
-<img
-  src="https://images.unifyx.dev/documentation_images/development-key.png"
-  alt="Development API Keys"
-  className="block"
-/>
-
-## Environment Isolation
-
-The Development and Production environments are completely isolated:
-
-- Development API keys only access Development data  
-- Production API keys only access Production data  
-- Connectors and data do not transfer between environments  

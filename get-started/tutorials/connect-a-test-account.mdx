@@ -1,32 +1,33 @@
 ---
 title: "3. Connect a test account"
-description: "Create a connector against a Bindbee-hosted sandbox tenant, authorize it, and collect the connector token your API calls need."
+sidebarTitle: "3. Connect an account"
+description: "Create a connector against your own test account, authorize it, and collect the connector token from connector for API calls."
 ---
 
 A connector is one customer's authorized link to one source system. Creating one produces the `connector_token` you have been missing since lesson 1.
 
-**By the end of this lesson** you will have an authorized connector and its token. About 15 minutes.
+**By the end of this lesson** you will have an authorized connector and its token.
 
 ## Context
 
-In production your customers create connectors themselves through Magic Link. Here you create one from the Dashboard, which is faster and produces the same result.
+In production your customers create connectors themselves through [Bindbee Embed](/how-to/bindbee-embed). Here you create one from the **Dashboard**, which is faster and produces the same result.
 
-You need credentials for a test tenant before you start. If you have not requested them, do that now — ask in your Slack channel or email [support@bindbee.dev](mailto:support@bindbee.dev). Bindbee hosts sandbox tenants for several systems, so you do not need to supply your own.
+You need your own test account for a supported HRIS system before you start to test credentials. If you do not already have one, sign up for a free trial with a supported system.
 
 <Warning>
-  This is the one point in the tutorial that can block on someone else. Request
-  credentials before you continue rather than partway through.
+  This is the one point in the tutorial that can block on getting a test account
+  set up. Do that before you continue rather than partway through.
 </Warning>
 
-## Step 1 — Create the connector
+## Step 1 - Create the connector
 
-In the Dashboard, with the environment set to **Development**, go to **Connectors** and choose **Create connector**. Give the test customer a recognizable organization name such as `Tutorial Test Co`, select category **HRIS**, and pick the integration matching your sandbox credentials.
+In the Dashboard, go to **Connectors**, switch to the **Development** tab, and choose **Create connector**. Give the test customer a recognizable organization name such as `Tutorial Test Co`, select category **HRIS**, and pick the integration matching your test account.
 
 **Result:** a connector with status `INCOMPLETE` and a Magic Link.
 
-## Step 2 — Authorize it with the sandbox credentials
+## Step 2 - Authorize it with your test account
 
-Open the Magic Link. You see what your customer would see: a linking page asking for whatever that system needs — an API key, a subdomain, a client ID and secret, or an OAuth redirect. Enter the sandbox credentials and complete every screen.
+Open the Magic Link. You see what your customer would see: a linking page asking for whatever that system needs - an API key, a subdomain, a client ID and secret, or an OAuth redirect. Enter your test account's credentials and complete every step.
 
 <Info>
   What each system asks for varies. Per-system click-through guides, written for
@@ -34,9 +35,9 @@ Open the Magic Link. You see what your customer would see: a linking page asking
   [Help Centre](https://help.bindbee.dev/guide).
 </Info>
 
-**Result:** the connector's status moves off `INCOMPLETE`.
+**Result:** On successful authorization, the connector's status moves to `ACTIVE`.
 
-## Step 3 — Copy the connector token
+## Step 3 - Copy the connector token
 
 Open the connector from the **Connectors** list. On the **Overview** tab, find and copy `connector_token`.
 
@@ -48,9 +49,9 @@ export CONNECTOR_TOKEN="your_connector_token"
 
 ## What you just did
 
-You created a record representing one customer plus one source system, and the Magic Link collected that system's credentials. Those credentials are stored by Bindbee and never pass through your application, which is the point of the flow. In return Bindbee issued a stable connector token — what your API calls use to say *whose data*.
+You linked one customer to one source system. The Magic Link collected their credentials - Bindbee stores those and in return you got a connector token, which your API calls use to say *whose data*.
 
-The connector exists but has not synced. There is nothing to read yet.
+The connector hasn't synced yet, so there's no data to read yet.
 
 ## If this didn't work
 
@@ -62,12 +63,12 @@ The connector exists but has not synced. There is nothing to read yet.
 
   <Accordion title="Authorization failed on the linking page">
     Usually wrong credentials, or a wrong subdomain or company identifier. Check
-    **Logs** for the actual error returned by the source system — it is more
+    **Logs** for the actual error returned by the source system - it is more
     specific than what the linking page shows.
   </Accordion>
 
   <Accordion title="Connector status stays INCOMPLETE">
-    The flow did not finish. Reopen the Magic Link and complete every step —
+    The flow did not finish. Reopen the Magic Link and complete every step -
     several systems have a final confirmation screen that is easy to close early.
   </Accordion>
 

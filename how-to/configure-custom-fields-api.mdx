@@ -3,6 +3,8 @@ title: "API Configuration"
 description: "Define Custom Fields and mappings programmatically. Useful for onboarding automation, replicating configuration across environments, or syncing Bindbee with your internal admin tooling."
 ---
 
+New here? [Map Custom Fields](/how-to/map-custom-fields) is the end-to-end walkthrough - this page is the full reference for the API path it links to.
+
 The Custom Fields API exposes the same capabilities as the dashboard so you can define fields and mappings programmatically. For the concepts (what Custom Fields are, organization vs connector scope) see the [Custom Fields overview](/explanation/custom-fields). For the dashboard equivalent, see [Dashboard Configuration](/how-to/configure-custom-fields-dashboard).
 
 <Note>
@@ -22,11 +24,11 @@ Content-Type: application/json
 
 ## Concepts
 
-- **Custom field** — a named extension on a unified model (e.g. `guardian_mobile` on `employee`). It belongs to a `(category, model)` pair such as `(HRIS, employee)`.
-- **Mapping** — the rule that tells Bindbee where to read the value from in the raw upstream payload. A mapping is either:
-  - **Organization-scoped** (`integration_slug` set) — applies to every connector of that integration in your org.
-  - **Connector-scoped** (`connector_token` set) — applies to a single connector instance and overrides the org-level mapping.
-- **JMESPath** — the expression language used to point at a value inside the raw upstream JSON. See [jmespath.org](https://jmespath.org/) for the full reference.
+- **Custom field** - a named extension on a unified model (e.g. `guardian_mobile` on `employee`). It belongs to a `(category, model)` pair such as `(HRIS, employee)`.
+- **Mapping** - the rule that tells Bindbee where to read the value from in the raw upstream payload. A mapping is either:
+  - **Organization-scoped** (`integration_slug` set) - applies to every connector of that integration in your org.
+  - **Connector-scoped** (`connector_token` set) - applies to a single connector instance and overrides the org-level mapping.
+- **JMESPath** - the expression language used to point at a value inside the raw upstream JSON. See [jmespath.org](https://jmespath.org/) for the full reference.
 
 ## Typical workflow
 
@@ -42,7 +44,7 @@ A complete end-to-end flow when defining a new custom field via the API looks li
     is available to JMESPath against.
   </Step>
   <Step title="Validate the JMESPath (optional)">
-    Dry-run your expression against real connector data — or an inline payload —
+    Dry-run your expression against real connector data - or an inline payload -
     without persisting anything. Recommended to avoid `INVALID_JSON_PATH` in
     production responses.
   </Step>
@@ -150,15 +152,15 @@ POST /api/v1/custom-fields/preview
 
 `raw_data_source` will be one of:
 
-- `"connector_sync"` — evaluated against the connector's latest synced row.
-- `"integration_sample"` — connector hasn't synced yet, fell back to the canned sample.
-- `"inline"` — the request supplied an inline `raw_data` payload to evaluate against.
+- `"connector_sync"` - evaluated against the connector's latest synced row.
+- `"integration_sample"` - connector hasn't synced yet, fell back to the canned sample.
+- `"inline"` - the request supplied an inline `raw_data` payload to evaluate against.
 
 `resolved_value_type` will be one of: `string`, `number`, `boolean`, `object`, `array`, `null`.
 
 ## Step 4: Create the custom field
 
-Once you're confident in your JMESPath, register the field itself. The field is just a typed slot on the `(category, model)` — it carries no mapping yet.
+Once you're confident in your JMESPath, register the field itself. The field is just a typed slot on the `(category, model)` - it carries no mapping yet.
 
 ```bash
 POST /api/v1/custom-fields
@@ -235,7 +237,7 @@ A mapping pairs the custom field with a JMESPath, scoped either to an integratio
 
 <Warning>
   Provide **exactly one** of `integration_slug` or `connector_token`. To change
-  the scope of an existing mapping, delete it and create a new one — only
+  the scope of an existing mapping, delete it and create a new one - only
   `json_path` is mutable via update.
 </Warning>
 
@@ -280,9 +282,9 @@ GET /api/v1/custom-fields/configuration?connector_token=<CONNECTOR_TOKEN>&catego
 
 Each entry's `source` indicates which mapping is winning:
 
-- `"connector"` — a connector-scoped mapping is in effect.
-- `"organization"` — no connector override; the org-scoped mapping is being inherited.
-- `null` — no mapping is configured for this field on this connector.
+- `"connector"` - a connector-scoped mapping is in effect.
+- `"organization"` - no connector override; the org-scoped mapping is being inherited.
+- `null` - no mapping is configured for this field on this connector.
 
 ## Updating and deleting
 
@@ -290,7 +292,7 @@ Each entry's `source` indicates which mapping is winning:
 | --------------------- | ------------------------------------------- | --------------------------------------------------------- |
 | List custom fields    | `GET /api/v1/custom-fields`                 | Supports `category`, `model`, and `source` filters.       |
 | Get one with mappings | `GET /api/v1/custom-fields/{id}`            | Returns the field plus all its mappings.                  |
-| Delete a field        | `DELETE /api/v1/custom-fields/{id}`         | Cascades — all mappings for the field are removed.        |
+| Delete a field        | `DELETE /api/v1/custom-fields/{id}`         | Cascades - all mappings for the field are removed.        |
 | Update a mapping      | `PATCH /api/v1/custom-fields/mapping/{id}`  | Only `json_path` is mutable. Re-create to change scope.   |
 | Delete a mapping      | `DELETE /api/v1/custom-fields/mapping/{id}` | Removes a single mapping; the field itself is unaffected. |
 

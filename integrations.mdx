@@ -1,13 +1,14 @@
 ---
 title: "Integrations & Coverage"
 description: "Every supported system, its slug, its connection type, and how to check exactly which models and fields a given connector returns."
+hidden: true
 ---
 
 Use your browser's find (`Ctrl`/`⌘` + `F`) to search this page for a system name or slug.
 
 <Info>
   **Slugs** are the identifiers you pass as `integration` when creating a
-  `link_token`. **Model and field support varies by connector** — and, on SFTP
+  `link_token`. **Model and field support varies by connector** - and, on SFTP
   connectors, by the individual customer's export template. To determine exactly
   what a *specific* connector returns, see
   [Check a connector's actual coverage](#check-a-connectors-actual-coverage).
@@ -96,7 +97,7 @@ Base path `/api/hris/v1/` · category `HRIS`
 | **Time & Attendance** | Time Off, Time Off Balance, Timesheet Entry |
 | **Banking** | Bank Info |
 
-Writable models: Employee, Time Off, Timesheet Entry, Employee Payroll Run — subject to per-connector support. See [Write Data Back](/how-to/write-data-back).
+Writable models: Employee, Time Off, Timesheet Entry, Employee Payroll Run - subject to per-connector support. See [Write Data Back](/how-to/write-data-back).
 
 ---
 
@@ -123,7 +124,7 @@ Base path `/api/ats/v1/` · category `ATS`
 ### ATS models
 
 | Group | Models |
-| --- | --- | --- |
+| --- | --- |
 | **Talent Acquisition** | Candidate, Application, Job, Job Interview Stage, Scheduled Interview, Screening Question |
 | **Evaluation** | Activity, Scorecard, EEOC, Reject Reason, Attachment, Tag |
 | **Outcomes** | Offer |
@@ -145,7 +146,7 @@ Base path `/api/lms/v1/` · category `LMS`
 ### LMS models
 
 | Group | Models |
-| --- | --- | --- |
+| --- | --- |
 | **People** | Users |
 | **Content** | Courses, Contents, Skills, Categories |
 | **Progress** | Completions, Enrollments |
@@ -154,7 +155,7 @@ LMS models are read-only.
 
 <Note>
   The same vendor can appear under more than one category with a **different
-  slug** — SAP SuccessFactors is `sap-success-factors` for HRIS and ATS, but
+  slug** - SAP SuccessFactors is `sap-success-factors` for HRIS and ATS, but
   `sap_sf_lms` for LMS. Always pair the slug with the matching `category`.
 </Note>
 
@@ -271,7 +272,7 @@ curl -G "https://api.bindbee.dev/api/hris/v1/employees" \
 | jq '[.items[] | to_entries[] | select(.value != null) | .key] | unique'
 ```
 
-That returns the fields populated for that customer — usually the question you actually care about.
+That returns the fields populated for that customer - usually the question you actually care about.
 
 <Warning>
   A model returning zero records is not proof it is unsupported. It can also mean
@@ -287,7 +288,7 @@ That returns the fields populated for that customer — usually the question you
 | In `raw_data`? | In unified field? | Meaning |
 | --- | --- | --- |
 | No | No | Source system didn't send it |
-| Yes | No | Unmapped — use a [custom field](/how-to/map-custom-fields) |
+| Yes | No | Unmapped - use a [custom field](/how-to/map-custom-fields) |
 | Yes | Yes | Working as intended |
 
 ---

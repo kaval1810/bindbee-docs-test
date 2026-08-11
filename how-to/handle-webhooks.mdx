@@ -1,6 +1,6 @@
 ---
 title: "Handle Webhooks"
-description: "Decide whether you need webhooks, set up an endpoint, verify signatures, and process events idempotently — end to end."
+description: "Decide whether you need webhooks, set up an endpoint, verify signatures, and process events idempotently - end to end."
 ---
 
 Polling every connector on a timer is the default way teams start, and the first thing that stops scaling. This tutorial replaces it.
@@ -9,21 +9,21 @@ Polling every connector on a timer is the default way teams start, and the first
 
 ---
 
-## Step 1 — Decide whether you need them
+## Step 1 - Decide whether you need them
 
 Answer these before writing any code:
 
 | If… | Then |
 | --- | --- |
-| You show HR data in a UI on demand | You may not need webhooks at all — read on request |
+| You show HR data in a UI on demand | You may not need webhooks at all - read on request |
 | You mirror data into your own database | Use `connector_data_modified` + `modified_after` |
 | You act on employee joins/leaves (provisioning, enrolment) | Use `employee_data_changed` |
 | You show connection health to your customer | Use the three `connector_sync_*` events |
-| You need sub-24-hour freshness | Webhooks won't help — that is a **sync frequency** question, not a delivery one |
+| You need sub-24-hour freshness | Webhooks won't help - that is a **sync frequency** question, not a delivery one |
 
 <Warning>
   Webhooks tell you *when a sync produced changes*. They do not make data fresher.
-  If your customer needs hourly data, the sync schedule has to change — see
+  If your customer needs hourly data, the sync schedule has to change - see
   [Data freshness](/explanation/data-freshness).
 </Warning>
 
@@ -31,7 +31,7 @@ Full comparison: [Webhooks vs Polling](/explanation/webhooks-vs-polling).
 
 ---
 
-## Step 2 — Understand the events
+## Step 2 - Understand the events
 
 | Event | Fires when | `data` contains |
 | --- | --- | --- |
@@ -41,7 +41,7 @@ Full comparison: [Webhooks vs Polling](/explanation/webhooks-vs-polling).
 | `employee_data_changed` | Employees created/updated | Array of employee IDs |
 | `connector_data_modified` | Any model created/updated | Object of `model → [ids]` |
 
-Every payload includes `webhook`, `connector` and `sync` objects. `connector.origin_id` is your own customer ID — that is your routing key.
+Every payload includes `webhook`, `connector` and `sync` objects. `connector.origin_id` is your own customer ID - that is your routing key.
 
 ```json
 {
@@ -70,12 +70,12 @@ Full payload reference: [Webhooks](/webhooks/overview).
 
 ---
 
-## Step 3 — Stand up an endpoint
+## Step 3 - Stand up an endpoint
 
 Requirements, all of which matter:
 
 - Public HTTPS URL accepting `POST`
-- Responds within **10 seconds** — Bindbee times out after that
+- Responds within **10 seconds** - Bindbee times out after that
 - Returns `2xx` on success; anything else is retried
 - Keeps the **raw request body** available for signature verification
 
@@ -87,7 +87,7 @@ Requirements, all of which matter:
 
 ---
 
-## Step 4 — Verify the signature
+## Step 4 - Verify the signature
 
 Every request carries `X-Bindbee-Webhook-Signature`: a base64url-encoded HMAC-SHA256 of the **raw body**, keyed with your organization's signature key from [app.bindbee.dev/webhooks](https://app.bindbee.dev/webhooks).
 
@@ -124,7 +124,7 @@ const express = require("express");
 const app = express();
 const SIGNATURE_KEY = process.env.BINDBEE_WEBHOOK_SIGNATURE_KEY;
 
-// Capture the raw body — re-serializing the parsed JSON will not match
+// Capture the raw body - re-serializing the parsed JSON will not match
 app.use(
   express.json({
     verify: (req, _res, buf) => {
@@ -169,14 +169,14 @@ More detail and failure modes: [Validate webhook signatures](/how-to/validate-we
 
 ---
 
-## Step 5 — Register the webhook
+## Step 5 - Register the webhook
 
 In the dashboard, go to **Configure → Webhooks → New webhook**:
 
-1. **Destination URL** — your endpoint. Use **Test URL** to confirm reachability.
-2. **Webhook Name** — e.g. `prod-employee-changes`.
-3. **Webhook Type** — `Production` or `Development`.
-4. **Events** — tick only what you handle.
+1. **Destination URL** - your endpoint. Use **Test URL** to confirm reachability.
+2. **Webhook Name** - e.g. `prod-employee-changes`.
+3. **Webhook Type** - `Production` or `Development`.
+4. **Events** - tick only what you handle.
 
 <Warning>
   Webhook type is environment-scoped. A **Production** webhook never fires for
@@ -188,7 +188,7 @@ Step-by-step with screenshots: [Webhooks](/webhooks/overview).
 
 ---
 
-## Step 6 — Process the event
+## Step 6 - Process the event
 
 The handler's job is: route by `origin_id`, then fetch what changed.
 
@@ -239,7 +239,7 @@ curl -G "https://api.bindbee.dev/api/hris/v1/employees" \
 
 ---
 
-## Step 7 — Make it idempotent
+## Step 7 - Make it idempotent
 
 Bindbee retries up to **4 times within 60 seconds** on network failures and any non-`2xx` response. You will receive duplicates.
 
@@ -253,18 +253,18 @@ Bindbee retries up to **4 times within 60 seconds** on network failures and any 
 Two rules make duplicates harmless:
 
 1. **Deduplicate** on `sync.sync_id` + `webhook.event`.
-2. **Upsert, never insert** — key on the record `id`.
+2. **Upsert, never insert** - key on the record `id`.
 
 <Warning>
   Retries stop after 4 attempts inside a 60-second window. If your endpoint is
   down for longer than that, those events are gone. Keep a scheduled
-  `modified_after` reconciliation running as a safety net — daily is usually
+  `modified_after` reconciliation running as a safety net - daily is usually
   enough.
 </Warning>
 
 ---
 
-## Step 8 — Verify
+## Step 8 - Verify
 
 1. Trigger a sync: `POST /api/embedded/v1/connectors/resync` with the connector token.
 2. Watch delivery attempts and responses under [Logs → Webhooks](https://app.bindbee.dev/logs/webhooks).

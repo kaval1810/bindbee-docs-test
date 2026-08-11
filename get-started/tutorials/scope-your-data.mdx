@@ -1,18 +1,19 @@
 ---
 title: "2. Scope the data you need"
+sidebarTitle: "2. Scope your data"
 description: "Choose which models and fields Bindbee requests from your customers' systems, and understand why that decision shapes everything downstream."
 ---
 
 Scope is the list of models and fields Bindbee will request from a connected system. You set it once for your organization and it applies to every connector you create afterwards.
 
-**By the end of this lesson** you will have the HRIS Employee model scoped to the fields your product actually reads. About 10 minutes.
+**By the end of this lesson** you will have the HRIS Employee model scoped to the fields your product actually reads.
 
 ## Context
 
 Doing this before connecting anything is deliberate. Three things follow from scope:
 
 - **What your customer must authorize.** Every model in scope maps to a permission in their source system. Asking for compensation data you never use means asking their HR admin to grant access to salaries.
-- **What arrives in your API responses.** A field outside scope is absent from responses. Not `null` with an explanation — simply not there.
+- **What arrives in your API responses.** A field outside scope is absent from responses. Not `null` with an explanation - simply not there.
 - **What syncs cost in time.** Fewer models means faster syncs and fewer moving parts when something goes wrong.
 
 <Info>
@@ -21,38 +22,24 @@ Doing this before connecting anything is deliberate. Three things follow from sc
   crosses the environment boundary.
 </Info>
 
-## Step 1 — List the fields your product actually reads
+## Step 1 - Open scoping and enable the fields you need
 
-Before touching the Dashboard, write them down. Not the ones that might be useful later — the ones a feature would break without.
+{/* VERIFY: click path needs confirming against the current Dashboard build. Source
+    material exists as a Help Centre walkthrough - "Scoping Data Fields and Models in
+    Bindbee" - but there is no existing docs page to check against. */}
 
-For this tutorial, use:
+In the Dashboard, go to **Configure → Scoping** and select the **HRIS** category. Enable **Employee**, then within it enable only the fields your product actually reads. For this tutorial, use:
 
 - `first_name`, `last_name`
 - `work_email`
 - `employment_status`
 - `department`
 
-Enough to prove the pipeline works. You can widen scope later without re-linking connectors.
-
-**Result:** a short, concrete list to configure against.
-
-## Step 2 — Open the scoping configuration
-
-{/* VERIFY: click path needs confirming against the current Dashboard build. Source
-    material exists as a Help Centre walkthrough — "Scoping Data Fields and Models in
-    Bindbee" — but there is no existing docs page to check against. */}
-
-In the Dashboard, with the environment set to **Development**, go to **Configure → Scoping** and select the **HRIS** category.
-
-**Result:** the list of HRIS models, each expandable to its fields.
-
-## Step 3 — Enable the Employee model and its fields
-
-Enable **Employee**, then within it enable only the five fields from step 1. Save.
+Save changes.
 
 **Result:** Employee is in scope with five fields; every other HRIS model is out.
 
-## Step 4 — Review what you excluded
+## Step 2 - Review what you excluded
 
 Look at what you left disabled. Two exclusions are worth being deliberate about:
 
@@ -67,22 +54,22 @@ Look at what you left disabled. Two exclusions are worth being deliberate about:
 
 You narrowed what Bindbee asks for, which narrows what your customers have to grant.
 
-This also gives you the first of three distinct reasons a field can be missing later. Keeping them separate is most of what makes missing-data problems quick to diagnose:
+This is also the first of three reasons a field can go missing later. Knowing which one you're dealing with makes it much faster to fix:
 
 | Cause | Where it is solved |
 | --- | --- |
-| Out of scope | This screen |
+| Out of scope | Dashboard -> Scoping |
 | In scope, but the source system did not grant permission | [Go-live checklist](/how-to/go-live-checklist) |
 | Not carried by the unified model at all | [Lesson 6](/get-started/tutorials/add-a-custom-field) |
 
-Permission failures are the quiet one — the field is omitted rather than erroring.
+Permission failures are the quiet one - the field is omitted rather than erroring.
 
 ## If this didn't work
 
 <AccordionGroup>
   <Accordion title="You can't find the Scoping section">
     Scoping sits under **Configure** in the Dashboard sidebar. If it is not
-    visible, your user may not have the required role — ask in your Slack channel.
+    visible, your user may not have the required role - ask Bindbee team support.
   </Accordion>
 
   <Accordion title="Changing scope after connectors already exist">

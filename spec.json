@@ -11741,11 +11741,11 @@
             "required": false,
             "schema": {
               "anyOf": [{ "type": "string" }, { "type": "null" }],
-              "description": "Integration slug — return organization-scoped mappings for this integration.",
+              "description": "Integration slug - return organization-scoped mappings for this integration.",
               "examples": ["workday"],
               "title": "Integration Slug"
             },
-            "description": "Integration slug — return organization-scoped mappings for this integration."
+            "description": "Integration slug - return organization-scoped mappings for this integration."
           },
           {
             "name": "connector_token",
@@ -11753,13 +11753,13 @@
             "required": false,
             "schema": {
               "anyOf": [{ "type": "string" }, { "type": "null" }],
-              "description": "Connector token — return connector-scoped mappings for this connector.",
+              "description": "Connector token - return connector-scoped mappings for this connector.",
               "examples": [
                 "i5kqe8bSedEdPLX9pHhFojKdo7Uzvue0f7I4NVhaDfV0GTxF0uAgwa_COb3zZU3T"
               ],
               "title": "Connector Token"
             },
-            "description": "Connector token — return connector-scoped mappings for this connector."
+            "description": "Connector token - return connector-scoped mappings for this connector."
           }
         ],
         "responses": {
@@ -11904,13 +11904,13 @@
             "required": false,
             "schema": {
               "anyOf": [{ "type": "string" }, { "type": "null" }],
-              "description": "Connector token — returns the connector's latest synced row, falling back to integration sample.",
+              "description": "Connector token - returns the connector's latest synced row, falling back to integration sample.",
               "examples": [
                 "i5kqe8bSedEdPLX9pHhFojKdo7Uzvue0f7I4NVhaDfV0GTxF0uAgwa_COb3zZU3T"
               ],
               "title": "Connector Token"
             },
-            "description": "Connector token — returns the connector's latest synced row, falling back to integration sample."
+            "description": "Connector token - returns the connector's latest synced row, falling back to integration sample."
           },
           {
             "name": "integration_slug",
@@ -11918,11 +11918,11 @@
             "required": false,
             "schema": {
               "anyOf": [{ "type": "string" }, { "type": "null" }],
-              "description": "Integration slug — returns the integration's canned sample (no connector required).",
+              "description": "Integration slug - returns the integration's canned sample (no connector required).",
               "examples": ["workday"],
               "title": "Integration Slug"
             },
-            "description": "Integration slug — returns the integration's canned sample (no connector required)."
+            "description": "Integration slug - returns the integration's canned sample (no connector required)."
           }
         ],
         "responses": {
@@ -14962,13 +14962,13 @@
           "integration_slug": {
             "anyOf": [{ "type": "string" }, { "type": "null" }],
             "title": "Integration Slug",
-            "description": "Integration slug — set this for an organization-scoped mapping (applies to all connectors of this integration in the org). Mutually exclusive with `connector_token`.",
+            "description": "Integration slug - set this for an organization-scoped mapping (applies to all connectors of this integration in the org). Mutually exclusive with `connector_token`.",
             "examples": ["workday"]
           },
           "connector_token": {
             "anyOf": [{ "type": "string" }, { "type": "null" }],
             "title": "Connector Token",
-            "description": "Connector token — set this for a connector-scoped mapping (applies to a single connector instance). Mutually exclusive with `integration_slug`.",
+            "description": "Connector token - set this for a connector-scoped mapping (applies to a single connector instance). Mutually exclusive with `integration_slug`.",
             "examples": [
               "i5kqe8bSedEdPLX9pHhFojKdo7Uzvue0f7I4NVhaDfV0GTxF0uAgwa_COb3zZU3T"
             ]

@@ -1,6 +1,6 @@
 ---
 title: "Connect Your First Customer"
-description: "Take a real customer from 'click connect' in your product to a synced connector you can read from — and store the right identifiers along the way."
+description: "Take a real customer from 'click connect' in your product to a synced connector you can read from - and store the right identifiers along the way."
 ---
 
 The Quickstart used the dashboard to create a connection. This tutorial does it the way your product will: programmatically, for a named customer, with the identifiers you need to map the connection back to your own database.
@@ -19,12 +19,12 @@ Both produce an identical connector. You can use Magic Link to launch and move t
 
 ---
 
-## Step 1 — Decide your `origin_id` before you write any code
+## Step 1 - Decide your `origin_id` before you write any code
 
 `origin_id` is *your* identifier for the customer. Bindbee stores it on the connector and returns it on every connector lookup and every webhook payload.
 
 <Warning>
-  Pick a stable internal ID — your tenant UUID or account ID. Do not use the
+  Pick a stable internal ID - your tenant UUID or account ID. Do not use the
   company's display name, an email address, or anything a customer can change.
   Reconciling connectors after the fact without a stable `origin_id` is painful.
 </Warning>
@@ -42,9 +42,9 @@ Both produce an identical connector. You can use Magic Link to launch and move t
 
 ---
 
-## Step 2 — Create a `link_token`
+## Step 2 - Create a `link_token`
 
-When the customer clicks **Connect HRIS** in your product, your backend requests a `link_token`. Do this server-side — it needs your API key.
+When the customer clicks **Connect HRIS** in your product, your backend requests a `link_token`. Do this server-side - it needs your API key.
 
 <CodeGroup>
 
@@ -116,7 +116,7 @@ The `integration` slug comes from the [Integrations](/integrations) list. If you
 
 ---
 
-## Step 3 — Render the connection flow
+## Step 3 - Render the connection flow
 
 <Tabs>
   <Tab title="React">
@@ -166,15 +166,15 @@ The `integration` slug comes from the [Integrations](/integrations) list. If you
     `org_name` and `origin_id`, and send the URL to your customer.
 
     The connector appears in your dashboard as soon as they finish. Skip to
-    Step 5 — there is no `temporary_token` to exchange.
+    Step 5 - there is no `temporary_token` to exchange.
   </Tab>
 </Tabs>
 
-You can match the flow to your own branding — logo, favicon and brand colour — under [Organization settings](/how-to/embed-brand-customization).
+You can match the flow to your own branding - logo, favicon and brand colour - under [Organization settings](/how-to/embed-brand-customization).
 
 ---
 
-## Step 4 — Exchange `temporary_token` for `connector_token`
+## Step 4 - Exchange `temporary_token` for `connector_token`
 
 `onSuccess` hands your frontend a short-lived `temporary_token`. Send it to your backend and exchange it immediately:
 
@@ -205,13 +205,13 @@ def exchange_token(temporary_token: str):
 ```
 
 <Warning>
-  The exchange is a server-side call — it requires your API key. Never expose the
+  The exchange is a server-side call - it requires your API key. Never expose the
   API key or the `connector_token` to the browser.
 </Warning>
 
 ---
 
-## Step 5 — Store the connection
+## Step 5 - Store the connection
 
 Persist the connector against your tenant. At minimum:
 
@@ -241,7 +241,7 @@ create table hris_connections (
 
 ---
 
-## Step 6 — Wait for the first sync
+## Step 6 - Wait for the first sync
 
 Linking does not mean data is ready. The first sync backfills the customer's full history and takes materially longer than later incremental syncs.
 
@@ -279,11 +279,11 @@ Read `status` and `sync_status` as two separate things:
   See [Force a resync](/how-to/force-a-resync).
 </Note>
 
-Rather than polling, subscribe to the `connector_synced` webhook — see [Handle Webhooks](/how-to/handle-webhooks).
+Rather than polling, subscribe to the `connector_synced` webhook - see [Handle Webhooks](/how-to/handle-webhooks).
 
 ---
 
-## Step 7 — Show the customer something
+## Step 7 - Show the customer something
 
 Once `sync_status` is `Done`, confirm the connection in your UI with real numbers. `total_employees` and `active_employees` are populated on the connector after the first successful sync, so you can render "Synced 412 employees from BambooHR" without fetching a single page.
 

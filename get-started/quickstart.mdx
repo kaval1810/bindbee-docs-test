@@ -1,21 +1,19 @@
 ---
-title: "Before you begin"
+title: "Quick start"
 description: "What you will build in this tutorial, what you need in front of you before you start, and what the tutorial deliberately leaves out."
 ---
 
-This is a single tutorial in seven lessons. Work through them in order — each one depends on the state the previous one left behind.
-
-**By the end of this tutorial** you will have employee records from a linked HRIS arriving in your own code, including one field the unified model does not carry, with your application notified when that data changes. About 45 minutes, plus waiting on a sync.
+This is a single tutorial in seven lessons - work through them in order, since each one depends on the state the previous one left behind.
 
 ## What you will build
 
 By the end, employee records from a linked HRIS will be arriving in your own code. That includes:
 
-- A **connector** you created and authorized against a test HRIS tenant
-- A completed **sync**, and a way to tell when it finished
+- A **connector** you created and authorized against a test HRIS integration
+- A completed **sync**, with a way to get notified when it finishes
 - **Employee data** read from the Bindbee API in the unified schema
-- **One field the unified model does not carry**, mapped out of the raw payload
-- A **webhook** telling your application when that data changes
+- **One field the unified model does not carry**, mapped out of the raw payload using a custom field
+- A **webhook** that tells your application when that data changes
 
 That is the whole thing.
 
@@ -23,25 +21,25 @@ That is the whole thing.
 
 <Info>
   Every item below is something to have open or on hand before lesson 1. If you
-  are missing any of them, resolve it first — the lessons assume all five.
+  are missing any of them, resolve it first.
 </Info>
 
 | You need | How to get it |
 | --- | --- |
-| Access to the Bindbee Dashboard | Provisioned by the Bindbee team during onboarding. If you cannot sign in, ask in your Slack channel. |
-| A **development** environment API key | Dashboard → API Keys, with the environment switcher set to Development. See [Development environment](/how-to/environments/development). |
-| Credentials for a test HRIS tenant | Request these in your Slack channel or from [support@bindbee.dev](mailto:support@bindbee.dev). Bindbee hosts sandbox tenants for several systems so you do not have to supply your own. Check [Integrations & Coverage](/integrations) for the supported systems and their slugs — you will need the slug in lesson 3. |
-| An HTTP client | `curl`, Postman, or your language's HTTP library. The lessons show `curl` and give you enough to translate. |
-| An endpoint that can receive a POST | Needed in lesson 7 only. A local tunnel such as ngrok is fine. |
+| Access to the Bindbee Dashboard | Provisioned by the Bindbee team during onboarding. If you cannot sign in, reach out to us or email us on [support@bindbee.dev](mailto:support@bindbee.dev) |
+| A **development** environment API key | **Settings → API Keys**, from the Development block. See [Development environment](/how-to/environments/development). |
+| Credentials for a test HRIS integration | Keep the HRIS sandbox or testing environment for validating the connection. |
 
 <Warning>
-  Sandbox credentials are not yet self-serve. Request them before you start
-  rather than at lesson 3, or the tutorial will stall partway through.
+  Of the three, the test HRIS account is the one most likely to cost you real
+  time - signing up for a sandbox with a supported system can take longer than
+  lessons 1 and 2 combined. Start that signup now if you don't already have
+  one, rather than discovering the wait at lesson 3.
 </Warning>
 
 ## What this tutorial does not cover
 
-Ruling these out now is what lets every lesson stay a single path with no branching. Each one is a real task — just a later one.
+Leaving these out keeps each lesson a single path with no branching decisions. They are real tasks - just ones you will handle later.
 
 <AccordionGroup>
   <Accordion title="Embedding Magic Link inside your own product">
@@ -52,22 +50,28 @@ Ruling these out now is what lets every lesson stay a single path with no branch
 
   <Accordion title="Preparing a real customer's source system">
     Test tenants come with the permissions already granted. Real customers do
-    not — and missing permissions are the single most common reason fields
+    not - and missing permissions are the single most common reason fields
     arrive empty. That is covered in the [Go-live
     checklist](/how-to/go-live-checklist).
   </Accordion>
 
   <Accordion title="Going to production">
-    Everything here happens in the development environment. Moving over is
-    covered in [Production environment](/how-to/environments/production),
-    including what carries across environments and what does not.
+    Everything here happens in the development environment. The steps for a
+    production connection are the same - the only difference is using a
+    production API key instead of a development one. See [Production
+    environment](/how-to/environments/production) for what carries across
+    environments and what does not.
   </Accordion>
 
   <Accordion title="Writing data back to the source system">
-    This tutorial only reads. Bindbee supports writes on several models — see
-    the API reference for the endpoints that accept `POST`.
+    This tutorial only reads. Bindbee supports writes on several models - see
+    the [API reference](/api-reference) for the endpoints that accept `POST`.
   </Accordion>
 </AccordionGroup>
+
+## Worth reading first
+
+The lessons teach each idea as you need it, so you can start right now. If you would rather see the whole model first, [Core concepts](/explanation/core-concepts) is a ten-minute read covering environments, API keys, connectors, connector tokens, syncs, unified models, and custom fields - it answers most of what lessons 1 through 3 will raise.
 
 ## The lessons
 
@@ -104,12 +108,12 @@ Ruling these out now is what lets every lesson stay a single path with no branch
 
 ## If you get stuck
 
-Each lesson ends with the failures that lesson can cause. These six account for most of them — worth skimming now so you recognize them when they happen.
+Each lesson ends with the failures that lesson can cause. These six account for most of them - worth skimming now so you recognize them when they happen.
 
 | Symptom | Cause | Where it's fixed |
 | --- | --- | --- |
 | `401 Unauthorized` | Missing the `Bearer ` prefix, or a key from the other environment | [Lesson 1](/get-started/tutorials/set-up-your-environment) |
-| `404 Not Found` on a connector endpoint | Connector paths are category-scoped — `/api/hris/v1/connectors`, not `/api/v1/connectors` | [Lesson 1](/get-started/tutorials/set-up-your-environment) |
+| `404 Not Found` on a connector endpoint | Connector paths are category-scoped - `/api/hris/v1/connectors`, not `/api/v1/connectors` | [Lesson 1](/get-started/tutorials/set-up-your-environment) |
 | `403` on `/employees` while `/connectors` works | The `X-Connector-Token` header is missing | [Lesson 3](/get-started/tutorials/connect-a-test-account) |
 | `items` is `[]` and nothing is obviously wrong | Development connectors never sync on their own | [Lesson 4](/get-started/tutorials/run-your-first-sync) |
 | A field you expected is `null` | Out of scope, not permitted by the source system, or not carried by the unified model | [How Bindbee decides what data you get](/explanation/what-data-you-get) |

@@ -1,6 +1,6 @@
 ---
 title: "Validate Webhook Signatures"
-description: "Verify that a webhook really came from Bindbee — and avoid the raw-body mistake that causes almost every signature mismatch."
+description: "Verify that a webhook really came from Bindbee - and avoid the raw-body mistake that causes almost every signature mismatch."
 ---
 
 Your webhook endpoint is a public URL. Anyone who discovers it can POST to it. Signature verification is what makes the payload trustworthy.
@@ -15,7 +15,7 @@ X-Bindbee-Webhook-Signature: <base64url-encoded HMAC-SHA256 of the raw body>
 
 You recompute it and compare.
 
-## Step 1 — Get your signature key
+## Step 1 - Get your signature key
 
 Find it in the **Security** section of the webhooks page at [app.bindbee.dev/webhooks](https://app.bindbee.dev/webhooks).
 
@@ -28,13 +28,13 @@ The key is unique to your organization and can be regenerated if exposed.
   endpoint will accept as genuine.
 </Warning>
 
-## Step 2 — Capture the raw body
+## Step 2 - Capture the raw body
 
 This is the step that goes wrong.
 
 <Warning>
   Verify against the **exact bytes** you received. Re-serializing the parsed JSON
-  — `JSON.stringify(req.body)`, `json.dumps(payload)` — changes key order,
+  - `JSON.stringify(req.body)`, `json.dumps(payload)` - changes key order,
   whitespace and number formatting. The HMAC will never match, and the code will
   look correct.
 </Warning>
@@ -44,12 +44,12 @@ Most frameworks discard the raw body after parsing. Configure them not to:
 | Framework | How |
 | --- | --- |
 | Express | `express.json({ verify: (req, _res, buf) => { req.rawBody = buf.toString("utf-8"); } })` |
-| Flask | `request.get_data()` — returns raw bytes |
-| Django | `request.body` — read before touching `request.POST` |
+| Flask | `request.get_data()` - returns raw bytes |
+| Django | `request.body` - read before touching `request.POST` |
 | FastAPI | `await request.body()` |
 | Rails | `request.raw_post` |
 
-## Step 3 — Verify
+## Step 3 - Verify
 
 <CodeGroup>
 
@@ -106,7 +106,7 @@ function signatureIsValid(rawBody, received) {
   const a = Buffer.from(expected, "utf-8");
   const b = Buffer.from(received, "utf-8");
 
-  // Length check first — timingSafeEqual throws on mismatched lengths
+  // Length check first - timingSafeEqual throws on mismatched lengths
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
@@ -145,9 +145,9 @@ head :unauthorized unless signature_valid?(request.raw_post,
 
 </CodeGroup>
 
-## Step 4 — Compare in constant time
+## Step 4 - Compare in constant time
 
-Use `hmac.compare_digest`, `crypto.timingSafeEqual` or `secure_compare` — never `==`.
+Use `hmac.compare_digest`, `crypto.timingSafeEqual` or `secure_compare` - never `==`.
 
 Naive string comparison exits at the first differing byte, and the timing difference is measurable over enough requests. It is a real, well-documented way to recover a signature byte by byte.
 
@@ -157,7 +157,7 @@ Naive string comparison exits at the first differing byte, and the timing differ
   your handler instead of returning `401`.
 </Warning>
 
-## Step 5 — Fail closed
+## Step 5 - Fail closed
 
 ```python
 if not received_signature:
@@ -166,7 +166,7 @@ if not signature_is_valid(raw_body, received_signature):
     abort(401)            # bad signature → reject
 ```
 
-Never process an unverified payload "just this once", and never fall back to accepting when verification errors. An unverified webhook can carry any `origin_id` an attacker chooses — meaning it can make you write attacker-supplied data against a real customer.
+Never process an unverified payload "just this once", and never fall back to accepting when verification errors. An unverified webhook can carry any `origin_id` an attacker chooses - meaning it can make you write attacker-supplied data against a real customer.
 
 ## Troubleshooting mismatches
 
@@ -195,13 +195,13 @@ Compare against the header value from that same delivery in [Logs → Webhooks](
 
 Signature verification proves authenticity, not uniqueness. You still need:
 
-- **Idempotency** — deduplicate on `sync.sync_id` + `webhook.event`
-- **A fast response** — 10-second timeout; acknowledge and queue
-- **`2xx`** — anything else triggers up to 4 retries within 60 seconds
+- **Idempotency** - deduplicate on `sync.sync_id` + `webhook.event`
+- **A fast response** - 10-second timeout; acknowledge and queue
+- **`2xx`** - anything else triggers up to 4 retries within 60 seconds
 
 <Warning>
   Returning `401` for a genuinely invalid signature causes Bindbee to retry 4
-  times. That is correct behaviour on both sides — but if *every* delivery is
+  times. That is correct behaviour on both sides - but if *every* delivery is
   failing verification, you will see 5x the traffic. Fix the mismatch rather than
   suppressing the `401`.
 </Warning>

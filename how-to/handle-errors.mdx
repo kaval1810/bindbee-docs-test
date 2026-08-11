@@ -1,6 +1,6 @@
 ---
 title: "Handle Errors"
-description: "What each status code means in Bindbee, which are retryable, and how to build a client that fails safely — especially on writes."
+description: "What each status code means in Bindbee, which are retryable, and how to build a client that fails safely - especially on writes."
 ---
 
 ## Status codes
@@ -18,7 +18,7 @@ description: "What each status code means in Bindbee, which are retryable, and h
 | `502` / `503` / `504` | Upstream or gateway issue | **Yes** | Retry with backoff |
 
 <Warning>
-  Retry `429` and `5xx`. Never retry `4xx` other than `429` — the request will
+  Retry `429` and `5xx`. Never retry `4xx` other than `429` - the request will
   fail identically every time, and retrying a write can create duplicates.
 </Warning>
 
@@ -38,7 +38,7 @@ Validation failures return a `detail` array identifying the offending field:
 }
 ```
 
-`loc` is the path to the field. Surface it — "missing `integration_params.policy_id`" is actionable; "validation failed" is not.
+`loc` is the path to the field. Surface it - "missing `integration_params.policy_id`" is actionable; "validation failed" is not.
 
 Missing `integration_params` is the most common cause on writes. Re-read the Meta schema for that connector.
 
@@ -48,10 +48,10 @@ Missing `integration_params` is the most common cause on writes. Re-read the Met
 
 | Header | Meaning |
 | --- | --- |
-| `X-RateLimit-Limit` | The ceiling — `200` |
+| `X-RateLimit-Limit` | The ceiling - `200` |
 | `X-RateLimit-Remaining` | Requests left this window |
 | `X-RateLimit-Reset` | Unix seconds when the window resets |
-| `Retry-After` | Seconds to wait — on `429` only |
+| `Retry-After` | Seconds to wait - on `429` only |
 
 Honour `Retry-After` rather than guessing:
 
@@ -94,7 +94,7 @@ Full detail: [Rate Limits](/api-reference/basics/rate-limits).
 <Warning>
   **Bindbee does not deduplicate repeated create requests.** Retrying a `POST`
   that timed out can create a duplicate employee or a duplicate time-off request
-  in your customer's HRIS. A timeout is not evidence the write failed — it may
+  in your customer's HRIS. A timeout is not evidence the write failed - it may
   have succeeded and the response been lost.
 </Warning>
 
@@ -117,7 +117,7 @@ def create_time_off(connector_token, request_key, body):
         return resp.json()
 
     except requests.Timeout:
-        # Unknown outcome — do NOT retry blind
+        # Unknown outcome - do NOT retry blind
         mark_unknown(request_key)
         raise WriteOutcomeUnknown(request_key)
 ```
@@ -162,16 +162,16 @@ log.error(
   your HTTP client's logging and in your error tracker's request capture.
 </Warning>
 
-`integration_slug` is the field that turns "some writes fail" into "writes fail on Workday" — include it everywhere.
+`integration_slug` is the field that turns "some writes fail" into "writes fail on Workday" - include it everywhere.
 
 ## Surfacing errors to your customer
 
 | Condition | Show them |
 | --- | --- |
-| `RELINK_NEEDED` | "Reconnect your HRIS" — prominent, actionable |
+| `RELINK_NEEDED` | "Reconnect your HRIS" - prominent, actionable |
 | Repeated sync failures | "We're having trouble syncing. We're on it." |
 | Single transient failure | Nothing |
-| `429` | Nothing — retry silently |
+| `429` | Nothing - retry silently |
 | Validation failure on their input | The specific field from `loc` |
 | `501` on a write | "Not supported for your HR system yet" |
 

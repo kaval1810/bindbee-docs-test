@@ -21,7 +21,7 @@ Work through this before your first real customer connects. Most items exist bec
   </Step>
   <Step title="Credentials are redacted from logs and error tracking">
     Check your HTTP client's request logging and your error tracker's request
-    capture — both commonly record headers by default.
+    capture - both commonly record headers by default.
   </Step>
   <Step title="Key rotation is a runbook, not a discovery">
     Regenerating a Production key invalidates the old one **immediately**. Know
@@ -52,7 +52,7 @@ Work through this before your first real customer connects. Most items exist bec
   </Step>
   <Step title="Re-linking is implemented">
     `RELINK_NEEDED` is unrecoverable without the customer. Ship the reconnect
-    path before you need it — it preserves the existing connector and token.
+    path before you need it - it preserves the existing connector and token.
   </Step>
 </Steps>
 
@@ -102,7 +102,7 @@ Work through this before your first real customer connects. Most items exist bec
     customer's HRIS. Record a request key; resolve unknowns by reading back.
   </Step>
   <Step title="The UI doesn't block on readback">
-    A 2xx means the source system accepted it — not that Bindbee can return it
+    A 2xx means the source system accepted it - not that Bindbee can return it
     yet.
   </Step>
 </Steps>
@@ -119,7 +119,7 @@ Work through this before your first real customer connects. Most items exist bec
   <Step title="Processing is deduplicated on sync_id + event">
     Up to 4 retries within 60 seconds means duplicates are guaranteed.
   </Step>
-  <Step title="Production webhooks are registered — not just Development">
+  <Step title="Production webhooks are registered - not just Development">
     They are environment-scoped and do not cross over.
   </Step>
   <Step title="A scheduled reconciliation sweep exists">
@@ -138,7 +138,7 @@ Work through this before your first real customer connects. Most items exist bec
     4xx other than 429 is never retried.
   </Step>
   <Step title="Concurrency across connectors is bounded">
-    Rate limits are per connector, so Bindbee won't stop you — your own
+    Rate limits are per connector, so Bindbee won't stop you - your own
     infrastructure will.
   </Step>
   <Step title="No resync on a timer">
@@ -206,7 +206,7 @@ Work through this before your first real customer connects. Most items exist bec
     policy.
   </Step>
   <Step title="Trust Center is your answer to security reviews">
-    [trust.bindbee.dev](https://trust.bindbee.dev) — link it rather than copying
+    [trust.bindbee.dev](https://trust.bindbee.dev) - link it rather than copying
     claims that go stale.
   </Step>
 </Steps>
@@ -217,11 +217,11 @@ Work through this before your first real customer connects. Most items exist bec
 
 1. Connect one real connector via your production flow.
 2. Confirm `origin_id` maps to the right tenant.
-3. Wait for the first sync — confirm your UI shows progress, not an empty state.
+3. Wait for the first sync - confirm your UI shows progress, not an empty state.
 4. Confirm `connector_synced` reaches your endpoint and passes signature verification.
 5. Run a full import; confirm the count matches `total_employees`.
 6. Run an incremental import; confirm the watermark advances.
-7. Simulate a failure — return `500` from your webhook endpoint and confirm retries then your sweep recover.
+7. Simulate a failure - return `500` from your webhook endpoint and confirm retries then your sweep recover.
 8. Trigger a resync from your UI; confirm throttling works.
 9. Confirm no credential appears in logs.
 

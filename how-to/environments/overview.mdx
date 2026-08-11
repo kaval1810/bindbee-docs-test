@@ -1,0 +1,50 @@
+---
+title: "Overview"
+description: "What's shared and what's separate between Bindbee's Development and Production environments, and how to manage and authenticate with each key."
+---
+
+## Development and Production
+
+Bindbee has two environments, each with its own API key.
+
+| | Development | Production |
+| --- | --- | --- |
+| Connectors | Separate | Separate |
+| Connector syncs | Manual trigger only | Automatic |
+| Logs | Separate | Separate |
+| Scoping | **Shared** | **Shared** |
+| Custom field | **Shared** | **Shared** |
+| Webhook | **Shared** | **Shared** |
+| API key | Separate | Separate |
+
+
+Scope and custom fields configured in Development carry over to Production. Connectors and their data do not - each environment's API key only accesses that environment's data.
+
+## Managing your API key
+
+View and regenerate either key from **Settings → [API Keys](https://app.bindbee.dev/settings/keys)** in the Bindbee dashboard. Development and Production each have their own block with their own key.
+
+<Warning>
+  Regenerating a key immediately invalidates the old one. Update any dependent services before regenerating - especially in Production.
+</Warning>
+
+## Authentication
+
+Include the matching environment's API key in the `Authorization` header using the **Bearer** prefix:
+
+```
+Authorization: Bearer YOUR_API_KEY
+```
+
+A Development key only works against Development data; a Production key only works against Production data. See [Authenticate a request](/how-to/authenticate) for the full rules on what each endpoint needs.
+
+## Environment-specific details
+
+<CardGroup cols={2}>
+  <Card title="Development" icon="flask-conical" href="/how-to/environments/development">
+    Sync behavior, connector limits, and key-sharing policy for testing.
+  </Card>
+  <Card title="Production" icon="box" href="/how-to/environments/production">
+    Sync behavior and key-handling rules for live customer data.
+  </Card>
+</CardGroup>

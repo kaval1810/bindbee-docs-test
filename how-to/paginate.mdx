@@ -1,6 +1,6 @@
 ---
 title: "Paginate Through Results"
-description: "Cursor pagination on every Bindbee list endpoint — the loop, the limits, and the mistakes that cause infinite loops or missed records."
+description: "Cursor pagination on every Bindbee list endpoint - the loop, the limits, and the mistakes that cause infinite loops or missed records."
 ---
 
 Every list endpoint in the Bindbee API is cursor-paginated and returns the same envelope.
@@ -26,7 +26,7 @@ Every list endpoint in the Bindbee API is cursor-paginated and returns the same 
 | Parameter | Default | Max | Notes |
 | --- | --- | --- | --- |
 | `page_size` | `50` | `200` | Requests above 200 are rejected |
-| `cursor` | — | — | Pass the previous response's `cursor` verbatim |
+| `cursor` | - | - | Pass the previous response's `cursor` verbatim |
 
 ## The loop
 
@@ -96,7 +96,7 @@ curl "https://api.bindbee.dev/api/hris/v1/employees?page_size=200" \
   -H "Authorization: Bearer $BINDBEE_API_KEY" \
   -H "X-Connector-Token: $CONNECTOR_TOKEN"
 
-# Next page — pass the cursor back
+# Next page - pass the cursor back
 curl -G "https://api.bindbee.dev/api/hris/v1/employees" \
   -H "Authorization: Bearer $BINDBEE_API_KEY" \
   -H "X-Connector-Token: $CONNECTOR_TOKEN" \
@@ -111,10 +111,10 @@ curl -G "https://api.bindbee.dev/api/hris/v1/employees" \
 Every filter from the first request must be repeated on every subsequent request. Changing a filter mid-pagination produces undefined results.
 
 ```python
-# Wrong — filter dropped after page 1
+# Wrong - filter dropped after page 1
 params = {"cursor": cursor}
 
-# Right — filters carried through
+# Right - filters carried through
 params = {"page_size": 200, "cursor": cursor, **filters}
 ```
 
@@ -146,7 +146,7 @@ params = {"page_size": 200, "cursor": cursor, **filters}
 
 | `page_size` | When |
 | --- | --- |
-| `200` | Bulk import — fewest requests |
+| `200` | Bulk import - fewest requests |
 | `50` (default) | General use |
 | `10`–`25` | Interactive UI, or when using `include_raw_data` |
 
@@ -158,9 +158,9 @@ params = {"page_size": 200, "cursor": cursor, **filters}
 
 ## Rate limits while paginating
 
-200 requests per minute **per connector**. At `page_size=200` that is 40,000 records a minute — pagination alone rarely hits it.
+200 requests per minute **per connector**. At `page_size=200` that is 40,000 records a minute - pagination alone rarely hits it.
 
-The risk is parallelism across connectors. Each connector has an independent limit, so parallel imports don't contend with each other — but your own infrastructure will. Bound concurrency and handle `429` with `Retry-After`.
+The risk is parallelism across connectors. Each connector has an independent limit, so parallel imports don't contend with each other - but your own infrastructure will. Bound concurrency and handle `429` with `Retry-After`.
 
 ```python
 import time
@@ -191,7 +191,7 @@ try:
                              modified_after=load_watermark()):
         upsert(employee)
 except Exception:
-    raise                      # watermark unchanged — safe to retry whole run
+    raise                      # watermark unchanged - safe to retry whole run
 else:
     save_watermark(started)    # only on complete success
 ```

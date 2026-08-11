@@ -1,6 +1,6 @@
 ---
 title: "Read Benefits & Payroll Data"
-description: "Assemble a full benefits enrolment picture and a payroll history for an employee — including the Benefit / Employer Benefit / Dependent Benefit distinction that trips up most first integrations."
+description: "Assemble a full benefits enrolment picture and a payroll history for an employee - including the Benefit / Employer Benefit / Dependent Benefit distinction that trips up most first integrations."
 ---
 
 Employee data is one model. Benefits and payroll are a **graph**, and getting the graph wrong is the most common cause of "the numbers don't match" tickets.
@@ -15,7 +15,7 @@ Employee data is one model. Benefits and payroll are a **graph**, and getting th
 
 ---
 
-## Part 1 — Benefits
+## Part 1 - Benefits
 
 ### The shape of the graph
 
@@ -50,12 +50,12 @@ In words:
 | `BenefitCoverage` | Coverage amount on an enrolment | "How much cover, and who does it apply to?" |
 
 <Warning>
-  `DependentBenefit` links a dependent to an **`employer_benefit`** — the plan —
+  `DependentBenefit` links a dependent to an **`employer_benefit`** - the plan -
   not to the employee's `Benefit` row. Do not assume you can walk from a
   dependent's benefit directly to the employee's benefit record.
 </Warning>
 
-### Step 1 — Fetch the employee's enrolments
+### Step 1 - Fetch the employee's enrolments
 
 ```bash
 curl -G "https://api.bindbee.dev/api/hris/v1/benefits" \
@@ -97,9 +97,9 @@ Read the contribution fields carefully:
   annual cost.
 </Warning>
 
-`end_date: null` means the enrolment is currently open. A non-null `end_date` in the past means it has lapsed — filter these out when showing "current coverage".
+`end_date: null` means the enrolment is currently open. A non-null `end_date` in the past means it has lapsed - filter these out when showing "current coverage".
 
-### Step 2 — Fetch the plan catalogue
+### Step 2 - Fetch the plan catalogue
 
 `EmployerBenefit` describes the plan itself, independent of anyone's enrolment:
 
@@ -126,9 +126,9 @@ curl "https://api.bindbee.dev/api/hris/v1/employer-benefits" \
 
 Note the plural: `EmployerBenefit.coverage_tiers` is the list of tiers the plan *offers*. `Benefit.coverage_tier` is the single tier the employee actually *chose*.
 
-`deduction_code` is the payroll code — this is your join key when reconciling a benefit against a payroll deduction line.
+`deduction_code` is the payroll code - this is your join key when reconciling a benefit against a payroll deduction line.
 
-### Step 3 — Fetch dependents and their enrolments
+### Step 3 - Fetch dependents and their enrolments
 
 ```bash
 curl -G "https://api.bindbee.dev/api/hris/v1/dependents" \
@@ -141,11 +141,11 @@ curl "https://api.bindbee.dev/api/hris/v1/dependent-benefits" \
   -H "X-Connector-Token: $CONNECTOR_TOKEN"
 ```
 
-`Dependent` carries `relationship`, `date_of_birth`, `is_student`, `gender`, `ssn` and an address — the fields eligibility rules are usually written against.
+`Dependent` carries `relationship`, `date_of_birth`, `is_student`, `gender`, `ssn` and an address - the fields eligibility rules are usually written against.
 
 `DependentBenefit` is thin by design: `dependent`, `employer_benefit`, and the date range.
 
-### Step 4 — Fetch coverage amounts
+### Step 4 - Fetch coverage amounts
 
 `BenefitCoverage` attaches a monetary amount to an enrolment and records who it covers:
 
@@ -160,9 +160,9 @@ curl "https://api.bindbee.dev/api/hris/v1/dependent-benefits" \
 }
 ```
 
-This is the model to use for life and disability plans where "how much cover" is the question. Not every connector populates it — see [Integrations & Coverage](/integrations).
+This is the model to use for life and disability plans where "how much cover" is the question. Not every connector populates it - see [Integrations & Coverage](/integrations).
 
-### Step 5 — Assemble the view
+### Step 5 - Assemble the view
 
 ```python
 from collections import defaultdict
@@ -199,7 +199,7 @@ for benefit in benefits:
         "annual_employee_cost": (
             benefit["employee_contribution"] * periods
             if periods and benefit.get("employee_contribution") is not None
-            else None      # unknown frequency — do not guess
+            else None      # unknown frequency - do not guess
         ),
         "covered_dependents": [
             d["first_name"] for d in dep_enrolments[benefit["employer_benefit"]]
@@ -215,7 +215,7 @@ for benefit in benefits:
 
 ---
 
-## Part 2 — Payroll
+## Part 2 - Payroll
 
 ### The shape
 
@@ -239,12 +239,12 @@ flowchart LR
 | `Compensation` | Employee's pay rate | "What is Jane's salary?" |
 
 <Note>
-  `Compensation` is the *rate* — what the employee is contracted to earn.
-  `EmployeePayrollRun` is the *actual* — what was paid in a specific period.
+  `Compensation` is the *rate* - what the employee is contracted to earn.
+  `EmployeePayrollRun` is the *actual* - what was paid in a specific period.
   They will not match, and are not supposed to.
 </Note>
 
-### Step 6 — Read payroll runs
+### Step 6 - Read payroll runs
 
 ```bash
 curl -G "https://api.bindbee.dev/api/hris/v1/payroll-runs" \
@@ -266,11 +266,11 @@ curl -G "https://api.bindbee.dev/api/hris/v1/payroll-runs" \
 }
 ```
 
-`check_date` — not `end_date` — is when money actually moved. Use it for cash-flow and reconciliation logic.
+`check_date` - not `end_date` - is when money actually moved. Use it for cash-flow and reconciliation logic.
 
 `run_type` distinguishes `REGULAR` from off-cycle runs (bonuses, corrections). Including off-cycle runs in a "typical monthly pay" calculation is a classic source of inflated averages.
 
-### Step 7 — Read an employee's pay detail
+### Step 7 - Read an employee's pay detail
 
 ```bash
 curl -G "https://api.bindbee.dev/api/hris/v1/employee-payroll-runs" \
@@ -295,9 +295,9 @@ curl -G "https://api.bindbee.dev/api/hris/v1/employee-payroll-runs" \
 }
 ```
 
-`earnings`, `deductions` and `taxes` are line-item arrays. `gross_pay` minus `net_pay` will not equal the sum of `deductions` alone — taxes are a separate array.
+`earnings`, `deductions` and `taxes` are line-item arrays. `gross_pay` minus `net_pay` will not equal the sum of `deductions` alone - taxes are a separate array.
 
-### Step 8 — Reconcile benefits against payroll
+### Step 8 - Reconcile benefits against payroll
 
 This is the join most benefits products need:
 
@@ -326,11 +326,11 @@ for epr in fetch_all("/api/hris/v1/employee-payroll-runs"):
 
 | Symptom | Likely cause |
 | --- | --- |
-| `benefits` empty but the HRIS shows plans | Benefits are a separate permission scope in many systems — the connection may not have been granted it |
+| `benefits` empty but the HRIS shows plans | Benefits are a separate permission scope in many systems - the connection may not have been granted it |
 | `company_contribution` is `null` | Many systems only expose the employee side |
 | Dependents present, `dependent-benefits` empty | The system tracks dependents without per-plan enrolment records |
-| `benefit-coverages` empty | Not supported by that connector — see [Integrations & Coverage](/integrations) |
-| Annual cost looks 2x wrong | `frequency` mishandled — see Step 1 |
+| `benefit-coverages` empty | Not supported by that connector - see [Integrations & Coverage](/integrations) |
+| Annual cost looks 2x wrong | `frequency` mishandled - see Step 1 |
 
 For anything the unified model does not carry, check `include_raw_data=true` first, then reach for a [custom field](/how-to/map-custom-fields) or [passthrough](/how-to/use-passthrough).
 

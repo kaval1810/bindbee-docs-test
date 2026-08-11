@@ -16,7 +16,7 @@ sync_status  →  Is the data current?           Syncing  | Done       | Failed
 
 They move independently. All nine combinations are reachable.
 
-## `status` — credential health
+## `status` - credential health
 
 | Value | Meaning | Data readable? | Your action |
 | --- | --- | --- | --- |
@@ -28,7 +28,7 @@ They move independently. All nine combinations are reachable.
 
 A `link_token` was issued, or a Magic Link was opened, but the customer never finished authorizing. There are no credentials, so nothing will ever sync.
 
-This is a common and undramatic state — people close tabs. It usually means your onboarding flow needs a nudge, not that anything failed.
+This is a common and undramatic state - people close tabs. It usually means your onboarding flow needs a nudge, not that anything failed.
 
 ### `COMPLETE`
 
@@ -54,9 +54,9 @@ Common causes:
   hour of data drift.
 </Warning>
 
-Data from the last successful sync remains readable. This is a feature — your product doesn't go blank — but it is also a trap: without surfacing the state, your customer sees plausible data that is silently frozen.
+Data from the last successful sync remains readable. This is a feature - your product doesn't go blank - but it is also a trap: without surfacing the state, your customer sees plausible data that is silently frozen.
 
-## `sync_status` — data currency
+## `sync_status` - data currency
 
 | Value | Meaning |
 | --- | --- |
@@ -64,7 +64,7 @@ Data from the last successful sync remains readable. This is a feature — your 
 | `Done` | Last sync completed successfully |
 | `Failed` | Last sync did not complete |
 
-`Failed` with `status: COMPLETE` means the credentials are fine but this particular run broke — a vendor outage, a timeout, a transient error. These often recover on the next scheduled run without any intervention.
+`Failed` with `status: COMPLETE` means the credentials are fine but this particular run broke - a vendor outage, a timeout, a transient error. These often recover on the next scheduled run without any intervention.
 
 ## The lifecycle
 
@@ -93,7 +93,7 @@ flowchart TD
     class Incomplete,Failed,Relink warn
 ```
 
-Re-linking updates the **existing** connector. The `connector_token` you already stored continues to work — you do not need to re-exchange tokens or re-key your database.
+Re-linking updates the **existing** connector. The `connector_token` you already stored continues to work - you do not need to re-exchange tokens or re-key your database.
 
 <Tip>
   Because re-linking preserves the connector, your recovery flow is simply:
@@ -103,7 +103,7 @@ Re-linking updates the **existing** connector. The `connector_token` you already
 
 ## `is_active`
 
-Separate from `status`. A connector can be deactivated — for example when the customer churns or you delete the connection via
+Separate from `status`. A connector can be deactivated - for example when the customer churns or you delete the connection via
 `DELETE /api/{category}/v1/connectors/{connector_id}/delete`.
 
 Treat `is_active: false` as terminal. Don't try to recover it; create a new connection.
@@ -121,9 +121,9 @@ Map states to user-visible outcomes explicitly:
 | `INCOMPLETE` | "Finish connecting your HRIS" + resume link | No |
 | `COMPLETE` + `Syncing`, first sync | "Importing your data…" with progress | No |
 | `COMPLETE` + `Done` | "Connected · last synced *X* ago" | No |
-| `COMPLETE` + `Failed`, once | Nothing — likely transient | No |
+| `COMPLETE` + `Failed`, once | Nothing - likely transient | No |
 | `COMPLETE` + `Failed`, repeatedly | "We're having trouble syncing" | Yes |
-| `RELINK_NEEDED` | "Reconnect your HRIS" — prominent, blocking | Yes |
+| `RELINK_NEEDED` | "Reconnect your HRIS" - prominent, blocking | Yes |
 | `is_active: false` | Connection removed | No |
 
 <Warning>
@@ -136,9 +136,9 @@ Map states to user-visible outcomes explicitly:
 
 Two ways, and you want both:
 
-**Webhooks** — `connector_sync_error` fires on failure with an `error` object explaining what happened. React immediately.
+**Webhooks** - `connector_sync_error` fires on failure with an `error` object explaining what happened. React immediately.
 
-**Polling the connector list** — `GET /api/{category}/v1/connectors` returns current `status`, `sync_status`, `sync_progress`, `last_sync_start_time` and `next_sync_start_time` for every connector. Run this on a schedule as a reconciliation sweep; it is the only reliable way to catch a `RELINK_NEEDED` that was detected while your webhook endpoint was down.
+**Polling the connector list** - `GET /api/{category}/v1/connectors` returns current `status`, `sync_status`, `sync_progress`, `last_sync_start_time` and `next_sync_start_time` for every connector. Run this on a schedule as a reconciliation sweep; it is the only reliable way to catch a `RELINK_NEEDED` that was detected while your webhook endpoint was down.
 
 See [Monitor sync status](/how-to/monitor-sync-status).
 
