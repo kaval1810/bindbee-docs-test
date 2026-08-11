@@ -25,11 +25,11 @@ Every Custom Field mapping is attached to one of two scopes:
 You can manage Custom Fields in two ways. Both create the same underlying configuration and can coexist — pick whichever fits the task.
 
 <CardGroup cols={2}>
-  <Card title="Dashboard Configuration" icon="app-window" href="/custom-fields/dashboard">
+  <Card title="Dashboard Configuration" icon="app-window" href="/how-to/configure-custom-fields-dashboard">
     Visual flow inside the Bindbee Dashboard. Best for ad-hoc setup,
     exploring upstream payloads interactively, and one-off field changes.
   </Card>
-  <Card title="API Configuration" icon="code" href="/custom-fields/api-workflow">
+  <Card title="API Configuration" icon="code" href="/how-to/configure-custom-fields-api">
     Programmatic flow for automation, infrastructure-as-code, replicating
     configuration across environments, or syncing with internal admin tools.
   </Card>
@@ -70,7 +70,7 @@ Example response with custom fields:
   contain `"INVALID_JSON_PATH"` in place of the value for that field rather
   than raising an error. Validate your expression before saving — via the
   dashboard's preview button or the API's
-  [`/custom-fields/preview`](/custom-fields/api-workflow#step-3-validate-the-jmespath-optional-but-recommended)
+  [`/custom-fields/preview`](/how-to/configure-custom-fields-api#step-3-validate-the-jmespath-optional-but-recommended)
   endpoint.
 </Warning>
 
@@ -95,7 +95,7 @@ Example response with custom fields:
 
 4. **Automation**
 
-   - Use the [API Configuration](/custom-fields/api-workflow) flow to keep custom field configuration in version control or replicate it across environments (dev → staging → prod).
+   - Use the [API Configuration](/how-to/configure-custom-fields-api) flow to keep custom field configuration in version control or replicate it across environments (dev → staging → prod).
    - The `configuration` endpoint is a good health check — run it after provisioning a new connector to confirm every expected field has a mapping.
 
 For more details on writing JMESPath expressions, see the [JMESPath Documentation](https://jmespath.org/).

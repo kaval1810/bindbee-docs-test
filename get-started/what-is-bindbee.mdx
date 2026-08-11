@@ -1,89 +1,77 @@
 ---
 title: "What is Bindbee?"
-description: "Bindbee is a Unified API for HRIS, Payroll, ATS and LMS. Build one integration against Bindbee's unified models and reach every system your customers use."
+description: "Bindbee gives you one API and one data model for reading HR, payroll, recruiting, and learning data out of whatever system your customer already runs."
 ---
 
-## The problem Bindbee solves
+Your customers run their people data somewhere — BambooHR, ADP, Workday, Gusto, an SFTP drop, or something you have never heard of. Your product needs that data, and every one of those systems models it differently.
 
-Your customers run their people data on BambooHR, Workday, ADP, Gusto, UKG, Rippling, and dozens of others. Each one has a different API, a different auth model, a different pagination scheme, and a different idea of what an "employee" is.
-
-Building and maintaining those integrations yourself is not one project. It is a permanent team.
-
-Bindbee gives you **one API, one auth model, and one set of unified data models** across every supported system.
-
-```http
-GET https://api.bindbee.dev/api/hris/v1/employees
-```
-
-That request returns the same `HrisEmployee` shape whether your customer is on BambooHR or Workday.
-
-## How it fits together
-
-<Steps>
-  <Step title="Your customer connects their system">
-    You send them a [Magic Link](/features/magic-link), or embed the connection
-    flow directly in your product with [Bindbee Embed](/sdk/bindbee-embed).
-    They authorize once.
-  </Step>
-  <Step title="Bindbee syncs and normalizes">
-    Bindbee pulls data from the third-party system on a schedule, maps it into
-    unified models, and stores the normalized result.
-  </Step>
-  <Step title="You read from one API">
-    You call Bindbee's unified endpoints with a `connector_token` that identifies
-    that customer's connection. No per-vendor code.
-  </Step>
-  <Step title="You stay in sync">
-    [Webhooks](/webhooks/overview) tell you when data changes so you don't have
-    to poll.
-  </Step>
-</Steps>
-
-<Info>
-  Bindbee reads from a **normalized copy** of your customer's data, not live from
-  the third-party API on every request. This is what makes response times and
-  rate limits predictable — and it is also why understanding
-  [how syncing works](/explanation/how-syncing-works) matters.
-</Info>
+Bindbee sits between the two. You integrate once, against one schema. Your customer authorizes their own system. Bindbee keeps the data in sync and hands it to you in a shape that does not change when the underlying system does.
 
 ## What you get
 
-<CardGroup cols={2}>
-  <Card title="Unified models" icon="boxes" href="/explanation/hris-model-relationships">
-    One schema for employees, employments, compensation, benefits, payroll runs,
-    time off, and more — across every connector.
-  </Card>
-  <Card title="Read and write" icon="arrow-left-right" href="/get-started/tutorials/write-data-back">
-    Read data out, and write employees, time off, timesheets and payroll runs
-    back into the source system.
-  </Card>
-  <Card title="Custom fields" icon="git-fork" href="/explanation/custom-fields-mental-model">
-    Surface any value from the raw upstream payload alongside the unified schema
-    using a JMESPath mapping.
-  </Card>
-  <Card title="Passthrough" icon="arrow-left-right" href="/explanation/passthrough-when-and-why">
-    When the unified model doesn't carry what you need, call the third-party API
-    directly through Bindbee's auth.
-  </Card>
-</CardGroup>
+- **Unified models** across HRIS, Payroll, ATS, and LMS — the same `Employee` object whether the data came from Gusto or Workday.
+- **Customer-authorized connectors** — your customer links their own system through [Magic Link](/how-to/magic-link), with no credentials passing through your product.
+- **Raw data and [custom fields](/explanation/custom-fields)** — when the unified model does not carry a value you need, you can map it out of the original payload yourself.
+- **[Webhooks](/webhooks/overview)** — your application finds out when a sync finishes or a record changes, instead of polling for it.
 
-## Product categories
+## How an integration works
 
-| Category | What it covers | Base path |
-| --- | --- | --- |
-| **HRIS** | HR, payroll, directory, benefits, time & attendance | `/api/hris/v1/` |
-| **ATS** | Recruiting — candidates, jobs, applications, offers | `/api/ats/v1/` |
-| **LMS** | Learning — users, courses, content, enrollments, completions | `/api/lms/v1/` |
+Five things happen, in this order, every time.
 
-Platform endpoints that are not category-specific — connectors, custom fields, passthrough, lookups — live under `/api/v1/` and `/api/embedded/v1/`.
+```mermaid
+flowchart LR
+    A[Scope<br/>the data] --> B[Customer<br/>links system]
+    B --> C[Bindbee<br/>syncs]
+    C --> D[You read<br/>unified data]
+    D --> E[Webhooks<br/>notify changes]
+```
+
+**Scope the data.** You decide which models and fields your product actually needs. Scope narrows what Bindbee requests and what your customer has to grant.
+
+**Your customer links their system.** They authorize their HRIS, payroll, ATS, or LMS through Magic Link. That authorization produces a connector.
+
+**Bindbee syncs.** Bindbee pulls the scoped data from the source system and normalizes it into the unified models.
+
+**You read unified data.** One set of endpoints, one schema, regardless of which system is on the other end.
+
+**Webhooks notify you of changes.** Sync completions and record-level changes are pushed to your endpoint.
 
 ## Where to go next
 
 <CardGroup cols={2}>
-  <Card title="Quickstart" icon="bolt" href="/get-started/quickstart">
-    First API call in about 10 minutes.
+  <Card title="Build your first integration" icon="play" href="/get-started/before-you-begin">
+    A guided tutorial that takes you from an empty environment to employee data
+    in your own code, including a custom field and a webhook. Start here if you
+    are new to Bindbee.
   </Card>
-  <Card title="Core Concepts" icon="book" href="/get-started/core-concepts">
-    API key vs connector token, connectors, syncs, unified models.
+
+  <Card title="Integrations & coverage" icon="plug" href="/integrations">
+    Every supported system, its slug, and whether it connects over API or SFTP —
+    across HRIS, Payroll, ATS, and LMS.
+  </Card>
+
+  <Card title="Take an integration live" icon="rocket" href="/how-to/go-live-checklist">
+    Preparing a real customer's source system, moving from development to
+    production, and the checks worth running before you switch over.
+  </Card>
+
+  <Card title="API reference" icon="code" href="/api-reference/basics/authentication">
+    Authentication, pagination, rate limits, and every endpoint across HRIS,
+    Payroll, ATS, and LMS.
+  </Card>
+
+  <Card title="Core concepts" icon="book-open" href="/explanation/core-concepts">
+    Connectors, environments, scope, syncs, and how the unified model relates to
+    the data underneath it.
   </Card>
 </CardGroup>
+
+## Getting help
+
+You have a dedicated Slack channel with the Bindbee team — that is the fastest route for anything blocking. For everything else, email [support@bindbee.dev](mailto:support@bindbee.dev).
+
+<Info>
+  Bindbee accounts are provisioned by our team during onboarding, not through
+  self-serve signup. If you do not yet have dashboard access, ask in your Slack
+  channel.
+</Info>

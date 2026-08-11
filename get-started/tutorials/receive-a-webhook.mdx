@@ -1,0 +1,180 @@
+---
+title: "7. Know when data changes"
+description: "Configure a development webhook, receive a sync completion event, and verify that it came from Bindbee."
+---
+
+Polling for changes works, badly. Webhooks let Bindbee tell your application when a sync finishes or a record changes.
+
+**By the end of this lesson** you will have received and verified a sync completion event. About 15 minutes.
+
+## Context
+
+Five events are available. You choose which to subscribe to when you create the webhook.
+
+| Event string | Fires when |
+| --- | --- |
+| `connector_sync_started` | A sync begins |
+| `connector_synced` | A sync completes successfully |
+| `connector_sync_error` | A sync fails |
+| `employee_data_changed` | Employee records are created or updated |
+| `connector_data_modified` | Records in any supported model change |
+
+<Info>
+  Event strings use **underscores**, not hyphens. `connector_synced`, never
+  `connector-synced`. Matching the wrong form fails quietly — your handler simply
+  never runs.
+</Info>
+
+<Warning>
+  Webhooks are environment-specific. A Production webhook receives nothing from
+  development connectors, which is a common reason one appears silently broken.
+</Warning>
+
+## Step 1 — Expose an endpoint
+
+You need a URL that accepts `POST` and returns a `2xx` within 10 seconds. A local tunnel such as ngrok is fine.
+
+**Result:** a reachable URL to give Bindbee.
+
+## Step 2 — Create the webhook
+
+In the Dashboard, go to **Configure → Webhooks**. Enter your destination URL and click **Test URL** to confirm Bindbee can reach it. Name it `Tutorial sync events`, set **Webhook Type** to **Development**, and select **Sync completed** and **Employee model change**.
+
+**Result:** an active development webhook, and a successful test delivery.
+
+## Step 3 — Trigger an event
+
+Resync your connector as in lesson 4.
+
+**Result:** a `connector_synced` payload arrives at your endpoint.
+
+```json
+{
+  "webhook": {
+    "webhook_id": "10c9a6b1-4ea8-476e-bdb0-193001a94a8d",
+    "url": "https://your-endpoint.example.com/bindbee",
+    "event": "connector_synced"
+  },
+  "connector": {
+    "id": "018f99e2-ed3a-7f4c-ae97-83d619bdf95c",
+    "display_name": "BreatheHR",
+    "integration_slug": "breathehr",
+    "categories": ["HRIS"],
+    "org_name": "Tutorial Test Co",
+    "connector_status": "COMPLETE"
+  },
+  "data": {
+    "display_status": "Done",
+    "last_sync_start_time": "2026-08-07T09:49:22.922083+00:00"
+  },
+  "sync": {
+    "sync_id": "019f146e-8396-7c6d-aff3-c5760bf5eef8",
+    "sync_type": "MANUAL",
+    "sync_name": "#1"
+  }
+}
+```
+
+`connector.id` tells you which customer. `sync.sync_type` distinguishes a manual trigger from a scheduled one.
+
+## Step 4 — Verify the signature
+
+Do not trust an unverified webhook. Every delivery carries `X-Bindbee-Webhook-Signature`, an HMAC-SHA256 of the raw body using your organization's signature key, found in the **Security** section of the Webhooks page.
+
+```python
+import base64, hashlib, hmac
+
+signature_key = "YOUR_WEBHOOK_SIGNATURE_KEY"
+
+if "X-Bindbee-Webhook-Signature" not in request.headers:
+    raise Exception("Signature header missing; request may not be from Bindbee.")
+
+received = request.headers["X-Bindbee-Webhook-Signature"]
+
+digest = hmac.new(
+    signature_key.encode("utf-8"),
+    request.body.encode("utf-8"),
+    hashlib.sha256,
+).digest()
+
+expected = base64.urlsafe_b64encode(digest).decode()
+
+if not hmac.compare_digest(expected, received):
+    raise Exception("Signature mismatch.")
+```
+
+<Warning>
+  Compute the HMAC over the **raw** request body. Parsing to JSON and
+  re-serializing changes the bytes and the signature will never match. In
+  Express, capture `req.rawBody` in the `verify` callback.
+</Warning>
+
+Node and Ruby versions are in the [Webhooks reference](/webhooks/overview).
+
+**Result:** a verified event you can safely act on.
+
+## What you just did
+
+Your application is now told when data changes instead of asking.
+
+Two properties of delivery shape how you write the handler. If a delivery fails, Bindbee retries up to 4 times within 60 seconds, with each attempt timing out after 10 seconds — and any non-`2xx` counts as a failure. So acknowledge fast and do your work asynchronously, and make the handler idempotent, because the same event can arrive more than once.
+
+Deliveries are logged at [Webhook logs](https://app.bindbee.dev/logs/webhooks).
+
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="No webhook arrived">
+    Check the type is **Development**, not Production. Then check the webhook
+    logs — if a delivery was attempted and failed, the problem is at your endpoint.
+  </Accordion>
+
+  <Accordion title="Signature never matches">
+    You are almost certainly hashing a re-serialized body. Use the raw bytes.
+    Also confirm the key is current — regenerating invalidates the old one.
+  </Accordion>
+
+  <Accordion title="The same event arrives repeatedly">
+    Your endpoint is not returning `2xx` fast enough. Acknowledge first, process
+    after.
+  </Accordion>
+
+  <Accordion title="Your handler never fires on a matching event">
+    Check for hyphens in your event string comparison.
+  </Accordion>
+</AccordionGroup>
+
+## Summary
+
+You built a working integration end to end. Along the way you learned to:
+
+- Separate development from production, and the API key from the connector token
+- Scope models and fields before asking a customer for permissions
+- Create and authorize a connector, and where its token lives
+- Trigger a sync and recognize the three signals that one finished
+- Read unified records, page through them, and filter by what changed
+- Map a value out of `raw_data` when the unified model does not carry it
+- Receive and verify webhook events
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Prepare a real customer's source system" icon="key" href="/how-to/go-live-checklist">
+    Sandbox tenants come pre-permissioned. Real ones do not, and missing
+    permissions fail silently. Read this before your first real customer.
+  </Card>
+
+  <Card title="Move to production" icon="rocket" href="/how-to/environments/production">
+    What carries across environments, what does not, and what to check before
+    switching over.
+  </Card>
+
+  <Card title="Connect customers from your app" icon="link" href="/how-to/connect-a-customer">
+    Take a real customer from "click connect" in your product to a synced
+    connector, instead of creating one from the Dashboard.
+  </Card>
+
+  <Card title="Core concepts" icon="book-open" href="/explanation/core-concepts">
+    The model behind what you just did.
+  </Card>
+</CardGroup>

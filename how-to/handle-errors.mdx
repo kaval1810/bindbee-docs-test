@@ -11,7 +11,7 @@ description: "What each status code means in Bindbee, which are retryable, and h
 | `401` | Authentication failed | No | `Bearer ` prefix, environment, key freshness |
 | `403` | Not authorized for this resource | No | `X-Connector-Token` present and matching environment |
 | `404` | Not found | No | Category path (`hris`/`ats`/`lms`), record ID |
-| `422` | Validation failed | No | Re-read the [Meta schema](/get-started/tutorials/write-data-back) |
+| `422` | Validation failed | No | Re-read the [Meta schema](/how-to/write-data-back) |
 | `429` | Rate limited | **Yes** | `Retry-After` header |
 | `500` | Server error | **Yes** | Retry with backoff; escalate if persistent |
 | `501` | Meta API not implemented for this integration | No | [Handle explicitly](/explanation/meta-api-schema-discovery#handling-501-not-implemented) |

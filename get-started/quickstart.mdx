@@ -1,279 +1,123 @@
 ---
-title: "Quickstart"
-description: "From signup to your first unified employee record in about 10 minutes. No production credentials and no customer required."
+title: "Before you begin"
+description: "What you will build in this tutorial, what you need in front of you before you start, and what the tutorial deliberately leaves out."
 ---
 
-By the end of this page you will have created a test connection, triggered a sync, and read normalized employee data out of the Bindbee API.
+This is a single tutorial in seven lessons. Work through them in order — each one depends on the state the previous one left behind.
+
+**By the end of this tutorial** you will have employee records from a linked HRIS arriving in your own code, including one field the unified model does not carry, with your application notified when that data changes. About 45 minutes, plus waiting on a sync.
+
+## What you will build
+
+By the end, employee records from a linked HRIS will be arriving in your own code. That includes:
+
+- A **connector** you created and authorized against a test HRIS tenant
+- A completed **sync**, and a way to tell when it finished
+- **Employee data** read from the Bindbee API in the unified schema
+- **One field the unified model does not carry**, mapped out of the raw payload
+- A **webhook** telling your application when that data changes
+
+That is the whole thing.
+
+## What you will need
 
 <Info>
-  **Time to first API call: ~10 minutes.** Everything here runs in the
-  **Development** environment, which is isolated from Production and free to
-  experiment in.
+  Every item below is something to have open or on hand before lesson 1. If you
+  are missing any of them, resolve it first — the lessons assume all five.
 </Info>
 
-## Before you start
-
-You need a Bindbee account. If you don't have one, [book a demo](https://www.bindbee.dev/book-demo) or sign in at [app.bindbee.dev](https://app.bindbee.dev).
-
-You will also need `curl`, or any HTTP client.
-
----
-
-## Step 1 — Get your Development API key
-
-Go to **Settings → API Keys** at [app.bindbee.dev/settings/keys](https://app.bindbee.dev/settings/keys) and copy your **Development** key.
-
-<img
-  src="https://images.unifyx.dev/documentation_images/development-key.png"
-  alt="Development API Keys"
-  className="block"
-/>
-
-Export it so the rest of the commands on this page work as written:
-
-```bash
-export BINDBEE_API_KEY="your_development_api_key"
-export BINDBEE_URL="https://api.bindbee.dev"   # use https://api-eu.bindbee.dev for the EU region
-```
+| You need | How to get it |
+| --- | --- |
+| Access to the Bindbee Dashboard | Provisioned by the Bindbee team during onboarding. If you cannot sign in, ask in your Slack channel. |
+| A **development** environment API key | Dashboard → API Keys, with the environment switcher set to Development. See [Development environment](/how-to/environments/development). |
+| Credentials for a test HRIS tenant | Request these in your Slack channel or from [support@bindbee.dev](mailto:support@bindbee.dev). Bindbee hosts sandbox tenants for several systems so you do not have to supply your own. Check [Integrations & Coverage](/integrations) for the supported systems and their slugs — you will need the slug in lesson 3. |
+| An HTTP client | `curl`, Postman, or your language's HTTP library. The lessons show `curl` and give you enough to translate. |
+| An endpoint that can receive a POST | Needed in lesson 7 only. A local tunnel such as ngrok is fine. |
 
 <Warning>
-  Make sure you copied the **Development** key. A Production key will not work
-  against Development data, and using one here would create a live connector.
+  Sandbox credentials are not yet self-serve. Request them before you start
+  rather than at lesson 3, or the tutorial will stall partway through.
 </Warning>
 
----
+## What this tutorial does not cover
 
-## Step 2 — Confirm the key works
+Ruling these out now is what lets every lesson stay a single path with no branching. Each one is a real task — just a later one.
 
-The lookup endpoints are organization-scoped, so they need only the API key. This is the fastest way to prove your credentials are correct before anything else can go wrong.
+<AccordionGroup>
+  <Accordion title="Embedding Magic Link inside your own product">
+    In lesson 3 you create a connector from the Dashboard, which is the fastest
+    route to a working sync. Embedding the linking flow in your own UI is a
+    separate job you will do before you onboard real customers.
+  </Accordion>
 
-```bash
-curl "$BINDBEE_URL/api/v1/lookup/integrations" \
-  -H "Authorization: Bearer $BINDBEE_API_KEY"
-```
+  <Accordion title="Preparing a real customer's source system">
+    Test tenants come with the permissions already granted. Real customers do
+    not — and missing permissions are the single most common reason fields
+    arrive empty. That is covered in the [Go-live
+    checklist](/how-to/go-live-checklist).
+  </Accordion>
 
-A `200` with a list of integrations means you are authenticated.
+  <Accordion title="Going to production">
+    Everything here happens in the development environment. Moving over is
+    covered in [Production environment](/how-to/environments/production),
+    including what carries across environments and what does not.
+  </Accordion>
 
-If you get `401`, the key is wrong or the `Bearer ` prefix is missing. See [Authenticate a request](/how-to/authenticate).
+  <Accordion title="Writing data back to the source system">
+    This tutorial only reads. Bindbee supports writes on several models — see
+    the API reference for the endpoints that accept `POST`.
+  </Accordion>
+</AccordionGroup>
 
----
+## The lessons
 
-## Step 3 — Create a connection
+<Steps>
+  <Step title="Set up your environment and keys">
+    Development versus production, and which of the two tokens goes on which
+    request. [Start here →](/get-started/tutorials/set-up-your-environment)
+  </Step>
+  <Step title="Scope the data you need">
+    Choose the models and fields your product reads. This decision shapes
+    everything downstream. [Lesson 2 →](/get-started/tutorials/scope-your-data)
+  </Step>
+  <Step title="Connect a test account">
+    Create a connector against a sandbox HRIS tenant and authorize it.
+    [Lesson 3 →](/get-started/tutorials/connect-a-test-account)
+  </Step>
+  <Step title="Run your first sync">
+    Development connectors do not sync on a schedule. You will trigger this one
+    yourself and watch it complete. [Lesson 4 →](/get-started/tutorials/run-your-first-sync)
+  </Step>
+  <Step title="Read employee data from the API">
+    Your first authenticated call that returns real records.
+    [Lesson 5 →](/get-started/tutorials/read-employee-data)
+  </Step>
+  <Step title="Add a field the unified model does not have">
+    Find the value in the raw payload, map it, and see it appear on the
+    unified object. [Lesson 6 →](/get-started/tutorials/add-a-custom-field)
+  </Step>
+  <Step title="Know when data changes">
+    Subscribe to a webhook so your application stops polling.
+    [Lesson 7 →](/get-started/tutorials/receive-a-webhook)
+  </Step>
+</Steps>
 
-A **connector** represents one customer's link to one system. You have two ways to create one.
+## If you get stuck
 
-<Tabs>
-  <Tab title="Magic Link (fastest)">
-    No code. Best for your first run.
+Each lesson ends with the failures that lesson can cause. These six account for most of them — worth skimming now so you recognize them when they happen.
 
-    1. In the dashboard, go to **Magic Link** and click **Create Magic Link**.
-    2. Choose category **HRIS** and pick an integration.
-    3. Enter an organization name (e.g. `Acme Corp`) and an `origin_id` — use
-       your own internal customer ID.
-    4. Open the generated link and complete the authorization as if you were the
-       customer.
-
-    Full walkthrough: [Magic Link](/features/magic-link).
-  </Tab>
-  <Tab title="Bindbee Embed (in your product)">
-    Generate a `link_token`, render the flow in your frontend, then exchange the
-    resulting `temporary_token` for a `connector_token`.
-
-    ```bash
-    curl -X POST "$BINDBEE_URL/api/embedded/v1/link/create-link-token" \
-      -H "Authorization: Bearer $BINDBEE_API_KEY" \
-      -H "Content-Type: application/json" \
-      -d '{
-        "end_user_data": {
-          "org_name": "Acme Corp.",
-          "origin_id": "your-internal-customer-id"
-        },
-        "category": "HRIS",
-        "integration": "bamboohr"
-      }'
-    ```
-
-    Full walkthrough: [Bindbee Embed](/sdk/bindbee-embed).
-  </Tab>
-</Tabs>
-
-Integration slugs (`bamboohr`, `workday`, `ukg-pro`, …) are listed on the [Integrations](/integrations) page.
-
----
-
-## Step 4 — Get your `connector_token`
-
-List your connectors and find the one you just created:
-
-```bash
-curl "$BINDBEE_URL/api/hris/v1/connectors" \
-  -H "Authorization: Bearer $BINDBEE_API_KEY"
-```
-
-```json
-{
-  "cursor": null,
-  "page_size": 50,
-  "items": [
-    {
-      "id": "018b18ef-c487-703c-afd9-0ca478ccd9d6",
-      "integration_slug": "bamboohr",
-      "category": "HRIS",
-      "status": "COMPLETE",
-      "sync_status": "Done",
-      "origin_id": "your-internal-customer-id",
-      "connector_token": "jk23h4jk23hk4j2h3kj4h23kjh4k23jh4k2j3h4",
-      "is_active": true
-    }
-  ]
-}
-```
-
-You can also read the token from the **Overview** tab of the connector in the dashboard.
-
-```bash
-export CONNECTOR_TOKEN="jk23h4jk23hk4j2h3kj4h23kjh4k23jh4k2j3h4"
-```
-
-<Tip>
-  In a real integration, store `connector_token` against your own customer record
-  the moment you receive it. You will need it on every subsequent request for
-  that customer.
-</Tip>
-
----
-
-## Step 5 — Trigger a sync
-
-Development connectors **do not sync automatically**. Nothing will be readable until you run one:
-
-```bash
-curl -X POST "$BINDBEE_URL/api/embedded/v1/connectors/resync" \
-  -H "Authorization: Bearer $BINDBEE_API_KEY" \
-  -H "X-Connector-Token: $CONNECTOR_TOKEN"
-```
-
-Poll the connector until `sync_status` is `Done`:
-
-```bash
-curl "$BINDBEE_URL/api/hris/v1/connectors" \
-  -H "Authorization: Bearer $BINDBEE_API_KEY"
-```
-
-The `sync_progress` field reports percentage complete while a sync is running.
-
-<Note>
-  In **Production** this step is unnecessary — syncs run automatically every 24
-  hours by default, and the first sync starts as soon as the customer finishes
-  linking. See [Force a resync](/how-to/force-a-resync) for when it *is*
-  appropriate.
-</Note>
-
----
-
-## Step 6 — Read unified employee data
-
-This is the call your product will actually make. Note that it needs **both** headers:
-
-<CodeGroup>
-
-```bash cURL
-curl "$BINDBEE_URL/api/hris/v1/employees?page_size=10" \
-  -H "Authorization: Bearer $BINDBEE_API_KEY" \
-  -H "X-Connector-Token: $CONNECTOR_TOKEN"
-```
-
-```python Python
-import os, requests
-
-resp = requests.get(
-    "https://api.bindbee.dev/api/hris/v1/employees",
-    headers={
-        "Authorization": f"Bearer {os.environ['BINDBEE_API_KEY']}",
-        "X-Connector-Token": os.environ["CONNECTOR_TOKEN"],
-    },
-    params={"page_size": 10},
-)
-resp.raise_for_status()
-for employee in resp.json()["items"]:
-    print(employee["display_full_name"], employee["work_email"])
-```
-
-```javascript Node
-const res = await fetch(
-  "https://api.bindbee.dev/api/hris/v1/employees?page_size=10",
-  {
-    headers: {
-      Authorization: `Bearer ${process.env.BINDBEE_API_KEY}`,
-      "X-Connector-Token": process.env.CONNECTOR_TOKEN,
-    },
-  },
-);
-
-if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
-
-const { items } = await res.json();
-for (const employee of items) {
-  console.log(employee.display_full_name, employee.work_email);
-}
-```
-
-</CodeGroup>
-
-```json
-{
-  "cursor": "MDE4YjE4ZWYtYzk5Yy03YTg2LTk5NDYtN2I3YzlkNTQzM2U1",
-  "page_size": 10,
-  "items": [
-    {
-      "id": "01931edf-04b6-7391-8a5c-93ac4b395316",
-      "remote_id": "3235005483341316245",
-      "modified_at": "2026-07-21T09:49:30.478384+00:00",
-      "employee_number": "000000168",
-      "first_name": "Jane",
-      "last_name": "Doe",
-      "display_full_name": "Jane Doe",
-      "work_email": "jane@acme.com",
-      "designation": "Staff Engineer",
-      "employment_status": "ACTIVE",
-      "start_date": "2023-04-03",
-      "manager": "01931edf-04c8-7649-a470-d85f6161bd1a",
-      "company": "01931edf-1a22-7f00-9b4e-2c9b7d1e5f04"
-    }
-  ]
-}
-```
-
-**That is the whole point of Bindbee.** That same response shape comes back for every connector, whichever system your customer is on.
-
----
-
-## Troubleshooting your first call
-
-| Symptom | Cause | Fix |
+| Symptom | Cause | Where it's fixed |
 | --- | --- | --- |
-| `401 Unauthorized` | Missing `Bearer ` prefix, or wrong environment key | [Authenticate a request](/how-to/authenticate) |
-| `items` is `[]` but sync said `Done` | Development connector never synced, or the account genuinely has no employees | Re-run Step 5 |
-| Empty response right after linking | First sync still running | Poll `sync_status` until `Done` |
-| `403` on `/employees` but `/connectors` works | `X-Connector-Token` header missing | Add the second header |
-| A field you expected is `null` | Source system doesn't expose it, or the connector doesn't map it | [Why is a field null?](/explanation/field-semantics) |
-| `429 Too Many Requests` | 200 req/min per connector exceeded | [Rate Limits](/api-reference/basics/rate-limits) |
+| `401 Unauthorized` | Missing the `Bearer ` prefix, or a key from the other environment | [Lesson 1](/get-started/tutorials/set-up-your-environment) |
+| `404 Not Found` on a connector endpoint | Connector paths are category-scoped — `/api/hris/v1/connectors`, not `/api/v1/connectors` | [Lesson 1](/get-started/tutorials/set-up-your-environment) |
+| `403` on `/employees` while `/connectors` works | The `X-Connector-Token` header is missing | [Lesson 3](/get-started/tutorials/connect-a-test-account) |
+| `items` is `[]` and nothing is obviously wrong | Development connectors never sync on their own | [Lesson 4](/get-started/tutorials/run-your-first-sync) |
+| A field you expected is `null` | Out of scope, not permitted by the source system, or not carried by the unified model | [How Bindbee decides what data you get](/explanation/what-data-you-get) |
+| `429 Too Many Requests` | Per-connector rate limit exceeded | [Rate limits](/api-reference/basics/rate-limits) |
 
----
+<Check>
+  Everything in this tutorial happens in the development environment against a
+  test tenant. No real customer data is touched at any point.
+</Check>
 
-## Next steps
-
-<CardGroup cols={2}>
-  <Card title="Connect Your First Customer" icon="plug" href="/get-started/tutorials/connect-your-first-customer">
-    Do Step 3 properly — in your own product, for a real customer.
-  </Card>
-  <Card title="Read Employee Data" icon="users" href="/get-started/tutorials/read-employee-data">
-    Pagination, filtering, expanding relations, incremental reads.
-  </Card>
-  <Card title="Handle Webhooks" icon="webhook" href="/get-started/tutorials/handle-webhooks">
-    Stop polling. Get told when data changes.
-  </Card>
-  <Card title="Go-Live Checklist" icon="rocket" href="/how-to/go-live-checklist">
-    What to verify before you point Production at this.
-  </Card>
-</CardGroup>
+Ready? [Set up your environment and keys →](/get-started/tutorials/set-up-your-environment)

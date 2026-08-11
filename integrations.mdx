@@ -96,7 +96,7 @@ Base path `/api/hris/v1/` · category `HRIS`
 | **Time & Attendance** | Time Off, Time Off Balance, Timesheet Entry |
 | **Banking** | Bank Info |
 
-Writable models: Employee, Time Off, Timesheet Entry, Employee Payroll Run — subject to per-connector support. See [Write Data Back](/get-started/tutorials/write-data-back).
+Writable models: Employee, Time Off, Timesheet Entry, Employee Payroll Run — subject to per-connector support. See [Write Data Back](/how-to/write-data-back).
 
 ---
 
@@ -104,26 +104,26 @@ Writable models: Employee, Time Off, Timesheet Entry, Employee Payroll Run — s
 
 Base path `/api/ats/v1/` · category `ATS`
 
-| System | Slug |
-| --- | --- |
-| Ashby | `ashby` |
-| BambooHR | `bamboohr` |
-| Greenhouse | `greenhouse` |
-| JazzHR | `jazzhr` |
-| JobScore | `jobscore` |
-| Jobvite | `jobvite` |
-| Lever | `lever` |
-| Paylocity Recruiting | `paylocity_recruiting` |
-| Recruitee | `recruitee` |
-| SAP SuccessFactors | `sap-success-factors` |
-| Teamtailor | `teamtailor` |
-| Workable | `workable` |
-| Workday | `workday` |
+| System | Slug | Type |
+| --- | --- | --- |
+| Ashby | `ashby` | API |
+| BambooHR | `bamboohr` | API |
+| Greenhouse | `greenhouse` | API |
+| JazzHR | `jazzhr` | API |
+| JobScore | `jobscore` | API |
+| Jobvite | `jobvite` | API |
+| Lever | `lever` | API |
+| Paylocity Recruiting | `paylocity_recruiting` | API |
+| Recruitee | `recruitee` | API |
+| SAP SuccessFactors | `sap-success-factors` | API |
+| Teamtailor | `teamtailor` | API |
+| Workable | `workable` | API |
+| Workday | `workday` | API |
 
 ### ATS models
 
 | Group | Models |
-| --- | --- |
+| --- | --- | --- |
 | **Talent Acquisition** | Candidate, Application, Job, Job Interview Stage, Scheduled Interview, Screening Question |
 | **Evaluation** | Activity, Scorecard, EEOC, Reject Reason, Attachment, Tag |
 | **Outcomes** | Offer |
@@ -137,15 +137,15 @@ Most ATS models support create operations.
 
 Base path `/api/lms/v1/` · category `LMS`
 
-| System | Slug |
-| --- | --- |
-| SAP SuccessFactors | `sap_sf_lms` |
-| Workday | `workday` |
+| System | Slug | Type |
+| --- | --- | --- |
+| SAP SuccessFactors | `sap_sf_lms` | API |
+| Workday | `workday` | API |
 
 ### LMS models
 
 | Group | Models |
-| --- | --- |
+| --- | --- | --- |
 | **People** | Users |
 | **Content** | Courses, Contents, Skills, Categories |
 | **Progress** | Completions, Enrollments |
@@ -203,7 +203,7 @@ Pass `category` and `integration` together when creating a `link_token`:
 
 </CodeGroup>
 
-Full flow: [Connect Your First Customer](/get-started/tutorials/connect-your-first-customer).
+Full flow: [Connect Your First Customer](/how-to/connect-a-customer).
 
 <Tip>
   Rather than hardcoding this list in your product, build your integration picker
@@ -316,7 +316,7 @@ Contact `support@bindbee.dev` with:
   <Card title="SFTP vs API" icon="file-up" href="/explanation/sftp-vs-api">
     Why file-based connectors behave differently.
   </Card>
-  <Card title="Connect Your First Customer" icon="plug" href="/get-started/tutorials/connect-your-first-customer">
+  <Card title="Connect Your First Customer" icon="plug" href="/how-to/connect-a-customer">
     Using a slug end to end.
   </Card>
 </CardGroup>

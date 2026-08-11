@@ -19,23 +19,24 @@
         "tab": "Get Started",
         "groups": [
           {
-            "group": "Introduction",
+            "group": "Start here",
             "icon": "flag",
             "pages": [
               "get-started/what-is-bindbee",
-              "get-started/quickstart",
-              "get-started/core-concepts"
+              "get-started/before-you-begin"
             ]
           },
           {
-            "group": "Tutorials",
-            "icon": "list-check",
+            "group": "Build your first integration",
+            "icon": "graduation-cap",
             "pages": [
-              "get-started/tutorials/connect-your-first-customer",
+              "get-started/tutorials/set-up-your-environment",
+              "get-started/tutorials/scope-your-data",
+              "get-started/tutorials/connect-a-test-account",
+              "get-started/tutorials/run-your-first-sync",
               "get-started/tutorials/read-employee-data",
-              "get-started/tutorials/read-benefits-and-payroll-data",
-              "get-started/tutorials/handle-webhooks",
-              "get-started/tutorials/write-data-back"
+              "get-started/tutorials/add-a-custom-field",
+              "get-started/tutorials/receive-a-webhook"
             ]
           },
           {
@@ -62,6 +63,15 @@
         "tab": "Explanation",
         "groups": [
           {
+            "group": "Foundations",
+            "icon": "lightbulb",
+            "pages": [
+              "explanation/core-concepts",
+              "explanation/unified-model-and-raw-data",
+              "explanation/what-data-you-get"
+            ]
+          },
+          {
             "group": "Architecture & Sync Engine",
             "icon": "network",
             "pages": [
@@ -85,7 +95,7 @@
             "pages": [
               "explanation/passthrough-when-and-why",
               "explanation/custom-fields-mental-model",
-              "custom-fields/overview",
+              "explanation/custom-fields",
               "explanation/meta-api-schema-discovery",
               "explanation/sftp-vs-api",
               "explanation/webhooks-vs-polling"
@@ -109,19 +119,20 @@
             "pages": [
               "how-to/authenticate",
               "how-to/install-sdks",
+              "how-to/connect-a-customer",
               {
                 "group": "Environments",
                 "pages": [
-                  "features/environments/development",
-                  "features/environments/production"
+                  "how-to/environments/development",
+                  "how-to/environments/production"
                 ]
               },
               {
                 "group": "Connection Experience",
                 "pages": [
-                  "features/magic-link",
-                  "sdk/bindbee-embed",
-                  "sdk/customizations"
+                  "how-to/magic-link",
+                  "how-to/bindbee-embed",
+                  "how-to/embed-brand-customization"
                 ]
               }
             ]
@@ -132,9 +143,12 @@
             "pages": [
               "how-to/paginate",
               "how-to/filter-with-modified-after",
+              "how-to/read-employee-directory",
+              "how-to/read-benefits-and-payroll",
+              "how-to/write-data-back",
               "how-to/map-custom-fields",
-              "custom-fields/dashboard",
-              "custom-fields/api-workflow",
+              "how-to/configure-custom-fields-dashboard",
+              "how-to/configure-custom-fields-api",
               "how-to/use-passthrough"
             ]
           },
@@ -143,6 +157,7 @@
             "icon": "activity",
             "pages": [
               "how-to/handle-errors",
+              "how-to/handle-webhooks",
               "how-to/validate-webhook-signatures",
               "how-to/monitor-sync-status",
               "how-to/force-a-resync"
@@ -649,6 +664,90 @@
     {
       "source": "/sdk/integrations",
       "destination": "/integrations"
+    },
+    {
+      "source": "/get-started/quickstart",
+      "destination": "/get-started/before-you-begin"
+    },
+    {
+      "source": "/get-started/core-concepts",
+      "destination": "/explanation/core-concepts"
+    },
+    {
+      "source": "/get-started/set-up-your-environment",
+      "destination": "/get-started/tutorials/set-up-your-environment"
+    },
+    {
+      "source": "/get-started/scope-your-data",
+      "destination": "/get-started/tutorials/scope-your-data"
+    },
+    {
+      "source": "/get-started/connect-a-test-account",
+      "destination": "/get-started/tutorials/connect-a-test-account"
+    },
+    {
+      "source": "/get-started/run-your-first-sync",
+      "destination": "/get-started/tutorials/run-your-first-sync"
+    },
+    {
+      "source": "/get-started/read-employee-data",
+      "destination": "/get-started/tutorials/read-employee-data"
+    },
+    {
+      "source": "/get-started/add-a-custom-field",
+      "destination": "/get-started/tutorials/add-a-custom-field"
+    },
+    {
+      "source": "/get-started/receive-a-webhook",
+      "destination": "/get-started/tutorials/receive-a-webhook"
+    },
+    {
+      "source": "/get-started/tutorials/connect-your-first-customer",
+      "destination": "/how-to/connect-a-customer"
+    },
+    {
+      "source": "/get-started/tutorials/read-benefits-and-payroll-data",
+      "destination": "/how-to/read-benefits-and-payroll"
+    },
+    {
+      "source": "/get-started/tutorials/handle-webhooks",
+      "destination": "/how-to/handle-webhooks"
+    },
+    {
+      "source": "/get-started/tutorials/write-data-back",
+      "destination": "/how-to/write-data-back"
+    },
+    {
+      "source": "/custom-fields/overview",
+      "destination": "/explanation/custom-fields"
+    },
+    {
+      "source": "/custom-fields/dashboard",
+      "destination": "/how-to/configure-custom-fields-dashboard"
+    },
+    {
+      "source": "/custom-fields/api-workflow",
+      "destination": "/how-to/configure-custom-fields-api"
+    },
+    {
+      "source": "/features/magic-link",
+      "destination": "/how-to/magic-link"
+    },
+    {
+      "source": "/features/environments/development",
+      "destination": "/how-to/environments/development"
+    },
+    {
+      "source": "/features/environments/production",
+      "destination": "/how-to/environments/production"
+    },
+    {
+      "source": "/sdk/bindbee-embed",
+      "destination": "/how-to/bindbee-embed"
+    },
+    {
+      "source": "/sdk/customizations",
+      "destination": "/how-to/embed-brand-customization"
     }
   ],
   "api": {

@@ -1,0 +1,135 @@
+---
+title: "6. Add a field the unified model doesn't have"
+description: "Find a value in raw_data, map it with a JMESPath expression, and read it back as a custom field on the unified object."
+---
+
+The unified model covers what is common across systems. Every source system also carries fields that are its own — a cost centre code, a badge number, a locally defined employment type.
+
+**By the end of this lesson** you will have one such value appearing on the unified employee object. About 15 minutes.
+
+## Context
+
+Custom fields surface values from the original payload alongside the normalized schema, so you get the extra field without giving up the stable shape.
+
+A mapping has two parts: a **field** registered on a `(category, model)` pair, and a **JMESPath expression** saying where in the raw payload its value lives.
+
+Mappings also have a scope:
+
+| Mapping scope | Applies to | Use when |
+| --- | --- | --- |
+| Organization | Every connector for that integration | The source system names the field consistently |
+| Connector | One connector only | One customer configured it differently |
+
+Connector scope is fine for this tutorial.
+
+## Step 1 — Find the value in `raw_data`
+
+Look at the `raw_data` object on an employee record from lesson 5, or fetch the payload directly with [Get raw data](/custom-fields/api/get-raw-data). Pick one value that is not in the unified schema.
+
+```json
+{
+  "employee": {
+    "customFields": {
+      "costCentre": "CC-4471"
+    }
+  }
+}
+```
+
+**Result:** a concrete path to a concrete value.
+
+## Step 2 — Write the JMESPath expression
+
+Mappings are [JMESPath](https://jmespath.org/) expressions evaluated against the raw payload. For the example above:
+
+```
+employee.customFields.costCentre
+```
+
+Dot notation for nested objects, `[0]` for list positions, `[?field=='value']` for filtering. The JMESPath playground is worth using for anything containing an array.
+
+**Result:** an expression ready to test.
+
+## Step 3 — Preview the expression
+
+Dry-run it against real connector data with [Preview](/custom-fields/api/preview). This returns what the mapping would produce without persisting anything.
+
+<Warning>
+  A wrong path does not raise an error. It resolves to `INVALID_JSON_PATH`,
+  which arrives as the field's **value**. Previewing first is how you avoid
+  discovering that in production.
+</Warning>
+
+**Result:** the expected value, or a mismatch you can fix before saving.
+
+## Step 4 — Create the custom field and mapping
+
+In the Dashboard, go to **Custom Fields**, create a field on the **HRIS / Employee** pair with a name your code will use — `cost_centre` — then attach your expression as a connector-scoped mapping.
+
+The Dashboard flow is documented at [Dashboard configuration](/how-to/configure-custom-fields-dashboard); the equivalent API calls at [API configuration](/how-to/configure-custom-fields-api).
+
+**Result:** the field exists with a mapping attached. Existing records populate on the next sync — in development, one you trigger.
+
+## Step 5 — Read it back
+
+Custom fields are excluded from responses unless you ask for them.
+
+```bash
+curl "https://api.bindbee.dev/api/hris/v1/employees?include_custom_fields=true" \
+  --header "Authorization: Bearer $BINDBEE_API_KEY" \
+  --header "X-Connector-Token: $CONNECTOR_TOKEN"
+```
+
+**Result:** a `custom_fields` object on each record.
+
+```json
+{
+  "items": [
+    {
+      "id": "018b18ef-c487-703c-afd9-0ca478ccd9d6",
+      "first_name": "Kunal",
+      "last_name": "Tyagi",
+      "custom_fields": {
+        "cost_centre": "CC-4471"
+      }
+    }
+  ]
+}
+```
+
+## What you just did
+
+You extended the unified model without breaking it. Your code reads a stable schema and one extra field you defined, and the mapping absorbs the source system's naming rather than your application doing so.
+
+<Info>
+  Custom field configuration is **shared across environments**, like scope. What
+  you mapped here applies in production without redoing it.
+</Info>
+
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="The field's value is INVALID_JSON_PATH">
+    The expression does not match the payload. Re-check the raw data — nesting
+    depth and exact key casing are the usual culprits. Preview the corrected
+    expression before saving it.
+  </Accordion>
+
+  <Accordion title="custom_fields is absent from the response">
+    Add `include_custom_fields=true`. It is off by default.
+  </Accordion>
+
+  <Accordion title="The field exists but is empty on every record">
+    The mapping is valid but resolves to nothing. Either the source system does
+    not populate that field for these employees, or you have not synced since
+    creating the mapping.
+  </Accordion>
+
+  <Accordion title="The value is missing from raw_data too">
+    Then it is not a mapping problem. Either the model is out of scope, or the
+    source system did not grant permission. See the [Go-live
+    checklist](/how-to/go-live-checklist).
+  </Accordion>
+</AccordionGroup>
+
+Next: [Know when data changes →](/get-started/tutorials/receive-a-webhook)

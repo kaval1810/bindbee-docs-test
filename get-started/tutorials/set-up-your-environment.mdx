@@ -1,0 +1,112 @@
+---
+title: "1. Set up your environment and keys"
+description: "Get a development API key, learn which of Bindbee's two tokens goes on which request, and confirm the key works."
+---
+
+Bindbee has two environments and two kinds of token. Getting both straight now prevents the two most common early mistakes: calling one environment with the other's key, and sending a request without the token that says whose data you want.
+
+**By the end of this lesson** you will have a working development API key and know which token belongs on which request. About 10 minutes.
+
+## Context
+
+### Development and production
+
+| | Development | Production |
+| --- | --- | --- |
+| Connectors | Separate | Separate |
+| Logs and webhook deliveries | Separate | Separate |
+| Scope configuration | **Shared** | **Shared** |
+| Custom field configuration | **Shared** | **Shared** |
+| Automatic syncs | No — you trigger them | Yes |
+
+The shared rows matter more than they look. Scope and custom fields configured in development carry over to production. Connectors and their data do not.
+
+Everything in this tutorial happens in Development.
+
+### The two tokens
+
+Every Bindbee request carries your API key. Requests that touch a specific customer's data carry a second token as well.
+
+| Token | Header | Identifies | Where it comes from |
+| --- | --- | --- | --- |
+| API key | `Authorization: Bearer …` | Your organization | Settings → API Keys |
+| Connector token | `X-Connector-Token` | One customer's linked system | Lesson 3 |
+
+A useful mental model: the API key says *who is asking*, the connector token says *whose data*. Any endpoint returning employee, payroll, candidate, or course records needs both. You do not have a connector token yet — that is expected.
+
+## Step 1 — Switch to the Development environment
+
+Open the Bindbee Dashboard and set the environment selector to **Development**.
+
+Keys are issued per environment, so this has to happen before you generate one.
+
+**Result:** the Dashboard shows Development, and the connector list is empty.
+
+## Step 2 — Create and store your API key
+
+Go to **Settings → [API Keys](https://app.bindbee.dev/settings/keys)** and generate a key.
+
+<img
+  src="https://images.unifyx.dev/documentation_images/development-key.png"
+  alt="The API Keys screen in the Bindbee Dashboard, with the environment set to Development"
+  className="block"
+/>
+
+```bash
+export BINDBEE_API_KEY="your_development_api_key"
+```
+
+<Warning>
+  Keys are shown once. If you lose it, regenerate from the same screen —
+  regenerating invalidates the old key, so update anything already using it.
+</Warning>
+
+**Result:** the key is set in your shell for the rest of the tutorial.
+
+## Step 3 — Confirm the key works
+
+List the connectors in your development environment. You have none yet, so an empty list is the correct answer — what you are checking is the `200`.
+
+```bash
+curl -i https://api.bindbee.dev/api/hris/v1/connectors \
+  --header "Authorization: Bearer $BINDBEE_API_KEY"
+```
+
+**Result:** a `200` with an empty `items` array. Your key is valid and pointed at the right environment.
+
+<Note>
+  Connectors are category-scoped. `/api/hris/v1/connectors` returns HRIS
+  connectors only — the ATS and LMS equivalents are `/api/ats/v1/connectors` and
+  `/api/lms/v1/connectors`. There is no combined endpoint across categories.
+</Note>
+
+## What you just did
+
+You now hold one half of Bindbee's authentication pair. Every request from here carries the `Authorization` header. Requests that return customer records will also need `X-Connector-Token`, which does not exist until you link a system in lesson 3.
+
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="401 Unauthorized">
+    The key is wrong, expired, or the `Bearer ` prefix is missing. The space
+    after `Bearer` is required.
+  </Accordion>
+
+  <Accordion title="200, but connectors you expected are missing">
+    You are almost certainly looking at the other environment. Development and
+    production keys return different connector lists — confirm the environment
+    selector was set to Development when you copied the key.
+  </Accordion>
+
+  <Accordion title="404 Not Found">
+    Check the category segment in the path. Connector endpoints are scoped per
+    category — `/api/hris/v1/connectors`, not `/api/v1/connectors`.
+  </Accordion>
+
+  <Accordion title="403 on an endpoint that returns records">
+    Endpoints returning customer data need `X-Connector-Token` as well. That
+    comes in lesson 3.
+  </Accordion>
+</AccordionGroup>
+
+Next: [Scope the data you need →](/get-started/tutorials/scope-your-data)
