@@ -25,30 +25,12 @@ That is the entire guarantee. It is narrower than it first sounds, and three thi
 
 The third is the one worth sitting with. A unified model that carried every vendor's every field would have thousands of columns and no stability - the thing you adopted it for. It is deliberately a **common denominator**, and the escape hatches below exist because a common denominator is not always enough.
 
-## What normalization does to a record
+## What to expect on a normalized record
 
-<Steps>
-  <Step title="Maps fields">
-    Vendor field names become Bindbee field names. A vendor field with no unified
-    counterpart is not mapped.
-  </Step>
-  <Step title="Coerces enums, or passes them through">
-    Vendor values are mapped into Bindbee's enums where they match. Where they
-    don't, the original string is returned unchanged rather than being dropped or
-    forced into the nearest bucket.
-  </Step>
-  <Step title="Rewrites relations as Bindbee IDs">
-    `manager`, `company`, `employment` and similar fields hold Bindbee UUIDs, not
-    the source system's identifiers. This is what makes relations traversable
-    across connectors.
-  </Step>
-  <Step title="Nulls what wasn't returned">
-    A field the vendor did not send becomes `null`. `null` means *unknown*, not
-    zero and not empty.
-  </Step>
-</Steps>
-
-The second step is the one that surprises people, and it is a deliberate choice about which failure mode is worse. Forcing `"Garden Leave"` into `INACTIVE` would give you a clean enum and a wrong answer. Passing it through gives you a messy enum and a true one. Bindbee picks true. See [Field semantics](/explanation/field-semantics) for how to write code that survives it.
+- **Field names** are Bindbee's, not the vendor's. A vendor field with no unified counterpart is left out.
+- **Enum values** match Bindbee's set where possible. Where a vendor's value doesn't match anything in the enum, you get the original string back instead of a wrong guess - so `"Garden Leave"` can show up where you expected `INACTIVE`. See [Field semantics](/explanation/field-semantics) for how to write code that survives it.
+- **Relation fields** (`manager`, `company`, `employment`, etc.) hold Bindbee IDs, not the vendor's IDs - so you can follow a relation the same way regardless of which system the data came from.
+- **Missing fields** are `null`. `null` means *unknown*, not zero and not empty.
 
 ## Why `raw_data` exists
 

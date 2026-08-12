@@ -17,29 +17,6 @@ Bindbee exposes five benefits models. Their names are similar enough that pickin
 
 The distinction that matters most: **`EmployerBenefit` is a catalogue entry. `Benefit` is an enrolment.** One `EmployerBenefit` has many `Benefit` rows pointing at it - one per enrolled employee.
 
-## The graph
-
-```mermaid
-flowchart TD
-    EB["EmployerBenefit<br/>'Acme PPO Medical'"]
-    B["Benefit<br/>(Jane's enrolment)"]
-    DB["DependentBenefit<br/>(Jane's spouse's enrolment)"]
-    E["Employee"]
-    D["Dependent"]
-    BC["BenefitCoverage"]
-
-    B -->|employer_benefit| EB
-    DB -->|employer_benefit| EB
-    B -->|employee| E
-    DB -->|dependent| D
-    D -->|employee| E
-    BC -->|benefit| B
-    BC -->|covered_dependents| D
-
-    classDef node fill:#F9F9F8,stroke:#E06D10,stroke-width:1.5px,color:#111,rx:8,ry:8
-    class EB,B,DB,E,D,BC node
-```
-
 <Warning>
   `DependentBenefit.employer_benefit` points at the **plan**, not at the
   employee's `Benefit` row. There is no direct link from a dependent's enrolment

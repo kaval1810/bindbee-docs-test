@@ -53,19 +53,7 @@ This is why webhooks-only is not a safe architecture for anything you must not m
 
 ## The recommendation
 
-**Use both.** Webhooks for latency, a scheduled sweep for correctness.
-
-```mermaid
-flowchart LR
-    A["connector_synced webhook"] --> B["read modified_after=&lt;watermark&gt;"]
-    C["daily scheduled sweep"] --> B
-    B --> D["upsert"]
-
-    classDef node fill:#F9F9F8,stroke:#E06D10,stroke-width:1.5px,color:#111,rx:8,ry:8
-    class A,B,C,D node
-```
-
-The sweep runs the identical logic on a timer - daily is usually sufficient. It costs almost nothing when webhooks are working, and it is the only thing that saves you when they aren't.
+**Use both.** Webhooks for latency, a scheduled sweep for correctness. Both do the same thing: read with `modified_after=<watermark>`, then upsert. The webhook triggers that read immediately after a sync; the sweep runs the same read again on a timer (daily is usually sufficient), so nothing is lost if a webhook is missed.
 
 Because the read is watermarked and the write is an idempotent upsert, running both is harmless. No deduplication logic beyond keying on `id`.
 

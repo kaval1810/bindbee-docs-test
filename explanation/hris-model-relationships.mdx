@@ -1,57 +1,17 @@
 ---
 title: "HRIS Model Relationships"
-description: "How Bindbee's 17 HRIS models connect to each other, which are roots and which are leaves, and which relationships are safe to assume."
+description: "How Bindbee's unified HRIS models reference each other, how to use `expand` to traverse them, and which relationships are safe to assume."
 ---
 
 The API reference tells you what fields each model has. It does not tell you how they fit together. This page does.
 
-## The map
+## Employee's relations
 
-```mermaid
-flowchart TD
-    Company["Company"]
-    Employee["Employee"]
-    Group["Group"]
-    PayGroup["PayGroup"]
-    PayrollRun["PayrollRun"]
-    PayrollRunCalendar["PayrollRunCalendar"]
-    EmployeePayrollRun["EmployeePayrollRun"]
-    EmployerBenefit["EmployerBenefit"]
-    Benefit["Benefit"]
-    DependentBenefit["DependentBenefit"]
-    BenefitCoverage["BenefitCoverage"]
-    Dependent["Dependent"]
-    Satellite["Employment · BankInfo · Dependent<br/>Benefit · Compensation · TimeOff<br/>TimeOffBalance · TimesheetEntry"]
-
-    Employee -->|company| Company
-    Employee -->|groups| Group
-    Group -->|parent_group| Group
-    Employee -->|pay_group| PayGroup
-    Employee -->|manager| Employee
-    Satellite -->|employee| Employee
-    PayGroup -->|pay_group| PayrollRun
-    PayrollRun -->|payroll_run| EmployeePayrollRun
-    EmployeePayrollRun -->|employee| Employee
-    PayrollRun -->|payroll_run_calendar| PayrollRunCalendar
-    Employee -->|payroll_run_calendar| PayrollRunCalendar
-    Benefit -->|employer_benefit| EmployerBenefit
-    DependentBenefit -->|employer_benefit| EmployerBenefit
-    BenefitCoverage -->|benefit| Benefit
-    BenefitCoverage -->|covered_dependents| Dependent
-
-    classDef node fill:#F9F9F8,stroke:#E06D10,stroke-width:1.5px,color:#111,rx:8,ry:8
-    classDef hub fill:#FFF3E9,stroke:#E06D10,stroke-width:2px,color:#111,rx:8,ry:8
-    class Company,Group,PayGroup,PayrollRun,PayrollRunCalendar,EmployeePayrollRun,EmployerBenefit,Benefit,DependentBenefit,BenefitCoverage,Dependent,Satellite node
-    class Employee hub
-```
-
-## Employee is the hub
-
-Almost everything hangs off `Employee`. These models carry an `employee` field pointing at it:
+Many models carry an `employee` field pointing at `Employee`:
 
 `Employment` · `Compensation` · `BankInfo` · `Benefit` · `Dependent` · `TimeOff` · `TimeOffBalance` · `TimesheetEntry` · `EmployeePayrollRun`
 
-`Employee` in turn points **outward** at:
+`Employee` itself points **outward** at:
 
 | Field | Points to | Notes |
 | --- | --- | --- |
@@ -107,16 +67,7 @@ Not every connector returns history. Some expose only the current position, in w
 
 ## The payroll chain
 
-```mermaid
-flowchart LR
-    A["PayGroup"] --> B["PayrollRun"]
-    B --> C["EmployeePayrollRun"]
-    C --> D["Employee"]
-    B --> E["PayrollRunCalendar"]
-
-    classDef node fill:#F9F9F8,stroke:#E06D10,stroke-width:1.5px,color:#111,rx:8,ry:8
-    class A,B,C,D,E node
-```
+A `PayGroup` follows a schedule (`PayrollRunCalendar`), and each `PayrollRun` it produces creates one `EmployeePayrollRun` per paid employee.
 
 | Model | One row per |
 | --- | --- |
@@ -138,30 +89,7 @@ Use `check_date` - not `end_date` - for anything cash-flow related. `run_type` s
 
 This one deserves its own page - see [Benefits vs Employer Benefits vs Dependent Benefits](/explanation/benefits-models).
 
-The short version:
-
-```mermaid
-flowchart LR
-    EB["EmployerBenefit<br/>(the plan the company offers)"]
-    B["Benefit"]
-    BC["BenefitCoverage"]
-    DB["DependentBenefit"]
-    Dep["Dependent"]
-    E["Employee"]
-
-    B -->|employer_benefit| EB
-    B -->|employee| E
-    BC -->|benefit| B
-    BC --> Dep
-    DB -->|employer_benefit| EB
-    DB -->|dependent| Dep
-    Dep -->|employee| E
-
-    classDef node fill:#F9F9F8,stroke:#E06D10,stroke-width:1.5px,color:#111,rx:8,ry:8
-    class EB,B,BC,DB,Dep,E node
-```
-
-Note that `DependentBenefit` links to the **plan**, not to the employee's `Benefit` row.
+The short version: `Benefit` and `DependentBenefit` both link back to the `EmployerBenefit` plan, and `BenefitCoverage` links to a `Benefit` plus the `Dependent`s it covers. Note that `DependentBenefit` links to the **plan**, not to the employee's `Benefit` row.
 
 ## Time & attendance
 

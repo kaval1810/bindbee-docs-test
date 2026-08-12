@@ -11,12 +11,14 @@ Bindbee normalizes them into one schema. You integrate against Bindbee once. You
 Six things happen, in this order, for every connection.
 
 ```mermaid
+%%{init: {'themeVariables': {'fontSize': '40px', 'primaryColor': '#f57e21', 'mainBkg': '#F57D2121', 'primaryTextColor': '#ffffff', 'nodeTextColor': '#000000', 'primaryBorderColor': '#c96518', 'nodeBorder': '#c96518', 'lineColor': '#f57e21'}}}%%
 flowchart LR
     A[Scope<br/>the data] --> B[Generate magic link<br/>or embed]
     B --> C[End customer<br/>authorize system]
     C --> D[Connector<br/>syncs]
     D --> E[You read<br/>unified data]
     E --> F[Webhooks<br/>notify changes]
+    linkStyle default stroke-width:2px
 ```
 
 **Scope the data.** You decide which models and fields your product actually needs. Scope narrows what Bindbee requests and what your customer has to grant.

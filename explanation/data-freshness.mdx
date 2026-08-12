@@ -1,111 +1,60 @@
 ---
 title: "Data Freshness & Polling Strategies"
-description: "How current Bindbee data actually is, why webhooks don't change that, and how to design around a 24-hour default sync window."
+description: "How current Bindbee data is, why webhooks don't change that, and how to design around the default 24-hour sync window."
 ---
 
-## The honest answer
+## How fresh is the data?
 
-Bindbee data is as fresh as the **last successful sync**. In Production, syncs run **once every 24 hours by default**.
-
-So in the worst case, a value you read is nearly 24 hours behind the source system.
+Bindbee data reflects the **last successful sync** - once every 24 hours by default in Production. Need sub-daily freshness? Sync frequency is adjustable - contact `support@bindbee.dev` or your account manager.
 
 <Warning>
-  Webhooks do not make data fresher. They tell you promptly *that a sync
-  happened*. If the sync runs daily, you learn about yesterday's changes
-  promptly - but you still learn about them a day late.
+  Webhooks tell you promptly *that a sync happened* - they don't make the sync
+  itself more frequent. On a daily schedule, you learn about changes
+  promptly, but still up to a day after they occurred in the HRIS.
 </Warning>
 
-If your product needs sub-daily freshness, that is a **sync frequency** conversation, not a delivery-mechanism one. Sync frequency is adjustable - contact `support@bindbee.dev` or your account manager.
+Total staleness adds up the sync schedule, the sync's own duration (`avg_sync_duration` on the connector), the source system's lag in exposing a change, and any ingest delay on your side.
 
-## What determines freshness
-
-Four things, in order of impact:
-
-1. **Sync schedule** - 24 hours by default in Production; adjustable.
-2. **Sync duration** - a large first sync can take a long time. `avg_sync_duration` on the connector tells you the typical figure for that specific connection.
-3. **Source-system latency** - the HRIS itself may not expose a change immediately. A payroll run can be finalized internally hours before it appears on the vendor's API.
-4. **Your ingest lag** - if you mirror into your own store, add however long your pipeline takes.
-
-Total staleness is the sum, not the maximum, of these. A "24-hour" figure is realistically "24 hours plus the tail".
-
-## Knowing how stale you are
+## Checking how stale you are
 
 Every connector reports its own timing:
-
-```json
-{
-  "sync_status": "Done",
-  "last_sync_start_time": "2026-07-22T09:49:30.478384+00:00",
-  "next_sync_start_time": "2026-07-23T09:49:30.478384+00:00",
-  "avg_sync_duration": "15 min 30 sec"
-}
-```
 
 | Field | Use it for |
 | --- | --- |
 | `last_sync_start_time` | "Last updated *X* ago" in your UI |
-| `next_sync_start_time` | "Next update in *Y*" - sets expectations |
+| `next_sync_start_time` | "Next update in *Y*" |
 | `avg_sync_duration` | Estimating how long a triggered sync will take |
 
 <Tip>
-  Showing data age is the highest-leverage thing you can do here. A user who can
-  see "synced 6 hours ago" does not file a ticket asking why yesterday's new hire
-  is missing. A user who sees an undated list does.
+  Showing data age ("synced 6 hours ago") heads off most freshness-related
+  support tickets.
 </Tip>
 
-Per-record, `modified_at` tells you when **Bindbee** last wrote that record - not when the HRIS changed it. It is a sync timestamp, not a business-event timestamp. See [Field semantics](/explanation/field-semantics).
+`modified_at` on a record is when **Bindbee** wrote it, not when the HRIS changed it. See [Field semantics](/explanation/field-semantics).
 
-## Choosing a strategy
+## Recommended pattern
+
+`connector_synced` webhook → read with `modified_after=<watermark>` → upsert by `id` → save the new watermark. Add a daily reconciliation sweep with the same logic to catch anything missed while your endpoint was down.
 
 | Requirement | Strategy |
 | --- | --- |
-| Display data on demand in a UI | Read through on request; cache briefly; show data age |
-| Mirror into your own database | `connector_synced` webhook → `modified_after` read → upsert |
+| Display on demand in a UI | Read through on request; cache briefly; show data age |
+| Mirror into your own database | Webhook + `modified_after` read + upsert |
 | React to joiners/leavers | `employee_data_changed` webhook → fetch by ID |
-| Nightly batch (payroll, billing, reporting) | Scheduled `modified_after` sweep; no webhooks needed |
-| User clicked "Refresh now" | Trigger a resync, show progress, then re-read |
-| Sub-hourly freshness | Talk to Bindbee about sync frequency first - no client-side pattern fixes this |
+| Nightly batch (payroll, billing) | Scheduled `modified_after` sweep; no webhooks needed |
+| Sub-hourly freshness | Talk to Bindbee about sync frequency - no client-side pattern fixes this |
 
-### The recommended default
+## Avoid
 
-For most integrations:
+- **Short-timer polling.** Calling `/employees` every few minutes can't outrun a 24-hour sync - it just burns rate limit.
+- **Resyncing on a schedule.** Trigger resyncs on user intent, not a cron. See [Force a resync](/how-to/force-a-resync).
+- **Treating `modified_at` as a business timestamp.** It's a write time, not a change time.
+- **Assuming a webhook means something changed.** A sync can rewrite unchanged records too - diff before acting on anything expensive.
+- **Gating onboarding on rows existing.** Gate on `sync_status` instead - an empty directory mid-sync looks identical to a genuinely empty one.
 
-```mermaid
-flowchart TD
-    A["connector_synced webhook"] --> B["read with modified_after =<br/>&lt;your last successful watermark&gt;"]
-    B --> C["upsert by id"]
-    C --> D["save watermark"]
+## Caching
 
-    classDef node fill:#F9F9F8,stroke:#E06D10,stroke-width:1.5px,color:#111,rx:8,ry:8
-    class A,B,C,D node
-```
-
-Plus a **daily reconciliation sweep** with the same `modified_after` logic, to cover events lost while your endpoint was down. Webhook retries stop after 4 attempts in 60 seconds - anything longer than a one-minute outage needs the sweep.
-
-## Anti-patterns
-
-**Polling the data endpoints on a short timer.** Calling `/employees` every five minutes cannot produce data that syncs every 24 hours have not yet fetched. You burn rate limit and get identical responses.
-
-**Resyncing on a schedule.** A resync does not bypass the vendor's own limits, and hammering it can get the connector throttled upstream. Trigger resyncs in response to user intent, not on a cron. See [Force a resync](/how-to/force-a-resync).
-
-**Treating `modified_at` as a business timestamp.** It answers "when did Bindbee write this?", not "when did this change in the HRIS?".
-
-**Assuming a webhook means the data is different.** A sync that rewrites unchanged records can still produce change events. Diff before acting on anything expensive - notifications, provisioning, emails.
-
-**Gating onboarding on rows existing.** Gate on `sync_status`. An empty directory mid-first-sync is indistinguishable from a genuinely empty one otherwise.
-
-## Cache guidance
-
-If you cache Bindbee responses:
-
-| Data | Reasonable TTL | Why |
-| --- | --- | --- |
-| Employee directory | Until next `connector_synced` | It cannot change in between |
-| Connector status | 1–5 minutes | Changes independently of syncs |
-| Integrations list | Hours | Rarely changes |
-| Payroll runs | Until next sync | Historical and immutable once paid |
-
-Invalidate on `connector_synced` rather than on a timer. It is both fresher and cheaper.
+Invalidate on `connector_synced`, not on a timer - it's both fresher and cheaper. Cache the employee directory until the next sync; cache connector status for only 1-5 minutes since it changes independently of syncs.
 
 ## Related
 

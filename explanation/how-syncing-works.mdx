@@ -16,17 +16,15 @@ flowchart LR
     class A,B,C node
 ```
 
-When you call `GET /api/hris/v1/employees`, Bindbee does **not** call BambooHR. It reads from a normalized copy that a background sync job produced earlier.
+When you call `GET /api/hris/v1/employees`, Bindbee does **not** call BambooHR. It reads from a normalized copy that a background sync job produced earlier - and that's what makes the API reliable:
 
-This is a deliberate trade-off:
+- Consistent response shape across every connector
+- Predictable latency, independent of vendor performance
+- Your rate limits, not the vendor's
+- Resilience when the vendor has an outage
+- One pagination and filtering model
 
-| You get | You give up |
-| --- | --- |
-| Consistent response shape across every connector | Real-time freshness |
-| Predictable latency, independent of vendor performance | "The API always reflects the HRIS right now" |
-| Your rate limits, not the vendor's | |
-| Resilience when the vendor has an outage | |
-| One pagination and filtering model | |
+The trade-off is freshness: the API reflects the most recent sync, not the HRIS at this exact second. See [Data Freshness](/explanation/data-freshness) for how sync frequency determines how current that is.
 
 Almost every "why is Bindbee behaving strangely?" question resolves to a consequence of this one design decision.
 
