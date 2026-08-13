@@ -6,7 +6,7 @@ description: "Surface a value from the raw upstream payload as a named field on 
 A custom field is a saved JMESPath expression that plucks a value out of data Bindbee already synced. No extra fetch, no extra latency.
 
 <Info>
-  Concepts - fields vs mappings, org vs connector scope, why it works this way -
+  Concepts - fields vs mappings, integration vs connector scope, why it works this way -
   are in [Custom Fields: The Mental Model](/explanation/custom-fields-mental-model).
   This page is the procedure.
 </Info>
@@ -45,7 +45,7 @@ Not there? You need [passthrough](/how-to/use-passthrough) instead.
     Declare it on a `(category, model)` pair.
   </Step>
   <Step title="Create a mapping">
-    Attach it to an integration (org-wide) or one connector.
+    Attach it to an integration (integration-scoped) or one connector (connector-scoped).
   </Step>
   <Step title="Verify and read">
     Confirm the effective configuration, then request it back.
@@ -132,10 +132,10 @@ or use [Dashboard Configuration → Step 1](/how-to/configure-custom-fields-dash
 `POST /api/v1/custom-fields/mapping` with the `custom_field_id` and a
 `json_path`, scoped by setting exactly one of:
 
-- `integration_slug` - **organization-scoped**, applies to every connector of
+- `integration_slug` - **integration-scoped**, applies to every connector of
   that integration. Start here.
 - `connector_token` - **connector-scoped**, applies to and overrides the
-  org-level mapping for one connector. Use for customers whose HRIS is
+  integration-level mapping for one connector. Use for customers whose HRIS is
   configured unusually.
 
 Full request/response for both: [API Configuration → Step 5](/how-to/configure-custom-fields-api#step-5-create-a-mapping),

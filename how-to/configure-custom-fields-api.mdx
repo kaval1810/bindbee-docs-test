@@ -5,7 +5,7 @@ description: "Define Custom Fields and mappings programmatically. Useful for onb
 
 New here? [Map Custom Fields](/how-to/map-custom-fields) is the end-to-end walkthrough - this page is the full reference for the API path it links to.
 
-The Custom Fields API exposes the same capabilities as the dashboard so you can define fields and mappings programmatically. For the concepts (what Custom Fields are, organization vs connector scope) see the [Custom Fields overview](/explanation/custom-fields). For the dashboard equivalent, see [Dashboard Configuration](/how-to/configure-custom-fields-dashboard).
+The Custom Fields API exposes the same capabilities as the dashboard so you can define fields and mappings programmatically. For the concepts (what Custom Fields are, integration vs connector scope) see the [Custom Fields overview](/explanation/custom-fields). For the dashboard equivalent, see [Dashboard Configuration](/how-to/configure-custom-fields-dashboard).
 
 <Note>
   Fields created from the API are tagged with `source: "API"`. Fields created
@@ -26,8 +26,8 @@ Content-Type: application/json
 
 - **Custom field** - a named extension on a unified model (e.g. `guardian_mobile` on `employee`). It belongs to a `(category, model)` pair such as `(HRIS, employee)`.
 - **Mapping** - the rule that tells Bindbee where to read the value from in the raw upstream payload. A mapping is either:
-  - **Organization-scoped** (`integration_slug` set) - applies to every connector of that integration in your org.
-  - **Connector-scoped** (`connector_token` set) - applies to a single connector instance and overrides the org-level mapping.
+  - **Integration-scoped** (`integration_slug` set) - applies to every connector of that integration in your org.
+  - **Connector-scoped** (`connector_token` set) - applies to a single connector instance and overrides the integration-level mapping.
 - **JMESPath** - the expression language used to point at a value inside the raw upstream JSON. See [jmespath.org](https://jmespath.org/) for the full reference.
 
 ## Typical workflow
@@ -52,7 +52,7 @@ A complete end-to-end flow when defining a new custom field via the API looks li
     Register the field on the target `(category, model)`.
   </Step>
   <Step title="Create a mapping">
-    Attach the field to either an integration (org-scoped) or a single connector
+    Attach the field to either an integration (integration-scoped) or a single connector
     (connector-scoped).
   </Step>
   <Step title="Verify the effective configuration">
@@ -190,10 +190,10 @@ POST /api/v1/custom-fields
 
 ## Step 5: Create a mapping
 
-A mapping pairs the custom field with a JMESPath, scoped either to an integration (applies to every connector of that integration) or to a single connector (overrides the org-level mapping for that connector only).
+A mapping pairs the custom field with a JMESPath, scoped either to an integration (applies to every connector of that integration) or to a single connector (overrides the integration-level mapping for that connector only).
 
 <Tabs>
-  <Tab title="Organization-scoped">
+  <Tab title="Integration-scoped">
     Applies to every Workday connector in your organization.
 
     ```bash
@@ -210,7 +210,7 @@ A mapping pairs the custom field with a JMESPath, scoped either to an integratio
 
   </Tab>
   <Tab title="Connector-scoped">
-    Applies to one specific connector and overrides any org-level mapping
+    Applies to one specific connector and overrides any integration-level mapping
     for the same field on that connector.
 
     ```bash
@@ -243,7 +243,7 @@ A mapping pairs the custom field with a JMESPath, scoped either to an integratio
 
 ## Step 6: Verify the effective configuration
 
-The configuration endpoint returns every custom field for a given `(connector, category, model)` together with the **effective** mapping in use. Connector-scoped mappings override organization-scoped ones, and unmapped fields are included with `json_path: null` so you can see what's still left to configure.
+The configuration endpoint returns every custom field for a given `(connector, category, model)` together with the **effective** mapping in use. Connector-scoped mappings override integration-scoped ones, and unmapped fields are included with `json_path: null` so you can see what's still left to configure.
 
 ```bash
 GET /api/v1/custom-fields/configuration?connector_token=<CONNECTOR_TOKEN>&category=HRIS&model=employee
@@ -263,7 +263,7 @@ GET /api/v1/custom-fields/configuration?connector_token=<CONNECTOR_TOKEN>&catego
       "category": "HRIS",
       "model": "employee",
       "json_path": "data.employee.guardian_mobile",
-      "source": "organization",
+      "source": "integration",
       "mapping_id": "018e586b-7d0b-7bc9-be65-a8fdbc82d734"
     },
     {
@@ -283,7 +283,7 @@ GET /api/v1/custom-fields/configuration?connector_token=<CONNECTOR_TOKEN>&catego
 Each entry's `source` indicates which mapping is winning:
 
 - `"connector"` - a connector-scoped mapping is in effect.
-- `"organization"` - no connector override; the org-scoped mapping is being inherited.
+- `"integration"` - no connector override; the integration-scoped mapping is being inherited.
 - `null` - no mapping is configured for this field on this connector.
 
 ## Updating and deleting

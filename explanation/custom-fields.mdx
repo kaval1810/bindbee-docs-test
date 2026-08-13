@@ -8,8 +8,8 @@ description: "Custom Fields let you extend Bindbee's unified models with additio
 A unified model has a fixed schema (e.g. an `employee` always exposes `first_name`, `email`, etc.). Custom Fields let you extend that schema with extra attributes - for example `guardian_mobile` - and tell Bindbee how to populate them by pointing a [JMESPath](https://jmespath.org/) expression at the raw upstream payload.
 
 <Info>
-  For how custom fields actually work - fields vs mappings, org vs connector
-  scope and which wins, freshness, and failure modes - see [Custom Fields: The
+  For how custom fields actually work - fields vs mappings, integration vs
+  connector scope and which wins, freshness, and failure modes - see [Custom Fields: The
   Mental Model](/explanation/custom-fields-mental-model). This page covers
   where to configure them and how to work with them day to day.
 </Info>
@@ -52,11 +52,11 @@ Fields arrive under a `custom_fields` object, tagged `source: "API"` or `source:
    - Always preview an expression before saving it.
    - Consider data type consistency across connectors of the same integration.
 
-3. **Organization vs Connector Level Mapping**
+3. **Integration vs Connector Level Mapping**
 
-   - Use **Organization Level** mappings for data that's consistent across all connectors of an integration.
+   - Use **Integration Level** mappings for data that's consistent across all connectors of an integration.
    - Use **Connector Level** mappings for connector-specific overrides.
-   - Review existing **Organization Level** mappings before creating connector-level duplicates.
+   - Review existing **Integration Level** mappings before creating connector-level duplicates.
 
 4. **Automation**
 

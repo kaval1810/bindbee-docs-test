@@ -64,12 +64,12 @@ flowchart LR
 
 | Scope | Set via | Applies to |
 | --- | --- | --- |
-| **Organization** | `integration_slug` | Every connector of that integration in your org |
+| **Integration** | `integration_slug` | Every connector of that integration in your org |
 | **Connector** | `connector_token` | One specific connector |
 
 When both exist for the same field on the same connector, **connector-level wins**.
 
-The intended pattern: define an org-level mapping that works for the typical customer on that integration, and add connector-level overrides for the customers who configured their HRIS unusually. That is common - HRIS deployments are heavily customized, and two BambooHR customers can store "emergency contact" in different custom-field slots.
+The intended pattern: define an integration-level mapping that works for the typical customer on that integration, and add connector-level overrides for the customers who configured their HRIS unusually. That is common - HRIS deployments are heavily customized, and two BambooHR customers can store "emergency contact" in different custom-field slots.
 
 ## Fields are opt-in on read
 
