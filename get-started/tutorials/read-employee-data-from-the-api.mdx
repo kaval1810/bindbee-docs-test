@@ -10,11 +10,11 @@ This is the payoff: one request, both tokens, real records.
 
 ## Context
 
-You now hold both tokens - the Development API key from [lesson 1](/get-started/tutorials/set-up-your-environment) and the connector token from [lesson 3](/get-started/tutorials/connect-a-test-account). Every request below carries both.
+You now hold both tokens - the Development API key from [lesson 1](/get-started/tutorials/set-up-your-environment-and-keys) and the connector token from [lesson 3](/get-started/tutorials/connect-a-test-account). Every request below carries both.
 
 ## Step 1 - Fetch employees
 
-`include_raw_data=true` asks for the original source-system payload alongside the normalized record. It is off by default; [lesson 6](/get-started/tutorials/add-a-custom-field) needs it, so turn it on now.
+`include_raw_data=true` asks for the original source-system payload alongside the normalized record. It is off by default; [lesson 6](/get-started/tutorials/add-a-field-the-unified-model-doesnt-have) needs it, so turn it on now.
 
 <CodeGroup>
 
@@ -154,7 +154,7 @@ That is lesson 6.
   </Accordion>
 
   <Accordion title="Records are there, but a field you expected is missing">
-    Check in this order: is the field in [scope](/get-started/tutorials/scope-your-data);
+    Check in this order: is the field in [scope](/get-started/tutorials/scope-the-data-you-need);
     did the source system grant permission for it; does the unified model carry
     it at all. Look in `raw_data` - if the value is there, it is the third case
     and lesson 6 solves it. If it is not there either, it is one of the first two.
@@ -165,4 +165,4 @@ That is lesson 6.
   </Accordion>
 </AccordionGroup>
 
-Next: [Add a field the unified model doesn't have →](/get-started/tutorials/add-a-custom-field)
+Next: [Add a field the unified model doesn't have →](/get-started/tutorials/add-a-field-the-unified-model-doesnt-have)

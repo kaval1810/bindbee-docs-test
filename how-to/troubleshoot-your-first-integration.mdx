@@ -10,8 +10,8 @@ search by symptom.
 
 | Symptom | Cause | Where it's fixed |
 | --- | --- | --- |
-| `401 Unauthorized` | Missing the `Bearer ` prefix, or a key from the other environment | [Lesson 1](/get-started/tutorials/set-up-your-environment) |
-| `404 Not Found` on a connector endpoint | Connector paths are category-scoped - `/api/hris/v1/connectors`, not `/api/v1/connectors` | [Lesson 1](/get-started/tutorials/set-up-your-environment) |
+| `401 Unauthorized` | Missing the `Bearer ` prefix, or a key from the other environment | [Lesson 1](/get-started/tutorials/set-up-your-environment-and-keys) |
+| `404 Not Found` on a connector endpoint | Connector paths are category-scoped - `/api/hris/v1/connectors`, not `/api/v1/connectors` | [Lesson 1](/get-started/tutorials/set-up-your-environment-and-keys) |
 | `403` on `/employees` while `/connectors` works | The `X-Connector-Token` header is missing | [Lesson 3](/get-started/tutorials/connect-a-test-account) |
 | `items` is `[]` and nothing is obviously wrong | Development connectors never sync on their own | [Lesson 4](/get-started/tutorials/run-your-first-sync) |
 | A field you expected is `null` | Out of scope, not permitted by the source system, or not carried by the unified model | [How Bindbee decides what data you get](/explanation/what-data-you-get) |

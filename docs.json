@@ -23,7 +23,7 @@
             "icon": "star",
             "pages": [
               "get-started/what-is-bindbee",
-              "features/overview",
+              "features/platform-overview",
               "get-started/tutorial-overview"
             ]
           },
@@ -31,12 +31,12 @@
             "group": "Tutorials",
             "icon": "graduation-cap",
             "pages": [
-              "get-started/tutorials/set-up-your-environment",
-              "get-started/tutorials/scope-your-data",
+              "get-started/tutorials/set-up-your-environment-and-keys",
+              "get-started/tutorials/scope-the-data-you-need",
               "get-started/tutorials/connect-a-test-account",
               "get-started/tutorials/run-your-first-sync",
-              "get-started/tutorials/read-employee-data",
-              "get-started/tutorials/add-a-custom-field",
+              "get-started/tutorials/read-employee-data-from-the-api",
+              "get-started/tutorials/add-a-field-the-unified-model-doesnt-have",
               "get-started/tutorials/receive-a-webhook"
             ]
           },
@@ -661,6 +661,26 @@
   },
   "redirects": [
     {
+      "source": "/features/overview",
+      "destination": "/features/platform-overview"
+    },
+    {
+      "source": "/get-started/tutorials/set-up-your-environment",
+      "destination": "/get-started/tutorials/set-up-your-environment-and-keys"
+    },
+    {
+      "source": "/get-started/tutorials/scope-your-data",
+      "destination": "/get-started/tutorials/scope-the-data-you-need"
+    },
+    {
+      "source": "/get-started/tutorials/read-employee-data",
+      "destination": "/get-started/tutorials/read-employee-data-from-the-api"
+    },
+    {
+      "source": "/get-started/tutorials/add-a-custom-field",
+      "destination": "/get-started/tutorials/add-a-field-the-unified-model-doesnt-have"
+    },
+    {
       "source": "/sdk/integrations",
       "destination": "/integrations"
     },
@@ -678,11 +698,11 @@
     },
     {
       "source": "/get-started/set-up-your-environment",
-      "destination": "/get-started/tutorials/set-up-your-environment"
+      "destination": "/get-started/tutorials/set-up-your-environment-and-keys"
     },
     {
       "source": "/get-started/scope-your-data",
-      "destination": "/get-started/tutorials/scope-your-data"
+      "destination": "/get-started/tutorials/scope-the-data-you-need"
     },
     {
       "source": "/get-started/connect-a-test-account",
@@ -694,11 +714,11 @@
     },
     {
       "source": "/get-started/read-employee-data",
-      "destination": "/get-started/tutorials/read-employee-data"
+      "destination": "/get-started/tutorials/read-employee-data-from-the-api"
     },
     {
       "source": "/get-started/add-a-custom-field",
-      "destination": "/get-started/tutorials/add-a-custom-field"
+      "destination": "/get-started/tutorials/add-a-field-the-unified-model-doesnt-have"
     },
     {
       "source": "/get-started/receive-a-webhook",
