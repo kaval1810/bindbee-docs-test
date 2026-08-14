@@ -1,9 +1,11 @@
 ---
-title: "Quick start"
+title: "Tutorial overview"
 description: "What you will build in this tutorial, what you need in front of you before you start, and what the tutorial deliberately leaves out."
 ---
 
 This is a single tutorial in seven lessons - work through them in order, since each one depends on the state the previous one left behind.
+
+**By the end** you will have employee records from a linked HRIS arriving in your own code, including one field the unified model does not carry, with your application notified when that data changes. About an hour of hands-on work, plus waiting on a sandbox signup and a sync.
 
 ## What you will build
 
@@ -26,9 +28,9 @@ That is the whole thing.
 
 | You need | How to get it |
 | --- | --- |
-| Access to the Bindbee Dashboard | Provisioned by the Bindbee team during onboarding. If you cannot sign in, reach out to us or email us on [support@bindbee.dev](mailto:support@bindbee.dev) |
+| Access to the Bindbee Dashboard | Provisioned by the Bindbee team during onboarding. If you cannot sign in, email us at [support@bindbee.dev](mailto:support@bindbee.dev) |
 | A **development** environment API key | **Settings → API Keys**, from the Development block. See [Development environment](/how-to/environments/development). |
-| Credentials for a test HRIS integration | Keep the HRIS sandbox or testing environment for validating the connection. |
+| Credentials for a test HRIS integration | Sign up for a sandbox or developer tenant with any [supported system](/integrations). Start this before lesson 1 - see the warning below. |
 
 <Warning>
   Of the three, the test HRIS account is the one most likely to cost you real
@@ -43,35 +45,26 @@ Leaving these out keeps each lesson a single path with no branching decisions. T
 
 <AccordionGroup>
   <Accordion title="Embedding Magic Link inside your own product">
-    In lesson 3 you create a connector from the Dashboard, which is the fastest
-    route to a working sync. Embedding the linking flow in your own UI is a
-    separate job you will do before you onboard real customers.
+    In lesson 3 you create the connector from the Dashboard. Embedding the
+    linking flow in your own UI comes later, before you onboard real customers.
   </Accordion>
 
   <Accordion title="Preparing a real customer's source system">
-    Test tenants come with the permissions already granted. Real customers do
-    not - and missing permissions are the single most common reason fields
-    arrive empty. That is covered in the [Go-live
-    checklist](/how-to/go-live-checklist).
+    Test tenants arrive with permissions already granted. Real customers do not
+    - the [Go-live checklist](/how-to/go-live-checklist) covers what to ask for.
   </Accordion>
 
   <Accordion title="Going to production">
-    Everything here happens in the development environment. The steps for a
-    production connection are the same - the only difference is using a
-    production API key instead of a development one. See [Production
-    environment](/how-to/environments/production) for what carries across
-    environments and what does not.
+    Everything here happens in the development environment. A production
+    connection uses the same steps with a production API key - see [Production
+    environment](/how-to/environments/production).
   </Accordion>
 
   <Accordion title="Writing data back to the source system">
-    This tutorial only reads. Bindbee supports writes on several models - see
-    the [API reference](/api-reference) for the endpoints that accept `POST`.
+    This tutorial only reads. For the endpoints that accept `POST`, see the [API
+    reference](/api-reference/basics/authentication).
   </Accordion>
 </AccordionGroup>
-
-## Worth reading first
-
-The lessons teach each idea as you need it, so you can start right now. If you would rather see the whole model first, [Core concepts](/explanation/core-concepts) is a ten-minute read covering environments, API keys, connectors, connector tokens, syncs, unified models, and custom fields - it answers most of what lessons 1 through 3 will raise.
 
 ## The lessons
 
@@ -96,28 +89,26 @@ The lessons teach each idea as you need it, so you can start right now. If you w
     Your first authenticated call that returns real records.
     [Lesson 5 →](/get-started/tutorials/read-employee-data)
   </Step>
-  <Step title="Add a field the unified model does not have">
+  <Step title="Add a field the unified model doesn't have">
     Find the value in the raw payload, map it, and see it appear on the
     unified object. [Lesson 6 →](/get-started/tutorials/add-a-custom-field)
   </Step>
-  <Step title="Know when data changes">
+  <Step title="Receive a webhook">
     Subscribe to a webhook so your application stops polling.
     [Lesson 7 →](/get-started/tutorials/receive-a-webhook)
   </Step>
 </Steps>
 
+Prefer to see the whole model before you start? [Core
+concepts](/explanation/core-concepts) is a ten-minute read - though the lessons
+teach each idea as you need it.
+
 ## If you get stuck
 
-Each lesson ends with the failures that lesson can cause. These six account for most of them - worth skimming now so you recognize them when they happen.
-
-| Symptom | Cause | Where it's fixed |
-| --- | --- | --- |
-| `401 Unauthorized` | Missing the `Bearer ` prefix, or a key from the other environment | [Lesson 1](/get-started/tutorials/set-up-your-environment) |
-| `404 Not Found` on a connector endpoint | Connector paths are category-scoped - `/api/hris/v1/connectors`, not `/api/v1/connectors` | [Lesson 1](/get-started/tutorials/set-up-your-environment) |
-| `403` on `/employees` while `/connectors` works | The `X-Connector-Token` header is missing | [Lesson 3](/get-started/tutorials/connect-a-test-account) |
-| `items` is `[]` and nothing is obviously wrong | Development connectors never sync on their own | [Lesson 4](/get-started/tutorials/run-your-first-sync) |
-| A field you expected is `null` | Out of scope, not permitted by the source system, or not carried by the unified model | [How Bindbee decides what data you get](/explanation/what-data-you-get) |
-| `429 Too Many Requests` | Per-connector rate limit exceeded | [Rate limits](/api-reference/basics/rate-limits) |
+Each lesson ends with the failures that lesson can cause. If something breaks in
+between, [Troubleshoot your first
+integration](/how-to/troubleshoot-your-first-integration) lists the common
+symptoms and where each one is fixed.
 
 <Check>
   Everything in this tutorial happens in the development environment against a

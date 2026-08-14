@@ -24,7 +24,7 @@
             "pages": [
               "get-started/what-is-bindbee",
               "features/overview",
-              "get-started/quickstart"
+              "get-started/tutorial-overview"
             ]
           },
           {
@@ -151,6 +151,7 @@
             "group": "Reliability",
             "icon": "activity",
             "pages": [
+              "how-to/troubleshoot-your-first-integration",
               "how-to/handle-errors",
               "how-to/handle-webhooks",
               "how-to/validate-webhook-signatures",
@@ -662,7 +663,11 @@
     },
     {
       "source": "/get-started/before-you-begin",
-      "destination": "/get-started/quickstart"
+      "destination": "/get-started/tutorial-overview"
+    },
+    {
+      "source": "/get-started/quickstart",
+      "destination": "/get-started/tutorial-overview"
     },
     {
       "source": "/get-started/core-concepts",

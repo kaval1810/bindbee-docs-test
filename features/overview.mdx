@@ -1,36 +1,77 @@
 ---
 title: "Platform Overview"
-description: "A tour of the Bindbee Dashboard: where connectors are managed and where syncs are observed."
+description: "How scope, connectors, syncs, and logs fit together - and where each one lives in the Bindbee Dashboard."
 ---
 
 New to Bindbee? Start with [What is Bindbee?](/get-started/what-is-bindbee) first.
 
-## Bindbee features
+Four things carry every integration, and they happen in that order. You set
+**scope** once - the models and fields Bindbee may request. Your customer
+authorizes their system, which creates a **connector**. That connector **syncs**,
+pulling the scoped data and normalizing it. When something looks wrong, **logs**
+show the exact request and response behind it.
 
-<CardGroup cols={1}>
+The Dashboard is where you watch all four.
+
+## In the Dashboard
+
+<CardGroup cols={2}>
   <Card title="Dashboard" icon="layout-grid" href="/features/dashboard">
-    Our easy-to-use Dashboard provides a central location for managing all of
-    your Bindbee integrations.
+    Manage your integrations from one place: API volume, connector health, and
+    which customer is on which system.
   </Card>
-  <Card title="Magic Link" icon="wand-sparkles" href="/how-to/magic-link">
-    Bindbee's Magic Link feature offers B2B tech companies an easy way to
-    deliver an in-browser Link experience to their end-users without requiring
-    any front-end code.
-  </Card>
+
   <Card title="Connectors" icon="link" href="/features/connectors">
-    A connector is like a bridge that connects your application with the
-    third-party tool you want to integrate with.
+    One customer's authorized link to one third-party system - where you find
+    its status, issues, and logs.
   </Card>
-  <Card title="Logs" icon="clipboard-list" href="/features/logs">
-    Bindbee Logs gives you real-time visibility into your API request and
-    response data.
-  </Card>
+
   <Card title="Scoping" icon="layers" href="/features/scoping">
-    Choose which models and fields Bindbee requests from your customers'
-    systems, set once for your organization.
+    The models and fields Bindbee requests, set once for your organization and
+    applied to every connector you create afterwards.
   </Card>
-  <Card title="Custom Fields" icon="Network" href="/explanation/custom-fields">
-    Extend Bindbee's unified models with fields specific to your use case, mapped
-    from the raw upstream payload.
+
+  <Card title="Logs" icon="clipboard-list" href="/features/logs">
+    Real-time visibility into the requests and responses behind a connector -
+    the first place to look when a sync misbehaves.
   </Card>
 </CardGroup>
+
+## How your customers connect
+
+<CardGroup cols={2}>
+  <Card title="Magic Link" icon="wand-sparkles" href="/how-to/magic-link">
+    Send your customer a secure URL that runs the whole authorization flow in
+    their browser, with no front-end code on your side.
+  </Card>
+
+  <Card title="Bindbee Embed" icon="code" href="/how-to/bindbee-embed">
+    Run that same authorization flow inside your own product, so your customer
+    never leaves your app.
+  </Card>
+</CardGroup>
+
+## Going further
+
+<CardGroup cols={2}>
+  <Card title="Environments" icon="git-fork" href="/how-to/environments/overview">
+    What is shared and what is separate between Development and Production, and
+    which key authenticates against each.
+  </Card>
+
+  <Card title="Custom Fields" icon="network" href="/explanation/custom-fields">
+    Extend the unified models with fields specific to your use case, mapped from
+    the raw upstream payload.
+  </Card>
+
+  <Card title="Webhooks" icon="webhook" href="/webhooks/overview">
+    Get told when a sync finishes or a record changes, instead of polling for
+    it.
+  </Card>
+</CardGroup>
+
+<Info>
+  Ready to build? The [tutorial](/get-started/quickstart) takes you from an empty
+  environment to employee data in your own code - you do not need the rest of
+  this page first.
+</Info>

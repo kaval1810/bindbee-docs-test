@@ -1,0 +1,23 @@
+---
+title: "Troubleshoot your first integration"
+description: "The symptoms you are most likely to hit while working through the tutorial, what causes each one, and the lesson that fixes it."
+---
+
+These six account for most of what goes wrong while working through the
+[tutorial](/get-started/tutorial-overview). Each lesson also ends with the
+failures that lesson can cause - this page collects them in one place so you can
+search by symptom.
+
+| Symptom | Cause | Where it's fixed |
+| --- | --- | --- |
+| `401 Unauthorized` | Missing the `Bearer ` prefix, or a key from the other environment | [Lesson 1](/get-started/tutorials/set-up-your-environment) |
+| `404 Not Found` on a connector endpoint | Connector paths are category-scoped - `/api/hris/v1/connectors`, not `/api/v1/connectors` | [Lesson 1](/get-started/tutorials/set-up-your-environment) |
+| `403` on `/employees` while `/connectors` works | The `X-Connector-Token` header is missing | [Lesson 3](/get-started/tutorials/connect-a-test-account) |
+| `items` is `[]` and nothing is obviously wrong | Development connectors never sync on their own | [Lesson 4](/get-started/tutorials/run-your-first-sync) |
+| A field you expected is `null` | Out of scope, not permitted by the source system, or not carried by the unified model | [How Bindbee decides what data you get](/explanation/what-data-you-get) |
+| `429 Too Many Requests` | Per-connector rate limit exceeded | [Rate limits](/api-reference/basics/rate-limits) |
+
+<Tip>
+  For errors outside the tutorial - retry behaviour, error shapes, and what each
+  status means in production - see [Handle errors](/how-to/handle-errors).
+</Tip>

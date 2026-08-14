@@ -6,7 +6,7 @@ description: "Trigger a sync on your development connector, watch it complete, a
 
 A connector with no sync has no data.
 
-**By the end of this lesson** you will have a completed sync and know three ways to tell when one has finished.
+**By the end of this lesson** you will have a completed sync and know three ways to tell when one has finished. About 5 minutes, plus the sync itself.
 
 ## Context
 
@@ -23,7 +23,7 @@ In production Bindbee syncs on a schedule. In development it does not - you trig
 From the Dashboard, open your connector info page and choose **Force Sync**. Or from the API:
 
 ```bash
-curl -X POST https://api.bindbee.dev/api/embedded/v1/connectors/force-sync \
+curl -X POST https://api.bindbee.dev/api/embedded/v1/connectors/resync \
   --header "Authorization: Bearer $BINDBEE_API_KEY" \
   --header "X-Connector-Token: $CONNECTOR_TOKEN"
 ```
@@ -100,7 +100,8 @@ Once a connector is in production, Bindbee syncs it on a schedule - **once every
 
   <Accordion title="The sync seems stuck in Syncing">
     Large tenants take longer. If it has not moved in well over an hour on a
-    sandbox tenant, raise it in your Slack channel with the connector ID.
+    sandbox tenant, raise it in your dedicated Bindbee support channel with the
+    connector ID, or email [support@bindbee.dev](mailto:support@bindbee.dev).
   </Accordion>
 
   <Accordion title="Nothing happens when you trigger a force sync">

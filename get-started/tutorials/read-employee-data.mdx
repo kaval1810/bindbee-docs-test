@@ -6,7 +6,7 @@ description: "Make your first authenticated request, read the unified Employee s
 
 This is the payoff: one request, both tokens, real records.
 
-**By the end of this lesson** you will be reading unified employee records in your own code, paging through them and filtering by what changed.
+**By the end of this lesson** you will be reading unified employee records in your own code, paging through them and filtering by what changed. About 10 minutes.
 
 ## Context
 
@@ -39,7 +39,7 @@ resp = requests.get(
 )
 resp.raise_for_status()
 for employee in resp.json()["items"]:
-    print(employee["display_full_name"], employee["work_email"])
+    print(employee["first_name"], employee["last_name"], employee["work_email"])
 ```
 
 ```javascript Node
@@ -58,7 +58,7 @@ if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
 
 const { items } = await res.json();
 for (const employee of items) {
-  console.log(employee.display_full_name, employee.work_email);
+  console.log(employee.first_name, employee.last_name, employee.work_email);
 }
 ```
 
