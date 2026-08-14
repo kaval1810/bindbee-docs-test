@@ -1,0 +1,56 @@
+---
+title: "Custom Fields"
+description: "Where custom fields are created and mapped in the Dashboard - the field itself, and the expression that fills it from the raw payload."
+---
+
+Custom fields carry values the unified model does not, taken from the source system's own payload and returned alongside the normalized record.
+
+## Where to find it
+
+In the Dashboard, go to **Custom Fields**.
+
+## What you configure there
+
+Creating one is two steps, and they are separate on purpose - the field is what your code reads, the mapping is where its value comes from.
+
+**Create the field.** Use **New Field**, give it a name, and save. Names must be unique and `snake_case`, because the name is the key your code reads off the `custom_fields` object.
+
+**Configure the mapping.** You are taken to the mapping screen, where you choose the level:
+
+| Mapping level | Applies to | Use when |
+| --- | --- | --- |
+| **Integration** | Every connector for that integration | The source system names the field consistently |
+| **Connector** | One selected connector | A single customer configured it differently |
+
+You can pick the value from a list, browse the raw JSON response and click the field you want, or type the JMESPath expression directly.
+
+<Warning>
+  A mapping that does not match the payload does not raise an error. It resolves
+  to `INVALID_JSON_PATH`, which arrives as the field's **value**. Preview an
+  expression before saving it.
+</Warning>
+
+<Info>
+  Custom field configuration is **shared across environments**, like scope. What
+  you map in Development applies in Production without redoing it.
+</Info>
+
+## Where to go next
+
+<CardGroup cols={2}>
+  <Card title="Add a custom field" icon="graduation-cap" href="/get-started/tutorials/add-a-custom-field">
+    Find a value in `raw_data`, map it, and read it back.
+  </Card>
+
+  <Card title="What custom fields are" icon="lightbulb" href="/explanation/custom-fields">
+    The model behind fields, mappings, and scope.
+  </Card>
+
+  <Card title="Dashboard configuration" icon="settings" href="/how-to/configure-custom-fields-dashboard">
+    The full click-by-click reference for this screen.
+  </Card>
+
+  <Card title="API configuration" icon="code" href="/how-to/configure-custom-fields-api">
+    The same thing programmatically.
+  </Card>
+</CardGroup>

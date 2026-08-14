@@ -47,7 +47,10 @@
               "features/dashboard",
               "features/connectors",
               "features/logs",
-              "features/scoping"
+              "features/issues",
+              "features/scoping",
+              "features/custom-fields",
+              "features/webhooks"
             ]
           }
           

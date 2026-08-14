@@ -3,13 +3,15 @@ title: "Logs"
 description: "Real-time visibility into the requests and responses behind a connector - the first place to look when a sync misbehaves."
 ---
 
-Logs give you real-time visibility into your API request and response data, so you can see exactly what happened for a particular connector.
+Logs give you real-time visibility into your API request and response data, so you can see exactly what happened for a particular [connector](/features/connectors). Open the **Logs** section in the Dashboard, or reach a single connector's logs from that connector's page.
 
 Each entry shows the direction of the data - `READ` or `WRITE` - along with the request and the response it received. When a response is an error, the error code is shown alongside it.
 
 <Tip>
-  This is the first place to look when you want to know whether an integration is
-  working.
+  When a sync misbehaves, this is the first place to look - the source system's
+  own error is usually more specific than the status Bindbee shows. If the
+  failure has already been raised against the connector, [Issues](/features/issues)
+  will have it too, along with the likely cause.
 </Tip>
 
 <img
