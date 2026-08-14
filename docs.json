@@ -23,7 +23,7 @@
             "icon": "star",
             "pages": [
               "get-started/what-is-bindbee",
-              "features/platform-overview",
+              "platform/overview",
               "get-started/tutorial-overview"
             ]
           },
@@ -44,13 +44,13 @@
             "group": "Platform Tour",
             "icon": "compass",
             "pages": [
-              "features/dashboard",
-              "features/connectors",
-              "features/logs",
-              "features/issues",
-              "features/scoping",
-              "features/custom-fields",
-              "features/webhooks"
+              "platform/dashboard",
+              "platform/connectors",
+              "platform/logs",
+              "platform/issues",
+              "platform/scoping",
+              "platform/custom-fields",
+              "platform/webhooks"
             ]
           }
           
@@ -661,8 +661,36 @@
   },
   "redirects": [
     {
+      "source": "/features/dashboard",
+      "destination": "/platform/dashboard"
+    },
+    {
+      "source": "/features/connectors",
+      "destination": "/platform/connectors"
+    },
+    {
+      "source": "/features/logs",
+      "destination": "/platform/logs"
+    },
+    {
+      "source": "/features/issues",
+      "destination": "/platform/issues"
+    },
+    {
+      "source": "/features/scoping",
+      "destination": "/platform/scoping"
+    },
+    {
+      "source": "/features/custom-fields",
+      "destination": "/platform/custom-fields"
+    },
+    {
+      "source": "/features/webhooks",
+      "destination": "/platform/webhooks"
+    },
+    {
       "source": "/features/overview",
-      "destination": "/features/platform-overview"
+      "destination": "/platform/overview"
     },
     {
       "source": "/get-started/tutorials/set-up-your-environment",
