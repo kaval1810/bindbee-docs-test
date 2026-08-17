@@ -46,11 +46,21 @@ Source-system credentials expire, get rotated, or lose permissions. When that ha
     }
     ```
 
-    Branch on `connector.connector_status`. A status indicating the connection needs re-authentication means the end user must reconnect; any other status is a transient or data-level failure that will retry on the next scheduled sync.
+    Branch on `connector.connector_status`. It carries one of three values:
 
-    <Warning>
-      **VERIFY.** Support guidance describes a `RELINK_NEEDED` value on `connector_status` as the signal for re-authentication, but only `COMPLETE` appears in the published payload samples. Confirm the full enum before shipping a branch on this field.
-    </Warning>
+    | Value | Meaning |
+    | --- | --- |
+    | `COMPLETE` | Authorised and syncing |
+    | `INCOMPLETE` | The end user never finished authorising |
+    | `RELINK_NEEDED` | Credentials stopped working - the end user must reconnect |
+
+    Only `RELINK_NEEDED` means the end user must act. Any other failure is transient or data-level and retries on the next scheduled sync.
+
+    <Note>
+      Relinking preserves the `connector_token`, so a connector recovering from
+      `RELINK_NEEDED` needs no change to anything you've stored - see
+      [Connector lifecycle](/concepts/connector-lifecycle).
+    </Note>
 
     **Result:** You can tell "this user must act" from "this will fix itself".
   </Step>

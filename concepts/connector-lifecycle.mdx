@@ -7,29 +7,31 @@ A connector is the only object in Bindbee with a lifecycle you have to manage. I
 
 ## The states
 
-**Pending.** Created when you initiate a connection, before your customer has authorised it. No credentials, no data, no syncs.
+A connector's `status` field carries one of three values. The names below are the ones the API returns.
 
-**Active.** Authorised and syncing on schedule. The normal steady state.
+**Pending (`INCOMPLETE`).** Created when you initiate a connection, before your customer has authorised it. No credentials, no data, no syncs.
 
-**Broken.** Credentials that no longer work. This covers several underlying causes that behave identically from your side: an OAuth token that expired and could not refresh, an API key the customer rotated, an integration user that was deactivated, or permissions that were narrowed after authorisation.
+**Active (`COMPLETE`).** Authorised and syncing on schedule. The normal steady state.
+
+**Broken (`RELINK_NEEDED`).** Credentials that no longer work. This covers several underlying causes that behave identically from your side: an OAuth token that expired and could not refresh, an API key the customer rotated, an integration user that was deactivated, or permissions that were narrowed after authorisation.
 
 A broken connector does not lose the data it already synced. It stops acquiring new data, and everything you have goes stale in place - which is precisely why this failure is easy to miss. Reads keep succeeding.
 
 <Warning>
-There is no error on the data endpoints when a connector is broken. Your application will keep reading successfully from a connector that stopped syncing weeks ago. Sync-status webhooks and connector state are the only reliable signals.
+There is no error on the data endpoints when a connector is broken. Your application will keep reading successfully from a connector that stopped syncing weeks ago. Sync-status webhooks and the connector's own `status` are the only reliable signals.
 </Warning>
 
 ## Relinking versus deleting
 
 When a connector breaks, both actions available to you look like they mean "fix it". They do not.
 
-**Relinking** sends your customer back through authorisation to supply working credentials. The connector keeps its identity, its history, and its synced records. Existing data reconciles against what the source system now returns, and normal syncing resumes. This is the correct response to essentially every broken connector.
+**Relinking** sends your customer back through authorisation to supply working credentials. The connector keeps its identity, its history, its synced records, and its `connector_token` - so nothing your application has stored needs updating. Existing data reconciles against what the source system now returns, and normal syncing resumes. This is the correct response to essentially every broken connector.
 
 **Deleting** removes the connector and its data. The customer's identifiers, the records synced under it, the sync history - all of it. Recovering means creating a new connector and running a fresh initial sync, and every record comes back with a new Bindbee `id`, breaking any foreign key you stored.
 
 Deletion is the right action when a customer churns or when a connection was created in error. It is the wrong instinct for a broken one, and it is not reversible.
 
-{/* VERIFY: does relinking rotate the connector token, or is the existing token preserved? Open item from the How-to spec - determines whether stored tokens need updating after a customer relinks. */}
+This is also why a token that stops working after a customer "reconnects" is worth investigating rather than refetching. Relinking preserves the token; only deletion and re-creation replace it.
 
 ## Credential rotation is routine
 
@@ -53,7 +55,7 @@ Preserving data through relink is what makes recovery cheap. Because the connect
 
 ## What this means for you
 
-- **Monitor connector state, not read success.** Reads succeed regardless.
+- **Monitor `status`, not read success.** Reads succeed regardless, so `RELINK_NEEDED` is the signal - not an error from the data endpoints.
 - **Relink to fix; delete to remove.** They are not interchangeable, and deletion is not reversible.
 - **Encourage dedicated integration users at setup** rather than authorisation tied to an individual's account.
 - **Treat connector deletion as your data-removal mechanism** for churned customers.

@@ -110,9 +110,9 @@ Write endpoints take a third header, `X-Idempotency-Key`. It is not part of auth
   </Accordion>
 
   <Accordion title="The connector token stopped working after the end user reconnected">
-    Treat `connector_token` as a value that can change over the life of a connector rather than a constant you capture once. Re-read the current token from the connector's Overview tab or via [Get Connectors](/api-reference/connectors/get-connectors), and key your stored tokens by connector ID so a rotation replaces the old value instead of sitting alongside it.
+    Relinking preserves the `connector_token`, so a working token does not stop working because a customer re-authorised. What usually happened is that the connector was deleted and a fresh link issued instead of relinked - that mints a new connector, a new token, and new record IDs. See [Update Credentials After an Auth Failure](/how-to/connections/update-credentials).
 
-    A handler that refetches the token on `401` and retries once is the cheapest way to survive this, regardless of what triggered the change.
+    Read the current token from the connector's **Connector Details** panel or via [Get Connectors](/api-reference/connectors/get-connectors), and key your stored tokens by connector ID so a replacement never sits alongside the old value.
   </Accordion>
 </AccordionGroup>
 
