@@ -63,8 +63,8 @@
             "icon": "lightbulb",
             "pages": [
               "concepts/core-concepts",
-              "concepts/unified-model-and-raw-data",
-              "concepts/what-data-you-get"
+              "concepts/unified-model",
+              "concepts/scope-and-permissions"
             ]
           },
           {
@@ -73,14 +73,17 @@
             "pages": [
               "concepts/how-syncing-works",
               "concepts/connector-lifecycle",
-              "concepts/sftp-vs-api",
-              "concepts/webhooks-vs-polling"
+              "concepts/sftp-and-file-connectors",
+              "concepts/webhooks-vs-polling",
+              "concepts/errors-issues-and-limits"
             ]
           },
           {
             "group": "Data models",
             "icon": "list-tree",
             "pages": [
+              "concepts/record-identity",
+              "concepts/status-and-terminations",
               "concepts/hris-model-relationships",
               "concepts/benefits-models",
               "concepts/field-semantics"
@@ -90,7 +93,7 @@
             "group": "Extending & writing",
             "icon": "puzzle",
             "pages": [
-              "concepts/custom-fields-mental-model",
+              "concepts/how-custom-fields-work",
               "concepts/meta-api-schema-discovery",
               "concepts/passthrough-when-and-why"
             ]
@@ -859,7 +862,7 @@
     },
     {
       "source": "/explanation/custom-fields-mental-model",
-      "destination": "/concepts/custom-fields-mental-model"
+      "destination": "/concepts/how-custom-fields-work"
     },
     {
       "source": "/explanation/field-semantics",
@@ -883,11 +886,11 @@
     },
     {
       "source": "/explanation/sftp-vs-api",
-      "destination": "/concepts/sftp-vs-api"
+      "destination": "/concepts/sftp-and-file-connectors"
     },
     {
       "source": "/explanation/unified-model-and-raw-data",
-      "destination": "/concepts/unified-model-and-raw-data"
+      "destination": "/concepts/unified-model"
     },
     {
       "source": "/explanation/webhooks-vs-polling",
@@ -895,7 +898,23 @@
     },
     {
       "source": "/explanation/what-data-you-get",
-      "destination": "/concepts/what-data-you-get"
+      "destination": "/concepts/scope-and-permissions"
+    },
+    {
+      "source": "/concepts/unified-model-and-raw-data",
+      "destination": "/concepts/unified-model"
+    },
+    {
+      "source": "/concepts/what-data-you-get",
+      "destination": "/concepts/scope-and-permissions"
+    },
+    {
+      "source": "/concepts/custom-fields-mental-model",
+      "destination": "/concepts/how-custom-fields-work"
+    },
+    {
+      "source": "/concepts/sftp-vs-api",
+      "destination": "/concepts/sftp-and-file-connectors"
     }
   ],
   "api": {

@@ -1,0 +1,72 @@
+---
+title: "How custom fields work"
+description: "What a custom field is, how organisation and connector mappings resolve against each other, and what JMESPath is doing."
+---
+
+A custom field is a named slot you add to a unified model, filled from somewhere in the source system's raw payload. It is how a value that Bindbee's standard model does not carry - a cost centre code, a badge number, a locally-defined employment classification - arrives as a stable field on your records rather than something your code digs out of raw data.
+
+The mechanism has two halves, and keeping them separate explains most of its behaviour.
+
+## Fields and mappings are separate things
+
+A **custom field** is registered against a category and model pair - for example, a field named `badge_number` on HRIS employees. Registering it does nothing on its own. It has no source, no value, and no effect on responses until you attach a mapping.
+
+A **mapping** says where that field's value comes from, for one particular scope, using a JMESPath expression evaluated against the raw payload.
+
+This split is why one field can carry several mappings. The badge number may sit at one path in BambooHR and a different path in Workday, and one customer may have configured their tenant so it sits somewhere else again. One field, three mappings, one stable field name in your code.
+
+## Two scopes, and which one wins
+
+Every mapping is scoped to exactly one of two things.
+
+**Organisation scope** attaches to an integration. The mapping applies to every connector in your organisation using that integration - every BambooHR connector, for instance. This is the default you want: configure once, applies to all customers on that system.
+
+**Connector scope** attaches to a single connector. It applies to that one customer only.
+
+When both exist for the same field, **connector scope wins**. The organisation mapping is the baseline; the connector mapping is the exception for a customer whose tenant is configured differently.
+
+<Info>
+To see what is actually in effect, read the configuration for a connector and model. It returns every field with its resolved mapping - the connector-scoped one where it exists, the organisation-scoped one otherwise. Fields with no applicable mapping appear with a null path, which is how you tell "not configured" apart from "configured and returning nothing."
+</Info>
+
+## JMESPath is the contract
+
+The mapping is an expression, not a field name. It is evaluated against the raw payload each time a record syncs, and its result becomes the field's value.
+
+That means the expression is a contract with a payload shape you do not control. If the source system restructures its response, or a particular customer's tenant nests things differently, the expression stops resolving and the field goes quiet - no error, just an empty value.
+
+Two endpoints exist because of this. Raw data retrieval lets you see the actual payload shape before writing an expression. Preview evaluates an expression against a connector's data without saving it, so you can confirm it resolves before committing.
+
+Writing an expression against a payload you have not looked at is the most common way to end up with a silently empty custom field.
+
+## What deleting removes
+
+Deleting a mapping removes that one mapping. The field survives, and any other mappings on it are untouched.
+
+Deleting the **field** cascades - every mapping attached to it goes too, across every integration and connector. There is no partial state and no recovery of the mappings.
+
+One further constraint: on an existing mapping, only the path is editable. Scope is fixed at creation. Moving a mapping from organisation scope to connector scope means deleting it and creating a new one.
+
+## Why it works this way
+
+The separation of field from mapping is what makes the unified model hold under pressure.
+
+The obvious alternative is to let each customer's data shape leak into the model directly - a per-connector schema, where the fields available depend on who you are reading. That gives everyone exactly what they want and destroys the property that makes a unified API useful: that one code path works for every customer. You would be back to integration-specific branching, with extra configuration on top.
+
+Registering the field centrally and varying only its source keeps the schema stable while allowing the plumbing underneath to differ per integration and per customer. Your code reads `badge_number` and does not know or care that it came from three different paths.
+
+The precedence rule follows from the same logic. Most customers on an integration are configured the same way, so the integration-level mapping should be the one that carries the load. Per-connector mappings exist for the minority that are not, and they have to win or they would be pointless - but they are the exception, and keeping them the exception is what stops the configuration becoming unmanageable.
+
+## What this means for you
+
+- **Look at the raw payload before writing an expression**, and preview it before saving. A wrong path fails silently.
+- **Prefer organisation scope.** Reach for connector scope only when a specific customer's tenant genuinely differs.
+- **A null path means unconfigured**, not empty. They are different problems with different fixes.
+- **Deleting a field is destructive across every connector.** Delete the mapping if you only meant to change one integration.
+- **Expressions can break when a source system changes.** A field that has gone quiet is worth checking against the current payload shape.
+
+## Related
+
+- [Map a custom field](/how-to/data-model/map-a-custom-field-from-the-dashboard) - create a field and attach a mapping
+- [Preview](/custom-fields/api/preview) - dry-run an expression before saving
+- [Unified model & raw data](/concepts/unified-model) - why the value is not in the standard model

@@ -1,0 +1,63 @@
+---
+title: "Unified model & raw data"
+description: "Why the value Bindbee returns is not always the value in the source system, and what raw data is for."
+---
+
+Bindbee returns the same employee shape whether your customer runs Workday, BambooHR, or a nightly SFTP drop. That consistency is the point of a unified API, and it is only achievable by making decisions on your behalf.
+
+Every one of those decisions loses something. Understanding which ones were made, and where the discarded information went, is most of what you need to know about the data model.
+
+## Normalisation is opinionated
+
+Source systems disagree about almost everything. One HRIS has a single `name` field. Another has legal name, preferred name, and display name, each optional. A third stores names only inside a nested profile object that is present for some employees and absent for others.
+
+Bindbee's employee model has one set of name fields. Populating them requires choosing which source field maps to which unified field, and what to do when the preferred choice is missing.
+
+These resolutions are usually fallback chains: use the preferred name if present, otherwise the legal name, otherwise what the profile object holds. The chain is a judgement about what most applications actually want, and it will occasionally be wrong for yours.
+
+<Info>
+Mappings are defined per integration and apply to every connector using that integration. There is no per-customer variation in how a standard field resolves - if the Workday name chain changes, it changes for every Workday connector at once.
+</Info>
+
+## Raw data is the original, unmodified
+
+Every synced record carries the source system's own payload alongside the normalised fields. Nothing is discarded during normalisation; it is set aside.
+
+This is where you go when the unified field is empty, when the fallback chain picked the wrong source, or when the value you need has no unified equivalent at all. It is also where the source system's own timestamps, identifiers, and status strings survive in their original form.
+
+Raw data is deliberately not normalised. Its shape is whatever that integration returns, it differs between integrations, and it can change when the source system changes its API. Reading it directly in application code means writing integration-specific handling - which is the thing you adopted a unified API to avoid.
+
+The supported path is to promote what you need into a custom field, so it arrives as a stable, named field on the unified model rather than something your code digs for.
+
+## Coverage varies, and some models are provisional
+
+Two things limit what the unified model can give you for a particular customer.
+
+**Not every integration supports every model.** Coverage is a property of what the source system exposes, and it differs integration by integration even within the same category. A model that is rich for one HRIS may be entirely absent for another.
+
+**Some models are still settling.** Models marked Beta in the API reference - Documents, currently - have contracts that may change. They are usable, but building on them means accepting that field names and shapes are not yet frozen.
+
+{/* VERIFY: does Beta carry a stated notice period or deprecation policy before a contract change? */}
+
+## Why it works this way
+
+The alternative to an opinionated model is a permissive one: a union of every field every source system offers, with everything optional.
+
+That design never loses information, and it also never delivers the benefit. Your code would branch on which integration a connector uses, which is precisely the work a unified API exists to remove. The union model is a passthrough with extra steps.
+
+Choosing a narrow, opinionated shape means one code path works everywhere, at the cost of decisions that are right in aggregate and wrong at the margins. Raw data exists so that being wrong at the margins is recoverable rather than terminal - the information is still there, and custom fields give you a supported route to surface it without abandoning the unified shape.
+
+Keeping mappings global rather than per-customer is the same trade at a different level. Per-connector mappings would let every integration behave exactly as each customer wants, and would make the platform's behaviour unpredictable and impossible to reason about across a customer base. Custom fields are the sanctioned local override, and they sit on top of the standard model rather than mutating it.
+
+## What this means for you
+
+- **When a unified field is empty, check raw data before concluding the source has no value.** The fallback chain may have missed it.
+- **Do not read raw data directly in application code.** Promote what you need into a custom field so it arrives as a stable named field.
+- **Expect coverage to differ by integration**, not just by category. Test against the integrations your customers actually use.
+- **Treat Beta models as provisional.** They work, but the contract is not frozen.
+
+## Related
+
+- [Inspect the raw payload](/how-to/data-model/inspect-the-raw-upstream-payload) - see what the source system returned
+- [Get Raw Data](/custom-fields/api/get-raw-data) - retrieve the upstream payload for a connector and model
+- [How custom fields work](/concepts/how-custom-fields-work) - the supported way to surface a raw value

@@ -1,0 +1,74 @@
+---
+title: "Errors, issues & limits"
+description: "Where a failure is reported, how to tell whether it originated with Bindbee or the source system, and what rate limits protect."
+---
+
+Something did not work. Before you can fix it you need to know whose failure it was - yours, Bindbee's, or the source system's - and those three arrive through different channels and look different from each other.
+
+## Three origins
+
+**Your request was wrong.** A malformed body, a missing required field, an invalid connector token. Bindbee rejects it directly with a 4xx and an error describing what was wrong with the request. These are the easiest to diagnose because everything you need is in the response.
+
+**The source system refused.** Bindbee's request to the HRIS failed - expired credentials, insufficient permissions, an endpoint the tenant does not expose, a validation rule specific to that system. Bindbee does not translate these. It passes the upstream failure through largely intact.
+
+**Nothing failed at all.** The request succeeded, the response is well-formed, and the data you wanted is absent. This is the hardest case because there is no error to look up. It is almost always scope or permissions rather than a fault.
+
+## The upstream envelope
+
+When the failure came from the source system, the response carries the source system's own answer rather than a Bindbee interpretation of it. Three fields do the work:
+
+- **`integration_status_code`** - the HTTP status the source system returned
+- **`integration_endpoint`** - which upstream endpoint was being called
+- **`integration_response`** - the source system's response body, unmodified
+
+That last field is the one to read first. It contains the HR system's own error format, whatever that happens to be. BambooHR returns a structured problem document. Dayforce returns its own process-result codes inside a 403. Workday returns SOAP faults. None of these are normalised, and the variation is the point - the upstream message frequently names the exact permission or field at fault, which a translated message would lose.
+
+<Warning>
+A 403 on `integration_status_code` almost always means the authorising credentials lack a permission, not that Bindbee is unauthorised. The fix is with your customer's HRIS administrator, not with your API keys.
+</Warning>
+
+## Write failures are source-shaped
+
+Reads mostly fail for structural reasons - credentials, permissions, coverage. Writes fail for business reasons, and those belong entirely to the source system.
+
+A time-off request rejected because the employee lacks balance, a hire rejected because a required custom field is unset in that tenant, a payroll entry rejected because the period is closed - none of these are conditions Bindbee can evaluate in advance. It submits the write and reports what came back.
+
+The consequence is that write error handling cannot be fully generic. You can handle the transport uniformly, but the messages that tell your user what to actually do are shaped by whichever system they run.
+
+## Where failures are recorded
+
+Not every failure surfaces on a response. A sync that fails partway through happens in the background, and you find out either from the connector's logs or from a sync-status webhook.
+
+Logs hold the per-request record: which endpoint, which status, what came back. This is where you go to answer "why is this connector not returning benefits" when nothing in your own application errored.
+
+{/* VERIFY: Issues is surfaced in the product as automated error tracking and resolution, but has no documented state model. Confirm whether an Issue has a lifecycle (open/resolved), whether it is API-accessible, and how it differs from a log entry, before this section ships. */}
+
+## Rate limits
+
+Two separate limits apply and they protect different things.
+
+Bindbee's own API limits how fast you can read. These are documented, they are generous relative to normal application traffic, and they are what a 429 from Bindbee refers to.
+
+The source system's limits are usually far tighter, and they constrain how fast Bindbee can sync rather than how fast you can read. Most HR systems permit a small number of requests per minute per tenant. This is the main reason sync cadence is measured in hours rather than minutes, and it is not something either of you can configure away.
+
+## Why it works this way
+
+Passing upstream errors through unmodified is a deliberate refusal to be helpful in a way that would actually hurt.
+
+The tempting alternative is normalisation: map every source system's failure into a single Bindbee error taxonomy, so your code handles one shape. That works for the coarse cases - auth failed, not found - and destroys the fine ones. HR systems return errors that name specific fields, specific permission objects, specific configuration in the customer's tenant. Collapsing "the Workday integration system user lacks Get_Workers permission on this security group" into `PERMISSION_DENIED` throws away the one sentence that tells the administrator what to change.
+
+The trade is that your error handling has to be layered. Handle the envelope generically - retry, log, alert on status code. Surface the upstream body to whoever can act on it, which is usually a human at the customer rather than your code.
+
+## What this means for you
+
+- **Read `integration_response` before anything else** when a failure came from upstream. It usually names the fix.
+- **Route 403s to the customer's HRIS administrator**, not to your own credentials.
+- **Do not build generic user-facing messages for write failures.** The useful detail is source-specific and worth surfacing.
+- **A successful response with missing data is not an error case** - it is a scope or permissions question.
+- **Sync failures will not appear in your application.** Watch logs or sync-status webhooks.
+
+## Related
+
+- [Diagnose a failing sync](/how-to/troubleshooting/diagnose-a-partial-sync) - work through a connector's logs
+- [Rate Limits](/api-reference/basics/rate-limits) - Bindbee's published limits
+- [Scope & permissions](/concepts/scope-and-permissions) - why data goes missing without an error
