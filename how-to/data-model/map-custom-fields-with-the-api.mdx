@@ -60,7 +60,7 @@ The Custom Fields API does everything the dashboard does. Use it when configurat
     }
     ```
 
-    `name` must be snake_case, 2–128 characters, and unique within the `(category, model)` pair. Fields created here are tagged `source: "API"`; dashboard-created fields are tagged `source: "DASHBOARD"`. Both behave identically once created.
+    `name` must be snake_case, 2-128 characters, and unique within the `(category, model)` pair. Fields created here are tagged `source: "API"`; dashboard-created fields are tagged `source: "DASHBOARD"`. Both behave identically once created.
 
     The field is a typed slot with no mapping yet - creating it populates nothing.
 
@@ -138,7 +138,7 @@ Define the configuration as data in your own repository, then apply it per envir
 
 <AccordionGroup>
   <Accordion title="Field creation is rejected">
-    Names must be snake_case, 2–128 characters, and unique within the `(category, model)` pair. The same name can exist on different models.
+    Names must be snake_case, 2-128 characters, and unique within the `(category, model)` pair. The same name can exist on different models.
   </Accordion>
 
   <Accordion title="The mapping was accepted but values don't appear">
@@ -162,5 +162,5 @@ Define the configuration as data in your own repository, then apply it per envir
 
 ## Related
 
-- [API Configuration](/how-to/data-model/map-custom-fields-with-the-api)
+- [Create Custom Field](/custom-fields/api/create-custom-field) · [Create Mapping](/custom-fields/api/create-mapping) · [Get Configuration](/custom-fields/api/get-configuration) - endpoint reference
 - [Custom Fields](/concepts/how-custom-fields-work)
