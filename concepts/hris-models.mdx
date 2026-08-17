@@ -1,153 +1,68 @@
 ---
 title: "HRIS models"
-description: "How Bindbee's unified HRIS models reference each other, how to use `expand` to traverse them, and which relationships are safe to assume."
+description: "How employee, employment, company, group, location and compensation relate, and where the fields you expect actually live."
 ---
 
-The API reference tells you what fields each model has. It does not tell you how they fit together. This page does.
+The field you are looking for is probably not on the employee. Job title, department, salary, cost centre, office - all of these feel like employee attributes and none of them are stored that way.
 
-## Employee's relations
+The reason is that they change independently of the person, and often more than once.
 
-Many models carry an `employee` field pointing at `Employee`:
+## The person and their employments
 
-`Employment` · `Compensation` · `BankInfo` · `Benefit` · `Dependent` · `TimeOff` · `TimeOffBalance` · `TimesheetEntry` · `EmployeePayrollRun`
+**Employee** holds what is true of the human: name, contact details, date of birth, dependants, identifiers.
 
-`Employee` itself points **outward** at:
+**Employment** holds what is true of a period of work: job title, employment type, effective dates, and the reporting relationship. A person can have several, and this is normal rather than exceptional.
 
-| Field | Points to | Notes |
-| --- | --- | --- |
-| `company` | `Company` | Which legal entity |
-| `manager` | `Employee` | Self-referential; `null` at the top of the tree |
-| `groups` | `Group[]` | Array of IDs |
-| `pay_group` | `PayGroup` | |
-| `payroll_run_calendar` | `PayrollRunCalendar` | Their pay schedule |
+Multiple employments arise from promotions recorded as new positions, transfers between departments or legal entities, moves between full-time and part-time, and rehires. Each is a segment of a career, and the history is often exactly what an HR system exists to preserve.
 
 <Warning>
-  `manager` is a self-reference and hierarchies from real HRIS systems are not
-  always clean trees. Guard against cycles and orphans when you walk it -
-  contractors, dotted-line reports and mid-transition records all produce
-  surprises.
+Do not read the first employment in the array and treat it as current. Ordering is not guaranteed to mean anything. The current employment is the one without a termination date, or where several are open, the one with the latest effective start.
 </Warning>
 
-## Employee vs Employment vs Compensation
+Compensation follows the same logic in a separate model, because pay changes on its own schedule - a raise without a title change produces a new compensation record and no new employment.
 
-The most common modelling mistake is collapsing these three.
+## Groups absorb several concepts
 
-| Model | Answers | Cardinality |
-| --- | --- | --- |
-| `Employee` | Who is this person? | One per person |
-| `Employment` | What position do they hold? | One or more per employee |
-| `Compensation` | What are they paid for it? | One or more per employee |
+**Group** is the model where departments, teams, divisions, business units, and cost centres all live. Each carries a type distinguishing which it is, and a parent reference so hierarchies can be reconstructed.
 
-`Employee` carries identity and current-state convenience fields (`designation`, `department`, `division`, `employment_status`).
+This is one of the more aggressive collapses in the unified model, and it surprises people looking for a dedicated department or cost-centre model. There isn't one. Filter groups by type instead.
 
-`Employment` carries the **position**: `job_title`, `department`, `division`, `employment_type`, `effective_date`. A promotion creates a new `Employment` row - it does not overwrite the old one.
+The reason is that source systems disagree profoundly about organisational structure. Some have exactly one hierarchy. Some have separate, independent trees for reporting lines, cost allocation, and legal entity. Some let customers define arbitrary grouping dimensions. A model per concept would be right for one HRIS and wrong for the next; a typed, self-referencing model holds all of them.
 
-`Compensation` carries the **rate**: `pay_rate`, `pay_period`, `pay_frequency`, `pay_currency`, `flsa_status`, `start_date`.
+**Location** is separate, because a physical workplace is not an organisational unit - people from several departments share an office, and a department spans several sites.
 
-<Tip>
-  For "what is this person's job title *now*", `Employee.designation` is the
-  convenient answer. For "what was their title in March", you need
-  `Employment` sorted by `effective_date`. Both are correct; they answer
-  different questions.
-</Tip>
+## Company is the legal entity
 
-Not every connector returns history. Some expose only the current position, in which case you get one `Employment` row. Do not assume a full history exists.
+**Company** holds legal and display names and tax identifiers. Customers with several legal entities have several companies, and the distinction between a company and a group is the distinction between a legal fact and an organisational one.
 
-## Group is recursive
+A customer running multiple entities may have them as several companies under one connector, or as separate connectors entirely, depending on how their HR system is configured. Both arrangements occur and neither is wrong.
 
-`Group` has a `parent_group` field, so groups nest. `type` distinguishes what kind of grouping it is, and `is_commonly_used_as_team` flags groups the source system treats as teams.
+## Sensitive models sync separately
 
-<Warning>
-  "Group" means different things in different systems - departments, cost
-  centres, locations, teams, custom segments. Read `type` before assuming
-  semantics, and expect the meaning to vary by connector.
-</Warning>
+**Bank info** carries payment details, masked. **Documents** carries files and is currently Beta, so its contract may change.
 
-`Employee.groups` is an array - an employee can be in several.
+Both are worth scoping deliberately. They are the models most likely to fall outside what your use case genuinely needs, and the most costly to hold without a reason.
 
-## The payroll chain
+## Why it works this way
 
-A `PayGroup` follows a schedule (`PayrollRunCalendar`), and each `PayrollRun` it produces creates one `EmployeePayrollRun` per paid employee.
+Separating employment and compensation from employee is what makes history representable at all.
 
-| Model | One row per |
-| --- | --- |
-| `PayGroup` | A population paid on the same cycle |
-| `PayrollRunCalendar` | A pay schedule |
-| `PayrollRun` | One company-wide payroll execution |
-| `EmployeePayrollRun` | One employee within one run |
+If job title and salary were employee fields, each change would overwrite the last, and the record would only ever show the present. Effective dates would be meaningless, a promotion would be indistinguishable from a correction, and anything requiring a point-in-time view - payroll reconciliation, benefits eligibility on a past date, audit - would be impossible.
 
-`EmployeePayrollRun` holds `gross_pay`, `net_pay`, and the line-item arrays `earnings`, `deductions` and `taxes`.
+Modelling them as separate records with their own dates costs you a join and a decision about which record is current. In exchange, the data can answer questions about the past, which is a substantial share of what HR data is for.
 
-<Warning>
-  `gross_pay − net_pay` will not equal the sum of `deductions`. Taxes are a
-  separate array. Sum `deductions` **and** `taxes` when reconciling.
-</Warning>
+The Group collapse is the opposite trade. Here the unified model gives up expressiveness to gain consistency: one typed model that every source system can map into, rather than a set of specific models that fit some systems and not others. You pay for it with a filter on every read.
 
-Use `check_date` - not `end_date` - for anything cash-flow related. `run_type` separates `REGULAR` runs from off-cycle bonus and correction runs; mixing them inflates any "typical pay" calculation.
+## What this means for you
 
-## The benefits cluster
-
-This one deserves its own page - see [Benefits vs Employer Benefits vs Dependent Benefits](/concepts/benefits-models).
-
-The short version: `Benefit` and `DependentBenefit` both link back to the `EmployerBenefit` plan, and `BenefitCoverage` links to a `Benefit` plus the `Dependent`s it covers. Note that `DependentBenefit` links to the **plan**, not to the employee's `Benefit` row.
-
-## Time & attendance
-
-| Model | Answers |
-| --- | --- |
-| `TimeOff` | Requests and absences - dates, type, status |
-| `TimeOffBalance` | Accrued and remaining entitlement |
-| `TimesheetEntry` | Hours worked |
-
-All three point at `Employee`. `TimeOff` and `TimesheetEntry` are writable via the Meta API workflow.
-
-## Universal fields
-
-Every unified model carries the same envelope:
-
-| Field | Meaning |
-| --- | --- |
-| `id` | Bindbee's stable UUID |
-| `remote_id` | The source system's own ID |
-| `modified_at` | When **Bindbee** last wrote this record |
-| `raw_data` | Original upstream payload, with `include_raw_data=true` |
-| `custom_fields` | Your mapped fields, with `include_custom_fields=true` |
-
-Use `id` as your foreign key. `remote_id` is for reconciling against the customer's own system or supporting them in the vendor UI.
-
-## Expanding relations
-
-Relations are IDs by default. Fetching each separately is an N+1. Use `expand`:
-
-```
-?expand=manager,company,pay_group
-?expand=manager[first_name,last_name,work_email]
-```
-
-Comma-separated, no spaces. Square brackets restrict which fields come back on the expanded object.
-
-## What you cannot assume
-
-<Warning>
-  These vary by connector, and assuming them is a reliable way to ship a bug:
-
-  - **That every relation is populated.** Any relation field can be `null` if the
-    source system doesn't expose it.
-  - **That history exists.** Some connectors return only current state.
-  - **That `Group` means the same thing everywhere.**
-  - **That every model is supported.** Model availability is per connector -
-    see [Integrations & Coverage](/integrations).
-  - **That IDs referenced actually resolve.** A `manager` ID can point at an
-    employee filtered out of your query, or not synced.
-</Warning>
+- **Select the current employment explicitly**, by termination date. Never by array position.
+- **Filter groups by type** rather than looking for a department or cost-centre model.
+- **Expect compensation to change without employment changing.** They are independent.
+- **Treat location as orthogonal to organisational structure.**
+- **Scope bank info and documents deliberately.** Most use cases do not need them.
 
 ## Related
 
-<CardGroup cols={2}>
-  <Card title="Benefits Models" icon="list-tree" href="/concepts/benefits-models">
-    The benefits cluster in full.
-  </Card>
-  <Card title="Field Semantics" icon="circle-slash" href="/concepts/enum-values">
-    Nulls, enums, and what modified_at really means.
-  </Card>
-</CardGroup>
+- [Read employee data](/get-started/tutorials/read-employee-data-from-the-api) - the employee and employment shapes
+- [Get Employments](/hris/employments/get-employments) - employment fields and dates
+- [Status & terminations](/concepts/status-and-terminations) - which employment is current

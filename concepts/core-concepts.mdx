@@ -1,128 +1,67 @@
 ---
 title: "Core concepts"
-description: "The seven ideas you need before writing any Bindbee code: environments, API keys, connectors, connector tokens, syncs, unified models, and custom fields."
+description: "How categories, integrations, connectors, models and records relate, and where organisations and environments sit."
 ---
 
-Read this once and the rest of the documentation will make sense.
+Five words carry most of the weight in Bindbee's API, and three of them sound interchangeable. Getting them straight early saves a great deal of confusion later, particularly when reading error messages or configuring custom fields, where the difference between an integration and a connector determines what your change affects.
 
-## 1. Environment
+## The five levels
 
-Bindbee has two fully isolated environments: **Development** and **Production**.
+**Category** is the kind of system: HRIS, ATS, or LMS. Categories determine which models exist. Employees and payroll runs belong to HRIS; candidates and offers belong to ATS. A category appears in endpoint paths and in custom field configuration.
 
-| | Development | Production |
-| --- | --- | --- |
-| API key | `dev_api_key` | `prod_api_key` |
-| Automatic syncs | No - trigger manually | Yes - every 24 hours by default |
-| Connector limit | Unlimited | Per your plan |
-| Data | Test connections | Real customer data |
+**Integration** is a specific vendor system - BambooHR, Workday, Greenhouse. An integration belongs to a category and defines what data is available and how it is retrieved. Integrations are identified by a slug, and that slug is what you use when configuring something that should apply to every customer on that system.
 
-Keys are not interchangeable. A Development key cannot read Production data and vice versa. Connectors and data never cross between them.
+**Connector** is one of your customers' authorised connections to one integration. If forty of your customers use BambooHR, you have one BambooHR integration and forty BambooHR connectors. A connector holds the credentials, owns the sync schedule, and is identified by a connector token.
 
-See Development and Production.
+**Model** is a unified object type - employee, employment, benefit, candidate. Models are consistent across every integration in a category, which is the whole point of a unified API.
 
-## 2. API key - proves who *you* are
+**Record** is a single instance of a model, synced from one connector.
 
-One key per environment, issued to your organization. It goes in the `Authorization` header on every request.
+Reading upward from a record: this employee came from this connector, which is your customer's connection to this integration, which belongs to this category.
 
-```http
-Authorization: Bearer YOUR_BINDBEE_API_KEY
-```
+<Info>
+The integration-versus-connector distinction is the one that matters operationally. Anything scoped to an integration affects every customer on that system. Anything scoped to a connector affects one customer. Custom field mappings use exactly this split, and so does most of what you will configure.
+</Info>
 
-Manage it at [app.bindbee.dev/settings/keys](https://app.bindbee.dev/settings/keys).
+## Organisation and environment
 
+Above all of this sits your **organisation** - your company's account. Scope configuration and custom field definitions belong here, which is why they apply across everything below.
 
-## 3. Connector - one customer's connection to one system
+Each organisation has two **environments**: development and production. They hold separate connectors and separate logs, so testing against a sandbox tenant never touches live customer data.
 
-A connector is a single link between **your customer** and **one third-party system**. If Acme Corp connects BambooHR, that is one connector. If Acme also connects Greenhouse, that is a second connector.
+What they do not hold separately is configuration. Scope and custom fields are organisation-level, so a change made while testing in development is a change in production as well. This surprises people who expect environments to be fully independent, and it is worth internalising before you start configuring.
 
-A connector carries:
+{/* VERIFY: dev-to-prod connector migration. Earlier documentation states connectors are strictly environment-separate; migration is now reportedly supported. Confirm before this section ships - Get Started Lesson 1's environments table depends on the same answer. */}
 
-| Field | Meaning |
-| --- | --- |
-| `id` | Bindbee's ID for the connection |
-| `integration_slug` | Which system, e.g. `bamboohr`, `workday`, `ukg-pro` |
-| `category` | `HRIS`, `ATS` or `LMS` |
-| `status` | `COMPLETE`, `INCOMPLETE`, or `RELINK_NEEDED` |
-| `sync_status` | `Syncing`, `Done`, or `Failed` |
-| `connector_token` | The credential you use to read that customer's data |
-| `origin_id` | *Your* ID for the customer - you set this |
+## Two tokens
 
-<Tip>
-  Always set `origin_id` to your own internal customer/tenant ID when you create
-  a connection. It is the only reliable way to map a Bindbee connector back to a
-  row in your database.
-</Tip>
+Requests carry two pieces of authentication, and they answer different questions.
 
-## 4. Connector token - proves *which customer's data* you want
+Your **API key** identifies your organisation. It is secret, it belongs on your server, and it never reaches a browser.
 
-The API key alone is not enough to read employee data. You also need the `connector_token` for the specific connector, in the `X-Connector-Token` header.
+The **connector token** identifies which customer's data you are asking about. Without it, Bindbee knows who is asking but not whose employees you want.
 
-```http
-Authorization: Bearer YOUR_BINDBEE_API_KEY
-X-Connector-Token: END_USER_CONNECTOR_TOKEN
-```
+This is why reading employees is not simply a matter of holding an API key. Every data request needs both - one for authority, one for subject.
 
-This two-header model is the single most common source of day-one confusion:
+## Why it works this way
 
-- **API key only** → organization-scoped endpoints (list connectors, list integrations, custom field definitions).
-- **API key + connector token** → any endpoint that reads or writes a customer's data.
+The layering exists so that configuration can be expressed at the level where it is actually true.
 
-See [Authenticate a request](/how-to/setup/authenticate-a-request) for the step-by-step.
+Scope is a decision about your product: which data your application needs at all. That is organisation-level because it does not vary by customer. A custom field mapping is usually a fact about a source system - where BambooHR keeps its cost centre - which makes it integration-level. Occasionally it is a fact about one customer's unusual tenant configuration, which makes it connector-level. Credentials are always about one customer, so they live on the connector and nowhere else.
 
-## 5. Sync - how data gets into Bindbee
+Flattening these would force a choice between configuring everything once and getting it wrong for the exceptions, or configuring everything per customer and drowning in it. The hierarchy lets each setting sit at its natural scope, with narrower scopes overriding wider ones where they exist.
 
-Bindbee does not proxy your request to the third-party system in real time. A background **sync job** pulls from the source system, normalizes the result, and stores it. Your API call reads that stored copy.
+The two-token split is a security boundary rather than an organisational one. Connector tokens are safe to hand to a specific request path because they grant access to exactly one customer's data. An API key is not, because it grants access to all of it. Keeping them separate means the identifier that travels most widely is the one with the least authority.
 
-Consequences worth internalising now:
+## What this means for you
 
-- Data is as fresh as the last successful sync - by default, up to 24 hours old in Production.
-- Development connectors **do not** sync automatically. Trigger a sync yourself.
-- The first sync after linking takes longer than subsequent ones. Until it finishes, `GET /employees` legitimately returns an empty list.
+- **Integration-scoped changes affect every customer on that system.** Check the scope before applying a mapping fix.
+- **Configuration crosses environments; data does not.** Plan scope before you begin testing, not after.
+- **Keep API keys server-side.** Connector tokens identify a customer, not your organisation.
+- **When reading an error, note which level it refers to.** A connector problem is one customer; an integration problem is all of them.
 
-See [How syncing works](/concepts/how-syncing-works).
+## Related
 
-## 6. Unified model - one schema across every connector
-
-Every record Bindbee returns shares a common envelope:
-
-| Field | Meaning |
-| --- | --- |
-| `id` | Bindbee's stable UUID for the record |
-| `remote_id` | The third-party system's own ID for the same record |
-| `modified_at` | When **Bindbee** last updated this record - not when the HRIS did |
-| `raw_data` | The original upstream payload, when `include_raw_data=true` |
-| `custom_fields` | Your mapped extra fields, when `include_custom_fields=true` |
-
-<Warning>
-  `modified_at` is a *Bindbee* timestamp. It moves when a sync rewrites the
-  record, which can happen even if no business field changed. See
-  [Field semantics](/concepts/enum-values).
-</Warning>
-
-List responses are cursor-paginated:
-
-```json
-{
-  "cursor": "MDE4YjE4ZWYtYzk5Yy03YTg2LTk5NDYtN2I3YzlkNTQzM2U1",
-  "page_size": 50,
-  "items": [ ... ]
-}
-```
-
-## 7. Custom fields - when the unified model isn't enough
-
-If your customer's system holds a value that Bindbee's unified schema does not carry, define a **custom field** and point a JMESPath expression at the raw upstream payload. Request it back with `include_custom_fields=true`.
-
-If you need a whole endpoint that has no unified equivalent, use [passthrough](/concepts/passthrough) instead.
-
-## Quick glossary
-
-| Term | One line |
-| --- | --- |
-| **Magic Link** | Hosted page your customer uses to authorize a connection |
-| **Bindbee Embed** | The same flow, embedded in your own frontend |
-| **`link_token`** | Short-lived token that initializes an Embed session |
-| **`temporary_token`** | Returned on successful link; exchanged for a `connector_token` |
-| **`connector_token`** | Long-lived credential for reading one customer's data |
-| **Meta API** | Returns the JSON Schema for a write operation on a given integration |
-| **Passthrough** | Authenticated proxy to the third-party API |
+- [Set up your environment](/get-started/tutorials/set-up-your-environment-and-keys) - keys, environments, and your first request
+- [Authentication](/api-reference/basics/authentication) - how the two tokens are supplied
+- [Scope & permissions](/concepts/scope-and-permissions) - what organisation-level scope controls

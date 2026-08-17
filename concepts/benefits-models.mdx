@@ -1,203 +1,66 @@
 ---
 title: "Benefits models"
-description: "Five models, similar names, different jobs. This page explains which one answers which question - and why choosing wrong produces plausible but wrong numbers."
+description: "The difference between benefits, employer benefits, dependent benefits and benefit coverages, and when to use each."
 ---
 
-Bindbee exposes five benefits models. Their names are similar enough that picking the wrong one is easy, and the failure mode is not an error - it is a number that looks reasonable and is wrong.
+Five models carry benefits data, and their names are close enough that picking the wrong one is easy. The distinction that matters is not what the benefit is - it is whose fact it is.
 
-## One sentence each
+## Whose fact is it
 
-| Model | One sentence |
-| --- | --- |
-| `EmployerBenefit` | A plan the employer **offers**. |
-| `Benefit` | An employee is **enrolled** in a plan, and this is what they pay. |
-| `Dependent` | A person **attached** to an employee - spouse, child. |
-| `DependentBenefit` | A dependent is **enrolled** in a plan. |
-| `BenefitCoverage` | The **amount** of cover on an enrolment, and who it applies to. |
+**Employer benefit** is the plan itself, as the employer offers it. A medical plan with a carrier, a name, and a plan year. It exists whether or not anyone has enrolled.
 
-The distinction that matters most: **`EmployerBenefit` is a catalogue entry. `Benefit` is an enrolment.** One `EmployerBenefit` has many `Benefit` rows pointing at it - one per enrolled employee.
+**Benefit** is one employee's enrolment in a plan. This is where the employee's contribution amount, coverage tier, and effective dates live. One employee enrolled in medical, dental, and vision has three.
 
-<Warning>
-  `DependentBenefit.employer_benefit` points at the **plan**, not at the
-  employee's `Benefit` row. There is no direct link from a dependent's enrolment
-  to the employee's enrolment. To group them, join both on `employer_benefit`
-  and resolve the employee through `Dependent.employee`.
-</Warning>
+**Dependent benefit** is a dependant's coverage under an employee's enrolment - the enrolled spouse or child, as distinct from the employee's own enrolment.
 
-## `EmployerBenefit` - the catalogue
+**Dependent** is the person: name, relationship, date of birth. Independent of any benefit, because a dependant exists whether or not they are covered.
 
-```json
-{
-  "id": "0192aa10-1c07-7b2e-8f00-5a1b3d7e9c42",
-  "plan_name": "Acme PPO Medical",
-  "provider_name": "Blue Shield",
-  "benefit_plan_type": "MEDICAL",
-  "benefit_plan_category": "HEALTH",
-  "deduction_code": "MED-PPO",
-  "description": "PPO medical plan, national network",
-  "coverage_tiers": ["EMPLOYEE_ONLY", "EMPLOYEE_AND_SPOUSE", "FAMILY"],
-  "start_date": "2026-01-01",
-  "end_date": null
-}
-```
+**Benefit coverage** carries coverage detail at a finer grain - amounts and terms tied to a specific coverage target rather than to the enrolment as a whole. This matters for plans like life insurance, where the sum assured differs between the employee, the spouse, and each child under a single enrolment.
 
-There is **no `employee` field** - that is the tell. This model describes the plan itself.
+The shortest way to choose: employer benefit for what is offered, benefit for who enrolled, dependent benefit for who else is covered, dependent for who they are, benefit coverage for how much.
 
-Two fields do real work:
+<Info>
+The most common modelling error is looking for coverage amounts on the enrolment. On plans with per-person amounts, the enrolment carries the contribution and the coverage model carries the amounts. Reading only the enrolment produces a plausible, incomplete picture.
+</Info>
 
-- **`coverage_tiers`** (plural) - the tiers the plan *offers*. Compare with `Benefit.coverage_tier` (singular) - the tier one employee *chose*.
-- **`deduction_code`** - the payroll code. This is your join key from a benefit to a payroll deduction line item. Not every system populates it.
+## Plan years bound everything
 
-Use it for: plan pickers, open-enrolment UIs, "what does this employer offer?".
+Benefits are the most time-bound data in an HR system. A plan year opens, enrolments run against it, contributions are deducted during it, and then the whole structure is replaced at renewal.
 
-## `Benefit` - the enrolment
+Two consequences follow.
 
-```json
-{
-  "id": "0192aa11-3f21-7c40-9e11-6b2d4c8f1a03",
-  "employee": "01931edf-04b6-7391-8a5c-93ac4b395316",
-  "employer_benefit": "0192aa10-1c07-7b2e-8f00-5a1b3d7e9c42",
-  "plan_name": "Acme PPO Medical",
-  "provider_name": "Blue Shield",
-  "benefit_plan_type": "MEDICAL",
-  "benefit_plan_category": "HEALTH",
-  "coverage_tier": "EMPLOYEE_AND_SPOUSE",
-  "employee_contribution": 142.50,
-  "company_contribution": 517.00,
-  "frequency": "MONTHLY",
-  "start_date": "2026-01-01",
-  "effective_date": "2026-01-01",
-  "end_date": null
-}
-```
+**Enrolments accumulate.** An employee in their third year has three medical enrolments, not one that was updated. The current one is bounded by the current plan year. An unfiltered read returns benefits history, and treating it as current state overstates coverage.
 
-`plan_name` and `provider_name` are denormalized onto `Benefit` so simple reads don't need a join. They should match the linked `EmployerBenefit`.
+**Renewal changes identity.** At renewal, most systems create new plan records rather than editing existing ones. Plans that look identical across years are distinct objects with distinct identifiers.
 
-<Warning>
-  **`frequency` governs the contribution amounts, and it is not always monthly.**
+## Where deductions live
 
-  `employee_contribution: 142.50` with `frequency: "BIWEEKLY"` is ~$3,705/year,
-  not $1,710. Normalize by `frequency` before annualizing, comparing plans, or
-  showing a cost. If `frequency` is `null` or unrecognised, show "unavailable"
-  rather than assuming monthly.
-</Warning>
+Benefits do not carry the money movement. What was actually withheld from a paycheque lives in payroll - deductions on an employee payroll run.
 
-Three date fields, three meanings:
+Connecting them is a real piece of work, because the deduction carries a payroll code and the enrolment carries a plan, and the correspondence between them is defined in the customer's configuration rather than in either record. Reconciling a deduction to a plan year additionally requires the payment date, since a January deduction may belong to either plan year depending on how the customer's calendar falls.
 
-| Field | Meaning |
-| --- | --- |
-| `start_date` | When the enrolment record begins |
-| `effective_date` | When coverage actually takes effect |
-| `end_date` | When it ended. `null` = currently active |
+This is the boundary between benefits data and payroll data, and it does not resolve cleanly in either direction.
 
-`start_date` and `effective_date` diverge with waiting periods - enrolled on hire, effective the first of the following month. Use `effective_date` for "is this person covered today".
+## Why it works this way
 
-Filter `end_date IS NULL` for current coverage, or you will show lapsed plans alongside active ones.
+Splitting the plan from the enrolment is what makes the data usable at scale.
 
-<Warning>
-  `company_contribution` is `null` on many connectors. Plenty of systems expose
-  only the employee-side deduction. Do not compute total cost as
-  `employee + company` without checking for `null` - you will silently
-  understate it.
-</Warning>
+Folding them together would put the plan's name, carrier, and terms on every employee's record - duplicated across everyone enrolled, and inconsistent the moment one copy is updated and another is not. Separating them means the plan is stated once and enrolments reference it, so a correction to the plan is a correction everywhere.
 
-## `Dependent` - the person
+The separate coverage model exists because coverage is genuinely not an attribute of the enrolment on many plans. Life insurance with different sums assured for employee, spouse, and children cannot be expressed as fields on a single enrolment record without either fixing the number of covered persons in the schema or nesting arbitrarily. A separate model with its own target is the shape that holds all of it, at the cost of one more read.
 
-```json
-{
-  "id": "0192aa13-0e55-7f21-a4b1-7d8e3f6c9a02",
-  "employee": "01931edf-04b6-7391-8a5c-93ac4b395316",
-  "first_name": "Alex",
-  "last_name": "Doe",
-  "relationship": "SPOUSE",
-  "date_of_birth": "1989-03-14",
-  "gender": "MALE",
-  "is_student": false,
-  "ssn": "***-**-1234",
-  "phone_number": "+1-555-0148",
-  "home_location": { ... }
-}
-```
+Keeping dependants separate from dependant benefits reflects the same principle. A dependant is a person who exists independently of coverage - they may be enrolled in some plans and not others, added mid-year, or recorded without being covered at all.
 
-Existing as a `Dependent` does **not** mean enrolled in anything. Dependents can be on file without coverage. Enrolment lives in `DependentBenefit`.
+## What this means for you
 
-`relationship`, `date_of_birth` and `is_student` are the fields eligibility rules are typically written against - age-out thresholds, student status extensions.
-
-<Warning>
-  `ssn` and `date_of_birth` are sensitive personal data covered by HIPAA and
-  GDPR obligations. Request them only when you need them, and handle them
-  accordingly.
-</Warning>
-
-## `DependentBenefit` - the dependent's enrolment
-
-```json
-{
-  "id": "0192aa14-9b66-7a32-c5d2-8e9f4a7b0c13",
-  "dependent": "0192aa13-0e55-7f21-a4b1-7d8e3f6c9a02",
-  "employer_benefit": "0192aa10-1c07-7b2e-8f00-5a1b3d7e9c42",
-  "start_date": "2026-01-01",
-  "effective_date": "2026-01-01",
-  "end_date": null
-}
-```
-
-Deliberately thin. No contribution amounts - the dependent's cost is folded into the employee's `Benefit.employee_contribution` via the `coverage_tier`, not itemized here.
-
-<Warning>
-  Do not sum dependent costs separately and add them to the employee's
-  contribution. You will double-count. The employee's contribution at
-  `EMPLOYEE_AND_SPOUSE` already includes the spouse.
-</Warning>
-
-## `BenefitCoverage` - the amount
-
-```json
-{
-  "id": "0192aa12-7d44-7e10-b3a0-9c6f2e5b8d71",
-  "benefit": "0192aa11-3f21-7c40-9e11-6b2d4c8f1a03",
-  "currency": "USD",
-  "amount": 50000.00,
-  "is_employee_covered": true,
-  "covered_dependents": ["0192aa13-0e55-7f21-a4b1-7d8e3f6c9a02"]
-}
-```
-
-This is "how much cover", not "how much it costs" - the benefit sum assured. Most relevant for life, AD&D and disability plans.
-
-`is_employee_covered` and `covered_dependents` together answer "who does this amount apply to". A plan can cover dependents without covering the employee.
-
-Availability varies significantly by connector - check [Integrations & Coverage](/integrations).
-
-## Which model answers which question
-
-| Question | Model |
-| --- | --- |
-| What plans does this employer offer? | `EmployerBenefit` |
-| Which tiers can an employee pick? | `EmployerBenefit.coverage_tiers` |
-| What is this employee enrolled in? | `Benefit`, filtered `end_date IS NULL` |
-| What does the employee pay per period? | `Benefit.employee_contribution` + `frequency` |
-| What does the employer pay? | `Benefit.company_contribution` - often `null` |
-| Who are this employee's dependents? | `Dependent` |
-| Which dependents have coverage? | `DependentBenefit` |
-| How much life cover does someone have? | `BenefitCoverage.amount` |
-| Which payroll deduction is this plan? | `EmployerBenefit.deduction_code` |
-
-## Three mistakes that produce wrong numbers
-
-**Counting `EmployerBenefit` rows as enrolments.** Three plans offered ≠ three people enrolled. Count `Benefit` rows.
-
-**Annualizing without `frequency`.** The most common source of costs that are 2x or 2.17x off.
-
-**Including lapsed enrolments.** Always filter on `end_date`, and use `effective_date` for point-in-time questions.
+- **Filter enrolments by plan year.** Unfiltered reads return history.
+- **Read benefit coverages when amounts matter**, not just enrolments.
+- **Do not expect plan identifiers to survive renewal.** Match on plan attributes, not identity.
+- **Deduction-to-plan reconciliation needs payroll data and payment dates**, and depends on the customer's own code configuration.
+- **A dependant may exist without coverage.** The models are separate for a reason.
 
 ## Related
 
-<CardGroup cols={2}>
-  <Card title="Read Benefits Data" icon="hand-coins" href="/how-to/reading-data/read-benefits-data">
-    Working code that assembles the full picture.
-  </Card>
-  <Card title="Field Semantics" icon="circle-slash" href="/concepts/enum-values">
-    Why enum values sometimes come back as raw vendor strings.
-  </Card>
-</CardGroup>
+- [Read benefits data](/how-to/reading-data/read-benefits-data) - enrolments, coverages, and dependants
+- [Get Benefit Coverages](/hris/benefit-coverages/get-benefit-coverages) - the coverage model
+- [Payroll & time models](/concepts/payroll-and-time-models) - where deductions live

@@ -1,183 +1,68 @@
 ---
 title: "Enum values"
-description: "Why a field is null when the HRIS clearly has the data, why modified_at moves when nothing changed, and why an enum sometimes contains a value that isn't in the enum."
+description: "Why normalisation collapses source values into a fixed set, and what UNKNOWN and OTHER actually mean."
 ---
 
-Three behaviours account for a large share of "is this a bug?" questions. None of them is a bug. All three follow from Bindbee normalizing many different systems into one schema.
+An employee your customer classifies as "Active PT" arrives with a status of active. A pay period they call "Semi-Monthly (2nd/16th)" arrives as semi-monthly. A benefit plan type they have named for their broker arrives as other.
 
----
+Nothing was lost, exactly. It was set aside.
 
-## 1. Why is `[field]` null when the HRIS has the data?
+## What an enum is doing
 
-A `null` unified field means one of five things. They are distinguishable, and it is worth knowing which one you have before opening a ticket.
+A unified enum is a fixed set of values that every source system's local vocabulary maps into. It exists so your code can branch on a known set rather than on strings it has never seen.
 
-### Diagnose it in one request
+Source vocabularies are unbounded. Customers define their own statuses, pay period names, benefit types, and employment classifications, and they do so to encode information their business cares about - division, contract type, shift pattern, broker. None of that is expressible in a fixed set, and all of it arrives at the mapping.
 
-```bash
-curl -G "https://api.bindbee.dev/api/hris/v1/employees" \
-  -H "Authorization: Bearer $BINDBEE_API_KEY" \
-  -H "X-Connector-Token: $CONNECTOR_TOKEN" \
-  --data-urlencode "include_raw_data=true" \
-  --data-urlencode "page_size=1"
-```
+So the enum is a projection. Values with a clear equivalent map to it. Values without one land on a fallback.
 
-`raw_data` is exactly what the third-party system returned. Search it for the value.
+## `OTHER` and `UNKNOWN` are different
 
-| `raw_data` contains it? | Diagnosis | Fix |
-| --- | --- | --- |
-| **No** | The source system never sent it | Permissions, or the vendor's API doesn't expose it |
-| **Yes, unmapped** | Bindbee has no unified field for it | Custom field |
-| **Yes, under a different key** | Vendor-specific naming not covered by the mapping | Contact support, or map a custom field |
+They look interchangeable and are not.
 
-### The five causes
+**`OTHER`** means the source provided a value and it did not correspond to any unified value. The information exists; the unified field could not represent it. This is a mapping outcome.
 
-**1. The source API does not expose the field.** Not every HRIS returns every attribute. The data may exist in the vendor's UI and simply not be available over their API. Nothing on Bindbee's side can recover it.
+**`UNKNOWN`** means the source did not provide a usable value at all - the field was absent, empty, or unset. This is an absence.
 
-**2. The connection lacks permission.** Compensation, SSN, bank details and benefits are commonly separate permission scopes. If the integration user wasn't granted them, those endpoints return nothing - often with no error, just absent data. This is the most common cause of "benefits are empty but I can see them in Workday".
+The distinction is diagnostically useful. A field returning `OTHER` across a customer's population means they use a vocabulary the mapping does not cover, and the original is available. A field returning `UNKNOWN` means the data is not being populated at source, which is a permissions or configuration question.
 
-**3. The field isn't populated for that record.** A `termination_date` on an active employee is correctly `null`. So is `manager` for the CEO. Check whether `null` is actually the right answer before treating it as missing.
+<Info>
+A high proportion of `OTHER` on one integration is worth investigating rather than accepting. It often means a mapping gap that affects every customer on that system, not just the one that reported it.
+</Info>
 
-**4. The connector doesn't support that model or field.** Field-level support varies by connector. See [Integrations & Coverage](/integrations).
+## The original is always in raw data
 
-**5. The sync hasn't run, or ran before the value was set.** Data is as fresh as the last sync. Check `last_sync_start_time`.
+Whatever the source system sent survives unmodified alongside the normalised value.
 
-<Warning>
-  Cause 2 is under-diagnosed. If an entire model is empty rather than a single
-  field, permissions are the first thing to check - not a Bindbee mapping issue.
-</Warning>
+This is the recovery path when the enum is insufficient. If the local vocabulary carries meaning your application needs - full-time versus part-time encoded in the status, contract type encoded in employment classification - read it from the payload and promote it into a custom field so it arrives as a stable field rather than something your code digs for.
 
-### Design for null
+What you should not do is branch on the raw string directly. That is integration-specific handling, and it will break when a customer edits their vocabulary.
 
-Every relation and nearly every non-identity field can be `null` on some connector.
+## Enums can gain values
 
-```python
-# Fragile - breaks on the first connector that omits compensation
-annual = employee["compensation"]["pay_rate"] * 12
+The fixed set is fixed at a point in time, not permanently. Values are added as coverage broadens and as source systems introduce concepts the model does not yet carry.
 
-# Robust
-comp = employee.get("compensation") or {}
-rate = comp.get("pay_rate")
-annual = rate * 12 if rate is not None else None
-```
+Code that treats the enum as exhaustive - a switch with no default, an exception on an unrecognised value - will break when a value is added. Handling the unrecognised case gracefully costs little and removes an entire class of future failure.
 
-Treat `null` as "unknown", never as zero, false, or empty string. A `null` `company_contribution` rendered as `$0.00` is a wrong number presented confidently.
+## Why it works this way
 
----
+The alternative is to pass source strings through untouched, and it fails on its own terms.
 
-## 2. Why did `modified_at` update when the data didn't change?
+Your code would then handle "Active", "ACTIVE", "Active FT", "A", and "Currently Employed" as five separate cases, all meaning employed, varying by integration and by customer within an integration. Every new customer would be a potential new string. That is precisely the per-integration branching a unified API exists to remove, and it moves the mapping work from Bindbee to you without making it easier.
 
-Because `modified_at` does not mean what the name suggests.
+Mapping to a fixed set means one comparison works everywhere. The cost is that nuance below the enum's resolution disappears from the unified field, which is why the fallback values exist and why raw data is retained rather than discarded. The design accepts that the projection will sometimes be too coarse, and makes the loss recoverable instead of pretending it does not happen.
 
-<Warning>
-  **`modified_at` is the datetime that *Bindbee* last updated this object.** It
-  is a sync timestamp, not a business-change timestamp. It has no relationship
-  to when the HRIS changed the record.
-</Warning>
+`OTHER` and `UNKNOWN` are kept separate for the same reason. Collapsing them into one value would be simpler and would hide the difference between "we could not represent this" and "there was nothing to represent" - two problems with entirely different fixes.
 
-A sync rewrites the records it processes. If the rewrite happens to produce identical values, `modified_at` still moves - Bindbee touched the record.
+## What this means for you
 
-So this is expected and correct:
-
-```
-Sync #12 at 09:00 → employee 01931edf…, modified_at = 09:00:14
-Sync #13 at 09:00 next day → same field values, modified_at = 09:00:11
-```
-
-### What this means for you
-
-**`modified_after` is inclusive, not minimal.** It will not miss changes - that is the guarantee that matters - but it may return records whose business fields are unchanged.
-
-**Your ingest must be an idempotent upsert.** Keyed on `id`. Never insert-only, never "if it came back it must be different".
-
-**Diff before doing anything expensive.** If a change triggers a notification, a provisioning action or an email, compare the fields you care about against what you already stored:
-
-```python
-WATCHED = ("employment_status", "designation", "manager",
-           "work_email", "termination_date", "department")
-
-def changed_meaningfully(incoming, stored):
-    if stored is None:
-        return True
-    return any(incoming.get(f) != stored.get(f) for f in WATCHED)
-
-for employee in fetch(modified_after=watermark):
-    stored = load(employee["id"])
-    upsert(employee)                         # always
-    if changed_meaningfully(employee, stored):
-        trigger_downstream(employee)         # only when it matters
-```
-
-**If you need "when did the HRIS change this?"**, `modified_at` cannot give it to you. Look for a vendor timestamp inside `raw_data`, if the system exposes one - availability varies. `remote_created_at` on `Employee` gives the creation time in the source system.
-
----
-
-## 3. Why does an enum contain a value that isn't in the enum?
-
-Bindbee normalizes vendor values into its own enums where they map cleanly. Where they don't, **the original value is passed through unchanged** rather than being dropped or coerced into a wrong bucket.
-
-The field descriptions say so explicitly: *"If the value is not one of the defined enum values, the original value is returned."*
-
-So `employment_status` is usually one of:
-
-```
-ACTIVE  PENDING  INACTIVE  ACTIVE_EXTERNAL  INACTIVE_EXTERNAL
-LEAVE   DECEASED  RETIRED  -
-```
-
-…but on a connector with a bespoke status, you may receive `"Garden Leave"` or `"Furloughed (H1)"`.
-
-<Warning>
-  Never write an exhaustive `switch` over a Bindbee enum with no default branch.
-  Always handle the unrecognised case.
-</Warning>
-
-```python
-KNOWN_ACTIVE = {"ACTIVE", "ACTIVE_EXTERNAL", "LEAVE"}
-KNOWN_INACTIVE = {"INACTIVE", "INACTIVE_EXTERNAL", "TERMINATED",
-                  "DECEASED", "RETIRED"}
-
-def is_active(status):
-    if status in KNOWN_ACTIVE:
-        return True
-    if status in KNOWN_INACTIVE:
-        return False
-    log.info("unmapped employment_status: %r", status)
-    return None          # unknown - do not guess
-```
-
-Returning `None` rather than defaulting to `False` matters: defaulting an unrecognised status to "inactive" can deprovision a real employee.
-
-### The `"-"` value
-
-Several enums include `"-"` as a member. Read it as "the source system provided a value that maps to nothing meaningful" - closer to unknown than to a real category. Treat it like `null`.
-
-### Enums that commonly carry passthrough values
-
-`employment_status` · `gender` · `ethnicity` · `marital_status` · `employment_type` · `pay_period` · `pay_frequency` · `flsa_status` · `benefit_plan_category` · `coverage_tier` · `run_state` · `run_type` · `relationship`
-
-<Tip>
-  Log unrecognised enum values with the `integration_slug`. The set stabilizes
-  quickly per connector, and the log tells you exactly which mappings are worth
-  requesting from Bindbee.
-</Tip>
-
----
-
-## Bonus: `id` vs `remote_id`
-
-| Field | Is | Use for |
-| --- | --- | --- |
-| `id` | Bindbee's UUID, stable across syncs | Foreign keys, `expand`, `ids=` filters |
-| `remote_id` | The source system's own ID | Reconciling against the customer's system, deep links into the vendor UI, support conversations |
-
-Key your database on `id`. `remote_id` is only unique within one connector - two customers on the same HRIS can share a `remote_id` value.
-
----
+- **Handle unrecognised enum values gracefully.** The set can grow.
+- **Treat `OTHER` as a signal**, particularly if it clusters on one integration.
+- **`UNKNOWN` points at source configuration or permissions**, not at a mapping gap.
+- **Promote local vocabulary into a custom field** if you need it. Do not branch on raw strings.
+- **Do not infer from an enum what it cannot carry.** Part-time status is not reliably in an employment status field.
 
 ## Related
 
-<CardGroup cols={2}>
-  <Card title="How Syncing Works" icon="rotate-cw" href="/concepts/how-syncing-works">
-    Why modified_at behaves this way.
-  </Card>
-</CardGroup>
+- [Inspect the raw payload](/how-to/data-model/inspect-the-raw-upstream-payload) - see the original value
+- [Get Employees](/hris/employee/get-employees) - enum fields and their values
+- [Unified model & raw data](/concepts/unified-model) - why normalisation loses information

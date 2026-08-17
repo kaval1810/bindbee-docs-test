@@ -1,154 +1,66 @@
 ---
 title: "Connector lifecycle"
-description: "What COMPLETE, INCOMPLETE and RELINK_NEEDED actually mean, how a connector moves between them, and what your product should do in each state."
+description: "The states a connector moves through, and what expiry, relink and deletion each do to data already synced."
 ---
 
-A connector is the link between one customer and one third-party system. It has a life: created, linked, syncing, healthy, degraded, recovered or dead. Modelling that life correctly is the difference between a product that quietly serves stale data and one that tells the customer to reconnect.
+A connector is the only object in Bindbee with a lifecycle you have to manage. It is created by someone outside your company, it can stop working without anything on your side changing, and one of the recovery actions available to you destroys data.
 
-## The two status fields
+## The states
 
-Bindbee reports connector health along two independent axes. Reading only one of them is the root of most confusion.
+**Pending.** Created when you initiate a connection, before your customer has authorised it. No credentials, no data, no syncs.
 
-```
-status       →  Are the credentials valid?     COMPLETE | INCOMPLETE | RELINK_NEEDED
-sync_status  →  Is the data current?           Syncing  | Done       | Failed
-```
+**Active.** Authorised and syncing on schedule. The normal steady state.
 
-They move independently. All nine combinations are reachable.
+**Broken.** Credentials that no longer work. This covers several underlying causes that behave identically from your side: an OAuth token that expired and could not refresh, an API key the customer rotated, an integration user that was deactivated, or permissions that were narrowed after authorisation.
 
-## `status` - credential health
-
-| Value | Meaning | Data readable? | Your action |
-| --- | --- | --- | --- |
-| `INCOMPLETE` | Linking started but never finished | No | Prompt the customer to complete the connection |
-| `COMPLETE` | Credentials valid and working | Yes | Normal operation |
-| `RELINK_NEEDED` | Credentials were rejected | Yes, but frozen | Prompt the customer to reconnect |
-
-### `INCOMPLETE`
-
-A `link_token` was issued, or a Magic Link was opened, but the customer never finished authorizing. There are no credentials, so nothing will ever sync.
-
-This is a common and undramatic state - people close tabs. It usually means your onboarding flow needs a nudge, not that anything failed.
-
-### `COMPLETE`
-
-The steady state. Credentials work, syncs run on schedule.
-
-`completed_at` records when linking finished.
-
-### `RELINK_NEEDED`
-
-Bindbee attempted to use the stored credentials and the third-party system rejected them. `relink_needed_at` records when this was detected.
-
-Common causes:
-
-- OAuth refresh token expired or was revoked
-- The customer's admin removed or deactivated the integration user
-- API credentials rotated on the customer's side
-- The customer's subscription tier changed and revoked API access
-- Permissions narrowed so the integration user can no longer read required scopes
+A broken connector does not lose the data it already synced. It stops acquiring new data, and everything you have goes stale in place - which is precisely why this failure is easy to miss. Reads keep succeeding.
 
 <Warning>
-  `RELINK_NEEDED` is not self-healing. No amount of waiting or resyncing fixes
-  it. Only the customer re-authorizing does. Every hour you don't tell them is an
-  hour of data drift.
+There is no error on the data endpoints when a connector is broken. Your application will keep reading successfully from a connector that stopped syncing weeks ago. Sync-status webhooks and connector state are the only reliable signals.
 </Warning>
 
-Data from the last successful sync remains readable. This is a feature - your product doesn't go blank - but it is also a trap: without surfacing the state, your customer sees plausible data that is silently frozen.
+## Relinking versus deleting
 
-## `sync_status` - data currency
+When a connector breaks, both actions available to you look like they mean "fix it". They do not.
 
-| Value | Meaning |
-| --- | --- |
-| `Syncing` | A sync is running now. `sync_progress` holds 0–100 |
-| `Done` | Last sync completed successfully |
-| `Failed` | Last sync did not complete |
+**Relinking** sends your customer back through authorisation to supply working credentials. The connector keeps its identity, its history, and its synced records. Existing data reconciles against what the source system now returns, and normal syncing resumes. This is the correct response to essentially every broken connector.
 
-`Failed` with `status: COMPLETE` means the credentials are fine but this particular run broke - a vendor outage, a timeout, a transient error. These often recover on the next scheduled run without any intervention.
+**Deleting** removes the connector and its data. The customer's identifiers, the records synced under it, the sync history - all of it. Recovering means creating a new connector and running a fresh initial sync, and every record comes back with a new Bindbee `id`, breaking any foreign key you stored.
 
-## The lifecycle
+Deletion is the right action when a customer churns or when a connection was created in error. It is the wrong instinct for a broken one, and it is not reversible.
 
-```mermaid
-flowchart TD
-    Created(["created"])
-    Incomplete(["INCOMPLETE"])
-    Complete(["COMPLETE"])
-    Syncing(["sync_status: Syncing"])
-    Done(["Done"])
-    Failed(["Failed"])
-    Relink(["RELINK_NEEDED"])
+{/* VERIFY: does relinking rotate the connector token, or is the existing token preserved? Open item from the How-to spec - determines whether stored tokens need updating after a customer relinks. */}
 
-    Created -->|customer authorizes| Complete
-    Created -->|abandons| Incomplete
-    Complete -->|first sync| Syncing
-    Syncing --> Done
-    Syncing --> Failed
-    Done -->|credentials rejected| Relink
-    Failed -->|credentials rejected| Relink
-    Relink -->|customer re-authorizes| Complete
+## Credential rotation is routine
 
-    classDef node fill:#F9F9F8,stroke:#E06D10,stroke-width:1.5px,color:#111,rx:8,ry:8
-    classDef warn fill:#FFF8E6,stroke:#D97706,stroke-width:1.5px,color:#111,rx:8,ry:8
-    class Created,Complete,Syncing,Done node
-    class Incomplete,Failed,Relink warn
-```
+Customers rotate API keys, cycle service accounts, and offboard the administrator who originally authorised the connection. Each of these breaks a connector through no fault of anyone's.
 
-Re-linking updates the **existing** connector. The `connector_token` you already stored continues to work - you do not need to re-exchange tokens or re-key your database.
+The last one is worth planning for specifically. When authorisation is tied to an individual's account rather than a dedicated integration user, that person leaving the company takes the connection with them. It is one of the more common causes of a connector breaking months after a clean setup, and it tends to be discovered late because nothing announces it.
 
-<Tip>
-  Because re-linking preserves the connector, your recovery flow is simply:
-  create a new `link_token` for the same `origin_id` and integration, and send
-  the customer through the same connect UI they used originally.
-</Tip>
+## What deletion actually removes
 
-## `is_active`
+Deleting a connector removes the synced records associated with it. This is worth stating plainly because it is sometimes what you want - a churned customer's employee data should not persist indefinitely, and connector deletion is the mechanism for removing it.
 
-Separate from `status`. A connector can be deactivated - for example when the customer churns or you delete the connection via
-`DELETE /api/{category}/v1/connectors/{connector_id}/delete`.
+It is also why deletion cannot be the reflex for a broken connection. The same operation that satisfies a data-removal request destroys a recoverable integration.
 
-Treat `is_active: false` as terminal. Don't try to recover it; create a new connection.
+## Why it works this way
 
-## `is_test_connector`
+Keeping data through a broken state is the decision that produces the silent-staleness problem, and it is still the right one.
 
-Flags a connector created for testing. Useful for excluding test connections from customer-facing counts, billing, and health dashboards.
+The alternative is to make data unavailable the moment credentials fail - reads start erroring, and the problem is impossible to miss. That is louder, and it converts a degradation into an outage. Your application stops working for that customer entirely because their IT department rotated a key, even though the data you hold is minutes old and perfectly usable. For most applications, slightly stale data is enormously better than no data.
 
-## What your product should do
+Preserving data through relink is what makes recovery cheap. Because the connector keeps its identity, a customer who fixes their credentials gets continuity rather than a new set of identifiers and a broken join in your database. The trade is that failure is quiet, which puts the burden on monitoring rather than on error handling.
 
-Map states to user-visible outcomes explicitly:
+## What this means for you
 
-| State | Show the customer | Alert your team? |
-| --- | --- | --- |
-| `INCOMPLETE` | "Finish connecting your HRIS" + resume link | No |
-| `COMPLETE` + `Syncing`, first sync | "Importing your data…" with progress | No |
-| `COMPLETE` + `Done` | "Connected · last synced *X* ago" | No |
-| `COMPLETE` + `Failed`, once | Nothing - likely transient | No |
-| `COMPLETE` + `Failed`, repeatedly | "We're having trouble syncing" | Yes |
-| `RELINK_NEEDED` | "Reconnect your HRIS" - prominent, blocking | Yes |
-| `is_active: false` | Connection removed | No |
-
-<Warning>
-  Do not treat a single `Failed` as an incident. Transient vendor errors are
-  normal and usually clear on the next scheduled run. Alert on *consecutive*
-  failures or on data age exceeding a threshold, not on a single event.
-</Warning>
-
-## Detecting state changes
-
-Two ways, and you want both:
-
-**Webhooks** - `connector_sync_error` fires on failure with an `error` object explaining what happened. React immediately.
-
-**Polling the connector list** - `GET /api/{category}/v1/connectors` returns current `status`, `sync_status`, `sync_progress`, `last_sync_start_time` and `next_sync_start_time` for every connector. Run this on a schedule as a reconciliation sweep; it is the only reliable way to catch a `RELINK_NEEDED` that was detected while your webhook endpoint was down.
-
-See [Monitor sync status](/how-to/troubleshooting/monitor-sync-status).
+- **Monitor connector state, not read success.** Reads succeed regardless.
+- **Relink to fix; delete to remove.** They are not interchangeable, and deletion is not reversible.
+- **Encourage dedicated integration users at setup** rather than authorisation tied to an individual's account.
+- **Treat connector deletion as your data-removal mechanism** for churned customers.
+- **Surface stale connectors to whoever manages the customer relationship**, since the fix is on their side.
 
 ## Related
 
-<CardGroup cols={2}>
-  <Card title="Monitor Sync Status" icon="gauge" href="/how-to/troubleshooting/monitor-sync-status">
-    Building the health surface.
-  </Card>
-  <Card title="How Syncing Works" icon="rotate-cw" href="/concepts/how-syncing-works">
-    What happens between trigger and stored data.
-  </Card>
-</CardGroup>
+- [Relink a broken connector](/how-to/connections/update-credentials) - walk a customer through re-authorisation
+- [Delete Connector](/api-reference/connectors/delete-connector) - remove a connector and its data
+- [Magic Link & end-user auth](/concepts/magic-link) - why the fix belongs to your customer

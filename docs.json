@@ -64,7 +64,8 @@
             "pages": [
               "concepts/core-concepts",
               "concepts/unified-model",
-              "concepts/scope-and-permissions"
+              "concepts/scope-and-permissions",
+              "concepts/magic-link"
             ]
           },
           {
@@ -86,6 +87,8 @@
               "concepts/status-and-terminations",
               "concepts/hris-models",
               "concepts/benefits-models",
+              "concepts/payroll-and-time-models",
+              "concepts/effective-dating",
               "concepts/enum-values"
             ]
           },

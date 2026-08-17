@@ -1,0 +1,62 @@
+---
+title: "Payroll & time models"
+description: "How payroll runs, employee payroll runs, pay groups, payroll codes, calendars, timesheets and time off fit together."
+---
+
+Eight models cover payroll and time, and they divide into two groups that are often confused: what was paid, and what was worked. They are related but neither derives from the other, and in many organisations they come from different systems entirely.
+
+## What was paid
+
+**Payroll run** is one processing event for a population of employees - a run type, a pay period, and a check date. It is the employer's event.
+
+**Employee payroll run** is one person's line within it: gross, net, earnings, deductions, and taxes. This is where the money is.
+
+**Pay group** is the population and cadence. Weekly hourly staff and monthly salaried staff are usually separate pay groups, processed on separate schedules. An employee belongs to one, and it determines when they are paid.
+
+**Payroll run calendar** is the forward schedule - periods and check dates that have not happened yet. It is the only model here that describes the future, which makes it the one to read when you need to know when the next opportunity to submit something is.
+
+**Payroll code** is the customer's own vocabulary for earnings and deductions. Every line on a payslip references one, and the codes are defined in the customer's payroll configuration rather than by any standard.
+
+<Warning>
+Payroll codes do not carry portable meaning. A code that identifies a 401(k) deduction at one customer identifies something else at another, and there is no reliable mapping from code to purpose. Any logic that interprets deductions must be configured per customer.
+</Warning>
+
+This is the single largest source of difficulty in payroll integrations. The data is structurally clean and semantically local.
+
+## What was worked
+
+**Timesheet entry** is recorded work: date, start and end, hours, breaks.
+
+**Time off** is a leave request: type, dates, duration, status, approver. Note that it is a request with a lifecycle, not just a period of absence - pending, approved, and rejected requests all exist, and reading time off without filtering on status counts leave that was never taken.
+
+**Time off balance** is entitlement remaining, by policy. It is a derived figure the source system calculates, and how it treats accrual, carryover, and pending requests differs by system. Two customers with the same policy can report balances that mean subtly different things.
+
+Timesheet data is also where normalisation works hardest. Source systems record time as punches, as durations, as intervals with breaks nested inside, or as daily totals with no detail. Reconstructing a consistent entry shape from these is lossy, and the original always survives in raw data.
+
+## The two halves do not join cleanly
+
+Hours worked and hours paid diverge routinely and legitimately. Overtime is calculated by rules the timesheet does not encode. Salaried employees are paid without any timesheet at all. Corrections apply to a later run than the period they fix. Time off may or may not appear as a payroll line depending on the policy.
+
+Any reconciliation between the two is arithmetic your application performs with knowledge of the customer's rules. The models sit alongside each other; they do not derive from one another.
+
+## Why it works this way
+
+The run and employee-run split mirrors how payroll actually executes: an employer-level event that produces per-employee results. Collapsing them would repeat the period, check date, and status on every employee line, and offer no way to represent a run that exists before its results do.
+
+Payroll codes are surfaced rather than interpreted, and that is a deliberate refusal. Bindbee could attempt to classify codes into standard categories - pre-tax deduction, employer contribution, taxable earning - and be wrong in ways that matter. A misclassified deduction in a benefits or retirement context produces incorrect contribution reporting, and the error is silent and downstream. Passing the customer's own code through unmodified means the classification decision sits with whoever has the configuration knowledge to make it correctly.
+
+Time off as a request rather than an absence follows the source systems, which model approval workflow rather than outcome. Flattening it to "days absent" would lose the pending state, which is precisely what most applications need to act on.
+
+## What this means for you
+
+- **Filter time off by status.** Pending and rejected requests are in the data.
+- **Never assume a payroll code means the same thing across customers.** Configure the mapping per customer.
+- **Read the calendar for future periods.** Runs only describe what has happened.
+- **Do not reconcile timesheets against payroll arithmetically** without encoding the customer's overtime and salary rules.
+- **Treat balances as the source system's calculation**, not a portable figure.
+
+## Related
+
+- [Read payroll data](/how-to/reading-data/read-payroll-and-timesheet-data) - runs, lines, and deductions
+- [Get Payroll Codes](/hris/payroll-codes/get-payroll-codes) - the customer's earning and deduction codes
+- [Benefits models](/concepts/benefits-models) - connecting deductions back to plans
