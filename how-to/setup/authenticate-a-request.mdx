@@ -9,16 +9,16 @@ Every request to the Bindbee unified API needs two headers: your organization's 
   **Before you start**
 
   - You have an API key for the environment you're calling - Development and Production keys are separate.
-  - At least one connector has completed the [Magic Link](/how-to/connections/generate-a-magic-link) flow.
+  - At least one connector is authorized, however it was created - from the Dashboard, a [Magic Link](/how-to/connections/generate-a-magic-link), or [programmatically](/how-to/connections/create-a-connector-programmatically).
 </Info>
 
 ## Steps
 
 <Steps>
-  <Step title="Copy your API key">
-    Open **Settings → API Keys** in the dashboard and copy the key for your current environment.
+  <Step title="Generate your API key">
+    Open **Settings → API Keys** in the dashboard, find the block for the environment you are calling, and generate a key. Copy it immediately - the value is shown once and is never displayed again.
 
-    **Result:** You have a key string. Store it as a secret - it is never returned again after creation, and regenerating it invalidates the previous key for every connector in that environment.
+    **Result:** You have a key string. Store it as a secret. If you lose it, generate a replacement from the same screen; regenerating invalidates the previous key for every connector in that environment.
   </Step>
 
   <Step title="Copy the connector token">
@@ -105,13 +105,13 @@ Connector-scoped endpoints act on one end user. Organization-scoped endpoints ac
   </Accordion>
 
   <Accordion title="The connector token stopped working after the end user reconnected">
-    Relinking can issue a new token. Fetch the current one from the connector's Overview tab or via [Get Connectors](/api-reference/connectors/get-connectors), and store tokens by connector ID rather than caching them indefinitely.
+    Treat `connector_token` as a value that can change over the life of a connector rather than a constant you capture once. Re-read the current token from the connector's Overview tab or via [Get Connectors](/api-reference/connectors/get-connectors), and key your stored tokens by connector ID so a rotation replaces the old value instead of sitting alongside it.
 
-    {/* VERIFY: confirm whether relinking always rotates the connector_token, or only when credentials change. */}
+    A handler that refetches the token on `401` and retries once is the cheapest way to survive this, regardless of what triggered the change.
   </Accordion>
 </AccordionGroup>
 
 ## Related
 
 - [Authentication](/api-reference/basics/authentication) - header reference
-- Environments - why keys are environment-scoped
+- [Choose an Environment](/how-to/setup/choose-an-environment) - why keys are environment-scoped
