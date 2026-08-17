@@ -1,0 +1,103 @@
+---
+title: "Include raw_data and Custom Fields in a Response"
+description: "Add the untransformed upstream payload or your mapped custom fields to a read, and know when not to."
+---
+
+Both are omitted by default. Each is a query parameter you opt into per request.
+
+<Info>
+  **Before you start**
+
+  - For custom fields, at least one field is mapped and resolves on this connector - see [Map a Custom Field from the Dashboard](/how-to/data-model/map-a-custom-field-from-the-dashboard).
+</Info>
+
+## Steps
+
+<Steps>
+  <Step title="Add the parameter">
+    | Parameter | Adds |
+    | --- | --- |
+    | `include_custom_fields=true` | A `custom_fields` object per record |
+    | `include_raw_data=true` | A `raw_data` object per record, untransformed |
+
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/employees?include_custom_fields=true&page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    Both are available on collection and single-record endpoints across models.
+
+    **Result:** The extra keys inline.
+  </Step>
+
+  <Step title="Read custom fields by name">
+    ```json
+    {
+      "id": "019f618e-c850-716d-a510-74639514abf6",
+      "first_name": "Ada",
+      "custom_fields": {
+        "cost_center_name": "Engineering-NA",
+        "guardian_mobile": "+1-555-123-4567"
+      }
+    }
+    ```
+
+    Only fields with a mapping that resolves on this connector appear. A field mapped for one connector and not another is absent rather than null on the second.
+
+    **Result:** Your mapped values alongside unified fields.
+  </Step>
+
+  <Step title="Lower page_size when including raw data">
+    `raw_data` carries the source system's full payload per record, which is frequently larger than the unified record itself. At `page_size=200` responses become slow and heavy.
+
+    Drop to 25–50 when including it, or filter to specific records instead.
+
+    **Result:** Responses that return in reasonable time.
+  </Step>
+</Steps>
+
+## Which to use when
+
+| Goal | Use |
+| --- | --- |
+| Consume a value in production | `include_custom_fields` |
+| Find a field to map | The [raw-data endpoint](/how-to/data-model/inspect-the-raw-upstream-payload), not this parameter |
+| Spot-check a mapping across many records | `include_raw_data`, with a small `page_size` |
+| Audit what the source returns for one person | `include_raw_data` with an `ids` filter |
+
+<Warning>
+  `include_raw_data=true` is a debugging tool. Leaving it on in production inflates every response, slows every page, and means your code depends on provider-specific shapes that change without notice - which is exactly what the unified model exists to avoid.
+
+  If you need a raw value routinely, map it as a custom field instead.
+</Warning>
+
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="custom_fields is missing entirely">
+    Confirm `include_custom_fields=true` is on the request. If it is, no mapped field resolves on this connector - check with the configuration endpoint, see [Scope a Mapping to One Connector or All](/how-to/data-model/scope-a-mapping).
+  </Accordion>
+
+  <Accordion title="A field's value is INVALID_JSON_PATH">
+    The mapping's expression doesn't resolve against this connector's payload. An invalid path returns this string rather than raising an error - see [Test a JMESPath Before Saving It](/how-to/data-model/test-a-jmespath).
+  </Accordion>
+
+  <Accordion title="A custom field is null for some records">
+    Usually correct - not every record has every value. Confirm by checking `raw_data` for a record where you expect it.
+  </Accordion>
+
+  <Accordion title="Responses became slow after adding raw data">
+    Expected. Lower `page_size`, or use the raw-data endpoint for a single record instead of paging everything with raw data attached.
+  </Accordion>
+
+  <Accordion title="You want raw data for one employee only">
+    Combine with a filter: `?ids=<EMPLOYEE_ID>&include_raw_data=true`. That's far cheaper than paging the collection.
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Custom Fields](/explanation/custom-fields)
+- [Get Employees](/hris/employee/get-employees)

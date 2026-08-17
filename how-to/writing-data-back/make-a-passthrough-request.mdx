@@ -1,0 +1,98 @@
+---
+title: "Make a Passthrough Request"
+description: "Call an endpoint on the source system directly when the unified API doesn't cover what you need."
+---
+
+Passthrough forwards a request to the underlying source system using the connector's stored credentials. Bindbee handles authentication; everything else - path, body, response shape - is the provider's.
+
+Use it for gaps, not as a default. Passthrough responses aren't unified, so every one you depend on is provider-specific code you maintain.
+
+<Info>
+  **Before you start**
+
+  - You've confirmed the unified API doesn't cover this - see [Check Which Writes an Integration Supports](/how-to/writing-data-back/check-write-support).
+  - You have the source system's own API documentation for the endpoint.
+</Info>
+
+## Steps
+
+<Steps>
+  <Step title="Find the provider's endpoint">
+    Work from the source system's own documentation. You need the path, method, and body it expects - Bindbee doesn't validate or transform these.
+
+    **Result:** A provider-specific request you can describe.
+  </Step>
+
+  <Step title="Send it through Passthrough">
+    ```bash
+    curl --request POST \
+      --url 'https://api.bindbee.dev/api/v1/passthrough' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'x-connector-token: <CONNECTOR_TOKEN>' \
+      --header 'Content-Type: application/json' \
+      --data '{
+        "method": "GET",
+        "path": "/v1/companies/current/paygroups"
+      }'
+    ```
+
+    The base URL, authentication, and any token refresh are handled from the connector. See [Make Passthrough Request](/api-reference/passthrough/make-passthrough-request) for the exact request shape.
+
+    **Result:** The provider's raw response.
+  </Step>
+
+  <Step title="Handle the response as provider-specific">
+    You get the source system's own response shape, not a unified model. Field names, casing, pagination, and error format are all theirs, and differ between integrations.
+
+    Write handling per integration rather than trying to generalise across them.
+
+    **Result:** Data your code understands.
+  </Step>
+</Steps>
+
+## Where Passthrough genuinely earns its place
+
+| Case | Why |
+| --- | --- |
+| Sourcing an `integration_params` value | Pay groups, statement types, and location codes often live only in provider configuration endpoints |
+| Validating a code before a write | Confirming a deduction code exists beats a rejected payroll write |
+| A write with no unified equivalent | Where the model isn't supported yet |
+| A provider-native filter | Where the source system supports narrowing the unified API doesn't expose |
+
+<Warning>
+  Passthrough is not the answer to a field missing from a read. If the value is in the synced payload, map it as a [custom field](/how-to/data-model/map-a-custom-field-from-the-dashboard) - that keeps it in the unified response, works across connectors, and survives provider API changes. Passthrough is for things genuinely outside what Bindbee syncs.
+</Warning>
+
+## Writes through Passthrough are on you
+
+Passthrough does not accept an idempotency key. A retried write goes straight through to the provider and creates a second record.
+
+Where you're writing, build your own protection: check whether the record exists before creating it, or use whatever idempotency mechanism the provider offers natively. Don't retry blind.
+
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="404 from the provider">
+    The path is wrong for this account. Provider paths vary by API version, region, and tenant - some embed a tenant or company identifier that differs per customer. Check the provider's docs for the version this integration authenticates against.
+  </Accordion>
+
+  <Accordion title="401 or 403 from the provider">
+    The connector's credentials authenticate but lack access to that endpoint. Passthrough grants no more access than the connection has - see [Resolve a Source-System Permission Error](/how-to/troubleshooting/resolve-a-permission-error).
+  </Accordion>
+
+  <Accordion title="The same request works on one connector and not another">
+    Expected. Provider APIs vary by the customer's plan tier, enabled modules, and configuration. Passthrough code needs per-connector fallbacks in a way unified endpoints don't.
+  </Accordion>
+
+  <Accordion title="You're using Passthrough for something on every request">
+    That's a signal the unified API should cover it. Raise it - a supported model or write is more maintainable than provider-specific code paths, and it's how coverage gets prioritised.
+  </Accordion>
+
+  <Accordion title="Provider rate limits">
+    Passthrough consumes the customer's own quota with the provider, on top of Bindbee's [rate limit](/api-reference/basics/rate-limits). Heavy use can affect the connector's own syncs.
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Make Passthrough Request](/api-reference/passthrough/make-passthrough-request)

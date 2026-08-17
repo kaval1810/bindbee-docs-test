@@ -1,0 +1,137 @@
+---
+title: "Fetch a Write Schema from the Meta API"
+description: "Build a valid write request body from the integration-specific schema instead of guessing at required fields."
+---
+
+Write requirements differ by integration - required fields, accepted enum values, and platform-specific parameters all vary. The Meta API returns a JSON Schema describing exactly what the current connector's integration expects. Fetch it before every new write integration; don't hard-code a body learned from one platform.
+
+<Info>
+  **Before you start**
+
+  - You have a `connector_token` for the connector you'll write to. The schema is integration-specific, so it must come from the same connector.
+</Info>
+
+## Steps
+
+<Steps>
+  <Step title="Fetch the schema">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/employees/meta/post' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'x-connector-token: <CONNECTOR_TOKEN>'
+    ```
+
+    **Result:** A JSON Schema for the request body.
+  </Step>
+
+  <Step title="Read the requirement markers">
+    Two markers express requirement, at different levels.
+
+    | Keyword | Scope |
+    | --- | --- |
+    | `isRequired` | On the individual field |
+    | `required` | Array on the parent object, listing all mandatory children |
+
+    Check the `required` array on each object, including nested ones - a field can be optional at the top level while being required inside an object you've chosen to send.
+
+    **Result:** The complete set of mandatory fields.
+  </Step>
+
+  <Step title="Use enum values verbatim">
+    Where a field carries `enum`, only those values are accepted, and `enumInformation` describes what each one means.
+
+    Read `enumInformation` rather than inferring from the value name. Platform vocabularies diverge - a leave type or pay statement code that looks self-explanatory often isn't, and the description is what tells you which one maps to your concept.
+
+    **Result:** Values the integration will accept.
+  </Step>
+
+  <Step title="Handle nested objects and arrays">
+    A field with `type: "object"` defines its children under `properties`. A field with `type: "array"` defines each element's shape under `items`, which has its own `required` array.
+
+    ```json
+    "earnings": {
+      "type": "array",
+      "isRequired": false,
+      "items": {
+        "type": "object",
+        "properties": {
+          "earning_code": { "type": "string", "isRequired": true },
+          "amount": { "type": "number", "isRequired": false }
+        },
+        "required": ["earning_code"]
+      }
+    }
+    ```
+
+    The array is optional here, but `earning_code` is mandatory on every element you include.
+
+    **Result:** Correctly shaped nested data.
+  </Step>
+
+  <Step title="Supply integration_params where required">
+    `integration_params` carries values the underlying platform demands that have no unified equivalent - a pay statement type ID, a leave category, a location reference.
+
+    Its properties are explicitly defined and can be required. Where they are, the write cannot succeed without them, and the values usually come from the source system's own configuration rather than from anything Bindbee returns.
+
+    ```json
+    "integration_params": {
+      "type": "object",
+      "isRequired": true,
+      "properties": {
+        "pay_statement_type_id": { "type": "string", "isRequired": true }
+      },
+      "required": ["pay_statement_type_id"]
+    }
+    ```
+
+    Distinguish this from `additional_attributes`, which is free-form, unvalidated, and for integration-specific values outside the unified fields.
+
+    | | `integration_params` | `additional_attributes` |
+    | --- | --- | --- |
+    | Structure | Defined | Free-form |
+    | Validated | Yes | No |
+    | Can be required | Yes | No |
+
+    **Result:** A body that satisfies the platform's own requirements.
+  </Step>
+
+  <Step title="Validate before sending">
+    The response is JSON Schema-compatible, so standard tooling validates against it directly. That catches shape errors locally rather than as a failed write against the customer's live HRIS.
+
+    The same schema also drives form generation if you're collecting these values from an end user.
+
+    **Result:** A body validated before it leaves your system.
+  </Step>
+</Steps>
+
+## Fetch it, don't cache it forever
+
+Schemas differ by integration and change as write support expands. Fetching per integration at build time and refreshing periodically is reasonable; hard-coding a body from one platform is the reliable way to fail on the second.
+
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="The schema is missing fields you know the platform needs">
+    Check `integration_params` and `additional_attributes` before concluding it's incomplete - platform-specific requirements live there rather than as top-level fields.
+  </Accordion>
+
+  <Accordion title="A write conforming to the schema still fails">
+    The schema describes the structural contract. The source system can enforce rules beyond it: a code that must already exist in their configuration, a date inside an open payroll period, an approval state, or a permission the connector lacks.
+
+    Read the error from the write response, and check whether the values you're sending exist in the customer's configuration.
+  </Accordion>
+
+  <Accordion title="No schema is returned for an operation you were told is supported">
+    A write can be available while its Meta schema is unimplemented. See [Check Which Writes an Integration Supports](/how-to/writing-data-back/check-write-support).
+  </Accordion>
+
+  <Accordion title="You don't know where to source an integration_params value">
+    These usually reference the customer's own HRIS configuration. Where the value isn't discoverable through a Bindbee read, [Passthrough](/how-to/writing-data-back/make-a-passthrough-request) can query the source system's configuration endpoint directly.
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Meta APIs for Write Operations](/meta-apis-for-write-operations)
+- [Get Create Employee Meta](/hris/employee/get-create-employee-meta)

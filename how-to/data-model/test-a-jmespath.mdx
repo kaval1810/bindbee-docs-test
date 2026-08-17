@@ -1,0 +1,120 @@
+---
+title: "Test a JMESPath Before Saving It"
+description: "Dry-run a mapping expression against real connector data so a bad path never reaches production responses."
+---
+
+An invalid JMESPath doesn't raise an error. It returns `"INVALID_JSON_PATH"` as the field's value, which means a broken mapping is only discovered by whoever consumes the response - often after it's been wrong for a while.
+
+The preview endpoint evaluates an expression without persisting anything.
+
+<Info>
+  **Before you start**
+
+  - You have a candidate expression - see [Inspect the Raw Upstream Payload](/how-to/data-model/inspect-the-raw-upstream-payload).
+</Info>
+
+## Steps
+
+<Steps>
+  <Step title="Send the expression">
+    ```bash
+    curl --request POST \
+      --url 'https://api.bindbee.dev/api/v1/custom-fields/preview' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'Content-Type: application/json' \
+      --data '{
+        "connector_token": "<CONNECTOR_TOKEN>",
+        "category": "HRIS",
+        "model": "employee",
+        "json_path": "data.employee.guardian_mobile"
+      }'
+    ```
+
+    ```json
+    {
+      "json_path": "data.employee.guardian_mobile",
+      "resolved_value": "+1-555-123-4567",
+      "resolved_value_type": "string",
+      "raw_data_source": "connector_sync"
+    }
+    ```
+
+    **Result:** The value the expression resolves to.
+  </Step>
+
+  <Step title="Check what it evaluated against">
+    `raw_data_source` tells you where the data came from, and it changes how much the result proves.
+
+    | Value | Meaning |
+    | --- | --- |
+    | `connector_sync` | The connector's latest synced row - the strongest signal |
+    | `integration_sample` | The connector hasn't synced; a canned sample was used |
+    | `inline` | A payload you supplied in the request |
+
+    An expression validated against `integration_sample` confirms the syntax but not that it matches this customer's actual data. Re-check against `connector_sync` once the connector has synced.
+
+    **Result:** You know how much to trust the result.
+  </Step>
+
+  <Step title="Check the resolved type">
+    `resolved_value_type` is one of `string`, `number`, `boolean`, `object`, `array`, or `null`.
+
+    An `object` or `array` usually means the expression stopped short - you've selected a container rather than a value. Add an index or a filter.
+
+    A `null` means it resolved but found nothing there.
+
+    **Result:** A scalar of the type you expected.
+  </Step>
+
+  <Step title="Test against a record that has the value">
+    A field present for some employees and absent for others resolves to `null` on the wrong sample record.
+
+    Preview against a connector where you know the value exists. In the dashboard, employee search lets you pick a specific person's record for the same purpose - see [Map a Custom Field from the Dashboard](/how-to/data-model/map-a-custom-field-from-the-dashboard).
+
+    **Result:** Confirmation the expression works where the data exists.
+  </Step>
+
+  <Step title="Save it">
+    Attach the validated expression as a mapping - see [Map Custom Fields with the API](/how-to/data-model/map-custom-fields-with-the-api).
+
+    **Result:** A mapping you've confirmed resolves.
+  </Step>
+</Steps>
+
+## Expressions worth testing carefully
+
+| Shape | Expression | Why it needs testing |
+| --- | --- | --- |
+| Value in an array | `fields[?name=='Cost Center'].value \| [0]` | Quoting inside filters is easy to get wrong, and without `[0]` you get an array |
+| Deeply nested | `data.employee.address.postal.code` | Any missing intermediate level yields `null`, not an error |
+| Name with special characters | `"custom-field-1"` | Hyphens and spaces need quoting |
+| Value that may be absent | any | Distinguishes "wrong path" from "absent for this record" |
+
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="resolved_value is null but you can see the value in the payload">
+    Compare the path against the payload level by level. The most common cause is a missing root - expressions are evaluated against the full response, so `employee.first_name` fails where `data.employee.first_name` works.
+  </Accordion>
+
+  <Accordion title="resolved_value_type is array when you expected a string">
+    A filter returns a list even when it matches one element. Append `| [0]`.
+  </Accordion>
+
+  <Accordion title="raw_data_source keeps returning integration_sample">
+    The connector hasn't synced. Trigger one - see [Force a Resync](/how-to/sync-control/force-a-resync) - then preview again. On a Development connector nothing syncs until you trigger it.
+  </Accordion>
+
+  <Accordion title="It previews correctly but the live field returns INVALID_JSON_PATH">
+    Check the saved mapping matches what you previewed, and that it's scoped to the connector you're reading from. An org-scoped mapping created against the wrong `integration_slug` won't apply - verify with the configuration endpoint.
+  </Accordion>
+
+  <Accordion title="It works on one connector and fails on another">
+    Payload shape varies with the customer's configuration and plan tier. Preview against each connector that matters and add connector-scoped overrides where they differ.
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Preview](/custom-fields/api/preview)
+- [API Configuration](/how-to/data-model/map-custom-fields-with-the-api)

@@ -134,7 +134,10 @@
               "how-to/reading-data/paginate-through-results",
               "how-to/reading-data/filter-with-modified-after",
               "how-to/reading-data/filter-and-narrow-a-collection",
-              "how-to/reading-data/read-employee-data"
+              "how-to/reading-data/include-raw-data-and-custom-fields",
+              "how-to/reading-data/read-employee-data",
+              "how-to/reading-data/read-benefits-data",
+              "how-to/reading-data/read-payroll-and-timesheet-data"
             ]
           },
           {
@@ -142,7 +145,24 @@
             "icon": "list-tree",
             "pages": [
               "how-to/data-model/inspect-the-raw-upstream-payload",
-              "how-to/data-model/map-a-custom-field-from-the-dashboard"
+              "how-to/data-model/map-a-custom-field-from-the-dashboard",
+              "how-to/data-model/map-custom-fields-with-the-api",
+              "how-to/data-model/test-a-jmespath",
+              "how-to/data-model/scope-a-mapping",
+              "how-to/data-model/restrict-models-and-fields"
+            ]
+          },
+          {
+            "group": "Writing Data Back",
+            "icon": "square-pen",
+            "pages": [
+              "how-to/writing-data-back/check-write-support",
+              "how-to/writing-data-back/fetch-a-write-schema",
+              "how-to/writing-data-back/create-a-time-off-request",
+              "how-to/writing-data-back/create-an-employee",
+              "how-to/writing-data-back/create-an-employee-payroll-run",
+              "how-to/writing-data-back/create-a-timesheet-entry",
+              "how-to/writing-data-back/make-a-passthrough-request"
             ]
           },
           {

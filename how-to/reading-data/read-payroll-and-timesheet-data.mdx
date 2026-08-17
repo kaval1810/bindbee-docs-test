@@ -1,0 +1,112 @@
+---
+title: "Read Payroll and Timesheet Data"
+description: "Fetch pay runs, per-employee earnings and deductions, and time entries - and pick the right date filter for each."
+---
+
+Payroll spans a run-level model and a per-employee model, plus a calendar of scheduled runs. Which one you read depends on whether you need the cycle or the amounts.
+
+<Info>
+  **Before you start**
+
+  - The connector has synced, and the customer's payroll module is in scope.
+</Info>
+
+## The models
+
+| Model | Represents | Endpoint |
+| --- | --- | --- |
+| Payroll run | One pay cycle for the employer | [Get Payroll Runs](/hris/payroll-runs/get-payroll-runs) |
+| Employee payroll run | One employee's earnings, deductions, and taxes within a run | [Get Employee Payroll Runs](/hris/employee-payroll-runs/get-employee-payroll-runs) |
+| Payroll run calendar | Scheduled and upcoming runs | [Get Payroll Run Calendars](/hris/payroll-run-calendar/get-payroll-run-calendars) |
+| Timesheet entry | Hours worked | [Get Timesheet Entries](/hris/timesheet-entries/get-timesheet-entries-list) |
+
+The calendar matters more than it looks. Deduction changes have to land before the customer's processing cut-off, and the calendar is how you know when the next run is - see [Create an Employee Payroll Run](/how-to/writing-data-back/create-an-employee-payroll-run).
+
+## Steps
+
+<Steps>
+  <Step title="Read per-employee payroll">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/employee-payroll-runs?employee_id=<EMPLOYEE_ID>&page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    Filter by `employee_id` for one person, or `payroll_run_id` for everyone in a cycle.
+
+    **Result:** Earnings, deductions, and taxes per employee.
+  </Step>
+
+  <Step title="Choose the right date filter">
+    Three independent pairs, and they mean different things.
+
+    | Filter pair | Bounds |
+    | --- | --- |
+    | `start_date_from` / `start_date_to` | Start of the pay period |
+    | `end_date_from` / `end_date_to` | End of the pay period |
+    | `check_date_from` / `check_date_to` | When payment was actually issued |
+
+    <Warning>
+      Check date and pay period are routinely different, and a period ending in December can pay in January. Reconciling by check date attributes that run to the wrong year; reconciling by period end attributes it to the wrong cash month.
+
+      Pick deliberately based on whether you're reconciling coverage or cash.
+    </Warning>
+
+    **Result:** Records scoped to the period you mean.
+  </Step>
+
+  <Step title="Read deductions from the per-employee model">
+    Deduction lines carry the codes defined in the customer's payroll configuration.
+
+    Those codes are customer-specific and do not map automatically to benefit plans - the relationship is configuration you establish with the customer and store yourself. See [Read Benefits Data](/how-to/reading-data/read-benefits-data) for the plan side.
+
+    **Result:** Deduction lines you can attribute, given a mapping you own.
+  </Step>
+
+  <Step title="Read timesheet entries">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/timesheet-entry?page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    **Result:** Time entries for the connector.
+  </Step>
+</Steps>
+
+## Where totals diverge from the customer's reports
+
+Reported totals are computed by the source system after entries are recorded. Rounding rules, break deduction, and overtime calculation are applied there, so raw entries can be correct while derived totals differ.
+
+Some platforms also model time as discrete punch events rather than intervals, so one shift may span several records and a break can split it. Compare raw entries against raw entries, never against a computed report.
+
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="Payroll returns nothing though the customer runs payroll">
+    Payroll is usually a separately licensed module with its own permission grant, and an empty result is the common failure mode rather than an error. See [Resolve a Source-System Permission Error](/how-to/troubleshooting/resolve-a-permission-error).
+  </Accordion>
+
+  <Accordion title="Amounts are off by a factor of 100">
+    Some platforms report in minor units. Check `raw_data` for one record against a known figure before scaling anything.
+  </Accordion>
+
+  <Accordion title="A run is missing from a period you expected">
+    Off-cycle runs, bonus runs, and corrections may be modelled differently or excluded. Check the calendar for what was actually scheduled rather than assuming a regular cadence.
+  </Accordion>
+
+  <Accordion title="Deduction codes are unfamiliar">
+    They're defined per customer in their payroll system. There's no universal set - confirm the mapping with the customer and store it against the connector.
+  </Accordion>
+
+  <Accordion title="Hours don't reconcile with the pay run">
+    Timesheet entries and payroll are separate models with separate sync timing. Entries can exist for a period whose run hasn't been processed yet, and approval workflows mean not every entry reaches pay.
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Get Employee Payroll Runs](/hris/employee-payroll-runs/get-employee-payroll-runs) · [Get Payroll Runs](/hris/payroll-runs/get-payroll-runs)
+- [Get Payroll Run Calendars](/hris/payroll-run-calendar/get-payroll-run-calendars)
