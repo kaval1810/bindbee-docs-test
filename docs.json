@@ -63,7 +63,14 @@
             "icon": "lightbulb",
             "pages": [
               "concepts/core-concepts",
-              "concepts/environments",
+              {
+                "group": "Environments",
+                "pages": [
+                  "concepts/environments/overview",
+                  "concepts/environments/development",
+                  "concepts/environments/production"
+                ]
+              },
               "concepts/unified-model",
               "concepts/scope-and-permissions",
               "concepts/integration-versions",
@@ -940,6 +947,22 @@
     {
       "source": "/concepts/passthrough-when-and-why",
       "destination": "/concepts/passthrough"
+    },
+    {
+      "source": "/concepts/environments",
+      "destination": "/concepts/environments/overview"
+    },
+    {
+      "source": "/how-to/setup/environments/overview",
+      "destination": "/concepts/environments/overview"
+    },
+    {
+      "source": "/how-to/setup/environments/development",
+      "destination": "/concepts/environments/development"
+    },
+    {
+      "source": "/how-to/setup/environments/production",
+      "destination": "/concepts/environments/production"
     }
   ],
   "api": {

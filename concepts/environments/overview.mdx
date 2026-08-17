@@ -5,13 +5,22 @@ description: "What Development and Production keep separate, what they share des
 
 Every organisation has two environments: Development and Production. The intuition most people arrive with is that they are two copies of the same account, isolated from each other. Half of that is right, and the half that is wrong is the half that causes surprises.
 
+| | Development | Production |
+| --- | --- | --- |
+| Connectors and their data | Separate | Separate |
+| Logs | Separate | Separate |
+| API key | Separate | Separate |
+| Connector syncs | Manual trigger only | Automatic |
+| Scope configuration | **Shared** | **Shared** |
+| Custom field configuration | **Shared** | **Shared** |
+
 ## What is separate
 
 Connectors and everything downstream of them. A connector belongs to exactly one environment, and so do its synced records, its logs, its sync history and its webhook deliveries. Nothing crosses.
 
 API keys are separate too, and this is the mechanism that enforces the rest. A key issued in Development reaches Development connectors only. Using the wrong one does not return a helpful error - it returns `401`, indistinguishable from a malformed key.
 
-Webhooks follow the same rule. A webhook registered against Production never fires for a Development connector, which is why a connector that changes environment stops delivering to the endpoint you had been watching.
+Webhook deliveries follow the connector. An event fires against the environment its connector lives in, so a webhook must cover that environment to receive anything - and a connector that changes environment stops delivering to the endpoint you had been watching until a webhook covers the new one.
 
 ## What is shared
 
@@ -23,6 +32,11 @@ This is the part that surprises people. It is also the part worth relying on: th
   The corollary is that a scope change made during testing narrows or widens
   what Production requests immediately, on connectors carrying live customer
   data. Scope is not a Development sandbox.
+</Warning>
+
+<Warning>
+  Regenerating a key invalidates the old one immediately. Update every
+  dependent service before regenerating, particularly in Production.
 </Warning>
 
 ## How an environment gets decided
@@ -56,6 +70,17 @@ Automatic syncs are absent from Development because scheduled extracts against a
 - **Expect stale data in Development** unless you trigger a sync - see [Sync a Development Connector](/how-to/sync-control/sync-a-development-connector).
 - **Register webhooks in both environments** if you rely on sync events while testing and in production.
 - **Plan scope before testing**, because the scope you set applies to live connectors immediately.
+
+## Environment-specific detail
+
+<CardGroup cols={2}>
+  <Card title="Development" icon="flask-conical" href="/concepts/environments/development">
+    Sync behaviour, connector limits, and the key-sharing policy for testing.
+  </Card>
+  <Card title="Production" icon="box" href="/concepts/environments/production">
+    Sync behaviour and key handling for live customer data.
+  </Card>
+</CardGroup>
 
 ## Related
 
