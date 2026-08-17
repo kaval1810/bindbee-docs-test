@@ -21,7 +21,7 @@ This is the single most common source of "the data looks stale" during developme
     curl --request POST \
       --url 'https://api.bindbee.dev/api/embedded/v1/connectors/resync' \
       --header 'Authorization: Bearer <BINDBEE_DEV_API_KEY>' \
-      --header 'x-connector-token: <CONNECTOR_TOKEN>'
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
     Use the Development API key. A Production key returns `401` against a Development connector.

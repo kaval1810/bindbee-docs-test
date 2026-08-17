@@ -18,7 +18,7 @@ description: "Write hours worked into the customer's time and attendance system.
     curl --request GET \
       --url 'https://api.bindbee.dev/api/hris/v1/timesheet-entry/meta/post' \
       --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
-      --header 'x-connector-token: <CONNECTOR_TOKEN>'
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
     Check how the platform expects hours to be expressed - start and end timestamps, or a duration - since this varies and determines how you model entries on your side.
@@ -45,8 +45,8 @@ description: "Write hours worked into the customer's time and attendance system.
     curl --request POST \
       --url 'https://api.bindbee.dev/api/hris/v1/timesheet-entry' \
       --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
-      --header 'x-connector-token: <CONNECTOR_TOKEN>' \
-      --header 'x-idempotency-key: <UNIQUE_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>' \
+      --header 'X-Idempotency-Key: <UNIQUE_KEY>' \
       --header 'Content-Type: application/json' \
       --data @entry.json
     ```

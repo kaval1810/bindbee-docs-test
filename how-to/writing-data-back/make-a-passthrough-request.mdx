@@ -28,7 +28,7 @@ Use it for gaps, not as a default. Passthrough responses aren't unified, so ever
     curl --request POST \
       --url 'https://api.bindbee.dev/api/v1/passthrough' \
       --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
-      --header 'x-connector-token: <CONNECTOR_TOKEN>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>' \
       --header 'Content-Type: application/json' \
       --data '{
         "method": "GET",

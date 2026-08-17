@@ -18,7 +18,7 @@ description: "Submit a time off request into the customer's HRIS, with the leave
     curl --request GET \
       --url 'https://api.bindbee.dev/api/hris/v1/time-off/meta/post' \
       --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
-      --header 'x-connector-token: <CONNECTOR_TOKEN>'
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
     Pay attention to the leave-type enum and to any required `integration_params`. Both vary by platform - see [Fetch a Write Schema from the Meta API](/how-to/writing-data-back/fetch-a-write-schema).
@@ -37,8 +37,8 @@ description: "Submit a time off request into the customer's HRIS, with the leave
     curl --request POST \
       --url 'https://api.bindbee.dev/api/hris/v1/time-off' \
       --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
-      --header 'x-connector-token: <CONNECTOR_TOKEN>' \
-      --header 'x-idempotency-key: <UNIQUE_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>' \
+      --header 'X-Idempotency-Key: <UNIQUE_KEY>' \
       --header 'Content-Type: application/json' \
       --data '{
         "employee": "019f618e-c850-716d-a510-74639514abf6",
@@ -53,7 +53,7 @@ description: "Submit a time off request into the customer's HRIS, with the leave
     Use field names and enum values from the schema rather than the example above.
 
     <Warning>
-      Always send `x-idempotency-key`. Writes create real records in the customer's HRIS, and a retried request without a key creates a duplicate leave request - which someone then has to find and cancel manually.
+      Always send `X-Idempotency-Key`. Writes create real records in the customer's HRIS, and a retried request without a key creates a duplicate leave request - which someone then has to find and cancel manually.
 
       Derive the key from your own request identity, not a random value, so a retry of the same logical request reuses the same key.
     </Warning>

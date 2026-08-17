@@ -20,7 +20,7 @@ Creating an employee writes a person record into the customer's system of record
     curl --request GET \
       --url 'https://api.bindbee.dev/api/hris/v1/employees/meta/post' \
       --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
-      --header 'x-connector-token: <CONNECTOR_TOKEN>'
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
     Employee creation has the widest variation of any write. Required fields differ substantially between platforms, and nested objects like `home_location` carry their own requirements.
@@ -63,8 +63,8 @@ Creating an employee writes a person record into the customer's system of record
     curl --request POST \
       --url 'https://api.bindbee.dev/api/hris/v1/employees' \
       --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
-      --header 'x-connector-token: <CONNECTOR_TOKEN>' \
-      --header 'x-idempotency-key: <UNIQUE_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>' \
+      --header 'X-Idempotency-Key: <UNIQUE_KEY>' \
       --header 'Content-Type: application/json' \
       --data @employee.json
     ```

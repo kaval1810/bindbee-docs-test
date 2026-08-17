@@ -23,7 +23,7 @@ It is also the write with the least tolerance for error. Payroll runs affect wha
     curl --request GET \
       --url 'https://api.bindbee.dev/api/hris/v1/employee-payroll-runs/meta/post' \
       --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
-      --header 'x-connector-token: <CONNECTOR_TOKEN>'
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
     Expect array-typed fields for earnings, deductions, and taxes, each with its own `required` array under `items`. Expect `integration_params` to be required - payroll writes almost always need a platform-specific reference such as a pay statement type.
@@ -69,8 +69,8 @@ It is also the write with the least tolerance for error. Payroll runs affect wha
     curl --request POST \
       --url 'https://api.bindbee.dev/api/hris/v1/employee-payroll-runs' \
       --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
-      --header 'x-connector-token: <CONNECTOR_TOKEN>' \
-      --header 'x-idempotency-key: <UNIQUE_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>' \
+      --header 'X-Idempotency-Key: <UNIQUE_KEY>' \
       --header 'Content-Type: application/json' \
       --data @payroll-run.json
     ```
