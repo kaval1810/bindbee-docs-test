@@ -1,0 +1,78 @@
+---
+title: "ATS models"
+description: "How candidates, applications, jobs, offers, interviews and scorecards relate."
+---
+
+Recruiting data is a process rather than a state, and the models reflect that. The central distinction - and the one most likely to be got wrong - is between a person and their pursuit of a particular job.
+
+## Candidate and application are not the same thing
+
+**Candidate** is the person: name, contact details, location. They exist once, however many roles they pursue.
+
+**Application** is one candidate's pursuit of one job. It carries the current stage, the source, and the dates. A candidate who applies to three roles has one candidate record and three applications.
+
+<Warning>
+Status lives on the application, not the candidate. There is no such thing as a rejected candidate - there is a candidate whose application to a particular job was rejected, who may be active on another. Reading rejection at the person level will mis-state your pipeline and can wrongly exclude someone still in process.
+</Warning>
+
+This is also why counting candidates and counting applications give different numbers, and why the ratio between them is itself informative.
+
+## The job side
+
+**Job** is the opening: title, status, department, office.
+
+**Job interview stage** is a step in a job's process. Stages belong to jobs rather than being global, because different roles run different processes - an engineering pipeline with a technical screen is not a sales pipeline. An application's current stage references one of these.
+
+**Department** and **office** are the organisational and physical placements of the job. Note that these are ATS-side records and do not automatically correspond to the HRIS group and location models, even for the same company. The two systems are configured independently.
+
+## The process side
+
+**Scheduled interview** is a specific interview event against an application, with its time and participants.
+
+**Scorecard** is feedback from an interview - the evaluation, not the event.
+
+**Activity** is the audit trail: notes, emails, status changes. Coverage varies considerably, since ATS vendors differ in how much of their activity history they expose.
+
+**Reject reason** is the customer's own vocabulary for why an application ended. Like payroll codes, these are locally defined and do not carry portable meaning across customers.
+
+## Supporting models
+
+**Remote user** is a person inside the ATS - a recruiter, hiring manager, or interviewer. They are staff, not candidates, and they are distinct from HRIS employees even when they are the same human.
+
+**Attachment** is a file. Resumes and cover letters attached to candidates are the common case.
+
+**Screening question** captures application-form questions and answers.
+
+**Tag** is a free-form label. Widely used and highly customer-specific.
+
+**EEOC** holds demographic data collected for compliance reporting. It is separated from the candidate record deliberately - this data is sensitive, legally restricted in how it may be used, and in most jurisdictions must not influence hiring decisions. Keeping it in a separate model makes excluding it from your scope a single decision, and most applications should exclude it.
+
+## ATS is the write-heavy category
+
+Around seventeen models accept creates, which is more than four times the HRIS write surface. Recruiting systems are built to receive data from job boards, sourcing tools, and assessment platforms, so their write APIs are correspondingly open.
+
+If you are building anything that pushes candidates or applications into a customer's ATS, the surface is likely to support it. See [Write support](/concepts/write-support) for the caveats.
+
+## Why it works this way
+
+Separating candidate from application is what makes recruiting data queryable at all.
+
+Folding them together would mean a person record per application, so a candidate applying to three roles becomes three people. Deduplicating them afterwards is guesswork, and the questions recruiting teams actually ask - has this person applied before, how many roles are they in, what happened last time - become unanswerable.
+
+Interview stages belonging to jobs rather than being global is the same principle applied to process. A global stage list would force every role through one pipeline, which no ATS does, because different roles genuinely need different processes.
+
+Isolating EEOC data reflects a legal reality rather than a modelling preference. Demographic information collected for compliance reporting is restricted in how it may be used, and a model that mixed it into the candidate record would make it arrive by default in every read. Separation makes not receiving it the easy choice.
+
+## What this means for you
+
+- **Read status from applications, never from candidates.**
+- **Expect multiple applications per candidate.** Deduplicate on the candidate, aggregate on applications.
+- **Do not map ATS departments and offices to HRIS groups and locations** without confirming the customer maintains them consistently.
+- **Exclude EEOC from scope unless you have a specific, lawful reason to hold it.**
+- **Treat reject reasons as customer-local vocabulary**, not a standard set.
+
+## Related
+
+- [Get Applications](/ats/application/get-applications) - the application model and stages
+- [Write support](/concepts/write-support) - what ATS accepts
+- [Record identity & duplicates](/concepts/record-identity) - candidate deduplication

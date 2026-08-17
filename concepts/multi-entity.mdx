@@ -1,0 +1,64 @@
+---
+title: "Multi-entity setups"
+description: "What it means when one customer has several tenants, entities, or connectors under one account."
+---
+
+Most documentation assumes one customer means one connector. For a meaningful share of mid-market and enterprise customers, it does not, and a data model built on the one-to-one assumption is expensive to unwind later.
+
+## Why one customer needs several connectors
+
+**Separate legal entities.** A group with several operating companies often runs a separate HR tenant per entity, for legal, tax, or historical reasons.
+
+**Separate countries.** Payroll is jurisdictional. A company operating in three countries commonly runs three payroll systems, and sometimes three different vendors.
+
+**Acquisitions not yet consolidated.** An acquired company keeps its own HR system for a period that is usually longer than anyone planned. During it, one commercial customer is two systems.
+
+**Split HRIS and payroll.** Core HR in one system and payroll in another is a common architecture, not an anomaly. Employee data and pay data arrive through different connectors.
+
+**Several products from one vendor.** A vendor selling distinct regional or functional products means several connectors even though the customer names one supplier.
+
+## Connectors are independent
+
+Each connector authorises separately, syncs on its own schedule, holds its own credentials, and can break on its own. There is no relationship between them at the platform level - Bindbee does not know that two connectors belong to the same commercial customer, because that grouping exists in your system, not in the data.
+
+The practical consequences:
+
+**Your customer record maps to a set of connectors.** Reading employees for a customer means reading across all of them and combining the results.
+
+**Health is per connector.** One broken connector means partial data for that customer, and your monitoring needs to express that. A customer with three connectors of which one has been broken for a month looks fine at a glance and is missing a third of their people.
+
+**Coverage is the intersection.** If one entity is on a system that does not expose benefits, that capability is absent for those employees regardless of what the other connectors support.
+
+## People appear more than once
+
+The same human employed by two entities in a group, or present in both an HRIS and a payroll system, exists as separate records under separate connectors with different identifiers.
+
+Bindbee will not merge them - identity is resolved within a connector and nowhere else. Deduplicating across connectors is your application's job, and it needs a matching strategy that does not rely on the source identifier, since the systems assign their own.
+
+<Warning>
+Headcount and any billing derived from record counts must deduplicate across connectors. Counting records across a multi-entity customer overstates their size, sometimes substantially.
+</Warning>
+
+## Why it works this way
+
+Bindbee could offer a customer-level grouping above the connector, and deliberately does not.
+
+The reason is that the grouping is a commercial fact rather than a data one, and only you know it. Whether two tenants are one customer or two depends on your contract, your billing, and how you have chosen to model the relationship - and different products in the same position answer it differently. A group with three subsidiaries might be one account or three, and the platform has no basis for guessing.
+
+Keeping connectors independent means the grouping lives where the knowledge is. It also keeps failure isolated: one entity's credentials expiring does not affect the others, and the customer can fix them separately rather than re-authorising everything.
+
+The cost is that you own the fan-out - reading across connectors, aggregating health, and deduplicating people. That work is unavoidable given the grouping is yours to define; what the platform can do is make each connector behave predictably in isolation.
+
+## What this means for you
+
+- **Model customer-to-connectors as one-to-many from the start.** Retrofitting is expensive.
+- **Aggregate connector health per customer.** A single broken connector is partial data, not total failure.
+- **Deduplicate people across connectors** using stable attributes rather than source identifiers.
+- **Do not derive headcount or billing from raw record counts** for multi-entity customers.
+- **Ask about entities and countries during onboarding.** It changes the shape of the implementation.
+
+## Related
+
+- [Get Connectors](/api-reference/connectors/get-connectors) - list connectors for your organisation
+- [Record identity & duplicates](/concepts/record-identity) - why the same person is two records
+- [Connector lifecycle](/concepts/connector-lifecycle) - per-connector failure states

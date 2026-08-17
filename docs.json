@@ -65,6 +65,8 @@
               "concepts/core-concepts",
               "concepts/unified-model",
               "concepts/scope-and-permissions",
+              "concepts/integration-versions",
+              "concepts/multi-entity",
               "concepts/magic-link"
             ]
           },
@@ -89,7 +91,9 @@
               "concepts/benefits-models",
               "concepts/payroll-and-time-models",
               "concepts/effective-dating",
-              "concepts/enum-values"
+              "concepts/enum-values",
+              "concepts/ats-models",
+              "concepts/lms-models"
             ]
           },
           {
@@ -98,6 +102,7 @@
             "pages": [
               "concepts/how-custom-fields-work",
               "concepts/how-meta-apis-work",
+              "concepts/write-support",
               "concepts/passthrough"
             ]
           }

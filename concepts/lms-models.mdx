@@ -1,0 +1,64 @@
+---
+title: "LMS models"
+description: "How users, courses, contents, enrollments and completions relate, and why LMS is read-only."
+---
+
+Learning data answers two questions: what training exists, and who has done it. Seven models cover both, and the split between assignment and achievement is the one that matters.
+
+## Assignment and achievement are separate
+
+**Enrollment** is an assignment. Someone has been given a course, or has started one. It says nothing about whether they finished.
+
+**Completion** is an achievement. Someone finished a course, with a completion date and, where the system records it, a result.
+
+Reading enrolments and treating them as training records is the most common error here, and in a compliance context it is a consequential one. Mandatory training reporting needs completions. An enrolment means the training was assigned, which is precisely what someone out of compliance also has.
+
+<Warning>
+An enrolment without a matching completion is the definition of outstanding training. If your product reports compliance, that gap is the report - not the enrolment count.
+</Warning>
+
+## The catalogue
+
+**Course** is the unit of learning that people are assigned and complete.
+
+**Content** is material within a course - modules, videos, documents. A course may have several. Where a system does not distinguish them, content may be sparse or absent.
+
+**Category** groups courses in the catalogue, using the customer's own taxonomy.
+
+**Skill** is a competency, associated with courses that develop or assess it. Support varies widely; many LMS platforms have no skill concept at all, and the model will be empty for those integrations.
+
+## LMS users are not HRIS employees
+
+**User** is a learner in the LMS. This is a separate identity from the HRIS employee, even when it is the same person.
+
+The systems are provisioned independently, and the identifiers do not correspond. Joining learning data to employee data means matching on a stable attribute - work email is usually the only reliable one - and accepting that some learners will not match, because contractors, former employees, and external participants often have LMS accounts and no HRIS record.
+
+This is worth designing for explicitly rather than treating unmatched users as errors.
+
+## Read-only
+
+No LMS model accepts writes. Enrolling someone in a course, recording a completion, or creating a course are not operations the unified API performs.
+
+Where a customer needs them, [passthrough](/concepts/passthrough) is the route, with the usual cost of integration-specific code.
+
+## Why it works this way
+
+Keeping enrolment and completion separate follows the domain rather than the convenience of a single model.
+
+Collapsing them - a course record per person with a status field - would work until you needed the interesting cases: a learner who enrolled twice, a completion for a course later removed from the catalogue, an assignment with a due date but no progress. Recurring compliance training is the clearest example, where the same course is completed annually and each completion is a distinct, separately-dated fact. A single record with a status can only hold the most recent one.
+
+Read-only reflects source system reality rather than a deliberate limitation. LMS platforms overwhelmingly treat enrolment as something their own administrators or automation rules perform, and expose narrow write APIs or none. Read coverage is the category's mature capability; write coverage largely does not exist upstream to be unified.
+
+## What this means for you
+
+- **Report on completions, not enrolments.** They answer different questions.
+- **Expect enrolment without completion.** That gap is signal, not missing data.
+- **Match learners to employees on email**, and design for the unmatched case.
+- **Expect skills and content to be thin or absent** on several integrations.
+- **Plan for read-only.** Any write need goes through passthrough.
+
+## Related
+
+- [Get Lms Completions](/lms/completions/get-completions) - completion records and dates
+- [Passthrough](/concepts/passthrough) - the only write route
+- [Write support](/concepts/write-support) - why LMS accepts none
