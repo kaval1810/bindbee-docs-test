@@ -97,7 +97,7 @@ Base path `/api/hris/v1/` · category `HRIS`
 | **Time & Attendance** | Time Off, Time Off Balance, Timesheet Entry |
 | **Banking** | Bank Info |
 
-Writable models: Employee, Time Off, Timesheet Entry, Employee Payroll Run - subject to per-connector support. See [Write Data Back](/how-to/writing-data-back/write-data-back).
+Writable models: Employee, Time Off, Timesheet Entry, Employee Payroll Run - subject to per-connector support. See Write Data Back.
 
 ---
 
@@ -204,7 +204,7 @@ Pass `category` and `integration` together when creating a `link_token`:
 
 </CodeGroup>
 
-Full flow: [Connect Your First Customer](/how-to/connections/connect-a-customer).
+Full flow: Connect Your First Customer.
 
 <Tip>
   Rather than hardcoding this list in your product, build your integration picker
@@ -288,7 +288,7 @@ That returns the fields populated for that customer - usually the question you a
 | In `raw_data`? | In unified field? | Meaning |
 | --- | --- | --- |
 | No | No | Source system didn't send it |
-| Yes | No | Unmapped - use a [custom field](/how-to/data-model/map-custom-fields) |
+| Yes | No | Unmapped - use a custom field |
 | Yes | Yes | Working as intended |
 
 ---
@@ -316,8 +316,5 @@ Contact `support@bindbee.dev` with:
 <CardGroup cols={2}>
   <Card title="SFTP vs API" icon="file-up" href="/explanation/sftp-vs-api">
     Why file-based connectors behave differently.
-  </Card>
-  <Card title="Connect Your First Customer" icon="plug" href="/how-to/connections/connect-a-customer">
-    Using a slug end to end.
   </Card>
 </CardGroup>
