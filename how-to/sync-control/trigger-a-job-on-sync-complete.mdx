@@ -25,6 +25,23 @@ A scheduled job that reads on a clock either runs before the sync finishes - pro
 
     Each delivery times out at 10 seconds, and a slow handler starts failing under exactly the load where a full sync just landed.
 
+    ```python Flask
+    @app.post("/bindbee/webhook")
+    def bindbee_webhook():
+        payload = request.get_json()
+
+        if payload["webhook"]["event"] != "connector_synced":
+            return "", 200
+
+        # the sync_id makes the job idempotent - see the last step
+        queue.enqueue(
+            process_sync,
+            connector_id=payload["connector"]["id"],
+            sync_id=payload["sync"]["sync_id"],
+        )
+        return "", 200          # acknowledge before doing any work
+    ```
+
     **Result:** Fast acknowledgement, work handed to a queue.
   </Step>
 

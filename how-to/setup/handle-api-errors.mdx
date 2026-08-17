@@ -65,6 +65,26 @@ Errors fall into three groups: fix the request, back off and retry, or act on th
   <Step title="Back off exponentially on 5xx">
     Retry with exponential backoff and jitter, capped at a few attempts. Jitter matters when many connectors fail together - without it, every client retries in lockstep.
 
+    ```python Python
+    import random, time, requests
+
+    RETRY_ON = {429, 500, 502, 503, 504}
+
+    def request_with_retry(method, url, *, max_attempts=4, **kwargs):
+        for attempt in range(max_attempts):
+            resp = requests.request(method, url, **kwargs)
+            if resp.status_code not in RETRY_ON:
+                return resp
+            if attempt == max_attempts - 1:
+                resp.raise_for_status()
+
+            # 429 tells you how long to wait; 5xx does not, so back off
+            retry_after = resp.headers.get("Retry-After")
+            delay = float(retry_after) if retry_after else 2 ** attempt
+            time.sleep(delay + random.uniform(0, 0.5))   # jitter
+        return resp
+    ```
+
     **Result:** Transient failures recover without amplifying.
   </Step>
 

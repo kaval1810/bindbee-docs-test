@@ -1,0 +1,154 @@
+---
+title: "Customise the Connection Experience"
+description: "Embed the connection flow inside your own product and brand it as yours, instead of sending customers to a hosted Magic Link."
+---
+
+A Magic Link takes your customer to a Bindbee-hosted page. Embedding the same flow keeps them inside your product, under your own logo and colours, and hands your backend the `connector_token` directly.
+
+<Info>
+  **Before you start**
+
+  - An API key for the environment you are connecting in - see [Choose an Environment](/how-to/setup/choose-an-environment)
+  - The category and integration slug you are connecting - see [Look Up an Integration Slug](/how-to/setup/look-up-an-integration-slug)
+  - A frontend you can add a script or an npm package to
+</Info>
+
+## Steps
+
+<Steps>
+  <Step title="Generate a link token">
+    A `link_token` initialises one embed session for one end customer. Create it from your backend, never the browser - it is issued against your API key.
+
+    <CodeGroup>
+
+    ```bash cURL
+    curl --request POST \
+      --url 'https://api.bindbee.dev/api/embedded/v1/link/create-link-token' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'Content-Type: application/json' \
+      --data '{
+        "end_user_data": {
+          "org_name": "Acme Corp.",
+          "origin_id": "064e1cd7-49ad-4e6d-8005-7e4c92fe9675"
+        },
+        "category": "HRIS",
+        "integration": "bamboohr"
+      }'
+    ```
+
+    ```python Python
+    import os, requests
+
+    resp = requests.post(
+        "https://api.bindbee.dev/api/embedded/v1/link/create-link-token",
+        headers={"Authorization": f"Bearer {os.environ['BINDBEE_API_KEY']}"},
+        json={
+            "end_user_data": {
+                "org_name": "Acme Corp.",
+                "origin_id": "064e1cd7-49ad-4e6d-8005-7e4c92fe9675",
+            },
+            "category": "HRIS",
+            "integration": "bamboohr",
+        },
+    )
+    resp.raise_for_status()
+    link_token = resp.json()["link_token"]
+    ```
+
+    </CodeGroup>
+
+    Set `origin_id` to your own identifier for that customer. It is what resolves a connector back to your records later, and it cannot be added afterwards.
+
+    **Result:** a `link_token` to hand to your frontend.
+  </Step>
+
+  <Step title="Mount the flow in your frontend">
+    Use the React package if you have React, the CDN script otherwise.
+
+    <CodeGroup>
+
+    ```jsx React
+    import { useBindbeeMagiclink } from "@bindbee/react-link";
+
+    const Connect = ({ linkToken }) => {
+      const { open } = useBindbeeMagiclink({
+        linkToken,
+        // serverUrl: "https://api-eu.bindbee.dev",  // EU region only
+        onSuccess: (temporaryToken) => sendToBackend(temporaryToken),
+        onClose: () => console.log("closed without finishing"),
+      });
+      return <button onClick={open}>Connect your HR system</button>;
+    };
+    ```
+
+    ```html CDN
+    <script
+      src="https://cdn.bindbee.dev/initialize.min.js"
+      integrity="sha512-1L1XqHiVgenLFd95eE8fqJ7o6kje+5+3IN7K0cuwNP6feTrYAeNTdpeqR1e2HgThSb5Bj+USqJeNiyEE9KBtfA=="
+      crossorigin="anonymous"
+    ></script>
+
+    <script>
+      window.BindbeeEmbed.initialize({
+        linkToken: "LINK_TOKEN",
+        onSuccess: (temporaryToken) => sendToBackend(temporaryToken),
+        onClose: () => {},
+      });
+      // window.BindbeeEmbed.open() to launch, .destroy() to clean up
+    </script>
+    ```
+
+    </CodeGroup>
+
+    **Result:** your customer completes authorization without leaving your product, and `onSuccess` returns a `temporary_token`.
+  </Step>
+
+  <Step title="Exchange the temporary token for a connector token">
+    The `temporary_token` is short-lived and cannot read data. Exchange it from your backend and store the result.
+
+    ```bash cURL
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/embedded/v1/connectors/connector_token/<TEMPORARY_TOKEN>' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>'
+    ```
+
+    **Result:** a `connector_token`, stored against your customer record. Every later read or write for that customer carries it.
+  </Step>
+
+  <Step title="Apply your branding">
+    Go to **Settings → Organization** in the Dashboard and set your **logo**, **favicon** and **brand colour**. The embedded component picks them up, so the flow matches your product rather than Bindbee's.
+
+    Logo and favicon are limited to 1 MB each.
+
+    **Result:** the embedded flow renders in your own branding for every customer.
+  </Step>
+</Steps>
+
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="The connector was created in the wrong environment">
+    The environment follows the API key that created the `link_token`, not anything in the frontend. A Development key produces a Development connector, which will not sync on a schedule. See [Choose an Environment](/how-to/setup/choose-an-environment).
+  </Accordion>
+
+  <Accordion title="The flow opens but the integration list is wrong or empty">
+    `category` and `integration` are fixed when the token is created, not chosen by the user. Check the slug - see [Look Up an Integration Slug](/how-to/setup/look-up-an-integration-slug).
+  </Accordion>
+
+  <Accordion title="onSuccess fired but API calls still return 403">
+    A `temporary_token` is not a `connector_token`. Requests for customer data need the exchanged token in `X-Connector-Token`.
+  </Accordion>
+
+  <Accordion title="The CDN script is blocked or fails to load">
+    The `integrity` hash must match the file you reference. If your CSP blocks it, allow `cdn.bindbee.dev`; the unminified build at `initialize.js` has its own hash.
+  </Accordion>
+
+  <Accordion title="You need a link without building a frontend">
+    Send a hosted link instead - see [Generate a Magic Link](/how-to/connections/generate-a-magic-link) - or create connectors from your backend with [Create a Connector Programmatically](/how-to/connections/create-a-connector-programmatically).
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Authentication](/api-reference/basics/authentication) - how the API key and connector token differ
+- [Core concepts](/explanation/core-concepts) - where connectors and tokens sit in the model
