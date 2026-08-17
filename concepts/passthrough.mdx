@@ -1,5 +1,5 @@
 ---
-title: "Passthrough: When & Why"
+title: "Passthrough"
 description: "Passthrough is the escape hatch from the unified model. It is powerful, and every use of it re-introduces the per-vendor code you adopted Bindbee to avoid."
 ---
 
@@ -43,7 +43,7 @@ That does not make it wrong. It makes it a decision with a cost, worth taking de
 | Vendor-specific action - trigger a workflow, approve in-system | **Yes** |
 | Data needed *right now*, cannot wait for a sync | **Yes**, carefully |
 | One extra field on a model Bindbee already syncs | **No** - custom field |
-| Field exists but is `null` | **No** - [diagnose it first](/concepts/field-semantics) |
+| Field exists but is `null` | **No** - [diagnose it first](/concepts/enum-values) |
 | "The unified API feels slow" | **No** - passthrough is slower; it hits the vendor live |
 | Bulk reads | **No** - you inherit the vendor's rate limits |
 

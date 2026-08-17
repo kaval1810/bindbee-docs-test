@@ -84,9 +84,9 @@
             "pages": [
               "concepts/record-identity",
               "concepts/status-and-terminations",
-              "concepts/hris-model-relationships",
+              "concepts/hris-models",
               "concepts/benefits-models",
-              "concepts/field-semantics"
+              "concepts/enum-values"
             ]
           },
           {
@@ -94,8 +94,8 @@
             "icon": "puzzle",
             "pages": [
               "concepts/how-custom-fields-work",
-              "concepts/meta-api-schema-discovery",
-              "concepts/passthrough-when-and-why"
+              "concepts/how-meta-apis-work",
+              "concepts/passthrough"
             ]
           }
         ]
@@ -866,7 +866,7 @@
     },
     {
       "source": "/explanation/field-semantics",
-      "destination": "/concepts/field-semantics"
+      "destination": "/concepts/enum-values"
     },
     {
       "source": "/explanation/how-syncing-works",
@@ -874,15 +874,15 @@
     },
     {
       "source": "/explanation/hris-model-relationships",
-      "destination": "/concepts/hris-model-relationships"
+      "destination": "/concepts/hris-models"
     },
     {
       "source": "/explanation/meta-api-schema-discovery",
-      "destination": "/concepts/meta-api-schema-discovery"
+      "destination": "/concepts/how-meta-apis-work"
     },
     {
       "source": "/explanation/passthrough-when-and-why",
-      "destination": "/concepts/passthrough-when-and-why"
+      "destination": "/concepts/passthrough"
     },
     {
       "source": "/explanation/sftp-vs-api",
@@ -915,6 +915,22 @@
     {
       "source": "/concepts/sftp-vs-api",
       "destination": "/concepts/sftp-and-file-connectors"
+    },
+    {
+      "source": "/concepts/field-semantics",
+      "destination": "/concepts/enum-values"
+    },
+    {
+      "source": "/concepts/hris-model-relationships",
+      "destination": "/concepts/hris-models"
+    },
+    {
+      "source": "/concepts/meta-api-schema-discovery",
+      "destination": "/concepts/how-meta-apis-work"
+    },
+    {
+      "source": "/concepts/passthrough-when-and-why",
+      "destination": "/concepts/passthrough"
     }
   ],
   "api": {
