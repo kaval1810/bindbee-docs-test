@@ -7,28 +7,97 @@ description: "Pull a clean employee census with the demographics carriers need, 
 ## What you'll use
 
 **Models** - [employee](/hris/employee/get-employees), [employment](/hris/employments/get-employments), [dependent](/hris/dependents/get-dependents), [location](/hris/locations/get-locations), [company](/hris/companies/get-companies)
-**Events** - sync completed
+**Events** - `connector_synced`
+
+<Info>
+  **Before you start**
+
+  - You have the carrier's required field list. It determines what you scope, and scope changes need a resync.
+  - You've agreed with the customer which population is being quoted. There is no filter that means "eligible".
+</Info>
 
 ## Steps
 
 <Steps>
-  <Step title="Scope the connector to what a census needs">
-    [Restrict Which Models and Fields Sync](/how-to/data-model/restrict-models-and-fields)
+  <Step title="Scope to what a census needs">
+    Set scope under **Configure → Scoping** before connecting customers. Exclude national ID and bank info - they are never needed for a quote and expand your compliance surface.
+
+    Keep date of birth, home postcode, and location. Those are rating fields, and excluding them breaks the quote rather than the integration.
+
+    <Warning>
+      Scope is organisation-level and shared across environments - see [Restrict Which Models and Fields Sync](/how-to/data-model/restrict-models-and-fields). It is not a per-customer setting.
+    </Warning>
+
+    **Result:** A field set matched to the carrier's requirement.
   </Step>
-  <Step title="Wait for a completed sync before reading">
-    [Trigger a Job When a Sync Completes](/how-to/sync-control/trigger-a-job-on-sync-complete)
+
+  <Step title="Read only after a completed sync">
+    A census read mid-sync is quietly short. Gate the extract on `connector_synced` rather than a timer - see [Trigger a Job When a Sync Completes](/how-to/sync-control/trigger-a-job-on-sync-complete).
+
+    Record the sync timestamp with the extract. A quote references a specific date, and "which day is this census" becomes unanswerable later otherwise.
+
+    **Result:** A stable dataset with a defensible as-of date.
   </Step>
-  <Step title="Filter to the population being quoted">
-    [Filter and Narrow a Collection](/how-to/reading-data/filter-and-narrow-a-collection)
+
+  <Step title="Assemble the population">
+    Carriers price eligible employees. Build that set from statuses explicitly rather than reaching for a single filter.
+
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/employees?employment_status=ACTIVE&page_size=200&expand=work_locations' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    Fetch each status you've agreed on separately - filters are inclusive only, so there is no way to exclude contingent workers in one request. `ACTIVE_EXTERNAL` is usually out; `LEAVE` is usually in, because those employees retain eligibility.
+
+    Expanding `work_locations` gets the rating geography inline instead of N follow-up calls - see [Read Employee Data](/how-to/reading-data/read-employee-data).
+
+    **Result:** The quoted population, per the agreed definition.
   </Step>
-  <Step title="Page the full result set">
-    [Paginate Through Results](/how-to/reading-data/paginate-through-results)
+
+  <Step title="Page the full set">
+    Follow the cursor to exhaustion. A census that stops at page one is the failure that looks most like success - see [Paginate Through Results](/how-to/reading-data/paginate-through-results).
+
+    **Result:** Every employee in the population.
   </Step>
-  <Step title="Read dependents for family composition">
-    [Read Benefits Data](/how-to/reading-data/read-benefits-data)
+
+  <Step title="Add family composition">
+    Read dependent benefits for who is actually covered, and dependents for their dates of birth.
+
+    Counting dependent records rather than coverage inflates the census - see [Sync Dependents and Beneficiaries](/how-to/guides/sync-dependents-and-beneficiaries).
+
+    **Result:** Household composition, priced correctly.
   </Step>
-  <Step title="Reconcile against the customer's headcount">
-    [Reconcile Record Counts Against the Source](/how-to/troubleshooting/reconcile-record-counts)
+
+  <Step title="Verify the rating fields are populated">
+    Check before delivering, not after. These fields return `null` rather than erroring, so an incomplete census looks complete.
+
+    ```python
+    REQUIRED = ["date_of_birth", "employment_status"]
+    gaps = {f: sum(1 for e in census if not e.get(f)) for f in REQUIRED}
+    # postal_code is nested inside home_location, not a top-level field
+    gaps["postal_code"] = sum(1 for e in census if not (e.get("home_location") or {}).get("postal_code"))
+    if any(gaps.values()):
+        raise CensusIncomplete(gaps)   # a permission gap, not an empty workforce
+    ```
+
+    A field null for every record is a permission, not absence - see [Resolve a Source-System Permission Error](/how-to/troubleshooting/resolve-a-permission-error).
+
+    **Result:** A census you can hand to a carrier.
+  </Step>
+
+  <Step title="Break the count down by entity">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/companies?page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    Group employees by `company_id` and confirm which legal entities belong in this quote. The credentials may cover more or fewer entities than the customer assumes - see [Reconcile Record Counts Against the Source](/how-to/troubleshooting/reconcile-record-counts).
+
+    **Result:** A count the customer recognises, per entity.
   </Step>
 </Steps>
 
@@ -44,7 +113,28 @@ description: "Pull a clean employee census with the demographics carriers need, 
 
 **Multi-entity customers need explicit handling.** Where a customer has several legal entities, the connected credentials may cover all, some, or one. Break the count down by `company_id` and confirm which entities are in scope for the quote rather than assuming the connector covers the whole organisation.
 
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="The headcount doesn't match the customer's">
+    Population definition, nearly always - contingent workers included, terminated employees retained, or one person holding several employments. See [Reconcile Record Counts Against the Source](/how-to/troubleshooting/reconcile-record-counts).
+  </Accordion>
+
+  <Accordion title="date_of_birth or postcode is null across the board">
+    A sensitive-data permission. The census will look complete and price wrong.
+  </Accordion>
+
+  <Accordion title="The census is short by a few hundred">
+    Either pagination stopped early, or it was read mid-sync. Gate on `connector_synced` and follow the cursor to exhaustion.
+  </Accordion>
+
+  <Accordion title="A field you need was scoped out">
+    Bring it back into scope and resync - the data was never collected, so it cannot be recovered retroactively.
+  </Accordion>
+</AccordionGroup>
+
 ## Related
 
 - [Filter and Narrow a Collection](/how-to/reading-data/filter-and-narrow-a-collection)
 - [Reconcile Record Counts Against the Source](/how-to/troubleshooting/reconcile-record-counts)
+- [Sync Dependents and Beneficiaries](/how-to/guides/sync-dependents-and-beneficiaries)

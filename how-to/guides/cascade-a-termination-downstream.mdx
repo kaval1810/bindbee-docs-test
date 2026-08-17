@@ -7,25 +7,97 @@ description: "React to an employee leaving by revoking access, ending coverage, 
 ## What you'll use
 
 **Models** - employee, employment, benefit, dependent benefit
-**Events** - employee model change, sync completed, sync error
+**Events** - `employee_data_changed`, `connector_synced`, `connector_sync_error`
+
+<Info>
+  **Before you start**
+
+  - A webhook is registered for the environment - see [Create a Webhook](/how-to/reliability/create-a-webhook).
+  - You can schedule work for a future date. Every action here is gated on a date, not on arrival.
+</Info>
 
 ## Steps
 
 <Steps>
-  <Step title="Subscribe to employee change events">
-    [Choose Webhook Events](/how-to/reliability/choose-webhook-events)
+  <Step title="Subscribe to employee changes">
+    Subscribe to `employee_data_changed`. Add `connector_sync_error` too - a connector that stops syncing stops reporting terminations, and silence is the failure mode here.
+
+    **Result:** IDs of employees whose records changed.
   </Step>
-  <Step title="Fetch the changed employees by ID">
-    [Filter and Narrow a Collection](/how-to/reading-data/filter-and-narrow-a-collection)
+
+  <Step title="Fetch the changed employees">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/employees?ids=<ID_1>,<ID_2>' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    `employment_status`, `termination_date` and `termination_reason` are all on the employee, so this one call carries everything the decision needs.
+
+    **Result:** Status and termination details in one response.
   </Step>
-  <Step title="Read status and termination date">
-    [Read Employee Data](/how-to/reading-data/read-employee-data)
+
+  <Step title="Match the full set of terminal statuses">
+    Four statuses are departures, and one that looks like one isn't.
+
+    ```python
+    TERMINAL = {"INACTIVE", "RETIRED", "DECEASED", "INACTIVE_EXTERNAL"}
+    # LEAVE is NOT a termination - revoking access for parental leave is an escalation
+
+    if emp["employment_status"] in TERMINAL:
+        handle_departure(emp)
+    ```
+
+    `INACTIVE_EXTERNAL` covers contractors ending an engagement, and matching only on `INACTIVE` silently misses them - see [Filter and Narrow a Collection](/how-to/reading-data/filter-and-narrow-a-collection) for the full enum.
+
+    **Result:** Every real departure, and no false ones.
   </Step>
-  <Step title="Read the associated coverage">
-    [Read Benefits Data](/how-to/reading-data/read-benefits-data)
+
+  <Step title="Schedule on the termination date, don't act on arrival">
+    Terminations are recorded when entered, with an effective date often weeks out.
+
+    ```python
+    termination_date = emp["termination_date"]
+    if termination_date > today:
+        schedule_offboarding(emp, at=termination_date)   # reversible until then
+    else:
+        offboard(emp)
+    ```
+
+    Keep the scheduled action cancellable. Rescinded resignations and entry errors are common enough that destructive-on-arrival costs more than it saves.
+
+    **Result:** Access ends on the last day, not on the day the HR team typed it in.
   </Step>
-  <Step title="Reconcile periodically to catch what events missed">
-    [Filter with modified_after](/how-to/reading-data/filter-with-modified-after)
+
+  <Step title="Read coverage end dates separately">
+    Employment ending does not end coverage. Read the benefit records to find when it actually stops.
+
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/benefits?employee_id=<EMPLOYEE_ID>&page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    Use the benefit's own end date - frequently the end of the month rather than the termination date - and expect a window where someone is terminated with coverage still active. See [Read Benefits Data](/how-to/reading-data/read-benefits-data).
+
+    **Result:** The real loss-of-coverage date, per plan.
+  </Step>
+
+  <Step title="Reconcile on a schedule">
+    This is the one workflow where the reconciliation pass is not optional. Run it independently of events.
+
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/employees?modified_after=2026-08-17T00:00:00Z&page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    Compare terminal-status employees against those you've offboarded. A missed delivery is never redelivered - see [Recover a Missed Webhook Delivery](/how-to/reliability/recover-a-missed-delivery) - and terminations are low-volume enough that a gap shows no symptom at all.
+
+    **Result:** A backstop that closes what events dropped.
   </Step>
 </Steps>
 
@@ -43,7 +115,32 @@ description: "React to an employee leaving by revoking access, ending coverage, 
 
 **Some platforms stop returning terminated records entirely.** Where that happens, disappearance is the only signal, and it's indistinguishable from a sync or permission problem. Confirm the platform's behaviour before treating absence as a departure - see [Trace a Missing Record](/how-to/troubleshooting/trace-a-missing-record).
 
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="Access was revoked while someone was on leave">
+    `LEAVE` was matched as terminal. It is not a departure, and this is the most expensive false positive in the workflow.
+  </Accordion>
+
+  <Accordion title="Access ended before the person's last day">
+    The status change was acted on rather than the termination date. Schedule on the date.
+  </Accordion>
+
+  <Accordion title="Contractors ended without notice, or not at all">
+    `INACTIVE_EXTERNAL` handled as either an ordinary termination or not at all. Decide deliberately which downstream actions apply to contingent workers.
+  </Accordion>
+
+  <Accordion title="An employee disappeared instead of going inactive">
+    Some platforms stop returning terminated records. That is indistinguishable from a scope or permission change - see [Trace a Missing Record](/how-to/troubleshooting/trace-a-missing-record) before treating absence as a departure.
+  </Accordion>
+
+  <Accordion title="Coverage was ended too early">
+    Employment status was used as the coverage signal. Read the benefit's end date instead.
+  </Accordion>
+</AccordionGroup>
+
 ## Related
 
 - [Read Employee Data](/how-to/reading-data/read-employee-data)
 - [Detect COBRA Qualifying Events](/how-to/guides/detect-cobra-qualifying-events)
+- [Recover a Missed Webhook Delivery](/how-to/reliability/recover-a-missed-delivery)

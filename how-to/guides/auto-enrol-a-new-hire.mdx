@@ -6,25 +6,103 @@ description: "Detect a new employee and start their benefits enrolment without a
 ## What you'll use
 
 **Models** - employee, employment, employer benefit, benefit
-**Events** - employee model change, sync completed
+**Events** - `employee_data_changed`, `connector_synced`
+
+<Info>
+  **Before you start**
+
+  - A webhook is registered for the environment - see [Create a Webhook](/how-to/reliability/create-a-webhook).
+  - You can persist a set of employee IDs per connector. Without that, you cannot tell a new hire from an update.
+</Info>
 
 ## Steps
 
 <Steps>
-  <Step title="Subscribe to employee change events">
-    [Choose Webhook Events](/how-to/reliability/choose-webhook-events)
+  <Step title="Subscribe to employee changes">
+    Subscribe to `employee_data_changed`, and to `connector_synced` if you need to know the run finished before acting - see [Choose Webhook Events](/how-to/reliability/choose-webhook-events).
+
+    The change event carries IDs, not records:
+
+    ```json
+    {
+      "webhook": { "event": "employee_data_changed" },
+      "connector": { "origin_id": "tenant_9f2c1b40", "integration_slug": "bamboohr" },
+      "data": ["0190d9d8-ac9b-76cb-a5ee-df70994e6f3d"],
+      "sync": { "sync_id": "019f146e-...", "sync_type": "AUTOMATED", "sync_name": "#13" }
+    }
+    ```
+
+    **Result:** A list of employee IDs that changed, and the connector they belong to.
   </Step>
-  <Step title="Separate genuine new hires from updates">
-    [Distinguish Created from Modified Records](/how-to/reliability/distinguish-created-from-modified)
+
+  <Step title="Guard against the first sync">
+    On a connector's first run every employee is new to you, and processing them as hires is not recoverable. Check before doing anything else.
+
+    ```python
+    if sync["sync_name"] == "#1" or connector_id not in self.baselined:
+        store_baseline(connector_id, event["data"])   # record IDs, run no workflows
+        return
+    ```
+
+    **Result:** Existing employees establish baseline state instead of triggering enrolment.
   </Step>
-  <Step title="Fetch the new employees by ID">
-    [Filter and Narrow a Collection](/how-to/reading-data/filter-and-narrow-a-collection)
+
+  <Step title="Separate creations from updates">
+    Diff the event's IDs against the ones you've already seen for this connector. Nothing in the payload distinguishes the two - see [Distinguish Created from Modified Records](/how-to/reliability/distinguish-created-from-modified).
+
+    ```python
+    new_ids = set(event["data"]) - seen_ids[connector_id]
+    if not new_ids:
+        return
+    ```
+
+    Key on the Bindbee `id`. `remote_id` and `employee_number` can be reissued upstream, which makes an update look like a hire.
+
+    **Result:** Only genuinely new employee records.
   </Step>
-  <Step title="Read start date and employment details">
-    [Read Employee Data](/how-to/reading-data/read-employee-data)
+
+  <Step title="Fetch those employees with their employment">
+    Request the IDs directly rather than paging the collection. `start_date` and `employment_status` are both on the employee, so one call is enough.
+
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/employees?ids=<ID_1>,<ID_2>' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    **Result:** Full records for the new employees, including their start dates.
   </Step>
+
+  <Step title="Gate on start date, not on arrival">
+    A record appearing is not a hire happening. Future-dated hires arrive weeks early and carry `PENDING`.
+
+    ```python
+    for emp in employees:
+        if emp["employment_status"] == "PENDING":
+            schedule_for(emp, emp["start_date"])   # don't act yet
+        elif emp["employment_status"] == "ACTIVE":
+            begin_enrolment(emp)
+    ```
+
+    Treat the `PENDING` to `ACTIVE` transition as its own signal - offers are withdrawn, and a workflow started on arrival reaches people who never join.
+
+    **Result:** Enrolment starts when employment does.
+  </Step>
+
   <Step title="Read the plans available to them">
-    [Read Benefits Data](/how-to/reading-data/read-benefits-data)
+    Fetch the employer's plan catalogue, which is what the employee will be choosing from.
+
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/employer-benefits?page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    This is the plan definition, not anyone's enrolment - see [Read Benefits Data](/how-to/reading-data/read-benefits-data). Which of these plans a given employee is eligible for is not readable; see the constraint below.
+
+    **Result:** The plans to present, per customer.
   </Step>
 </Steps>
 
@@ -42,7 +120,28 @@ Handle the initial sync as a bulk import that establishes baseline state without
 
 **The window is short and sync latency eats it.** Enrolment windows typically run 30 days from hire, and a 24-hour cadence plus your own processing interval consumes a meaningful share before you begin. Measure the gap between hire date and first contact for a real customer before assuming the schedule is adequate.
 
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="Every employee arrived as a new hire">
+    A first sync or a resync. Both re-sync the whole population, so every record looks changed - see [Filter with modified_after](/how-to/reading-data/filter-with-modified-after) for why. This is what the baseline guard in step 2 exists to prevent.
+  </Accordion>
+
+  <Accordion title="No event fired though a hire was entered">
+    Change events fire only when a sync actually changes records, and a sync only picks up the hire on its next run. On a Development connector there is no schedule at all - see [Sync a Development Connector](/how-to/sync-control/sync-a-development-connector).
+  </Accordion>
+
+  <Accordion title="A start date is missing or in the past">
+    Backdated entries are routine for hires processed late, and `start_date` is null on some integrations. Where it is, the employment's `effective_date` is the fallback - see [Read Employee Data](/how-to/reading-data/read-employee-data).
+  </Accordion>
+
+  <Accordion title="An enrolment started for someone who never joined">
+    A `PENDING` record acted on at arrival rather than at start date. Withdrawn offers and deferred start dates both produce this.
+  </Accordion>
+</AccordionGroup>
+
 ## Related
 
 - [Distinguish Created from Modified Records](/how-to/reliability/distinguish-created-from-modified)
 - [Read Employee Data](/how-to/reading-data/read-employee-data)
+- [Read Benefits Data](/how-to/reading-data/read-benefits-data)
