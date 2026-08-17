@@ -155,7 +155,8 @@
               "how-to/reading-data/include-raw-data-and-custom-fields",
               "how-to/reading-data/read-employee-data",
               "how-to/reading-data/read-benefits-data",
-              "how-to/reading-data/read-payroll-and-timesheet-data"
+              "how-to/reading-data/read-payroll-data",
+              "how-to/reading-data/read-time-and-attendance-data"
             ]
           },
           {
@@ -971,6 +972,10 @@
     {
       "source": "/how-to/connections/customise-the-connection-experience",
       "destination": "/how-to/connections/embed-the-connection-flow"
+    },
+    {
+      "source": "/how-to/reading-data/read-payroll-and-timesheet-data",
+      "destination": "/how-to/reading-data/read-payroll-data"
     }
   ],
   "api": {

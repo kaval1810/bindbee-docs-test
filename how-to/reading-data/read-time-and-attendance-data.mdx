@@ -1,0 +1,119 @@
+---
+title: "Read Time and Attendance Data"
+sidebarTitle: "Read Time & Attendance"
+description: "Fetch timesheet entries, time off requests, and remaining balances - and know why none of them reconcile with payroll."
+---
+
+Time and attendance is three models: hours worked, leave requested, and leave remaining. They are read separately and answer different questions.
+
+For amounts paid rather than hours worked, see [Read Payroll Data](/how-to/reading-data/read-payroll-data).
+
+<Info>
+  **Before you start**
+
+  - The connector has synced, and the customer's time module is in scope. It is frequently licensed separately from payroll.
+</Info>
+
+## The models
+
+| Model | Represents | Endpoint |
+| --- | --- | --- |
+| Timesheet entry | Hours worked | [Get Timesheet Entries](/hris/timesheet-entries/get-timesheet-entries-list) |
+| Time off | A leave request and its approval state | [Get Time Off](/hris/time-off/get-time-off-list) |
+| Time off balance | How much leave remains, by policy | [Get Time Off Balances](/hris/time-off-balance/get-time-off-balances-list) |
+
+## Steps
+
+<Steps>
+  <Step title="Read timesheet entries">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/timesheet-entry?employee_id=<EMPLOYEE_ID>&page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    Entries are bounded by time, not date, and the filter pairs reflect that:
+
+    | Filter pair | Bounds |
+    | --- | --- |
+    | `start_time_from` / `start_time_to` | When the entry starts |
+    | `end_time_from` / `end_time_to` | When it ends |
+
+    **Result:** Time entries for the period you asked for.
+  </Step>
+
+  <Step title="Read time off requests">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/time-off?employee_id=<EMPLOYEE_ID>&status=APPROVED&page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    `status` is one of `REQUESTED`, `APPROVED`, `DECLINED`, `CANCELLED`, `DELETED`.
+
+    <Warning>
+      Filter on `status` for anything that acts on leave. An unfiltered read returns declined and cancelled requests alongside approved ones, and treating the whole set as booked leave overstates absence.
+    </Warning>
+
+    Each record carries `amount` and `units`, where `units` is `HOURS` or `DAYS`. The unit is the source system's choice, so it varies by connector and sometimes by policy within one connector - read it per record rather than assuming.
+
+    `request_type` is the normalised leave category: `VACATION`, `SICK`, `PERSONAL`, `MATERNITY`, `PATERNITY`, `BEREAVEMENT`, `FMLA` and others. Unmapped upstream values pass through verbatim - see [Enum values](/concepts/enum-values).
+
+    **Result:** Leave requests with their approval state.
+  </Step>
+
+  <Step title="Read remaining balances">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/time-off-balances?employee_id=<EMPLOYEE_ID>&page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    A balance carries `balance`, `used`, and `policy_type` - one record per policy, so an employee with vacation and sick policies has two.
+
+    Balances are a snapshot from the last sync, not a live figure. A request approved since then is not reflected, which matters if you are showing a remaining figure to an employee about to book leave.
+
+    **Result:** Remaining leave per policy.
+  </Step>
+</Steps>
+
+## Where totals diverge from the customer's reports
+
+Reported totals are computed by the source system after entries are recorded. Rounding rules, break deduction, and overtime calculation are applied there, so raw entries can be correct while derived totals differ.
+
+Some platforms also model time as discrete punch events rather than intervals, so one shift may span several records and a break can split it. Compare raw entries against raw entries, never against a computed report.
+
+The same caution applies to payroll. Hours worked and hours paid diverge legitimately - overtime follows rules the timesheet doesn't encode, salaried employees are paid without timesheets, and approval workflows mean not every entry reaches pay. Any reconciliation between them is arithmetic your application performs with knowledge of the customer's rules.
+
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="Time off or timesheets return nothing">
+    Time and attendance is commonly a separately licensed module with its own permission grant, and an empty result is the usual failure mode rather than an error. See [Resolve a Source-System Permission Error](/how-to/troubleshooting/resolve-a-permission-error).
+  </Accordion>
+
+  <Accordion title="Balances don't match what the employee sees">
+    Balances are a point-in-time snapshot from the last sync, and accrual is calculated upstream on the source system's own schedule. A balance that is stale by one sync interval is expected, not a defect - see [How syncing works](/concepts/how-syncing-works).
+  </Accordion>
+
+  <Accordion title="Leave totals are too high">
+    Almost always an unfiltered `status`. Declined and cancelled requests are returned alongside approved ones.
+  </Accordion>
+
+  <Accordion title="Hours don't reconcile with the pay run">
+    Timesheet entries and payroll are separate models with separate sync timing. Entries can exist for a period whose run hasn't been processed yet, and approval workflows mean not every entry reaches pay. See [Read Payroll Data](/how-to/reading-data/read-payroll-data).
+  </Accordion>
+
+  <Accordion title="units differs between records">
+    Correct, and worth handling. The source system chooses whether leave is counted in hours or days, and some platforms vary it by policy. Normalise on read using the `units` field rather than assuming one.
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Payroll & time models](/concepts/payroll-and-time-models) - why hours worked and hours paid don't join
+- [Get Timesheet Entries](/hris/timesheet-entries/get-timesheet-entries-list) · [Get Time Off](/hris/time-off/get-time-off-list) · [Get Time Off Balances](/hris/time-off-balance/get-time-off-balances-list)
+- [Create a Time Off Request](/how-to/writing-data-back/create-a-time-off-request) - the write side

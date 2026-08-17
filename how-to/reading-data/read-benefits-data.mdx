@@ -1,6 +1,6 @@
 ---
 title: "Read Benefits Data"
-description: "Fetch enrolments, plan definitions, and dependent coverage across the four benefits models without conflating them."
+description: "Fetch enrolments, plan definitions, dependent coverage, and sums assured across the five benefits models without conflating them."
 ---
 
 Benefits data is spread across five models, and most benefits integration problems come from reading the wrong one. This page covers what's specific to them - for the general techniques, see [Paginate Through Results](/how-to/reading-data/paginate-through-results).
@@ -106,7 +106,7 @@ Similarly, a **dependent** existing does not mean they're covered. Coverage is a
 
 ## Assigning a plan year
 
-Neither benefits nor payroll records carry a plan year directly. To attribute a deduction to a plan year, cross-reference the payroll run's payment date against the benefit's coverage dates - see [Read Payroll and Timesheet Data](/how-to/reading-data/read-payroll-and-timesheet-data).
+Neither benefits nor payroll records carry a plan year directly. To attribute a deduction to a plan year, cross-reference the payroll run's payment date against the benefit's coverage dates - see [Read Payroll Data](/how-to/reading-data/read-payroll-data).
 
 The edge case that breaks naive implementations: a deduction paid in January can belong to the previous plan year, because payroll timing and plan year boundaries don't align. Reconciling on payment date alone misattributes those. Use the effective dates on the benefit, not the payroll date, to decide the plan year.
 

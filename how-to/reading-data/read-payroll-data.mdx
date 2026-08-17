@@ -1,10 +1,11 @@
 ---
-title: "Read Payroll and Timesheet Data"
-sidebarTitle: "Read Payroll & Timesheets"
-description: "Fetch pay runs, per-employee earnings and deductions, and time entries - and pick the right date filter for each."
+title: "Read Payroll Data"
+description: "Fetch pay runs, per-employee earnings and deductions, and the calendar of upcoming runs - and pick the right date filter for each."
 ---
 
 Payroll spans a run-level model and a per-employee model, plus a calendar of scheduled runs. Which one you read depends on whether you need the cycle or the amounts.
+
+For hours worked rather than money paid, see [Read Time and Attendance Data](/how-to/reading-data/read-time-and-attendance-data) - the two do not reconcile arithmetically, and [Payroll & time models](/concepts/payroll-and-time-models) explains why.
 
 <Info>
   **Before you start**
@@ -19,7 +20,6 @@ Payroll spans a run-level model and a per-employee model, plus a calendar of sch
 | Payroll run | One pay cycle for the employer | [Get Payroll Runs](/hris/payroll-runs/get-payroll-runs) |
 | Employee payroll run | One employee's earnings, deductions, and taxes within a run | [Get Employee Payroll Runs](/hris/employee-payroll-runs/get-employee-payroll-runs) |
 | Payroll run calendar | Scheduled and upcoming runs | [Get Payroll Run Calendars](/hris/payroll-run-calendar/get-payroll-run-calendars) |
-| Timesheet entry | Hours worked | [Get Timesheet Entries](/hris/timesheet-entries/get-timesheet-entries-list) |
 | Payroll code | The earning and deduction codes defined in the payroll system | [Get Payroll Codes](/hris/payroll-codes/get-payroll-codes) |
 | Pay group | How employees are grouped onto a pay schedule | [Get Pay Groups](/hris/pay-groups/get-pay-groups) |
 
@@ -66,24 +66,7 @@ The calendar matters more than it looks. Deduction changes have to land before t
 
     **Result:** Deduction lines you can attribute, given a mapping you own.
   </Step>
-
-  <Step title="Read timesheet entries">
-    ```bash
-    curl --request GET \
-      --url 'https://api.bindbee.dev/api/hris/v1/timesheet-entry?page_size=200' \
-      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
-      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
-    ```
-
-    **Result:** Time entries for the connector.
-  </Step>
 </Steps>
-
-## Where totals diverge from the customer's reports
-
-Reported totals are computed by the source system after entries are recorded. Rounding rules, break deduction, and overtime calculation are applied there, so raw entries can be correct while derived totals differ.
-
-Some platforms also model time as discrete punch events rather than intervals, so one shift may span several records and a break can split it. Compare raw entries against raw entries, never against a computed report.
 
 ## If this didn't work
 
@@ -104,12 +87,13 @@ Some platforms also model time as discrete punch events rather than intervals, s
     They're defined per customer in their payroll system. There's no universal set - confirm the mapping with the customer and store it against the connector.
   </Accordion>
 
-  <Accordion title="Hours don't reconcile with the pay run">
-    Timesheet entries and payroll are separate models with separate sync timing. Entries can exist for a period whose run hasn't been processed yet, and approval workflows mean not every entry reaches pay.
+  <Accordion title="Payroll doesn't reconcile with hours worked">
+    Expected. Overtime is calculated by rules the timesheet doesn't encode, salaried employees are paid without timesheets at all, and corrections land in a later run than the period they fix. See [Read Time and Attendance Data](/how-to/reading-data/read-time-and-attendance-data).
   </Accordion>
 </AccordionGroup>
 
 ## Related
 
+- [Payroll & time models](/concepts/payroll-and-time-models) - why the two halves don't join
 - [Get Employee Payroll Runs](/hris/employee-payroll-runs/get-employee-payroll-runs) · [Get Payroll Runs](/hris/payroll-runs/get-payroll-runs)
-- [Get Payroll Run Calendars](/hris/payroll-run-calendar/get-payroll-run-calendars) · [Get Payroll Codes](/hris/payroll-codes/get-payroll-codes)
+- [Get Payroll Run Calendars](/hris/payroll-run-calendar/get-payroll-run-calendars) · [Get Payroll Codes](/hris/payroll-codes/get-payroll-codes) · [Get Pay Groups](/hris/pay-groups/get-pay-groups)
