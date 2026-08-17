@@ -71,3 +71,20 @@ img,
 #navbar button.rounded-full {
   border-radius: 4px !important;
 }
+
+/* Breadcrumbs: keep the brand colour the section eyebrow had before
+   styling.eyebrows was switched from "section" to "breadcrumbs". */
+.breadcrumb-list .breadcrumb-item,
+.breadcrumb-list .breadcrumb-item a {
+  color: #f57e21 !important;
+}
+
+.breadcrumb-list .breadcrumb-item:hover,
+.breadcrumb-list .breadcrumb-item a:hover {
+  color: #c96518 !important;
+}
+
+.dark .breadcrumb-list .breadcrumb-item,
+.dark .breadcrumb-list .breadcrumb-item a {
+  color: #FA923D !important;
+}
