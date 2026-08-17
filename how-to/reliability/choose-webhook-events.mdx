@@ -5,7 +5,17 @@ description: "Pick the right events for what you're building, and know what each
 
 Five events are available. Subscribing to all of them is a common mistake - each one you take on is a delivery you have to handle, and most integrations need two or three.
 
-## The events
+<Info>
+  **Before you start**
+
+  - You know what your integration reacts to: fresh data landing, specific records changing, or breakage.
+  - You have somewhere to register the subscription - see [Create a Webhook](/how-to/reliability/create-a-webhook).
+</Info>
+
+## Steps
+
+<Steps>
+  <Step title="Know what the five events are">
 
 | Dashboard label | Event string | Fires when |
 | --- | --- | --- |
@@ -19,7 +29,10 @@ Five events are available. Subscribing to all of them is a common mistake - each
   Event strings use underscores. `connector-synced` is not a valid event name.
 </Note>
 
-## Choose by what you're building
+    **Result:** The set you're choosing from.
+  </Step>
+
+  <Step title="Pick by what you're building">
 
 | Goal | Subscribe to |
 | --- | --- |
@@ -32,7 +45,10 @@ Five events are available. Subscribing to all of them is a common mistake - each
 
 Sync error alone is worth taking even if you keep your existing scheduled processing - it costs one handler and tells you when a customer's data has stopped updating. See [Detect a Connection That Needs Relinking](/how-to/reliability/detect-a-connection-that-needs-relinking).
 
-## What every payload carries
+    **Result:** A shortlist, usually of two or three.
+  </Step>
+
+  <Step title="Confirm the payload carries what you need">
 
 All payloads include `webhook`, `connector`, `data`, and `sync`.
 
@@ -64,9 +80,11 @@ All payloads include `webhook`, `connector`, `data`, and `sync`.
 
 `connector_sync_error` adds an `error` object with `failed_at`, `message`, and `detail`. `detail` is `{}` when nothing more specific is available.
 
-## What the data-change payloads give you
+    **Result:** Confirmation the event identifies the customer and the run.
+  </Step>
 
-Both change events return **IDs, not records**.
+  <Step title="Plan for IDs rather than records">
+    Both change events return **IDs, not records**.
 
 Employee model change returns a flat array:
 
@@ -90,6 +108,10 @@ Fetch the records with `ids` - see [Filter and Narrow a Collection](/how-to/read
 
   {/* VERIFY: a created-vs-modified flag in the payload was committed to on the Clarity call. Confirm whether it shipped and update this page. */}
 </Warning>
+
+    **Result:** A handler that fetches current state rather than trusting the payload.
+  </Step>
+</Steps>
 
 ## If this didn't work
 

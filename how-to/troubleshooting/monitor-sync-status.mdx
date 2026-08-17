@@ -19,12 +19,21 @@ Before investigating missing or unexpected data, establish what the last sync ac
 
     **Result:** A list of sync runs, most recent first, each with a status.
 
-    | Status | Meaning |
+    | Dashboard status | Meaning |
     | --- | --- |
     | Done | Every in-scope model loaded |
     | Syncing | Currently running - records may be incomplete until it finishes |
     | Partial | Some models loaded, others failed |
     | Failed | The sync did not complete |
+
+    <Warning>
+      These are the dashboard's labels. The `sync_status` field on the connector
+      endpoint carries a narrower set - `Syncing`, `Done` or `Failed` - so code
+      branching on a literal `"Partial"` will never match. Read the per-model
+      breakdown to detect a partial run programmatically.
+    </Warning>
+
+    {/* VERIFY: which sync_status value does a partial run report - Done or Failed? JobDisplayStatus in spec.json has only Syncing, Done, Failed, but the dashboard shows Partial as a fourth state. Determines how a partial run is detected from the API. */}
   </Step>
 
   <Step title="Open the most recent run">

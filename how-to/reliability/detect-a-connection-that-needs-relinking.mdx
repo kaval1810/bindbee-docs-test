@@ -82,9 +82,9 @@ Source-system credentials expire, get rotated, or lose permissions. When that ha
   </Step>
 </Steps>
 
-## What you just did
+## What this leaves open
 
-You closed the three gaps that let stale data reach production undetected: a failed sync, an expired credential, and a sync that never started. The remaining gap is reading data mid-sync - for that, gate your job on `connector_synced` rather than on a clock. See [Trigger a Job When a Sync Completes](/how-to/sync-control/trigger-a-job-on-sync-complete).
+Three gaps are now covered: a failed sync, an expired credential, and a sync that never started. The one still open is reading data mid-sync - for that, gate your job on `connector_synced` rather than on a clock. See [Trigger a Job When a Sync Completes](/how-to/sync-control/trigger-a-job-on-sync-complete).
 
 ## If this didn't work
 

@@ -62,12 +62,13 @@ Your webhook endpoint is publicly reachable, so anyone can `POST` to it. Every r
         verify: (req, res, buf) => { req.rawBody = buf.toString(); },
       }));
 
-      const receivedSignature = req.headers["X-Bindbee-Webhook-Signature"];
+      // Node lower-cases incoming header names - the mixed-case key is always undefined
+      const receivedSignature = req.headers["x-bindbee-webhook-signature"];
       if (!receivedSignature) throw new Error("Signature header missing.");
 
       const hmacDigest = crypto
         .createHmac("sha256", WEBHOOK_SECRET)
-        .update(Buffer.from(req.rawBody, "utf-8").toString())
+        .update(req.rawBody)
         .digest("base64")
         .replace(/\+/g, "-")
         .replace(/\//g, "_");
@@ -82,7 +83,8 @@ Your webhook endpoint is publicly reachable, so anyone can `POST` to it. Every r
       require 'base64'
       require 'openssl'
 
-      received_signature = request.env['X-Bindbee-Webhook-Signature']
+      # Rack exposes headers as HTTP_-prefixed env keys; request.headers does the mapping
+      received_signature = request.headers['X-Bindbee-Webhook-Signature']
       raise "Signature header missing." unless received_signature
 
       request_body = request.raw_post.force_encoding('UTF-8')

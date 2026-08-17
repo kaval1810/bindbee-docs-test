@@ -29,13 +29,15 @@ A forced resync starts a sync now. Use it after a relink, after a permission cha
       ```python Python
       import requests
 
-      requests.post(
+      resp = requests.post(
           "https://api.bindbee.dev/api/embedded/v1/connectors/resync",
           headers={
               "Authorization": f"Bearer {BINDBEE_API_KEY}",
               "X-Connector-Token": CONNECTOR_TOKEN,
           },
+          timeout=30,
       )
+      resp.raise_for_status()
       ```
     </CodeGroup>
 
