@@ -8,7 +8,7 @@ A Magic Link is a hosted URL your customer opens to authorise their HRIS. They e
 <Info>
   **Before you start**
 
-  - You know which environment this connection belongs in - see [Choose an Environment](/how-to/setup/choose-an-environment). It's fixed at creation.
+  - You know which environment this connection belongs in - see [Choose an Environment](/how-to/setup/choose-an-environment). It's fixed at creation, though a connector can be moved later without the end user reconnecting - see [Move a Connector Between Environments](/how-to/setup/move-a-connector-between-environments).
   - You know which integration the customer uses.
 </Info>
 
@@ -62,7 +62,7 @@ A Magic Link is a hosted URL your customer opens to authorise their HRIS. They e
   </Accordion>
 
   <Accordion title="You need to generate links in bulk or from your own product">
-    Two options. Create connectors programmatically - see [Create a Connector Programmatically](/how-to/connections/create-a-connector-programmatically). Or embed the connection flow directly in your product, white-labelled with your own branding.
+    Two options. Create connectors programmatically - see [Create a Connector Programmatically](/how-to/connections/create-a-connector-programmatically). Or embed the connection flow directly in your product, white-labelled with your own branding - see [Customise the Connection Experience](/how-to/connections/customise-the-connection-experience).
 
     Manually generated links are a reasonable way to launch; teams commonly start there and move to the embedded flow once volume justifies it.
   </Accordion>
@@ -74,5 +74,5 @@ A Magic Link is a hosted URL your customer opens to authorise their HRIS. They e
 
 ## Related
 
-- [Magic Link](/how-to/connections/generate-a-magic-link) - what the end user sees
+- [Magic Link & end-user auth](/concepts/magic-link) - what the end user sees, and why the credentials never reach you
 - [help.bindbee.dev](https://help.bindbee.dev) - per-system setup guides

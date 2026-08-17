@@ -6,12 +6,6 @@ description: "Generate connection links from your own application instead of cre
 
 Creating links in the dashboard works while you're onboarding customers one at a time. Once connection is part of your product's own signup or setup flow, generate them programmatically.
 
-<Warning>
-  The link token payload below is documented, but the endpoint path isn't published in the API reference.
-
-  {/* VERIFY: confirm the link token creation endpoint path, method, and response shape, then replace the placeholder below and add a reference page. */}
-</Warning>
-
 <Info>
   **Before you start**
 
@@ -36,10 +30,11 @@ Creating links in the dashboard works while you're onboarding customers one at a
 
     | Field | Purpose |
     | --- | --- |
-    | `org_name` | The customer's organisation name, shown in the dashboard |
-    | `origin_id` | **Your** identifier for this customer |
-    | `category` | `HRIS`, `ATS`, or `LMS` |
-    | `integration` | The integration slug |
+    | `org_name` | The customer's organisation name, shown in the dashboard. Required |
+    | `origin_id` | **Your** identifier for this customer. Required |
+    | `email` | The end user's email. Optional |
+    | `category` | `HRIS`, `ATS`, or `LMS`. Required |
+    | `integration` | The integration slug. Required |
 
     **Result:** A payload identifying who is connecting and to what.
   </Step>
@@ -53,7 +48,54 @@ Creating links in the dashboard works while you're onboarding customers one at a
   </Step>
 
   <Step title="Create the link and deliver it">
-    Call the link token endpoint with your API key, then present the returned link to the customer - redirect to it, or embed it in your own onboarding flow.
+    Post the payload to the link token endpoint with your API key. Create it from your backend - the key must never reach the browser.
+
+    <CodeGroup>
+
+    ```bash cURL
+    curl --request POST \
+      --url 'https://api.bindbee.dev/api/embedded/v1/link/create-link-token' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'Content-Type: application/json' \
+      --data '{
+        "end_user_data": {
+          "org_name": "Acme Corp.",
+          "origin_id": "064e1cd7-49ad-4e6d-8005-7e4c92fe9675"
+        },
+        "category": "HRIS",
+        "integration": "bamboohr"
+      }'
+    ```
+
+    ```python Python
+    import os, requests
+
+    resp = requests.post(
+        "https://api.bindbee.dev/api/embedded/v1/link/create-link-token",
+        headers={"Authorization": f"Bearer {os.environ['BINDBEE_API_KEY']}"},
+        json={
+            "end_user_data": {
+                "org_name": "Acme Corp.",
+                "origin_id": "064e1cd7-49ad-4e6d-8005-7e4c92fe9675",
+            },
+            "category": "HRIS",
+            "integration": "bamboohr",
+        },
+        timeout=30,
+    )
+    resp.raise_for_status()
+    link_token = resp.json()["link_token"]
+    ```
+
+    </CodeGroup>
+
+    The response carries a single field:
+
+    ```json
+    { "link_token": "..." }
+    ```
+
+    Present it to the customer - redirect to it, or embed it in your own onboarding flow. See [Create Link Token](/sdk/create-link-token) for the full schema.
 
     **Result:** The customer authorises without you sending a link by hand.
   </Step>
@@ -67,7 +109,23 @@ Creating links in the dashboard works while you're onboarding customers one at a
   </Step>
 
   <Step title="Store the connector token">
-    Read `connector_token` from the created connector and store it against your customer. It's what you pass as `X-Connector-Token` on every subsequent call - see [Authenticate a Request](/how-to/setup/authenticate-a-request).
+    Fetch the connector by the `origin_id` you set, and read `connector_token` from it.
+
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/connectors?origin_id=064e1cd7-49ad-4e6d-8005-7e4c92fe9675&is_active=true' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>'
+    ```
+
+    Store it against your customer. It's what you pass as `X-Connector-Token` on every subsequent call - see [Authenticate a Request](/how-to/setup/authenticate-a-request).
+
+    <Note>
+      There is no `temporary_token` in this flow. That exchange belongs to the
+      embedded SDK, where `onSuccess` hands your frontend a short-lived token to
+      swap for a `connector_token` - see
+      [Customise the Connection Experience](/how-to/connections/customise-the-connection-experience).
+      With a hosted link you read the token from the connector instead.
+    </Note>
 
     **Result:** You can read and write for that customer.
   </Step>
@@ -75,9 +133,9 @@ Creating links in the dashboard works while you're onboarding customers one at a
 
 ## Letting the customer choose the integration
 
-The payload names a single integration, so you decide which platform the link connects to before generating it.
+`integration` is required, so the platform is decided before the link exists - there is no flow where the end user picks it. The same applies to the embedded component, where `category` and `integration` are fixed when the token is created.
 
-If your customers pick their own HRIS, either collect that choice in your UI first and generate the matching link, or use the hosted flow that presents the integration picker. The lookup endpoint gives you the list to render, filtered to what your organization can actually connect.
+If your customers use different systems, collect that choice in your own UI first and generate the matching link. Render the options from the lookup endpoint, which is already filtered to what your organization can actually connect - see [Look Up an Integration Slug](/how-to/setup/look-up-an-integration-slug).
 
 ## If this didn't work
 
