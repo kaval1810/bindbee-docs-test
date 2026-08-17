@@ -345,8 +345,7 @@ request_body = request.body
 
 # Ensure the presence of a signature header in the request
 if "X-Bindbee-Webhook-Signature" not in request.headers:
-    print('Signature header missing; request may not be from Bindbee.')
-    raise
+    raise ValueError("Signature header missing; request may not be from Bindbee.")
 
 # Retrieve the signature header from the request
 received_signature = request.headers["X-Bindbee-Webhook-Signature"]
@@ -375,7 +374,8 @@ require 'json'
 
 secret_key = 'YOUR_WEBHOOK_SIGNATURE_KEY'
 request_body = request.raw_post
-received_signature = request.env['X-Bindbee-Webhook-Signature']
+# Rack exposes headers as HTTP_-prefixed env keys; request.headers does the mapping
+received_signature = request.headers['X-Bindbee-Webhook-Signature']
 
 unless received_signature
   raise "Signature header missing; request may not be from Bindbee."
@@ -414,19 +414,18 @@ app.use(
 const webhookSecret = "YOUR_WEBHOOK_SIGNATURE_KEY";
 const rawRequestBody = request.rawBody;
 
-const receivedSignature = request.headers["X-Bindbee-Webhook-Signature"];
+// Node lower-cases incoming header names - the mixed-case key is always undefined
+const receivedSignature = request.headers["x-bindbee-webhook-signature"];
 
 if (!receivedSignature) {
-  console.log("Missing webhook signature; request may not be from Bindbee.");
+  // Fail closed: never fall through to comparison without a signature
+  throw new Error("Missing webhook signature; request may not be from Bindbee.");
 }
 
-// Ensure the request body is properly encoded
-const utf8Body = Buffer.from(rawRequestBody, "utf-8").toString();
-
-// Create an HMAC digest using SHA-256
+// Create an HMAC digest using SHA-256 over the raw body
 const hmacDigest = crypto
   .createHmac("sha256", webhookSecret)
-  .update(utf8Body)
+  .update(rawRequestBody)
   .digest("base64")
   .replace(/\+/g, "-")
   .replace(/\//g, "_");
