@@ -72,8 +72,7 @@
             "icon": "network",
             "pages": [
               "explanation/how-syncing-works",
-              "explanation/connector-lifecycle",
-              "explanation/data-freshness"
+              "explanation/connector-lifecycle"
             ]
           },
           {
@@ -91,17 +90,9 @@
             "pages": [
               "explanation/passthrough-when-and-why",
               "explanation/custom-fields-mental-model",
-              "explanation/custom-fields",
               "explanation/meta-api-schema-discovery",
               "explanation/sftp-vs-api",
               "explanation/webhooks-vs-polling"
-            ]
-          },
-          {
-            "group": "Security & Compliance",
-            "icon": "shield-check",
-            "pages": [
-              "explanation/security-and-compliance"
             ]
           }
         ]

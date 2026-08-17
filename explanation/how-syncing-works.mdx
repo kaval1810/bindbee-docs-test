@@ -24,7 +24,7 @@ When you call `GET /api/hris/v1/employees`, Bindbee does **not** call BambooHR. 
 - Resilience when the vendor has an outage
 - One pagination and filtering model
 
-The trade-off is freshness: the API reflects the most recent sync, not the HRIS at this exact second. See [Data Freshness](/explanation/data-freshness) for how sync frequency determines how current that is.
+The trade-off is freshness: the API reflects the most recent sync, not the HRIS at this exact second. See [Data Freshness](/explanation/how-syncing-works) for how sync frequency determines how current that is.
 
 Almost every "why is Bindbee behaving strangely?" question resolves to a consequence of this one design decision.
 
@@ -150,7 +150,7 @@ Things worth building deliberately:
 ## Related
 
 <CardGroup cols={2}>
-  <Card title="Data Freshness & Polling" icon="clock" href="/explanation/data-freshness">
+  <Card title="Data Freshness & Polling" icon="clock" href="/explanation/how-syncing-works">
     How current is the data, really?
   </Card>
   <Card title="Connector States & Lifecycle" icon="route" href="/explanation/connector-lifecycle">
