@@ -31,17 +31,33 @@ Slugs are not derivable from the display name. `ADP Workforce Now` is `adp`; `Ri
     }
     ```
 
-    This is filtered to what your organization actually has enabled, which makes it more useful than the published reference list - it won't return something you can't connect.
+    This is filtered to what your organization actually has enabled, which makes it more useful than the published reference list - it won't return something you can't connect. The full schema is on [List Integrations](/custom-fields/lookup/list-integrations).
 
-    [Get Integrations](/api-reference/integrations/get-integrations) returns the same information with pagination if you need to enumerate.
+    <Note>
+      [Get Integrations](/api-reference/integrations/get-integrations) is a
+      different endpoint with a different shape - it is paginated, scoped to one
+      category by its path, and names the slug field `integration_slug` inside
+      an `items` array rather than `slug` inside `integrations`. It carries no
+      `display_name` or `categories`. Don't treat the two as interchangeable.
+    </Note>
 
     **Result:** Valid slugs for your account.
   </Step>
 
   <Step title="Check the category">
-    Several platforms appear in more than one category with the same slug - `workday` covers HRIS, ATS, and LMS; `bamboohr` and `sap-success-factors` span HRIS and ATS.
+    A slug and a category are not independent, and they vary in both directions.
 
-    The slug alone doesn't disambiguate. Always pair it with the category.
+    Some platforms keep one slug across several categories - `workday` covers HRIS, ATS, and LMS; `bamboohr` and `sap-success-factors` span HRIS and ATS. Here the slug alone doesn't tell you which API you're addressing.
+
+    Others change slug per category. SAP SuccessFactors is `sap-success-factors` for HRIS and ATS but `sap_sf_lms` for LMS.
+
+    <Warning>
+      Don't derive one category's slug from another's. A vendor's HRIS slug sent
+      with `"category": "LMS"` is rejected as invalid whenever the LMS connector
+      has a slug of its own.
+    </Warning>
+
+    Read both values from the same row of the lookup response - the `categories` array on each item is what the org has enabled for that specific slug.
 
     **Result:** An unambiguous integration reference.
   </Step>
@@ -88,6 +104,8 @@ Slugs are not derivable from the display name. `ADP Workforce Now` is `adp`; `Ri
   <Accordion title="A slug is rejected as invalid">
     Check hyphens versus underscores - both are used and the pattern isn't consistent. `sap-success-factors` and `google-workspace` use hyphens; `adp_sftp` and `oracle_hcm` use underscores.
 
+    Then check the slug is the one for the category you're sending, which is a separate failure - see step 2.
+
     Use the lookup endpoint rather than typing from a reference list.
   </Accordion>
 
@@ -106,5 +124,5 @@ Slugs are not derivable from the display name. `ADP Workforce Now` is `adp`; `Ri
 
 ## Related
 
+- [List Integrations](/custom-fields/lookup/list-integrations) - the endpoint used here
 - [Integrations](/integrations) - published reference list
-- [Get Integrations](/api-reference/integrations/get-integrations)

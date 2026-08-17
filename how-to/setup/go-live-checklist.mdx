@@ -69,15 +69,15 @@ Work through this before your first real customer connects. Most items exist bec
     Captured before the run, saved only on success.
   </Step>
   <Step title="All writes to your store are idempotent upserts on id">
-    You will receive the same record repeatedly. See
-    [Field semantics](/concepts/enum-values).
+    You will receive the same record repeatedly.
   </Step>
   <Step title="Every field is treated as nullable">
     Any relation or attribute can be null on some connector.
   </Step>
   <Step title="No exhaustive switch over an enum without a default">
     Unmapped vendor values pass through verbatim. Defaulting an unknown
-    employment status to "inactive" can deprovision a real employee.
+    employment status to "inactive" can deprovision a real employee. See
+    [Enum values](/concepts/enum-values).
   </Step>
   <Step title="include_raw_data is off in bulk pipelines">
     It pulls sensitive fields the unified model deliberately omits.
@@ -95,11 +95,21 @@ Work through this before your first real customer connects. Most items exist bec
     silently.
   </Step>
   <Step title="501 Not Implemented is handled as its own branch">
-    It means the schema is unpublished, not that the write is unsupported.
+    It means the schema is unpublished for that integration and model, not that
+    the write is unsupported. See
+    [Meta APIs](/meta-apis-for-write-operations#meta-api-not-implemented-for-an-integration).
   </Step>
-  <Step title="Writes are never blind-retried">
-    They are not idempotent. A retried timeout can duplicate a record in your
-    customer's HRIS. Record a request key; resolve unknowns by reading back.
+  <Step title="Every write carries X-Idempotency-Key">
+    Derived from your own record for the thing being created - not random, not a
+    timestamp. A retry must reuse the same key, or a retried timeout duplicates
+    a record in your customer's HRIS. See
+    [Create an Employee](/how-to/writing-data-back/create-an-employee).
+  </Step>
+  <Step title="Passthrough writes are never retried blind">
+    Passthrough accepts no idempotency key, so a retry reaches the provider as a
+    second write. Check whether the record exists first, or use the provider's
+    own mechanism - see
+    [Make a Passthrough Request](/how-to/writing-data-back/make-a-passthrough-request).
   </Step>
   <Step title="The UI doesn't block on readback">
     A 2xx means the source system accepted it - not that Bindbee can return it
