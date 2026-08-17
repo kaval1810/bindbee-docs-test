@@ -140,12 +140,12 @@ Two ways, and you want both:
 
 **Polling the connector list** - `GET /api/{category}/v1/connectors` returns current `status`, `sync_status`, `sync_progress`, `last_sync_start_time` and `next_sync_start_time` for every connector. Run this on a schedule as a reconciliation sweep; it is the only reliable way to catch a `RELINK_NEEDED` that was detected while your webhook endpoint was down.
 
-See [Monitor sync status](/how-to/monitor-sync-status).
+See [Monitor sync status](/how-to/troubleshooting/monitor-sync-status).
 
 ## Related
 
 <CardGroup cols={2}>
-  <Card title="Monitor Sync Status" icon="gauge" href="/how-to/monitor-sync-status">
+  <Card title="Monitor Sync Status" icon="gauge" href="/how-to/troubleshooting/monitor-sync-status">
     Building the health surface.
   </Card>
   <Card title="How Syncing Works" icon="rotate-cw" href="/explanation/how-syncing-works">

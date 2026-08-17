@@ -26,7 +26,7 @@ curl -G "https://api.bindbee.dev/api/hris/v1/employees" \
 | `raw_data` contains it? | Diagnosis | Fix |
 | --- | --- | --- |
 | **No** | The source system never sent it | Permissions, or the vendor's API doesn't expose it |
-| **Yes, unmapped** | Bindbee has no unified field for it | [Custom field](/how-to/map-custom-fields) |
+| **Yes, unmapped** | Bindbee has no unified field for it | [Custom field](/how-to/data-model/map-custom-fields) |
 | **Yes, under a different key** | Vendor-specific naming not covered by the mapping | Contact support, or map a custom field |
 
 ### The five causes
@@ -180,7 +180,7 @@ Key your database on `id`. `remote_id` is only unique within one connector - two
   <Card title="How Syncing Works" icon="rotate-cw" href="/explanation/how-syncing-works">
     Why modified_at behaves this way.
   </Card>
-  <Card title="Map Custom Fields" icon="git-fork" href="/how-to/map-custom-fields">
+  <Card title="Map Custom Fields" icon="git-fork" href="/how-to/data-model/map-custom-fields">
     Surface a value that has no unified field.
   </Card>
 </CardGroup>

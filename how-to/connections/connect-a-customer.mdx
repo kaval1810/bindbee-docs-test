@@ -1,0 +1,307 @@
+---
+title: "Connect Your First Customer"
+description: "Take a real customer from 'click connect' in your product to a synced connector you can read from - and store the right identifiers along the way."
+---
+
+The Quickstart used the dashboard to create a connection. This tutorial does it the way your product will: programmatically, for a named customer, with the identifiers you need to map the connection back to your own database.
+
+**You will build:** a connect flow, a token exchange, and a stored connector record.
+
+## Choose your flow
+
+| | Magic Link | Bindbee Embed |
+| --- | --- | --- |
+| Frontend code needed | None | React SDK or JS snippet |
+| Where the customer authorizes | Bindbee-hosted page | Inside your product |
+| Best for | Pilots, sales-assisted onboarding, low volume | Self-serve product onboarding |
+
+Both produce an identical connector. You can use Magic Link to launch and move to Embed later without changing any read code.
+
+---
+
+## Step 1 - Decide your `origin_id` before you write any code
+
+`origin_id` is *your* identifier for the customer. Bindbee stores it on the connector and returns it on every connector lookup and every webhook payload.
+
+<Warning>
+  Pick a stable internal ID - your tenant UUID or account ID. Do not use the
+  company's display name, an email address, or anything a customer can change.
+  Reconciling connectors after the fact without a stable `origin_id` is painful.
+</Warning>
+
+```json
+{
+  "end_user_data": {
+    "org_name": "Acme Corp.",
+    "origin_id": "tenant_9f2c1b40"
+  }
+}
+```
+
+`org_name` is the human-readable label shown in your Bindbee dashboard. `origin_id` is the join key.
+
+---
+
+## Step 2 - Create a `link_token`
+
+When the customer clicks **Connect HRIS** in your product, your backend requests a `link_token`. Do this server-side - it needs your API key.
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.bindbee.dev/api/embedded/v1/link/create-link-token" \
+  -H "Authorization: Bearer $BINDBEE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "end_user_data": {
+      "org_name": "Acme Corp.",
+      "origin_id": "tenant_9f2c1b40"
+    },
+    "category": "HRIS",
+    "integration": "bamboohr"
+  }'
+```
+
+```python Python
+import os, requests
+
+def create_link_token(tenant_id: str, org_name: str, integration: str):
+    resp = requests.post(
+        "https://api.bindbee.dev/api/embedded/v1/link/create-link-token",
+        headers={
+            "Authorization": f"Bearer {os.environ['BINDBEE_API_KEY']}",
+            "Content-Type": "application/json",
+        },
+        json={
+            "end_user_data": {"org_name": org_name, "origin_id": tenant_id},
+            "category": "HRIS",
+            "integration": integration,
+        },
+    )
+    resp.raise_for_status()
+    return resp.json()
+```
+
+```javascript Node
+async function createLinkToken({ tenantId, orgName, integration }) {
+  const res = await fetch(
+    "https://api.bindbee.dev/api/embedded/v1/link/create-link-token",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.BINDBEE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        end_user_data: { org_name: orgName, origin_id: tenantId },
+        category: "HRIS",
+        integration,
+      }),
+    },
+  );
+  if (!res.ok) throw new Error(`link_token failed: ${res.status}`);
+  return res.json();
+}
+```
+
+</CodeGroup>
+
+<Note>
+  **The API key you use here decides the environment of the connector.** A
+  Development key creates a Development connector; a Production key creates a
+  Production connector. There is no way to move a connector between them later.
+</Note>
+
+The `integration` slug comes from the [Integrations](/integrations) list. If you want the customer to pick their own system, omit a hardcoded slug and present the list in your own UI first.
+
+---
+
+## Step 3 - Render the connection flow
+
+<Tabs>
+  <Tab title="React">
+    ```bash
+    npm install --save @bindbee/react-link
+    ```
+
+    ```jsx
+    import { useBindbeeMagiclink } from "@bindbee/react-link";
+
+    function ConnectHrisButton({ linkToken, onConnected }) {
+      const { open } = useBindbeeMagiclink({
+        linkToken,
+        serverUrl: "https://api.bindbee.dev", // 'https://api-eu.bindbee.dev' for EU
+        onSuccess: (temporaryToken) => onConnected(temporaryToken),
+        onClose: () => console.log("Customer closed the flow"),
+      });
+
+      return <button onClick={open}>Connect your HRIS</button>;
+    }
+    ```
+  </Tab>
+  <Tab title="Any frontend (CDN)">
+    ```html
+    <script
+      src="https://cdn.bindbee.dev/initialize.min.js"
+      integrity="sha512-1L1XqHiVgenLFd95eE8fqJ7o6kje+5+3IN7K0cuwNP6feTrYAeNTdpeqR1e2HgThSb5Bj+USqJeNiyEE9KBtfA=="
+      crossorigin="anonymous"
+    ></script>
+    ```
+
+    ```js
+    window.BindbeeEmbed.initialize({
+      linkToken: LINK_TOKEN,
+      serverUrl: "https://api.bindbee.dev",
+      onSuccess: (temporaryToken) => sendToBackend(temporaryToken),
+      onClose: () => {},
+    });
+
+    document
+      .querySelector("#connect")
+      .addEventListener("click", () => window.BindbeeEmbed.open());
+    ```
+  </Tab>
+  <Tab title="Magic Link (no frontend)">
+    Create the link in the dashboard under **Magic Link**, fill in the same
+    `org_name` and `origin_id`, and send the URL to your customer.
+
+    The connector appears in your dashboard as soon as they finish. Skip to
+    Step 5 - there is no `temporary_token` to exchange.
+  </Tab>
+</Tabs>
+
+You can match the flow to your own branding - logo, favicon and brand colour - under [Organization settings](/how-to/connections/embed-brand-customization).
+
+---
+
+## Step 4 - Exchange `temporary_token` for `connector_token`
+
+`onSuccess` hands your frontend a short-lived `temporary_token`. Send it to your backend and exchange it immediately:
+
+<CodeGroup>
+
+```bash cURL
+curl "https://api.bindbee.dev/api/embedded/v1/connectors/connector_token/$TEMPORARY_TOKEN" \
+  -H "Authorization: Bearer $BINDBEE_API_KEY"
+```
+
+```python Python
+def exchange_token(temporary_token: str):
+    resp = requests.get(
+        f"https://api.bindbee.dev/api/embedded/v1/connectors/connector_token/{temporary_token}",
+        headers={"Authorization": f"Bearer {os.environ['BINDBEE_API_KEY']}"},
+    )
+    resp.raise_for_status()
+    return resp.json()   # {"connector_token": "...", "connector_id": "..."}
+```
+
+</CodeGroup>
+
+```json
+{
+  "connector_token": "jk23h4jk23hk4j2h3kj4h23kjh4k23jh4k2j3h4",
+  "connector_id": "123e4567-e89b-12d3-a456-426614174000"
+}
+```
+
+<Warning>
+  The exchange is a server-side call - it requires your API key. Never expose the
+  API key or the `connector_token` to the browser.
+</Warning>
+
+---
+
+## Step 5 - Store the connection
+
+Persist the connector against your tenant. At minimum:
+
+| Store | Why |
+| --- | --- |
+| `connector_token` | Required on every data request for this customer |
+| `connector_id` | Identifies the connector in dashboard and support tickets |
+| `integration_slug` | Drives which features you enable for this customer |
+| `category` | `HRIS` / `ATS` / `LMS` |
+| Your `tenant_id` | The join back to your own data |
+
+```sql
+create table hris_connections (
+  tenant_id         uuid primary key,
+  connector_id      uuid not null,
+  connector_token   text not null,   -- encrypt at rest
+  integration_slug  text not null,
+  category          text not null,
+  connected_at      timestamptz not null default now()
+);
+```
+
+<Tip>
+  Treat `connector_token` as a credential. Encrypt it at rest and keep it out of
+  logs and error reports.
+</Tip>
+
+---
+
+## Step 6 - Wait for the first sync
+
+Linking does not mean data is ready. The first sync backfills the customer's full history and takes materially longer than later incremental syncs.
+
+Check where it is:
+
+```bash
+curl "https://api.bindbee.dev/api/hris/v1/connectors" \
+  -H "Authorization: Bearer $BINDBEE_API_KEY"
+```
+
+```json
+{
+  "id": "018b18ef-c487-703c-afd9-0ca478ccd9d6",
+  "integration_slug": "bamboohr",
+  "status": "COMPLETE",
+  "sync_status": "Syncing",
+  "sync_progress": 62,
+  "last_sync_start_time": "2026-07-22T09:49:30.478384+00:00",
+  "next_sync_start_time": "2026-07-23T09:49:30.478384+00:00",
+  "origin_id": "tenant_9f2c1b40",
+  "total_employees": null,
+  "active_employees": null
+}
+```
+
+Read `status` and `sync_status` as two separate things:
+
+| Field | Answers |
+| --- | --- |
+| `status` | Are the credentials good? `COMPLETE`, `INCOMPLETE`, `RELINK_NEEDED` |
+| `sync_status` | Is data ready? `Syncing`, `Done`, `Failed` |
+
+<Note>
+  In **Development**, `sync_status` stays idle until you trigger a sync yourself.
+  See [Force a resync](/how-to/sync-control/force-a-resync).
+</Note>
+
+Rather than polling, subscribe to the `connector_synced` webhook - see [Handle Webhooks](/how-to/reliability/handle-webhooks).
+
+---
+
+## Step 7 - Show the customer something
+
+Once `sync_status` is `Done`, confirm the connection in your UI with real numbers. `total_employees` and `active_employees` are populated on the connector after the first successful sync, so you can render "Synced 412 employees from BambooHR" without fetching a single page.
+
+---
+
+## What you built
+
+- A connect flow tied to your own `tenant_id` through `origin_id`
+- A stored, encrypted `connector_token`
+- A sync-status check that distinguishes "bad credentials" from "not ready yet"
+
+## Next
+
+<CardGroup cols={2}>
+  <Card title="Read Employee Data" icon="users" href="/how-to/reading-data/read-employee-data">
+    Page through, filter, and expand the data you just synced.
+  </Card>
+  <Card title="Connector States & Lifecycle" icon="network" href="/explanation/connector-lifecycle">
+    What `RELINK_NEEDED` means and how to recover from it.
+  </Card>
+</CardGroup>

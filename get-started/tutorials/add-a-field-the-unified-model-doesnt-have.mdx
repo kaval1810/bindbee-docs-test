@@ -83,7 +83,7 @@ Dry-run it against real connector data with [Preview](/custom-fields/api/preview
 
 In the Dashboard, go to **Custom Fields**, create a field on the **HRIS / Employee** pair with a name your code will use - `cost_centre` - then attach your expression as a connector-scoped mapping.
 
-The Dashboard flow is documented at [Dashboard configuration](/how-to/configure-custom-fields-dashboard); the equivalent API calls at [API configuration](/how-to/configure-custom-fields-api).
+The Dashboard flow is documented at [Dashboard configuration](/how-to/data-model/map-a-custom-field-from-the-dashboard); the equivalent API calls at [API configuration](/how-to/data-model/map-custom-fields-with-the-api).
 
 **Result:** the field exists with a mapping attached. Existing records populate on the next sync - in development, one you trigger.
 
@@ -145,7 +145,7 @@ You extended the unified model without breaking it. Your code reads a stable sch
   <Accordion title="The value is missing from raw_data too">
     Then it is not a mapping problem. Either the model is out of scope, or the
     source system did not grant permission. See the [Go-live
-    checklist](/how-to/go-live-checklist).
+    checklist](/how-to/setup/go-live-checklist).
   </Accordion>
 </AccordionGroup>
 

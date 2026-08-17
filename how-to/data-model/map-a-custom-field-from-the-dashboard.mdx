@@ -1,0 +1,114 @@
+---
+title: "Map a Custom Field from the Dashboard"
+description: "Surface a value that isn't in the unified model by creating a custom field and pointing it at the raw upstream payload."
+---
+
+Custom fields extend a unified model with extra attributes, populated by a [JMESPath](https://jmespath.org/) expression pointed at the raw payload. This is the visual flow - for automation or version-controlled configuration, use the [API](/how-to/data-model/map-custom-fields-with-the-api) instead.
+
+<Info>
+  **Before you start**
+
+  - You know the value exists upstream - see [Inspect the Raw Upstream Payload](/how-to/data-model/inspect-the-raw-upstream-payload).
+  - You know the model it belongs to, and whether it should apply to one connector or every connector on an integration.
+</Info>
+
+## Steps
+
+<Steps>
+  <Step title="Create the field">
+    In **Custom Fields**, click **New Field** and fill in the dialog.
+
+    Names must be unique and snake_case. Use something descriptive - `cost_center_name`, not `custom_1`. The name becomes a key in your API responses and is awkward to change later.
+
+    **Result:** The field exists with no mapping yet, and you're taken to the mapping screen.
+  </Step>
+
+  <Step title="Choose the scope">
+    | Scope | Applies to | Use when |
+    | --- | --- | --- |
+    | Connector Level | One connector | Payload shape varies by customer, or you're overriding an org-level mapping |
+    | Organization Level | Every connector on that integration | The field is reliably in the same place for all customers on that platform |
+
+    Where both exist for the same field, the connector-level mapping wins for that connector.
+
+    Prefer Organization Level where the shape is genuinely consistent - one mapping then covers every new connector on that integration without further setup. Payload shape varies with the customer's plan tier and enabled modules, so verify against more than one connector before assuming consistency.
+
+    **Result:** You've chosen a scope and selected the connector or integration.
+  </Step>
+
+  <Step title="Point the field at a value">
+    Three ways to fill the data field box:
+
+    - Pick from the suggested mappings
+    - Click `</>` to open the raw JSON response and click the value you want
+    - Type the JMESPath expression directly
+
+    Clicking the value in the raw JSON view is the most reliable - it builds the expression for you and avoids quoting mistakes on nested paths.
+
+    **Result:** The field has an expression attached.
+  </Step>
+
+  <Step title="Find fields that only some employees have">
+    A field may appear in `raw_data` for some employees and not others, so the default record may not show it.
+
+    Use the employee search at the top of the data panel: search by name or email, select the employee, and review their raw data in the right-hand panel. Then select the field and click **Map Field**.
+
+    **Result:** You've mapped against a record that actually contains the value.
+  </Step>
+
+  <Step title="Retrieve it">
+    Add `include_custom_fields=true` to your request.
+
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/employees?include_custom_fields=true' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    ```json
+    {
+      "id": "emp_123",
+      "name": "John Doe",
+      "custom_fields": {
+        "cost_center_name": "Engineering-NA"
+      }
+    }
+    ```
+
+    **Result:** The value appears under `custom_fields`.
+  </Step>
+</Steps>
+
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="The field returns INVALID_JSON_PATH">
+    The expression didn't resolve. An invalid path does not raise an error - it returns `"INVALID_JSON_PATH"` as the value, so this only surfaces at read time.
+
+    Usually an array needing an index or filter, or a quoting error inside a filter. Preview the expression before saving to catch it - see [Test a JMESPath Before Saving It](/how-to/data-model/test-a-jmespath).
+  </Accordion>
+
+  <Accordion title="The field is empty for some employees and populated for others">
+    Often correct - not every employee has every value. Confirm with employee search: look at a record where you expect the value and one where you don't.
+
+    If it's empty for employees who should have it, the value may sit at a different path for those records, or be gated by permission. See [Resolve a Source-System Permission Error](/how-to/troubleshooting/resolve-a-permission-error).
+  </Accordion>
+
+  <Accordion title="The mapping works on one connector but not another on the same integration">
+    Payload shape varies by customer configuration, plan tier, and enabled modules. Add a connector-level mapping for the ones that differ; it overrides the organization-level mapping for that connector only.
+  </Accordion>
+
+  <Accordion title="The field doesn't appear in the response at all">
+    Check `include_custom_fields=true` is on the request - custom fields are omitted by default. If it's present and the key is still missing, the field has no mapping that resolves on this connector.
+  </Accordion>
+
+  <Accordion title="You need the same fields in both environments">
+    Configuration doesn't cross environments. Recreating it by hand is error-prone at any scale - define it through the API instead so the same definitions can be applied to both. See [Map Custom Fields with the API](/how-to/data-model/map-custom-fields-with-the-api).
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Dashboard Configuration](/how-to/data-model/map-a-custom-field-from-the-dashboard)
+- [Custom Fields](/explanation/custom-fields) - scopes and precedence

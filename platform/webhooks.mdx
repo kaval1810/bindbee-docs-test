@@ -18,7 +18,7 @@ In the Dashboard, go to **Configure → Webhooks**.
 | **Webhook Type** | Which environment's connectors this webhook covers - Development, Production, or both |
 | **Events** | Which events trigger a delivery, chosen by checkbox |
 
-The **Security** section on the same page holds your organization's signature key. Every delivery is signed with it, and your handler should verify that signature before acting on the payload - see [Validate webhook signatures](/how-to/validate-webhook-signatures).
+The **Security** section on the same page holds your organization's signature key. Every delivery is signed with it, and your handler should verify that signature before acting on the payload - see [Validate webhook signatures](/how-to/reliability/validate-webhook-signatures).
 
 <Warning>
   The Dashboard labels events in prose, but the payload carries the event
@@ -38,7 +38,7 @@ The **Security** section on the same page holds your organization's signature ke
     Every event, the full payload shape, and the delivery rules.
   </Card>
 
-  <Card title="Handle webhooks" icon="webhook" href="/how-to/handle-webhooks">
+  <Card title="Handle webhooks" icon="webhook" href="/how-to/reliability/handle-webhooks">
     Writing a handler: acknowledge fast, work asynchronously, stay idempotent.
   </Card>
 

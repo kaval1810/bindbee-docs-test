@@ -47,7 +47,7 @@ Every connector reports its own timing:
 ## Avoid
 
 - **Short-timer polling.** Calling `/employees` every few minutes can't outrun a 24-hour sync - it just burns rate limit.
-- **Resyncing on a schedule.** Trigger resyncs on user intent, not a cron. See [Force a resync](/how-to/force-a-resync).
+- **Resyncing on a schedule.** Trigger resyncs on user intent, not a cron. See [Force a resync](/how-to/sync-control/force-a-resync).
 - **Treating `modified_at` as a business timestamp.** It's a write time, not a change time.
 - **Assuming a webhook means something changed.** A sync can rewrite unchanged records too - diff before acting on anything expensive.
 - **Gating onboarding on rows existing.** Gate on `sync_status` instead - an empty directory mid-sync looks identical to a genuinely empty one.
@@ -62,7 +62,7 @@ Invalidate on `connector_synced`, not on a timer - it's both fresher and cheaper
   <Card title="Webhooks vs Polling" icon="scale" href="/explanation/webhooks-vs-polling">
     Picking a delivery mechanism.
   </Card>
-  <Card title="Filtering with modified_after" icon="funnel" href="/how-to/filter-with-modified-after">
+  <Card title="Filtering with modified_after" icon="funnel" href="/how-to/reading-data/filter-with-modified-after">
     The incremental read pattern in detail.
   </Card>
 </CardGroup>

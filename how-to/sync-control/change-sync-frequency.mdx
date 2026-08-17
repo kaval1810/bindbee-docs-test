@@ -1,0 +1,83 @@
+---
+title: "Change Sync Frequency"
+description: "Adjust how often a Production connector pulls data from the source system."
+---
+
+Production connectors sync every 24 hours by default. The cadence is adjustable - shorter for time-sensitive workflows, longer for data that changes rarely or where the source system is slow or rate-limited.
+
+<Warning>
+  Changing the cadence is currently a support request, not a dashboard control.
+
+  {/* VERIFY: confirm whether a self-serve cadence control has shipped. If so, this becomes a dashboard task and the request step is cut. */}
+</Warning>
+
+<Info>
+  **Before you start**
+
+  - The connector is in Production. Development connectors have no schedule at all - see [Sync a Development Connector](/how-to/sync-control/sync-a-development-connector).
+</Info>
+
+## Steps
+
+<Steps>
+  <Step title="Work out the cadence you need">
+    | Cadence | Fits |
+    | --- | --- |
+    | 6 hours | Same-day propagation - eligibility, enrolment, onboarding |
+    | 24 hours (default) | Most workflows |
+    | Weekly | Reference data that changes rarely, or slow source systems |
+
+    Six hours is the shortest available. Faster is not always better: each sync pulls the full in-scope dataset from the source system, and some platforms are slow or rate-limit aggressively enough that shorter cadences cause failures rather than fresher data.
+
+    **Result:** A target cadence.
+  </Step>
+
+  <Step title="Request the change">
+    Send support the connector IDs and the cadence.
+
+    **Result:** Support confirms once applied.
+  </Step>
+
+  <Step title="Confirm the new rhythm">
+    After the next scheduled run, check the connector's sync history and compare start times across runs.
+
+    **Result:** Runs are landing at the expected interval.
+  </Step>
+</Steps>
+
+## Cadence isn't the only lever
+
+If the goal is fresher data rather than a fixed schedule, two other approaches often fit better.
+
+**React to changes instead of polling.** Subscribe to sync-completed and data-change events so your pipeline runs when data actually lands - see [Trigger a Job When a Sync Completes](/how-to/sync-control/trigger-a-job-on-sync-complete).
+
+**Resync on demand.** When you need current data for one customer at a specific moment, [force a resync](/how-to/sync-control/force-a-resync) rather than raising the cadence for everyone.
+
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="Syncs are landing later each day">
+    Historically, run start times could drift because each run was scheduled relative to the previous one's completion. That was fixed in August 2026 - start times are now stable, and a forced resync is the way to change them deliberately.
+
+    If you're still seeing drift, report it with the connector ID and the start times of several consecutive runs.
+  </Accordion>
+
+  <Accordion title="Your processing runs on a cron and the sync time no longer aligns">
+    A cron job assumes the sync finished before your job starts, which stops being true as populations grow and sync duration changes.
+
+    Even if you keep the cron schedule, gate the job on the sync-completed event so it skips or defers when data isn't ready. This is the single most common cause of processing incomplete data.
+  </Accordion>
+
+  <Accordion title="A shorter cadence made syncs start failing">
+    Some source systems can't sustain a full extract every six hours, and failures increase rather than freshness. Move back to 24 hours and use forced resyncs for the cases that genuinely need same-day data.
+  </Accordion>
+
+  <Accordion title="You need different cadences for different customers">
+    Cadence is per connector, so different customers can run on different schedules. Include the specific connector IDs in the request rather than asking for an account-wide change.
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Sync Frequency](/api-reference/basics/sync-frequency)
+- [Production](/how-to/setup/environments/production)

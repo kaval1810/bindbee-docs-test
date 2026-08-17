@@ -92,7 +92,7 @@ One request tells you every connector's `sync_status`, `last_sync_start_time` an
 
 Non-negotiables:
 
-- **Verify the signature** against the raw request body. See [Validate webhook signatures](/how-to/validate-webhook-signatures).
+- **Verify the signature** against the raw request body. See [Validate webhook signatures](/how-to/reliability/validate-webhook-signatures).
 - **Respond within 10 seconds.** Acknowledge, then process on a queue.
 - **Deduplicate** on `sync.sync_id` + `webhook.event`.
 - **Register both environments.** Production webhooks never fire for Development connectors.
@@ -108,7 +108,7 @@ Non-negotiables:
 ## Related
 
 <CardGroup cols={2}>
-  <Card title="Handle Webhooks" icon="webhook" href="/how-to/handle-webhooks">
+  <Card title="Handle Webhooks" icon="webhook" href="/how-to/reliability/handle-webhooks">
     Build the receiver end to end.
   </Card>
   <Card title="Data Freshness" icon="clock" href="/explanation/data-freshness">

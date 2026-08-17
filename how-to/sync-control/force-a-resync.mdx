@@ -1,0 +1,98 @@
+---
+title: "Force a Resync"
+description: "Trigger an immediate sync on a connector instead of waiting for the next scheduled run."
+---
+
+A forced resync starts a sync now. Use it after a relink, after a permission change, after a transient failure, or whenever you need data before the next scheduled run.
+
+<Info>
+  **Before you start**
+
+  - You have the connector's `connector_token`.
+  - The connector isn't already syncing - check its sync history first.
+</Info>
+
+## Steps
+
+<Steps>
+  <Step title="Trigger the sync">
+    `POST` to the resync endpoint with the connector token in the header. The connector is identified by the token, so there's no request body.
+
+    <CodeGroup>
+      ```bash cURL
+      curl --request POST \
+        --url 'https://api.bindbee.dev/api/embedded/v1/connectors/resync' \
+        --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+        --header 'x-connector-token: <CONNECTOR_TOKEN>'
+      ```
+
+      ```python Python
+      import requests
+
+      requests.post(
+          "https://api.bindbee.dev/api/embedded/v1/connectors/resync",
+          headers={
+              "Authorization": f"Bearer {BINDBEE_API_KEY}",
+              "x-connector-token": CONNECTOR_TOKEN,
+          },
+      )
+      ```
+    </CodeGroup>
+
+    **Result:** A `200` and a new run in the connector's sync history.
+
+    <Tip>
+      From the dashboard, the equivalent control is on the connector's page. The API is the better route when you're resyncing several connectors or reacting to an event automatically.
+    </Tip>
+  </Step>
+
+  <Step title="Wait for it to finish before reading">
+    A resync is asynchronous - the `200` means the run started, not that data is ready. Reads during a sync return a partially updated dataset.
+
+    Gate downstream work on the sync-completed event rather than a fixed delay. See [Trigger a Job When a Sync Completes](/how-to/sync-control/trigger-a-job-on-sync-complete).
+
+    **Result:** Your pipeline reads a complete dataset.
+  </Step>
+
+  <Step title="Check the outcome">
+    Confirm the run completed rather than failing or partially completing - see [Monitor Sync Status](/how-to/troubleshooting/monitor-sync-status).
+
+    **Result:** You know whether the resync fixed the problem.
+  </Step>
+</Steps>
+
+## When to use this
+
+| Situation | Resync? |
+| --- | --- |
+| After the end user relinks | Yes - don't wait for the schedule |
+| After a permission is granted upstream | Yes - permission changes aren't retroactive |
+| A transient or size-related sync failure | Yes, once |
+| The same models fail every run | No - diagnose first, see [Diagnose a Partial Sync](/how-to/troubleshooting/diagnose-a-partial-sync) |
+| A Development connector needs fresh data | Yes - this is the normal mechanism |
+| You want data more often generally | No - change the cadence instead, see [Change Sync Frequency](/how-to/sync-control/change-sync-frequency) |
+
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="401 or 403">
+    `401` means the API key is missing or from the wrong environment. `403` means the token doesn't permit this operation. See [Authenticate a Request](/how-to/setup/authenticate-a-request).
+  </Accordion>
+
+  <Accordion title="The sync doesn't appear to start">
+    Check whether one is already running - a connector syncs one run at a time. Large populations can take substantially longer than expected, so a run may still be in progress from earlier.
+  </Accordion>
+
+  <Accordion title="You're resyncing repeatedly to work around a failure">
+    Repeated resyncing on a connector that fails the same way each time won't clear it and adds upstream load. Read the per-model breakdown instead - the failure is usually a permission gap or an extract-size limit, and neither is fixed by retrying.
+  </Accordion>
+
+  <Accordion title="You want to reset a connector rather than resync it">
+    Resync is the reset. Deleting and recreating a connector discards its sync history and record identities, changing the IDs your system has already stored - see [Rename or Delete a Connector](/how-to/connections/rename-or-delete-a-connector).
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Force Resync a Connector](/api-reference/connectors/resync-connector)
+- [Sync Frequency](/api-reference/basics/sync-frequency)

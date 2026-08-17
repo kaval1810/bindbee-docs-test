@@ -119,7 +119,7 @@ A sync rewrites the records it processed, whether or not their business values c
 
 This is why `modified_after` is an *inclusive* filter - safe for correctness (you will not miss changes) but not a promise of minimality (you may receive records that look identical). Your ingest path must be an idempotent upsert.
 
-See [Field semantics](/explanation/field-semantics) and [Filtering with `modified_after`](/how-to/filter-with-modified-after).
+See [Field semantics](/explanation/field-semantics) and [Filtering with `modified_after`](/how-to/reading-data/filter-with-modified-after).
 
 ## When syncs fail
 
@@ -145,7 +145,7 @@ Things worth building deliberately:
 2. **Upsert on `id`, never insert.** You will see the same record repeatedly.
 3. **Keep a watermark, not a full re-import.** Store your last successful run time and pass it as `modified_after`.
 4. **Handle "synced but empty" as a distinct state** from "not synced yet". A customer with genuinely zero employees and a customer mid-first-sync look identical if you only look at `items`.
-5. **Don't resync on a timer.** It does not make data fresher than the vendor allows, and it burns rate limit. See [Force a resync](/how-to/force-a-resync).
+5. **Don't resync on a timer.** It does not make data fresher than the vendor allows, and it burns rate limit. See [Force a resync](/how-to/sync-control/force-a-resync).
 
 ## Related
 
