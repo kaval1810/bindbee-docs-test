@@ -1,0 +1,52 @@
+---
+title: "Write Payroll Deductions Back to Payroll"
+description: "Take a benefit election in your product and land it as a deduction line in the customer's payroll system."
+---
+
+This is the round trip behind most benefits products: read the enrolment, calculate the amount, write it to payroll, confirm it landed.
+
+## What you'll use
+
+**Models** - employee, benefit, employer benefit, employee payroll run, payroll run calendar
+**Events** - sync completed, data model change
+
+## Steps
+
+<Steps>
+  <Step title="Confirm the integration supports payroll writes">
+    [Check Which Writes an Integration Supports](/how-to/writing-data-back/check-write-support)
+  </Step>
+  <Step title="Read the employee's enrolment and plan">
+    [Read Benefits Data](/how-to/reading-data/read-benefits-data)
+  </Step>
+  <Step title="Establish the deduction code for that plan">
+    See Constraints below - this is configuration you own.
+  </Step>
+  <Step title="Check the next open pay period">
+    [Read Payroll and Timesheet Data](/how-to/reading-data/read-payroll-and-timesheet-data)
+  </Step>
+  <Step title="Fetch the write schema for this integration">
+    [Fetch a Write Schema from the Meta API](/how-to/writing-data-back/fetch-a-write-schema)
+  </Step>
+  <Step title="Write the deduction with an idempotency key">
+    [Create an Employee Payroll Run](/how-to/writing-data-back/create-an-employee-payroll-run)
+  </Step>
+  <Step title="Verify it landed in the intended period">
+    [Read Payroll and Timesheet Data](/how-to/reading-data/read-payroll-and-timesheet-data)
+  </Step>
+</Steps>
+
+## Constraints specific to this combination
+
+**Plan-to-deduction-code mapping is yours to own.** Nothing in either the benefits models or the payroll models connects a benefit plan to the deduction code that represents it in payroll. Codes are defined per customer in their payroll system and don't follow a standard. Establish the mapping with each customer explicitly during onboarding and store it against the connector. A wrong code posts a real deduction against the wrong plan, and it surfaces as a payroll discrepancy weeks later rather than as an API error.
+
+**Plan year cannot be derived from the payroll date.** Payroll runs carry period and check dates; benefits carry coverage and effective dates. A deduction paid in January can belong to the prior plan year because payroll timing and plan year boundaries don't align. Assign the plan year from the benefit's effective dates, never from the payment date.
+
+**The cut-off is invisible through the API.** Payroll closes for processing before the pay date, and that deadline is the customer's operational schedule, not a field you can read. A write submitted after close is either rejected or silently applied to the next period. Agree the deadline per customer and treat missed changes as catch-up adjustments in the following period rather than assuming a retroactive edit is possible.
+
+**Sync latency sits between election and write.** An election made in the HRIS isn't visible to you until the connector syncs, so the usable window between election and payroll cut-off is shorter than it appears. Where timing is tight, [force a resync](/how-to/sync-control/force-a-resync) rather than waiting for the schedule.
+
+## Related
+
+- [Read Benefits Data](/how-to/reading-data/read-benefits-data)
+- [Create an Employee Payroll Run](/how-to/writing-data-back/create-an-employee-payroll-run)

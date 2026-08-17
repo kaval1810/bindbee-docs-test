@@ -1,0 +1,48 @@
+---
+title: "Cascade a Termination Downstream"
+description: "React to an employee leaving by revoking access, ending coverage, and notifying downstream vendors."
+---
+
+## What you'll use
+
+**Models** - employee, employment, benefit, dependent benefit
+**Events** - employee model change, sync completed, sync error
+
+## Steps
+
+<Steps>
+  <Step title="Subscribe to employee change events">
+    [Choose Webhook Events](/how-to/reliability/choose-webhook-events)
+  </Step>
+  <Step title="Fetch the changed employees by ID">
+    [Filter and Narrow a Collection](/how-to/reading-data/filter-and-narrow-a-collection)
+  </Step>
+  <Step title="Read status and termination date">
+    [Read Employee Data](/how-to/reading-data/read-employee-data)
+  </Step>
+  <Step title="Read the associated coverage">
+    [Read Benefits Data](/how-to/reading-data/read-benefits-data)
+  </Step>
+  <Step title="Reconcile periodically to catch what events missed">
+    [Filter with modified_after](/how-to/reading-data/filter-with-modified-after)
+  </Step>
+</Steps>
+
+## Constraints specific to this combination
+
+**Terminal status is not one value.** `INACTIVE`, `RETIRED`, and `DECEASED` are all departures with different downstream handling, and `INACTIVE_EXTERNAL` covers contractors ending an engagement. Matching only on `INACTIVE` misses real terminations. Equally, `LEAVE` is not a termination and must not trigger offboarding - an employee on parental leave whose access is revoked is a support escalation.
+
+**Future-dated terminations arrive early.** Many HRIS platforms record a termination when it's entered, with an effective date weeks out. Acting on the status change rather than the date revokes access before the person's last day. Gate every action on the termination date, and schedule rather than execute on arrival.
+
+**Terminations are frequently reversed.** Entered in error, rescinded resignations, and rehires within the same period all occur. Where possible make offboarding reversible for a window rather than destructive on arrival - and note that a rehire may return as a new employment on the same employee, or a new employee entirely, depending on the platform. See [Trace an Unexpected or Duplicate Record](/how-to/troubleshooting/trace-an-unexpected-record).
+
+**Coverage ends on its own schedule.** Benefit end dates are set separately from the termination date, often to the end of the month. Don't infer coverage loss from employment status - read the benefit's end date.
+
+**A missed event is silent.** Terminations are low-volume, so a lost webhook delivery produces no visible gap. Since exhausted deliveries are never redelivered - see [Recover a Missed Webhook Delivery](/how-to/reliability/recover-a-missed-delivery) - run a periodic reconciliation query for recently terminated employees rather than relying on events alone. This is the one workflow where the reconciliation pass is not optional.
+
+**Some platforms stop returning terminated records entirely.** Where that happens, disappearance is the only signal, and it's indistinguishable from a sync or permission problem. Confirm the platform's behaviour before treating absence as a departure - see [Trace a Missing Record](/how-to/troubleshooting/trace-a-missing-record).
+
+## Related
+
+- [Read Employee Data](/how-to/reading-data/read-employee-data)
+- [Detect COBRA Qualifying Events](/how-to/guides/detect-cobra-qualifying-events)

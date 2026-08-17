@@ -1,0 +1,53 @@
+---
+title: "Sync Voluntary Benefits Elections and Deductions"
+description: "Read voluntary benefit elections and write the corresponding employee-paid deductions to payroll."
+---
+
+<Warning>
+  Assembled from the available API surface rather than from implemented customer integrations. This guide depends on payroll write support, which expands model by model - confirm availability for your target integrations first.
+</Warning>
+
+## What you'll use
+
+**Models** - employee, benefit, employer benefit, employee payroll run
+**Events** - data model change, sync completed
+
+## Steps
+
+<Steps>
+  <Step title="Confirm payroll write support for the integration">
+    [Check Which Writes an Integration Supports](/how-to/writing-data-back/check-write-support)
+  </Step>
+  <Step title="Read voluntary elections">
+    [Read Benefits Data](/how-to/reading-data/read-benefits-data)
+  </Step>
+  <Step title="Subscribe to election changes">
+    [Choose Webhook Events](/how-to/reliability/choose-webhook-events)
+  </Step>
+  <Step title="Fetch the write schema">
+    [Fetch a Write Schema from the Meta API](/how-to/writing-data-back/fetch-a-write-schema)
+  </Step>
+  <Step title="Write the deduction with an idempotency key">
+    [Create an Employee Payroll Run](/how-to/writing-data-back/create-an-employee-payroll-run)
+  </Step>
+  <Step title="Reconcile deductions against elections">
+    [Reconcile Premium Billing](/how-to/guides/reconcile-premium-billing)
+  </Step>
+</Steps>
+
+## Constraints specific to this combination
+
+**Voluntary plans may not appear as benefits at all.** Accident, critical illness, legal, pet, and identity products are sometimes carried in the HRIS as generic deduction lines with no corresponding benefit record - the election lives with the carrier or the broker. Check whether the plans you need are present as employer benefits per integration before assuming the read side exists. Where they aren't, the election has to come from your own system and this becomes a write-only workflow.
+
+**Employee-paid means the full amount, and it varies more.** Voluntary premiums frequently depend on age, coverage amount, and tobacco status, so the deduction differs per employee and changes at age-band boundaries mid-year. A deduction written once at enrolment will drift out of date without a scheduled recalculation.
+
+**Elections change outside open enrolment.** Voluntary products often permit changes and cancellations year-round. A workflow that writes deductions once per plan year will miss mid-year cancellations, which produces the worst outcome available: continuing to deduct for coverage the employee cancelled.
+
+**Cancellation is often absence, not a status.** A cancelled election commonly disappears from the benefits data rather than changing state. No change event fires for a record that no longer exists, so a periodic reconciliation of active deductions against current elections is required - events alone will not catch it. See [Filter with modified_after](/how-to/reading-data/filter-with-modified-after) for why this can't be done incrementally.
+
+**Deduction codes are per product and per customer.** Each voluntary product needs its own code mapping, and the set is larger and changes more often than for core medical. Treat the mapping as configuration you maintain per connector - see [Write Payroll Deductions Back to Payroll](/how-to/guides/write-payroll-deductions-back).
+
+## Related
+
+- [Create an Employee Payroll Run](/how-to/writing-data-back/create-an-employee-payroll-run)
+- [Reconcile Premium Billing](/how-to/guides/reconcile-premium-billing)

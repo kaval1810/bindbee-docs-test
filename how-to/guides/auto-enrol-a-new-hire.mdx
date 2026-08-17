@@ -1,0 +1,48 @@
+---
+title: "Auto-Enrol a New Hire"
+description: "Detect a new employee and start their benefits enrolment without acting on the entire existing workforce."
+---
+
+## What you'll use
+
+**Models** - employee, employment, employer benefit, benefit
+**Events** - employee model change, sync completed
+
+## Steps
+
+<Steps>
+  <Step title="Subscribe to employee change events">
+    [Choose Webhook Events](/how-to/reliability/choose-webhook-events)
+  </Step>
+  <Step title="Separate genuine new hires from updates">
+    [Distinguish Created from Modified Records](/how-to/reliability/distinguish-created-from-modified)
+  </Step>
+  <Step title="Fetch the new employees by ID">
+    [Filter and Narrow a Collection](/how-to/reading-data/filter-and-narrow-a-collection)
+  </Step>
+  <Step title="Read start date and employment details">
+    [Read Employee Data](/how-to/reading-data/read-employee-data)
+  </Step>
+  <Step title="Read the plans available to them">
+    [Read Benefits Data](/how-to/reading-data/read-benefits-data)
+  </Step>
+</Steps>
+
+## Constraints specific to this combination
+
+**The first sync will look like everyone was hired at once.** When a connector is first connected, every employee is new to you. Without a guard, this triggers enrolment workflows for the entire workforce - the failure mode is a welcome email to several thousand existing employees, and it is not recoverable.
+
+Handle the initial sync as a bulk import that establishes baseline state without triggering per-employee workflows, then switch to event-driven handling. `sync.sync_name` increments per run, which is one way to recognise the first. The same applies after a [forced resync](/how-to/sync-control/force-a-resync).
+
+**New in Bindbee is not the same as newly hired.** A record can appear because the employee was just hired, because they came into scope after a permission or configuration change, or because a prior sync failed to load them. Check the start date rather than treating first-appearance as a hire.
+
+**Pre-start records arrive before the person does.** Future-dated hires are commonly entered weeks in advance and carry `PENDING`. That's useful - it's the window in which enrolment paperwork should happen - but it means acting on arrival can start a workflow for someone who hasn't joined and may never join. Offers are withdrawn. Gate on start date, and handle the `PENDING` to `ACTIVE` transition as a separate signal.
+
+**Eligibility isn't in the employee model.** Waiting periods, hours thresholds, and class-based eligibility rules live in the customer's benefits configuration, not in anything you can read. You can read the start date and employment type; you cannot read "eligible on 1 October". Agree the rules per customer and compute eligibility yourself.
+
+**The window is short and sync latency eats it.** Enrolment windows typically run 30 days from hire, and a 24-hour cadence plus your own processing interval consumes a meaningful share before you begin. Measure the gap between hire date and first contact for a real customer before assuming the schedule is adequate.
+
+## Related
+
+- [Distinguish Created from Modified Records](/how-to/reliability/distinguish-created-from-modified)
+- [Read Employee Data](/how-to/reading-data/read-employee-data)

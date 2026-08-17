@@ -202,6 +202,24 @@
               "how-to/troubleshooting/trace-an-unexpected-record",
               "how-to/troubleshooting/reconcile-record-counts"
             ]
+          },
+          {
+            "group": "End-to-End Guides",
+            "icon": "route",
+            "pages": [
+              "how-to/guides/write-payroll-deductions-back",
+              "how-to/guides/detect-cobra-qualifying-events",
+              "how-to/guides/cascade-a-termination-downstream",
+              "how-to/guides/sync-census-data-for-quoting",
+              "how-to/guides/sync-dependents-and-beneficiaries",
+              "how-to/guides/auto-enrol-a-new-hire",
+              "how-to/guides/calculate-ichra-allowances",
+              "how-to/guides/determine-eligibility-in-real-time",
+              "how-to/guides/reconcile-premium-billing",
+              "how-to/guides/manage-self-funded-enrollment",
+              "how-to/guides/feed-benefits-decision-support",
+              "how-to/guides/sync-voluntary-benefits"
+            ]
           }
         ]
       },

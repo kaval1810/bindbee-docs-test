@@ -1,0 +1,50 @@
+---
+title: "Reconcile Premium Billing"
+description: "Match what was deducted in payroll against what was enrolled, and explain the differences."
+---
+
+<Warning>
+  Assembled from the available API surface rather than from implemented customer integrations. Confirm model coverage against your target integrations before building.
+</Warning>
+
+## What you'll use
+
+**Models** - employee, benefit, employer benefit, employee payroll run, payroll run
+**Events** - sync completed
+
+## Steps
+
+<Steps>
+  <Step title="Read enrolments for the period">
+    [Read Benefits Data](/how-to/reading-data/read-benefits-data)
+  </Step>
+  <Step title="Read payroll deductions for the period">
+    [Read Payroll and Timesheet Data](/how-to/reading-data/read-payroll-and-timesheet-data)
+  </Step>
+  <Step title="Page both collections fully before comparing">
+    [Paginate Through Results](/how-to/reading-data/paginate-through-results)
+  </Step>
+  <Step title="Read only what changed on subsequent runs">
+    [Filter with modified_after](/how-to/reading-data/filter-with-modified-after)
+  </Step>
+  <Step title="Explain population differences before investigating">
+    [Reconcile Record Counts Against the Source](/how-to/troubleshooting/reconcile-record-counts)
+  </Step>
+</Steps>
+
+## Constraints specific to this combination
+
+**The join between a deduction and a plan is configuration you own.** Deduction lines carry customer-defined codes with no reference to the benefit plan they fund. Reconciliation depends entirely on the plan-to-code mapping you established during onboarding - see [Write Payroll Deductions Back to Payroll](/how-to/guides/write-payroll-deductions-back). Without it there is nothing to join on, and a wrong mapping produces a reconciliation that balances against the wrong plan.
+
+**Pick your date basis and hold it.** Benefits have coverage and effective dates; payroll has period start, period end, and check date. A period ending in December can pay in January, so reconciling on check date attributes coverage to the wrong year while reconciling on period end attributes cash to the wrong month. Choose based on whether you're reconciling coverage or cash, and use the benefit's effective dates - never the payment date - to assign the plan year.
+
+**Deduction frequency rarely matches premium frequency.** Premiums are usually monthly; payroll may be weekly, fortnightly, semi-monthly, or four-weekly. Months with an extra pay period, and customers who skip deductions on certain runs, both break a naive per-period comparison. Reconcile on period totals rather than per-run amounts.
+
+**Mid-period changes leave legitimate partial amounts.** A change in coverage tier, a mid-month start, or a termination produces a prorated deduction that will not match a full premium. Expect these and classify them rather than flagging them as discrepancies.
+
+**Arrears and catch-ups appear in the wrong period by design.** A missed deduction is commonly recovered in a later run, so that period shows more than the premium and the earlier one shows less. Reconcile across a window rather than a single period, or these net out as two errors instead of one correction.
+
+## Related
+
+- [Read Payroll and Timesheet Data](/how-to/reading-data/read-payroll-and-timesheet-data)
+- [Read Benefits Data](/how-to/reading-data/read-benefits-data)

@@ -1,0 +1,46 @@
+---
+title: "Sync Dependents and Beneficiaries"
+description: "Build an accurate picture of who is covered under each employee, not just who is recorded as a dependent."
+---
+
+## What you'll use
+
+**Models** - employee, dependent, dependent benefit, benefit, employer benefit
+**Events** - data model change, sync completed
+
+## Steps
+
+<Steps>
+  <Step title="Read dependents for the employee">
+    [Read Benefits Data](/how-to/reading-data/read-benefits-data)
+  </Step>
+  <Step title="Read dependent benefits for actual coverage">
+    [Read Benefits Data](/how-to/reading-data/read-benefits-data)
+  </Step>
+  <Step title="Page both collections fully">
+    [Paginate Through Results](/how-to/reading-data/paginate-through-results)
+  </Step>
+  <Step title="Map any missing attributes from the raw payload">
+    [Inspect the Raw Upstream Payload](/how-to/data-model/inspect-the-raw-upstream-payload)
+  </Step>
+  <Step title="Subscribe to changes across both models">
+    [Choose Webhook Events](/how-to/reliability/choose-webhook-events)
+  </Step>
+</Steps>
+
+## Constraints specific to this combination
+
+**Existence is not coverage.** A dependent record means the employee has recorded that person. A dependent benefit means they're enrolled in a specific plan. Employees commonly record dependents who are covered under a spouse's plan, or who were dropped at a prior enrolment. Build coverage from dependent benefits and use dependents only for demographics - counting dependents as covered lives is the standard cause of an eligibility file with too many people on it.
+
+**Dependents and beneficiaries are different concepts.** A dependent is covered under a health plan; a beneficiary receives a life or retirement benefit and is often neither covered nor a dependent. Most HRIS platforms model them separately or conflate them inconsistently. Check `raw_data` to see how the specific platform distinguishes them before assuming the dependent model covers both.
+
+**Coverage tier and dependent records disagree more often than they should.** An employee on an employee-plus-family tier with no dependent records is common - the tier was elected in benefits administration while dependent details live elsewhere, or were never entered. Treat a mismatch as a data-quality signal to surface, not as something to reconcile silently.
+
+**Relationship vocabularies are customer-specific.** Spouse, domestic partner, child, stepchild, and legal ward vary in naming and availability across platforms and customer configurations. Map them per connector rather than assuming a standard set.
+
+**Dependent changes fire under the parent employee.** A dependent added or removed may surface as a change on the employee rather than on the dependent model. Subscribe to data model change rather than employee model change alone, and re-read dependents whenever the employee changes - see [Filter with modified_after](/how-to/reading-data/filter-with-modified-after) for why the filter alone won't catch related-model changes.
+
+## Related
+
+- [Read Benefits Data](/how-to/reading-data/read-benefits-data)
+- [Get Dependents](/hris/dependents/get-dependents)
