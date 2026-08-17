@@ -3,7 +3,7 @@ title: "Read Benefits Data"
 description: "Fetch enrolments, plan definitions, and dependent coverage across the four benefits models without conflating them."
 ---
 
-Benefits data is spread across four models, and most benefits integration problems come from reading the wrong one. This page covers what's specific to them - for the general techniques, see [Paginate Through Results](/how-to/reading-data/paginate-through-results).
+Benefits data is spread across five models, and most benefits integration problems come from reading the wrong one. This page covers what's specific to them - for the general techniques, see [Paginate Through Results](/how-to/reading-data/paginate-through-results).
 
 <Info>
   **Before you start**
@@ -11,7 +11,7 @@ Benefits data is spread across four models, and most benefits integration proble
   - The connector has synced, and the customer's benefits module is in scope.
 </Info>
 
-## The four models
+## The five models
 
 | Model | Represents | Endpoint |
 | --- | --- | --- |
@@ -19,6 +19,9 @@ Benefits data is spread across four models, and most benefits integration proble
 | Benefit | An employee's enrolment in a plan | [Get Benefits](/hris/benefits/get-benefits) |
 | Dependent | A person covered under an employee | [Get Dependents](/hris/dependents/get-dependents) |
 | Dependent benefit | A dependent's coverage under a specific plan | [Get Dependent Benefits](/hris/dependent-benefits/get-dependent-benefits) |
+| Benefit coverage | The amount covered, per covered person | [Get Benefit Coverages](/hris/benefit-coverages/get-benefit-coverages) |
+
+Or, shortest: employer benefit for what is offered, benefit for who enrolled, dependent benefit for who else is covered, dependent for who they are, benefit coverage for how much.
 
 The distinction that matters most: an **employer benefit** is the plan definition, a **benefit** is one employee's enrolment in it. Counting benefits to find out how many plans a customer offers gives you an enrolment count.
 
@@ -80,6 +83,25 @@ Similarly, a **dependent** existing does not mean they're covered. Coverage is a
 
     **Result:** An accurate picture of who is covered, not just who exists.
   </Step>
+
+  <Step title="Read coverage amounts from the coverage model">
+    Amounts are not on the enrolment. Where a plan insures different sums for the employee, the spouse, and each child - life insurance is the common case - those amounts live on benefit coverage, one record per covered person.
+
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/benefit-coverages?benefit_id=<BENEFIT_ID>&page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    Each record carries `amount` and `currency`, plus `is_employee_covered` and `covered_dependents` to say who the amount applies to. Filter by `benefit_id` to get the coverages for one enrolment.
+
+    <Warning>
+      Reading only the enrolment produces a plausible but incomplete picture - it has the contribution and the tier, and no sums assured. This is the most common modelling error on benefits, and nothing in the response signals the gap.
+    </Warning>
+
+    **Result:** How much each covered person is insured for, not just who is enrolled.
+  </Step>
 </Steps>
 
 ## Assigning a plan year
@@ -116,5 +138,6 @@ The edge case that breaks naive implementations: a deduction paid in January can
 
 ## Related
 
+- [Benefits models](/concepts/benefits-models) - which model holds what, and why they're separate
 - [Get Benefits](/hris/benefits/get-benefits) · [Get Employer Benefits](/hris/employer-benefits/get-employer-benefits)
-- [Get Dependents](/hris/dependents/get-dependents) · [Get Dependent Benefits](/hris/dependent-benefits/get-dependent-benefits)
+- [Get Dependents](/hris/dependents/get-dependents) · [Get Dependent Benefits](/hris/dependent-benefits/get-dependent-benefits) · [Get Benefit Coverages](/hris/benefit-coverages/get-benefit-coverages)

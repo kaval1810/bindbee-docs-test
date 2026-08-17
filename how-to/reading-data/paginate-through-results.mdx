@@ -48,6 +48,8 @@ Every collection endpoint is paginated with `cursor` and `page_size`. Follow the
   <Step title="Loop until the cursor is exhausted">
     <CodeGroup>
       ```python Python
+      import time, requests
+
       def fetch_all(path, params, api_key, connector_token):
           headers = {
               "Authorization": f"Bearer {api_key}",
@@ -60,7 +62,13 @@ Every collection endpoint is paginated with `cursor` and `page_size`. Follow the
               if cursor:
                   params["cursor"] = cursor
               r = requests.get(f"https://api.bindbee.dev{path}",
-                               params=params, headers=headers)
+                               params=params, headers=headers, timeout=30)
+
+              if r.status_code == 429:
+                  # Wait, then retry the same cursor - don't advance
+                  time.sleep(float(r.headers.get("Retry-After", 1)))
+                  continue
+
               r.raise_for_status()
               body = r.json()
               records.extend(body["items"])
@@ -83,7 +91,15 @@ Every collection endpoint is paginated with `cursor` and `page_size`. Follow the
               Authorization: `Bearer ${apiKey}`,
               "X-Connector-Token": connectorToken,
             },
+            signal: AbortSignal.timeout(30_000),
           });
+
+          if (res.status === 429) {
+            // Wait, then retry the same cursor - don't advance
+            const wait = Number(res.headers.get("Retry-After") ?? 1);
+            await new Promise((r) => setTimeout(r, wait * 1000));
+            continue;
+          }
           if (!res.ok) throw new Error(`${res.status}`);
 
           const body = await res.json();

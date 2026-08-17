@@ -53,7 +53,7 @@ Both are omitted by default. Each is a query parameter you opt into per request.
   <Step title="Lower page_size when including raw data">
     `raw_data` carries the source system's full payload per record, which is frequently larger than the unified record itself. At `page_size=200` responses become slow and heavy.
 
-    Drop to 25–50 when including it, or filter to specific records instead.
+    Drop to 25-50 when including it, or filter to specific records instead.
 
     **Result:** Responses that return in reasonable time.
   </Step>
