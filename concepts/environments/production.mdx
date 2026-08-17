@@ -1,42 +1,47 @@
 ---
 title: "Production"
-description: "Bindbee Production environment for live customer integrations."
+description: "What changes when a connection carries real customer data: syncs run unattended, connectors are counted, and the key stops being something you can share."
 ---
 
-## Overview
+Production is where connections carrying a real customer's data live. The API surface is identical to Development, so nothing in your code changes when you move. What changes is that the system now acts on its own, and that the consequences of a mistake reach someone else's employees.
 
-The Production environment is used for running live customer integrations. It handles real customer data and is intended for use with customers actively operating in production.
+## Syncs run without you
 
-Connectors, their data, and logs are isolated from Development - but scope and custom field configuration are shared across both environments.
+A Production connector refreshes on a schedule - every 24 hours by default - with no request from you. That cadence can be changed, though not from the dashboard.
+
+The schedule is what makes Production usable and also what sets the ceiling on freshness. A record edited in the source system an hour ago is not visible until the next sync runs, and no delivery mechanism changes that. Webhooks tell you a sync finished sooner; they do not make it happen sooner.
+
+## Connectors are counted
+
+Every Production connector is counted and billed. This is where test connections become expensive: a connection created against a Production key to try something out is indistinguishable from a live one, and stays billed until somebody notices.
 
 <Warning>
-  Production API keys provide access to real customer data. Keep them secure and never expose them publicly.
+  Incomplete connectors - where the end user opened the link but never finished
+  authorising - sit in the same list as active ones. Counting without filtering
+  is the usual reason a connector count looks wrong.
 </Warning>
 
-See [Environments](/concepts/environments/overview) for what's shared vs. separate between Development and Production, plus how to manage and authenticate with your key.
+## The key is a production secret
 
-## Production API Key
+A Production key reaches real customer data across every connector in the environment. It belongs on a server, in a secret store, and nowhere else - not in a browser, not in a shared `.env`, not in a screenshot in a ticket.
 
-Your Production API key (`prod_api_key`) is used exclusively to access the Production environment. It cannot be used to access the Development environment.
+Regenerating one invalidates the old key immediately for every connector in the environment, so a rotation is a coordinated deploy rather than a quick fix.
 
-<Note>
-  Only Production API keys can be used to access the Production environment.
-  Development API keys are strictly limited to the Development environment.
- </Note>
+## Why it works this way
 
-## Sync Behavior
+Unattended syncing is the product. A customer connects once and their data keeps arriving, which is only true if nothing depends on someone remembering to press a button. That is worth the loss of control it implies - you cannot make Production hold still while you look at it.
 
-In the Production environment, data syncs are handled automatically.
+Counting connectors rather than API calls follows the shape of the value. One connector is one customer's data flowing continuously, which is the thing being paid for; a busy month of reads against that connector costs the customer no more.
 
-<Note>
-  Data synchronization occurs once every 24 hours by default. This sync frequency can be adjusted based on customization preferences.
-</Note>
+## What this means for you
 
-## Intended Usage
+- **Test in Development first.** A Production connector starts syncing the moment it is authorised, against a real system, on a schedule you did not ask for.
+- **Filter to active connectors before counting**, or incomplete ones inflate the number - see [Rename or Delete a Connector](/how-to/connections/rename-or-delete-a-connector).
+- **Move test connections out rather than deleting them.** Development is unbilled and preserves the connection - see [Move a Connector Between Environments](/how-to/setup/move-a-connector-between-environments).
+- **Plan a key rotation as a deploy.** Every service using the old key breaks the moment you regenerate.
 
-The Production environment is designed for:
-- Live customer integrations
-- Real-time and scheduled data synchronization
-- Stable, production-ready workflows
+## Related
 
-It should only be used once integrations have been fully tested in the Development environment.
+- [Change Sync Frequency](/how-to/sync-control/change-sync-frequency)
+- [Rate limits](/api-reference/basics/rate-limits)
+- [Environments](/concepts/environments/overview)
