@@ -74,8 +74,11 @@ Every request to the Bindbee unified API needs two headers: your organization's 
 | --- | --- | --- |
 | Unified data (`/api/hris/*`, `/api/ats/*`, `/api/lms/*`) | Required | Required |
 | [Passthrough](/api-reference/passthrough/make-passthrough-request) | Required | Required |
-| [Connectors](/api-reference/connectors/get-connectors) | Required | Not used |
+| [Force a resync](/api-reference/connectors/resync-connector) | Required | Required |
+| [Connector list](/api-reference/connectors/get-connectors) and [delete](/api-reference/connectors/delete-connector) | Required | Not used |
 | [Integrations](/api-reference/integrations/get-integrations) | Required | Not used |
+| [Custom fields](/custom-fields/api/list-custom-fields) and mappings | Required | Not used |
+| [Webhooks](/webhooks/overview) and delivery logs | Required | Not used |
 
 Connector-scoped endpoints act on one end user. Organization-scoped endpoints act across your whole account, so they take the API key alone.
 
