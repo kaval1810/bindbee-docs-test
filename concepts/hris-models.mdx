@@ -25,6 +25,8 @@ erDiagram
 
 Multiple employments arise from promotions recorded as new positions, transfers between departments or legal entities, moves between full-time and part-time, and rehires. Each is a segment of a career, and the history is often exactly what an HR system exists to preserve.
 
+{/* VERIFY: HrisEmployment in spec.json has no termination_date - only effective_date. termination_date and termination_reason are on HrisEmployeeResponse. Either the spec omits the field on employment, or termination is employee-level only and the current-employment selection rule below needs rewriting around effective_date. Confirm with engineering before this ships. */}
+
 <Warning>
 Do not read the first employment in the array and treat it as current. Ordering is not guaranteed to mean anything. The current employment is the one without a termination date, or where several are open, the one with the latest effective start.
 </Warning>
