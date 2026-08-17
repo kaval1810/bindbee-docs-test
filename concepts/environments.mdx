@@ -1,0 +1,64 @@
+---
+title: "Environments"
+description: "What Development and Production keep separate, what they share despite being separate, and why a connector's environment is fixed when it is created."
+---
+
+Every organisation has two environments: Development and Production. The intuition most people arrive with is that they are two copies of the same account, isolated from each other. Half of that is right, and the half that is wrong is the half that causes surprises.
+
+## What is separate
+
+Connectors and everything downstream of them. A connector belongs to exactly one environment, and so do its synced records, its logs, its sync history and its webhook deliveries. Nothing crosses.
+
+API keys are separate too, and this is the mechanism that enforces the rest. A key issued in Development reaches Development connectors only. Using the wrong one does not return a helpful error - it returns `401`, indistinguishable from a malformed key.
+
+Webhooks follow the same rule. A webhook registered against Production never fires for a Development connector, which is why a connector that changes environment stops delivering to the endpoint you had been watching.
+
+## What is shared
+
+Configuration. Scope and custom field definitions belong to the organisation, not to an environment, so a change made while testing in Development is a change in Production at the same moment.
+
+This is the part that surprises people. It is also the part worth relying on: the scope you settle and the mappings you build while testing are the ones that will be in force when you go live. You are not configuring twice.
+
+<Warning>
+  The corollary is that a scope change made during testing narrows or widens
+  what Production requests immediately, on connectors carrying live customer
+  data. Scope is not a Development sandbox.
+</Warning>
+
+## How an environment gets decided
+
+At creation, and only at creation. Whichever route creates the connector settles it: a Magic Link generated from the dashboard takes the environment the dashboard is in, and a link token created from your backend takes the environment of the API key that created it.
+
+A connector can be moved afterwards. The authorisation survives, the end user is not involved, and record identities are preserved - but the switch is handled by the Bindbee team rather than a control in the dashboard.
+
+## What differs in behaviour
+
+| | Development | Production |
+| --- | --- | --- |
+| Automatic sync | None - every sync is triggered | Scheduled, 24 hours by default |
+| Connectors | Unlimited | Counted |
+| Billing | Not billed | Billed per connector |
+
+The sync difference is the one that reads as a bug. A Development connector returns whatever its last triggered sync produced, indefinitely, with nothing in the response indicating the data is old.
+
+## Why it works this way
+
+The separation exists so that testing against a sandbox tenant cannot touch live customer data, and so that a mistake made while integrating is contained. That argues for isolating connectors, records and keys, which is what happens.
+
+Configuration is not isolated because it describes your product rather than an environment. The fields your application reads, and the custom mappings it depends on, are properties of what you are building - not of where you happen to be testing. Duplicating them per environment would mean configuring twice and drifting the moment someone changed one and not the other. The trade is that configuration has no staging step, and that is a real cost paid deliberately.
+
+Automatic syncs are absent from Development because scheduled extracts against a customer's system are the expensive part of the product, and running them unattended for connectors nobody is watching benefits no one.
+
+## What this means for you
+
+- **Decide the environment before you create the connection**, since it is settled at creation - see [Choose an Environment](/how-to/setup/choose-an-environment).
+- **Treat a wrong environment as recoverable, not fatal.** The connection is retained and the customer is not asked to reconnect - see [Move a Connector Between Environments](/how-to/setup/move-a-connector-between-environments).
+- **Expect stale data in Development** unless you trigger a sync - see [Sync a Development Connector](/how-to/sync-control/sync-a-development-connector).
+- **Register webhooks in both environments** if you rely on sync events while testing and in production.
+- **Plan scope before testing**, because the scope you set applies to live connectors immediately.
+
+## Related
+
+- [Choose an Environment](/how-to/setup/choose-an-environment)
+- [Authentication](/api-reference/basics/authentication)
+- [Core concepts](/concepts/core-concepts)

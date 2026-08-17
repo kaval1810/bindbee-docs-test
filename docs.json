@@ -63,6 +63,7 @@
             "icon": "lightbulb",
             "pages": [
               "concepts/core-concepts",
+              "concepts/environments",
               "concepts/unified-model",
               "concepts/scope-and-permissions",
               "concepts/integration-versions",

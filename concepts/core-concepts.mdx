@@ -27,11 +27,11 @@ The integration-versus-connector distinction is the one that matters operational
 
 Above all of this sits your **organisation** - your company's account. Scope configuration and custom field definitions belong here, which is why they apply across everything below.
 
-Each organisation has two **environments**: development and production. They hold separate connectors and separate logs, so testing against a sandbox tenant never touches live customer data.
+Each organisation has two **environments**: Development and Production. They hold separate connectors, keys and logs, so testing against a sandbox tenant never touches live customer data.
 
-What they do not hold separately is configuration. Scope and custom fields are organisation-level, so a change made while testing in development is a change in production as well. This surprises people who expect environments to be fully independent, and it is worth internalising before you start configuring.
+What they do not hold separately is configuration. Scope and custom fields are organisation-level, so a change made while testing in Development is a change in Production as well. This surprises people who expect environments to be fully independent, and it is worth internalising before you start configuring.
 
-{/* VERIFY: dev-to-prod connector migration. Earlier documentation states connectors are strictly environment-separate; migration is now reportedly supported. Confirm before this section ships - Get Started Lesson 1's environments table depends on the same answer. */}
+A connector's environment is settled when it is created, but it is not permanent: it can be switched without the end user reconnecting, though not from the dashboard. [Environments](/concepts/environments) covers what each side holds and what a move does.
 
 ## Two tokens
 
