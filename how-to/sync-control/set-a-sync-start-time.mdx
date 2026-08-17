@@ -1,0 +1,84 @@
+---
+title: "Set a Connector's Sync Start Time"
+description: "Control when in the day a connector's scheduled sync runs, so data lands before your processing window."
+---
+
+Cadence determines how often a connector syncs; start time determines when in the day. If your own processing runs on a schedule, the two need to line up - data that lands after your job runs is a day late.
+
+<Warning>
+  Setting a start time is currently a support request, not a dashboard control.
+
+  {/* VERIFY: confirm whether a self-serve control has shipped since Aug 2026. */}
+</Warning>
+
+<Info>
+  **Before you start**
+
+  - The connector is in Production. Development connectors have no schedule - see [Sync a Development Connector](/how-to/sync-control/sync-a-development-connector).
+  - You know your own processing window.
+</Info>
+
+## Steps
+
+<Steps>
+  <Step title="Work backwards from your processing window">
+    Pick a start time that leaves room for the sync to finish before your job runs.
+
+    Duration scales with population size and with how many upstream calls each record costs, so a large customer can take substantially longer than a small one on the same integration. Leave more margin than the current duration suggests - populations grow, and the margin is what absorbs it.
+
+    **Result:** A target start time with headroom.
+  </Step>
+
+  <Step title="Check the current pattern">
+    Open the connector's sync history and note the start times of several consecutive runs - see [Monitor Sync Status](/how-to/troubleshooting/monitor-sync-status).
+
+    **Result:** The current rhythm, and evidence if it's inconsistent.
+  </Step>
+
+  <Step title="Request the change">
+    Send support the connector IDs, the desired start time, and the timezone.
+
+    **Result:** Support confirms once applied.
+  </Step>
+
+  <Step title="Verify across several runs">
+    Check start times over a few days, not one. A single run landing on time doesn't confirm a stable schedule.
+
+    **Result:** Consistent start times.
+  </Step>
+</Steps>
+
+## The better fix for the underlying problem
+
+Aligning a sync to a fixed clock is inherently fragile. Sync duration changes as populations grow, source systems slow down under their own load, and a run that finishes comfortably today can overrun in six months. Tightening the schedule doesn't remove the race - it narrows it.
+
+Gating your job on the sync-completed event removes it entirely, and works regardless of when the sync happens to start or how long it takes. See [Trigger a Job When a Sync Completes](/how-to/sync-control/trigger-a-job-on-sync-complete).
+
+Even if you keep the schedule, recording the last completion timestamp per connector lets your job skip customers whose data hasn't refreshed - which is the failure that actually costs something.
+
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="Start times drift later each day">
+    Runs were previously scheduled relative to the previous run's completion, which accumulated drift over time. That was corrected in August 2026.
+
+    If you still see it, report the connector ID with start times from several consecutive runs - the pattern is what makes it diagnosable.
+  </Accordion>
+
+  <Accordion title="The sync starts on time but finishes after your job">
+    A duration problem, not a start-time problem. Moving the start earlier buys margin now but not permanently. Gate on the completion event instead.
+  </Accordion>
+
+  <Accordion title="Different customers need different times">
+    Start time is per connector, so different customers can run on different schedules. Include the specific connector IDs rather than requesting an account-wide change.
+  </Accordion>
+
+  <Accordion title="You need data at a specific moment, not on a schedule">
+    [Force a resync](/how-to/sync-control/force-a-resync) for one-off freshness rather than reshaping the schedule around an occasional need.
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Sync Frequency](/api-reference/basics/sync-frequency)
+- [Change Sync Frequency](/how-to/sync-control/change-sync-frequency)

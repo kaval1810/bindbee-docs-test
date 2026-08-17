@@ -1,0 +1,86 @@
+---
+title: "Sync a Development Connector"
+description: "Refresh a Development connector's data, which never happens automatically."
+---
+
+Development connectors do not sync on a schedule. Their data is whatever the last triggered sync produced, so it stays frozen until you act.
+
+This is the single most common source of "the data looks stale" during development.
+
+<Info>
+  **Before you start**
+
+  - You have the connector's `connector_token`.
+</Info>
+
+## Steps
+
+<Steps>
+  <Step title="Trigger the sync">
+    ```bash
+    curl --request POST \
+      --url 'https://api.bindbee.dev/api/embedded/v1/connectors/resync' \
+      --header 'Authorization: Bearer <BINDBEE_DEV_API_KEY>' \
+      --header 'x-connector-token: <CONNECTOR_TOKEN>'
+    ```
+
+    Use the Development API key. A Production key returns `401` against a Development connector.
+
+    The dashboard control on the connector's page does the same thing.
+
+    **Result:** A run appears in the connector's sync history.
+  </Step>
+
+  <Step title="Wait for it to finish">
+    The response means the run started, not that data is ready. Check the sync history, or subscribe to sync events on a **Development** webhook - a Production webhook receives nothing for these connectors.
+
+    **Result:** A completed run.
+  </Step>
+
+  <Step title="Read the refreshed data">
+    Call with the Development key and the connector token.
+
+    **Result:** Data as of the sync you just triggered.
+  </Step>
+</Steps>
+
+## Making this less painful during development
+
+**Sync after changing anything upstream.** Edit a record in the sandbox HRIS, then resync before checking. Without that step you're reading the previous state and will conclude the change didn't propagate.
+
+**Sync after scope or mapping changes.** Neither applies retroactively. A new custom field returns nothing until a sync populates it - see [Map a Custom Field from the Dashboard](/how-to/data-model/map-a-custom-field-from-the-dashboard).
+
+**Script it.** A resync call at the start of an integration test suite removes a whole category of confusing failures.
+
+**Don't emulate production cadence.** Repeatedly resyncing to simulate a schedule loads the source system's sandbox, which is usually rate-limited more aggressively than production.
+
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="401 on the resync call">
+    Wrong environment key. Development connectors need the Development key - see [Authenticate a Request](/how-to/setup/authenticate-a-request).
+  </Accordion>
+
+  <Accordion title="The sync completes but data is unchanged">
+    Confirm the change was saved in the source system, and that the field is in scope for this connector - see [Restrict Which Models and Fields Sync](/how-to/data-model/restrict-models-and-fields).
+
+    Some sandbox environments also lag their own UI, so a change can be visible in their interface before their API returns it.
+  </Accordion>
+
+  <Accordion title="No webhook fired for the sync">
+    Check the webhook's type is Development. This is the most common webhook mistake during development - a Production webhook is silent for every Development connector.
+  </Accordion>
+
+  <Accordion title="You want a Development connector to sync automatically">
+    Not available. Automatic syncing is a Production behaviour. If a connection needs unattended syncing it belongs in Production - see [Move a Connector Between Environments](/how-to/setup/move-a-connector-between-environments).
+  </Accordion>
+
+  <Accordion title="Your test data is drifting from what production customers have">
+    Sandbox tenants rarely mirror real configuration - missing modules, empty manager hierarchies, no dependents. Validate mappings against at least one real connector before relying on them.
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Development](/how-to/setup/choose-an-environment)
+- [Force Resync a Connector](/api-reference/connectors/resync-connector)

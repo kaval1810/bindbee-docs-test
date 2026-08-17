@@ -1,0 +1,111 @@
+---
+title: "Handle API Errors"
+description: "Interpret Bindbee's error responses and build retry behaviour that doesn't make things worse."
+---
+
+Errors fall into three groups: fix the request, back off and retry, or act on the connection. Treating them uniformly - retrying everything, or failing on everything - causes the two most common integration problems.
+
+<Info>
+  **Before you start**
+
+  - You can log response status, headers, and body. Status alone rarely identifies the cause.
+</Info>
+
+## Steps
+
+<Steps>
+  <Step title="Classify the status">
+    | Status | Meaning | Retry? |
+    | --- | --- | --- |
+    | `400` | Malformed request or invalid parameter | No - fix the request |
+    | `401` | Missing, malformed, or wrong-environment API key | No - fix credentials |
+    | `403` | Valid credentials without access to this resource | No - see below |
+    | `404` | Resource doesn't exist for this connector | No |
+    | `422` | Validation failed - usually a write body | No - fix the body |
+    | `429` | Rate limit exceeded | Yes, after `Retry-After` |
+    | `5xx` | Server-side | Yes, with backoff |
+
+    Retrying a `4xx` other than `429` will never succeed and consumes the connector's rate limit while failing.
+
+    **Result:** You know whether retrying is meaningful.
+  </Step>
+
+  <Step title="Handle 429 using the headers">
+    Every response carries rate limit headers, not just the failures:
+
+    | Header | Meaning |
+    | --- | --- |
+    | `X-RateLimit-Limit` | Requests allowed per minute - currently 200 |
+    | `X-RateLimit-Remaining` | Left in the current window |
+    | `X-RateLimit-Reset` | Unix timestamp when the window resets |
+    | `Retry-After` | Seconds to wait - on `429` responses |
+
+    Wait `Retry-After` seconds, then resume. Don't retry immediately, and don't use a fixed delay - the header is authoritative.
+
+    Better still, watch `X-RateLimit-Remaining` on successful responses and slow down before you hit zero. Throttling proactively is cheaper than recovering.
+
+    <Note>
+      The limit is **200 requests per minute per connector token**, not per API key. Each end user has an independent budget, so parallelising across customers is fine - hammering one customer's connector is what trips it.
+    </Note>
+
+    **Result:** Backoff driven by the server's own signal.
+  </Step>
+
+  <Step title="Distinguish the two causes of 403">
+    A `403` means the credentials are valid but don't permit this resource. Two very different situations produce it:
+
+    - **A connector token used against the wrong API category** - an HRIS connector called on `/api/ats/v1/*`. That's a bug in your code.
+    - **A model whose writes are disabled for that integration** - see [Check Which Writes an Integration Supports](/how-to/writing-data-back/check-write-support).
+
+    Neither is retryable, and neither is a source-system permission problem - those surface as sync failures or empty results rather than `403`. See [Resolve a Source-System Permission Error](/how-to/troubleshooting/resolve-a-permission-error).
+
+    **Result:** You route the failure to the right fix.
+  </Step>
+
+  <Step title="Back off exponentially on 5xx">
+    Retry with exponential backoff and jitter, capped at a few attempts. Jitter matters when many connectors fail together - without it, every client retries in lockstep.
+
+    **Result:** Transient failures recover without amplifying.
+  </Step>
+
+  <Step title="Log enough to diagnose">
+    Capture status, response body, `X-RateLimit-Remaining`, the connector ID, and the endpoint. A `403` without the endpoint is nearly undiagnosable later.
+
+    The dashboard's **Logs** view shows each request and response per connector with the error code, which is the fastest way to check a specific failure - see [Logs](/platform/logs).
+
+    **Result:** Failures you can investigate after the fact.
+  </Step>
+</Steps>
+
+## An empty result is not an error
+
+The failure mode that costs most is a `200` with no records. Permission gaps, out-of-scope models, and stalled syncs all present this way, and code that only branches on status treats it as "the customer has no employees".
+
+Where a zero count is implausible, check sync status rather than assuming absence - see [Trace a Missing Record](/how-to/troubleshooting/trace-a-missing-record).
+
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="401 with a key you're sure is correct">
+    Environment mismatch - a Development key against a Production connector returns `401` rather than a clearer error. See [Authenticate a Request](/how-to/setup/authenticate-a-request).
+
+    Also check the header includes the `Bearer ` prefix.
+  </Accordion>
+
+  <Accordion title="429 despite low request volume">
+    The limit is per connector. Several of your services calling the same connector share one budget, and a page walk at `page_size=50` uses four times the requests of one at 200.
+  </Accordion>
+
+  <Accordion title="Intermittent 5xx on one integration only">
+    May reflect the source system rather than Bindbee. Capture the connector ID and timestamps and report it - the pattern across connectors on the same integration is what identifies it.
+  </Accordion>
+
+  <Accordion title="422 on a write that matches the schema">
+    The schema is the structural contract; the source system enforces rules beyond it - codes that must exist in their configuration, closed periods, approval states. See [Fetch a Write Schema from the Meta API](/how-to/writing-data-back/fetch-a-write-schema).
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Rate Limits](/api-reference/basics/rate-limits)
+- [Logs](/platform/logs)

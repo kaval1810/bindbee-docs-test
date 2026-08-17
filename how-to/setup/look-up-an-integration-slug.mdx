@@ -1,0 +1,110 @@
+---
+title: "Look Up an Integration Slug"
+description: "Find the exact identifier for an integration, needed when creating connectors, scoping mappings, or filtering by platform."
+---
+
+Integrations are identified by a slug - `bamboohr`, `adp`, `sap-success-factors`. You need the exact value when creating a connector programmatically, scoping a custom field mapping to an integration, or matching on `integration_slug` in a webhook payload.
+
+Slugs are not derivable from the display name. `ADP Workforce Now` is `adp`; `Rippling` is `rippling_platform` while `rippling` is the legacy connector.
+
+<Info>
+  **Before you start**
+
+  - You know which platform you're targeting, and whether you need its HRIS, ATS, or LMS connector.
+</Info>
+
+## Steps
+
+<Steps>
+  <Step title="Fetch the list your organization can use">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/v1/lookup/integrations?category=HRIS' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>'
+    ```
+
+    ```json
+    {
+      "integrations": [
+        { "slug": "workday", "display_name": "Workday", "categories": ["HRIS"] }
+      ]
+    }
+    ```
+
+    This is filtered to what your organization actually has enabled, which makes it more useful than the published reference list - it won't return something you can't connect.
+
+    [Get Integrations](/api-reference/integrations/get-integrations) returns the same information with pagination if you need to enumerate.
+
+    **Result:** Valid slugs for your account.
+  </Step>
+
+  <Step title="Check the category">
+    Several platforms appear in more than one category with the same slug - `workday` covers HRIS, ATS, and LMS; `bamboohr` and `sap-success-factors` span HRIS and ATS.
+
+    The slug alone doesn't disambiguate. Always pair it with the category.
+
+    **Result:** An unambiguous integration reference.
+  </Step>
+
+  <Step title="Watch for API and SFTP variants">
+    Many platforms have both an API connector and a file-based one, with distinct slugs:
+
+    | Platform | API | SFTP |
+    | --- | --- | --- |
+    | ADP Workforce Now | `adp` | `adp_sftp` |
+    | Paylocity | `paylocity` | `paylocity_sftp` |
+    | Paycom | `paycom` | `paycom_sftp` |
+    | Rippling | `rippling_platform` | `rippling_sftp` |
+    | iSolved | - | `isolved_sftp` |
+
+    These behave differently. File-based connectors deliver point-in-time snapshots rather than API responses, which changes how absence and deletion are interpreted - see [Trace a Missing Record](/how-to/troubleshooting/trace-a-missing-record).
+
+    A mapping scoped to `paylocity` does not apply to `paylocity_sftp` connectors.
+
+    **Result:** The variant that matches the connection.
+  </Step>
+
+  <Step title="Read the slug from a connector you already have">
+    Webhook payloads carry `connector.integration_slug`, and it's on the connector's page in the dashboard.
+
+    That's the most reliable source when debugging - it tells you what a connector actually is, rather than what you assumed.
+
+    **Result:** The authoritative slug for an existing connection.
+  </Step>
+</Steps>
+
+## Where slugs are used
+
+| Context | Field |
+| --- | --- |
+| Creating a connector | `integration` in the link token payload |
+| Organization-scoped custom field mapping | `integration_slug` |
+| Inspecting a raw payload sample | `integration_slug` |
+| Webhook payloads | `connector.integration_slug` |
+
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="A slug is rejected as invalid">
+    Check hyphens versus underscores - both are used and the pattern isn't consistent. `sap-success-factors` and `google-workspace` use hyphens; `adp_sftp` and `oracle_hcm` use underscores.
+
+    Use the lookup endpoint rather than typing from a reference list.
+  </Accordion>
+
+  <Accordion title="An org-scoped custom field mapping isn't applying">
+    The mapping's `integration_slug` doesn't match the connector's. The SFTP-variant case is the usual cause. Confirm with the configuration endpoint - see [Scope a Mapping to One Connector or All](/how-to/data-model/scope-a-mapping).
+  </Accordion>
+
+  <Accordion title="The integration you need isn't listed">
+    It may not be enabled for your organization, or not yet supported. Ask support - the lookup endpoint reflects your entitlements, not the full catalogue.
+  </Accordion>
+
+  <Accordion title="The published list and the lookup endpoint disagree">
+    Trust the lookup endpoint. The reference list is maintained separately and can lag.
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Integrations](/integrations) - published reference list
+- [Get Integrations](/api-reference/integrations/get-integrations)

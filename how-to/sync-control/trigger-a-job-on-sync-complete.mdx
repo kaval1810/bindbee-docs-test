@@ -1,0 +1,87 @@
+---
+title: "Trigger a Job When a Sync Completes"
+description: "Run your processing when fresh data actually lands, instead of guessing with a cron schedule."
+---
+
+A scheduled job that reads on a clock either runs before the sync finishes - processing a half-loaded dataset - or waits longer than it needs to. Gating on the sync-completed event removes the guess.
+
+<Info>
+  **Before you start**
+
+  - You have a webhook receiving deliveries - see [Create a Webhook](/how-to/reliability/create-a-webhook).
+</Info>
+
+## Steps
+
+<Steps>
+  <Step title="Subscribe to Sync completed">
+    Select **Sync completed** on your webhook. Add **Sync error** too - you want to know when a run fails as well as when it succeeds. See [Choose Webhook Events](/how-to/reliability/choose-webhook-events).
+
+    **Result:** `connector_synced` arrives when a run finishes.
+  </Step>
+
+  <Step title="Acknowledge, then queue">
+    Return `200` immediately and enqueue the work. Never process inline.
+
+    Each delivery times out at 10 seconds, and a slow handler starts failing under exactly the load where a full sync just landed.
+
+    **Result:** Fast acknowledgement, work handed to a queue.
+  </Step>
+
+  <Step title="Resolve the connector to your customer">
+    Read `connector.origin_id` from the payload - that's the identifier you set when generating the Magic Link.
+
+    Use `sync.sync_type` to distinguish a scheduled run (`AUTOMATED`) from one you or support triggered (`MANUAL`), if your handling differs. `sync.sync_id` correlates this event with the earlier start event for the same run.
+
+    **Result:** You know whose data is ready and how the run was initiated.
+  </Step>
+
+  <Step title="Read incrementally in the job">
+    Combine the event with a stored watermark so you process only what changed - see [Filter with modified_after](/how-to/reading-data/filter-with-modified-after).
+
+    The event tells you data has landed; the filter tells you what's new. Neither alone is sufficient.
+
+    **Result:** A job that runs at the right time on the right subset.
+  </Step>
+
+  <Step title="Make the job idempotent">
+    The same sync can be reprocessed - a retried delivery, a resync, a replay after an outage. A forced resync in particular makes every record match your incremental filter.
+
+    Assume a job may run twice on overlapping data and design for it.
+
+    **Result:** Reprocessing is safe.
+  </Step>
+</Steps>
+
+## Keeping a cron and still fixing the problem
+
+You don't have to move your processing onto events to get the main benefit.
+
+Record the last `connector_synced` timestamp per connector when the event arrives. Have your existing cron job check that timestamp and skip or defer any customer whose data hasn't refreshed since the last run.
+
+That's a small change that stops the most common failure: processing a customer whose sync stalled days ago and treating the stale result as current.
+
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="Events arrive but data still looks incomplete">
+    Check whether the run was partial rather than clean - a partial sync loads some models and fails others, and reads against the succeeded ones look fine while relationships between them are incomplete. See [Diagnose a Partial Sync](/how-to/troubleshooting/diagnose-a-partial-sync).
+  </Accordion>
+
+  <Accordion title="Data-change events arrive before the sync completes">
+    Expected - a sync writes as it goes, so change events can fire mid-run. Use those to know *which* records changed and the completion event to know *when* it's safe to act.
+  </Accordion>
+
+  <Accordion title="Your job never runs for some customers">
+    Their sync isn't completing. A connector that has stopped syncing produces no completion event and your job silently skips them forever - which is why Sync error and Sync start matter alongside this. See [Detect a Connection That Needs Relinking](/how-to/reliability/detect-a-connection-that-needs-relinking).
+  </Accordion>
+
+  <Accordion title="Jobs pile up when many syncs finish together">
+    Connectors on the same cadence complete in clusters. Queue the work rather than processing on the webhook thread, and remember rate limits are per connector token - parallelising across customers is fine, hammering one is not.
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Webhooks](/webhooks/overview)
+- [Choose Webhook Events](/how-to/reliability/choose-webhook-events)

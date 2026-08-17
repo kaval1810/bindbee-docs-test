@@ -1,0 +1,110 @@
+---
+title: "Create a Connector Programmatically"
+description: "Generate connection links from your own application instead of creating them by hand in the dashboard."
+---
+
+Creating links in the dashboard works while you're onboarding customers one at a time. Once connection is part of your product's own signup or setup flow, generate them programmatically.
+
+<Warning>
+  The link token payload below is documented, but the endpoint path isn't published in the API reference.
+
+  {/* VERIFY: confirm the link token creation endpoint path, method, and response shape, then replace the placeholder below and add a reference page. */}
+</Warning>
+
+<Info>
+  **Before you start**
+
+  - You know the integration slug and category - see [Look Up an Integration Slug](/how-to/setup/look-up-an-integration-slug).
+  - You're using the API key for the environment the connector should live in - the environment is fixed at creation.
+</Info>
+
+## Steps
+
+<Steps>
+  <Step title="Build the link token payload">
+    ```json
+    {
+      "end_user_data": {
+        "org_name": "Acme Corp.",
+        "origin_id": "064e1cd7-49ad-4e6d-8005-7e4c92fe9675"
+      },
+      "category": "HRIS",
+      "integration": "bamboohr"
+    }
+    ```
+
+    | Field | Purpose |
+    | --- | --- |
+    | `org_name` | The customer's organisation name, shown in the dashboard |
+    | `origin_id` | **Your** identifier for this customer |
+    | `category` | `HRIS`, `ATS`, or `LMS` |
+    | `integration` | The integration slug |
+
+    **Result:** A payload identifying who is connecting and to what.
+  </Step>
+
+  <Step title="Set origin_id to something you can resolve">
+    This is the field that makes programmatic creation worth doing. Every webhook payload returns it as `connector.origin_id`, so an incoming sync or error event resolves to your customer record with no mapping table.
+
+    Use your own stable internal identifier - a customer or tenant ID, not an email or company name that can change.
+
+    **Result:** Events you can route without a lookup.
+  </Step>
+
+  <Step title="Create the link and deliver it">
+    Call the link token endpoint with your API key, then present the returned link to the customer - redirect to it, or embed it in your own onboarding flow.
+
+    **Result:** The customer authorises without you sending a link by hand.
+  </Step>
+
+  <Step title="Wait for the connector via webhook">
+    Connector creation completes when the customer finishes authorising, which may be minutes or days later. Don't poll.
+
+    Subscribe to sync events so you learn when the connection is live and has data - see [Choose Webhook Events](/how-to/reliability/choose-webhook-events). Match the incoming `origin_id` to your customer record.
+
+    **Result:** Your system learns about the connection when it's actually usable.
+  </Step>
+
+  <Step title="Store the connector token">
+    Read `connector_token` from the created connector and store it against your customer. It's what you pass as `X-Connector-Token` on every subsequent call - see [Authenticate a Request](/how-to/setup/authenticate-a-request).
+
+    **Result:** You can read and write for that customer.
+  </Step>
+</Steps>
+
+## Letting the customer choose the integration
+
+The payload names a single integration, so you decide which platform the link connects to before generating it.
+
+If your customers pick their own HRIS, either collect that choice in your UI first and generate the matching link, or use the hosted flow that presents the integration picker. The lookup endpoint gives you the list to render, filtered to what your organization can actually connect.
+
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="The integration slug is rejected">
+    Check hyphens versus underscores, and that the slug matches the category. Use the lookup endpoint rather than a hard-coded list - see [Look Up an Integration Slug](/how-to/setup/look-up-an-integration-slug).
+  </Accordion>
+
+  <Accordion title="The connector was created in the wrong environment">
+    The environment comes from the API key used to create the link. It can be switched without the customer reconnecting - see [Move a Connector Between Environments](/how-to/setup/move-a-connector-between-environments).
+  </Accordion>
+
+  <Accordion title="Connectors are created but never complete">
+    Customers opened the link and abandoned it. Incomplete connectors persist and inflate connector counts - filter to **Active Connectors** when reviewing, and follow up or delete them.
+  </Accordion>
+
+  <Accordion title="You generated two links for the same customer">
+    Two completed links produce two connectors, both billed in Production. To fix a broken connection, relink the existing connector rather than issuing a new link - see [Update Credentials After an Auth Failure](/how-to/connections/update-credentials).
+
+    Check for an existing connector by `origin_id` before generating.
+  </Accordion>
+
+  <Accordion title="You need to generate links in bulk">
+    Generate per customer rather than in one batch - each link is specific to one end user, and links generated far in advance are more likely to be stale by the time they're opened.
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Magic Link](/how-to/connections/generate-a-magic-link)
+- [Integrations](/integrations) - slugs and payload examples

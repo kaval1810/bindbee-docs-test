@@ -115,7 +115,9 @@
             "pages": [
               "how-to/setup/authenticate-a-request",
               "how-to/setup/choose-an-environment",
-              "how-to/setup/move-a-connector-between-environments"
+              "how-to/setup/move-a-connector-between-environments",
+              "how-to/setup/handle-api-errors",
+              "how-to/setup/look-up-an-integration-slug"
             ]
           },
           {
@@ -123,6 +125,7 @@
             "icon": "link",
             "pages": [
               "how-to/connections/generate-a-magic-link",
+              "how-to/connections/create-a-connector-programmatically",
               "how-to/connections/update-credentials",
               "how-to/connections/rename-or-delete-a-connector"
             ]
@@ -169,8 +172,11 @@
             "group": "Sync Control",
             "icon": "rotate-cw",
             "pages": [
+              "how-to/sync-control/change-sync-frequency",
+              "how-to/sync-control/set-a-sync-start-time",
               "how-to/sync-control/force-a-resync",
-              "how-to/sync-control/change-sync-frequency"
+              "how-to/sync-control/sync-a-development-connector",
+              "how-to/sync-control/trigger-a-job-on-sync-complete"
             ]
           },
           {
@@ -180,6 +186,8 @@
               "how-to/reliability/create-a-webhook",
               "how-to/reliability/choose-webhook-events",
               "how-to/reliability/validate-webhook-signatures",
+              "how-to/reliability/distinguish-created-from-modified",
+              "how-to/reliability/recover-a-missed-delivery",
               "how-to/reliability/detect-a-connection-that-needs-relinking"
             ]
           },
@@ -189,7 +197,10 @@
             "pages": [
               "how-to/troubleshooting/monitor-sync-status",
               "how-to/troubleshooting/diagnose-a-partial-sync",
-              "how-to/troubleshooting/resolve-a-permission-error"
+              "how-to/troubleshooting/resolve-a-permission-error",
+              "how-to/troubleshooting/trace-a-missing-record",
+              "how-to/troubleshooting/trace-an-unexpected-record",
+              "how-to/troubleshooting/reconcile-record-counts"
             ]
           }
         ]
