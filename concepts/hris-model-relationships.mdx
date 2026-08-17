@@ -87,7 +87,7 @@ Use `check_date` - not `end_date` - for anything cash-flow related. `run_type` s
 
 ## The benefits cluster
 
-This one deserves its own page - see [Benefits vs Employer Benefits vs Dependent Benefits](/explanation/benefits-models).
+This one deserves its own page - see [Benefits vs Employer Benefits vs Dependent Benefits](/concepts/benefits-models).
 
 The short version: `Benefit` and `DependentBenefit` both link back to the `EmployerBenefit` plan, and `BenefitCoverage` links to a `Benefit` plus the `Dependent`s it covers. Note that `DependentBenefit` links to the **plan**, not to the employee's `Benefit` row.
 
@@ -144,10 +144,10 @@ Comma-separated, no spaces. Square brackets restrict which fields come back on t
 ## Related
 
 <CardGroup cols={2}>
-  <Card title="Benefits Models" icon="list-tree" href="/explanation/benefits-models">
+  <Card title="Benefits Models" icon="list-tree" href="/concepts/benefits-models">
     The benefits cluster in full.
   </Card>
-  <Card title="Field Semantics" icon="circle-slash" href="/explanation/field-semantics">
+  <Card title="Field Semantics" icon="circle-slash" href="/concepts/field-semantics">
     Nulls, enums, and what modified_at really means.
   </Card>
 </CardGroup>

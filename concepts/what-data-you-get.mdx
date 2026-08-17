@@ -59,7 +59,7 @@ Fixing it is a conversation with the customer's admin, not a change on Bindbee's
 
 This gate is different from the other two in an important way: **the data is there.** It synced. It just has no unified field to live in, so it sits in `raw_data` and nowhere else.
 
-That makes it the only gate you can clear yourself, without touching scope and without asking your customer for anything - map the value as a [custom field](/explanation/custom-fields-mental-model) and it appears on the unified object.
+That makes it the only gate you can clear yourself, without touching scope and without asking your customer for anything - map the value as a [custom field](/concepts/custom-fields-mental-model) and it appears on the unified object.
 
 ## Which gate closed?
 
@@ -84,7 +84,7 @@ curl -G "https://api.bindbee.dev/api/hris/v1/employees" \
   Check for a completed sync before reading anything into an empty response. In
   Development nothing syncs on a schedule, so "empty" most often means "not yet
   synced" rather than any gate at all. See
-  [How syncing works](/explanation/how-syncing-works).
+  [How syncing works](/concepts/how-syncing-works).
 </Info>
 
 ## Why this is worth understanding rather than looking up
@@ -96,13 +96,13 @@ The design consequence is small and worth building early: **when a field your pr
 ## Related
 
 <CardGroup cols={2}>
-  <Card title="The Unified Model and Raw Data" icon="boxes" href="/explanation/unified-model-and-raw-data">
+  <Card title="The Unified Model and Raw Data" icon="boxes" href="/concepts/unified-model-and-raw-data">
     What normalization promises, and what it gives up.
   </Card>
-  <Card title="Field Semantics" icon="circle-slash" href="/explanation/field-semantics">
+  <Card title="Field Semantics" icon="circle-slash" href="/concepts/field-semantics">
     Diagnosing a null field, symptom by symptom.
   </Card>
-  <Card title="How Syncing Works" icon="rotate-cw" href="/explanation/how-syncing-works">
+  <Card title="How Syncing Works" icon="rotate-cw" href="/concepts/how-syncing-works">
     Why an empty response often means "not yet", not "never".
   </Card>
 </CardGroup>

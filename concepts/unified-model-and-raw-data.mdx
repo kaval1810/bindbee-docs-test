@@ -28,7 +28,7 @@ The third is the one worth sitting with. A unified model that carried every vend
 ## What to expect on a normalized record
 
 - **Field names** are Bindbee's, not the vendor's. A vendor field with no unified counterpart is left out.
-- **Enum values** match Bindbee's set where possible. Where a vendor's value doesn't match anything in the enum, you get the original string back instead of a wrong guess - so `"Garden Leave"` can show up where you expected `INACTIVE`. See [Field semantics](/explanation/field-semantics) for how to write code that survives it.
+- **Enum values** match Bindbee's set where possible. Where a vendor's value doesn't match anything in the enum, you get the original string back instead of a wrong guess - so `"Garden Leave"` can show up where you expected `INACTIVE`. See [Field semantics](/concepts/field-semantics) for how to write code that survives it.
 - **Relation fields** (`manager`, `company`, `employment`, etc.) hold Bindbee IDs, not the vendor's IDs - so you can follow a relation the same way regardless of which system the data came from.
 - **Missing fields** are `null`. `null` means *unknown*, not zero and not empty.
 
@@ -84,16 +84,16 @@ Custom fields are a **view over data Bindbee already synced**, not an extra fetc
 ## Related
 
 <CardGroup cols={2}>
-  <Card title="How Bindbee Decides What Data You Get" icon="database" href="/explanation/what-data-you-get">
+  <Card title="How Bindbee Decides What Data You Get" icon="database" href="/concepts/what-data-you-get">
     The three gates a field clears before it reaches you.
   </Card>
-  <Card title="Field Semantics" icon="circle-slash" href="/explanation/field-semantics">
+  <Card title="Field Semantics" icon="circle-slash" href="/concepts/field-semantics">
     Why a field is null, and why an enum holds a value that isn't in the enum.
   </Card>
-  <Card title="Custom Fields: The Mental Model" icon="network" href="/explanation/custom-fields-mental-model">
+  <Card title="Custom Fields: The Mental Model" icon="network" href="/concepts/custom-fields-mental-model">
     Why custom fields are a view, not a fetch.
   </Card>
-  <Card title="Passthrough: When & Why" icon="arrow-left-right" href="/explanation/passthrough-when-and-why">
+  <Card title="Passthrough: When & Why" icon="arrow-left-right" href="/concepts/passthrough-when-and-why">
     The escape hatch, and what it costs.
   </Card>
 </CardGroup>

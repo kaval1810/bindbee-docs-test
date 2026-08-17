@@ -79,7 +79,7 @@ Consequences worth internalising now:
 - Development connectors **do not** sync automatically. Trigger a sync yourself.
 - The first sync after linking takes longer than subsequent ones. Until it finishes, `GET /employees` legitimately returns an empty list.
 
-See [How syncing works](/explanation/how-syncing-works).
+See [How syncing works](/concepts/how-syncing-works).
 
 ## 6. Unified model - one schema across every connector
 
@@ -96,7 +96,7 @@ Every record Bindbee returns shares a common envelope:
 <Warning>
   `modified_at` is a *Bindbee* timestamp. It moves when a sync rewrites the
   record, which can happen even if no business field changed. See
-  [Field semantics](/explanation/field-semantics).
+  [Field semantics](/concepts/field-semantics).
 </Warning>
 
 List responses are cursor-paginated:
@@ -113,7 +113,7 @@ List responses are cursor-paginated:
 
 If your customer's system holds a value that Bindbee's unified schema does not carry, define a **custom field** and point a JMESPath expression at the raw upstream payload. Request it back with `include_custom_fields=true`.
 
-If you need a whole endpoint that has no unified equivalent, use [passthrough](/explanation/passthrough-when-and-why) instead.
+If you need a whole endpoint that has no unified equivalent, use [passthrough](/concepts/passthrough-when-and-why) instead.
 
 ## Quick glossary
 

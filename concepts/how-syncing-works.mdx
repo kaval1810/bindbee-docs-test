@@ -24,7 +24,7 @@ When you call `GET /api/hris/v1/employees`, Bindbee does **not** call BambooHR. 
 - Resilience when the vendor has an outage
 - One pagination and filtering model
 
-The trade-off is freshness: the API reflects the most recent sync, not the HRIS at this exact second. See [Data Freshness](/explanation/how-syncing-works) for how sync frequency determines how current that is.
+The trade-off is freshness: the API reflects the most recent sync, not the HRIS at this exact second. See [Data Freshness](/concepts/how-syncing-works) for how sync frequency determines how current that is.
 
 Almost every "why is Bindbee behaving strangely?" question resolves to a consequence of this one design decision.
 
@@ -95,7 +95,7 @@ A connector can be `status: COMPLETE` and `sync_status: Failed` - credentials fi
 <Warning>
   Never infer connection health from whether a data endpoint returned rows. Read
   the connector's `status` and `sync_status`. See
-  [Connector States & Lifecycle](/explanation/connector-lifecycle).
+  [Connector States & Lifecycle](/concepts/connector-lifecycle).
 </Warning>
 
 ## Environment differences
@@ -119,7 +119,7 @@ A sync rewrites the records it processed, whether or not their business values c
 
 This is why `modified_after` is an *inclusive* filter - safe for correctness (you will not miss changes) but not a promise of minimality (you may receive records that look identical). Your ingest path must be an idempotent upsert.
 
-See [Field semantics](/explanation/field-semantics) and [Filtering with `modified_after`](/how-to/reading-data/filter-with-modified-after).
+See [Field semantics](/concepts/field-semantics) and [Filtering with `modified_after`](/how-to/reading-data/filter-with-modified-after).
 
 ## When syncs fail
 
@@ -150,10 +150,10 @@ Things worth building deliberately:
 ## Related
 
 <CardGroup cols={2}>
-  <Card title="Data Freshness & Polling" icon="clock" href="/explanation/how-syncing-works">
+  <Card title="Data Freshness & Polling" icon="clock" href="/concepts/how-syncing-works">
     How current is the data, really?
   </Card>
-  <Card title="Connector States & Lifecycle" icon="route" href="/explanation/connector-lifecycle">
+  <Card title="Connector States & Lifecycle" icon="route" href="/concepts/connector-lifecycle">
     What each status means and how to recover.
   </Card>
 </CardGroup>

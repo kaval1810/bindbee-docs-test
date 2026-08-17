@@ -56,43 +56,43 @@
         ]
       },
       {
-        "tab": "Explanation",
+        "tab": "Concepts",
         "groups": [
           {
             "group": "Foundations",
             "icon": "lightbulb",
             "pages": [
-              "explanation/core-concepts",
-              "explanation/unified-model-and-raw-data",
-              "explanation/what-data-you-get"
+              "concepts/core-concepts",
+              "concepts/unified-model-and-raw-data",
+              "concepts/what-data-you-get"
             ]
           },
           {
-            "group": "Architecture & Sync Engine",
+            "group": "Sync engine",
             "icon": "network",
             "pages": [
-              "explanation/how-syncing-works",
-              "explanation/connector-lifecycle"
+              "concepts/how-syncing-works",
+              "concepts/connector-lifecycle",
+              "concepts/sftp-vs-api",
+              "concepts/webhooks-vs-polling"
             ]
           },
           {
-            "group": "Data Models",
+            "group": "Data models",
             "icon": "list-tree",
             "pages": [
-              "explanation/hris-model-relationships",
-              "explanation/benefits-models",
-              "explanation/field-semantics"
+              "concepts/hris-model-relationships",
+              "concepts/benefits-models",
+              "concepts/field-semantics"
             ]
           },
           {
-            "group": "Integration Patterns",
+            "group": "Extending & writing",
             "icon": "puzzle",
             "pages": [
-              "explanation/passthrough-when-and-why",
-              "explanation/custom-fields-mental-model",
-              "explanation/meta-api-schema-discovery",
-              "explanation/sftp-vs-api",
-              "explanation/webhooks-vs-polling"
+              "concepts/custom-fields-mental-model",
+              "concepts/meta-api-schema-discovery",
+              "concepts/passthrough-when-and-why"
             ]
           }
         ]
@@ -791,7 +791,7 @@
     },
     {
       "source": "/get-started/core-concepts",
-      "destination": "/explanation/core-concepts"
+      "destination": "/concepts/core-concepts"
     },
     {
       "source": "/get-started/set-up-your-environment",
@@ -823,7 +823,7 @@
     },
     {
       "source": "/custom-fields/overview",
-      "destination": "/explanation/custom-fields"
+      "destination": "/concepts/custom-fields"
     },
     {
       "source": "/custom-fields/dashboard",
@@ -844,6 +844,58 @@
     {
       "source": "/how-to/force-a-resync",
       "destination": "/how-to/sync-control/force-a-resync"
+    },
+    {
+      "source": "/explanation/benefits-models",
+      "destination": "/concepts/benefits-models"
+    },
+    {
+      "source": "/explanation/connector-lifecycle",
+      "destination": "/concepts/connector-lifecycle"
+    },
+    {
+      "source": "/explanation/core-concepts",
+      "destination": "/concepts/core-concepts"
+    },
+    {
+      "source": "/explanation/custom-fields-mental-model",
+      "destination": "/concepts/custom-fields-mental-model"
+    },
+    {
+      "source": "/explanation/field-semantics",
+      "destination": "/concepts/field-semantics"
+    },
+    {
+      "source": "/explanation/how-syncing-works",
+      "destination": "/concepts/how-syncing-works"
+    },
+    {
+      "source": "/explanation/hris-model-relationships",
+      "destination": "/concepts/hris-model-relationships"
+    },
+    {
+      "source": "/explanation/meta-api-schema-discovery",
+      "destination": "/concepts/meta-api-schema-discovery"
+    },
+    {
+      "source": "/explanation/passthrough-when-and-why",
+      "destination": "/concepts/passthrough-when-and-why"
+    },
+    {
+      "source": "/explanation/sftp-vs-api",
+      "destination": "/concepts/sftp-vs-api"
+    },
+    {
+      "source": "/explanation/unified-model-and-raw-data",
+      "destination": "/concepts/unified-model-and-raw-data"
+    },
+    {
+      "source": "/explanation/webhooks-vs-polling",
+      "destination": "/concepts/webhooks-vs-polling"
+    },
+    {
+      "source": "/explanation/what-data-you-get",
+      "destination": "/concepts/what-data-you-get"
     }
   ],
   "api": {
