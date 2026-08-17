@@ -19,11 +19,11 @@ A unified model has a fixed schema (e.g. an `employee` always exposes `first_nam
 You can manage Custom Fields in two ways. Both create the same underlying configuration and can coexist - pick whichever fits the task.
 
 <CardGroup cols={2}>
-  <Card title="Dashboard Configuration" icon="app-window" href="/how-to/configure-custom-fields-dashboard">
+  <Card title="Dashboard Configuration" icon="app-window" href="/custom-fields/dashboard">
     Visual flow inside the Bindbee Dashboard. Best for ad-hoc setup,
     exploring upstream payloads interactively, and one-off field changes.
   </Card>
-  <Card title="API Configuration" icon="code" href="/how-to/configure-custom-fields-api">
+  <Card title="API Configuration" icon="code" href="/how-to/data-model/configure-custom-fields-api">
     Programmatic flow for automation, infrastructure-as-code, replicating
     configuration across environments, or syncing with internal admin tools.
   </Card>
@@ -37,7 +37,7 @@ Once a field has at least one mapping that resolves on a connector, request it b
 GET https://api.bindbee.dev/api/hris/v1/employees?include_custom_fields=true
 ```
 
-Fields arrive under a `custom_fields` object, tagged `source: "API"` or `source: "DASHBOARD"` depending on how they were created - both behave identically and appear together in lookups and responses. See [Fields are opt-in on read](/explanation/custom-fields-mental-model#fields-are-opt-in-on-read) for the response shape, and [Failure modes](/explanation/custom-fields-mental-model#failure-modes) for why a field can come back as `"INVALID_JSON_PATH"` and how to catch it before it ships - via the dashboard's preview button or the API's [`/custom-fields/preview`](/how-to/configure-custom-fields-api#step-3-validate-the-jmespath-optional-but-recommended) endpoint.
+Fields arrive under a `custom_fields` object, tagged `source: "API"` or `source: "DASHBOARD"` depending on how they were created - both behave identically and appear together in lookups and responses. See [Fields are opt-in on read](/explanation/custom-fields-mental-model#fields-are-opt-in-on-read) for the response shape, and [Failure modes](/explanation/custom-fields-mental-model#failure-modes) for why a field can come back as `"INVALID_JSON_PATH"` and how to catch it before it ships - via the dashboard's preview button or the API's [`/custom-fields/preview`](/how-to/data-model/configure-custom-fields-api#step-3-validate-the-jmespath-optional-but-recommended) endpoint.
 
 ## Best Practices
 
@@ -60,7 +60,7 @@ Fields arrive under a `custom_fields` object, tagged `source: "API"` or `source:
 
 4. **Automation**
 
-   - Use the [API Configuration](/how-to/configure-custom-fields-api) flow to keep custom field configuration in version control or replicate it across environments (dev → staging → prod).
+   - Use the [API Configuration](/how-to/data-model/configure-custom-fields-api) flow to keep custom field configuration in version control or replicate it across environments (dev → staging → prod).
    - The `configuration` endpoint is a good health check - run it after provisioning a new connector to confirm every expected field has a mapping.
 
 For more details on writing JMESPath expressions, see the [JMESPath Documentation](https://jmespath.org/).

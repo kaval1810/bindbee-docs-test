@@ -12,7 +12,7 @@ A custom field is a saved JMESPath expression that plucks a value out of data Bi
 </Info>
 
 Everything below uses the API. It's also available as a visual flow in the
-dashboard - see [Dashboard Configuration](/how-to/configure-custom-fields-dashboard)
+dashboard - see [Dashboard Configuration](/custom-fields/dashboard)
 if you'd rather click through it, especially for one-off exploration.
 
 ## Before you start
@@ -27,7 +27,7 @@ curl -G "https://api.bindbee.dev/api/hris/v1/employees" \
   --data-urlencode "page_size=1"
 ```
 
-Not there? You need [passthrough](/how-to/use-passthrough) instead.
+Not there? You need [passthrough](/how-to/writing-data-back/make-a-passthrough-request) instead.
 
 ## The procedure
 
@@ -58,13 +58,13 @@ Not there? You need [passthrough](/how-to/use-passthrough) instead.
 
 Fetch the exact `model` and `integration_slug` values from `/api/v1/lookup/models`
 and `/api/v1/lookup/integrations` - guessed names are rejected. Full requests:
-[API Configuration → Step 1](/how-to/configure-custom-fields-api#step-1-discover-models-and-integrations).
+[API Configuration → Step 1](/how-to/data-model/configure-custom-fields-api#step-1-discover-models-and-integrations).
 
 ## Step 2 - Inspect the raw payload
 
 Fetch a sample from `/api/v1/custom-fields/raw-data` and read the structure
 carefully - this is the document your expression targets. Full request/response:
-[API Configuration → Step 2](/how-to/configure-custom-fields-api#step-2-inspect-the-raw-upstream-payload).
+[API Configuration → Step 2](/how-to/data-model/configure-custom-fields-api#step-2-inspect-the-raw-upstream-payload).
 
 <Warning>
   Inspect payloads from **more than one employee**. Optional fields, empty
@@ -105,7 +105,7 @@ curl -X POST "https://api.bindbee.dev/api/v1/custom-fields/preview" \
 ```
 
 The response also carries the resolved value's type and where it came from -
-see [API Configuration → Step 3](/how-to/configure-custom-fields-api#step-3-validate-the-jmespath-optional-but-recommended)
+see [API Configuration → Step 3](/how-to/data-model/configure-custom-fields-api#step-3-validate-the-jmespath-optional-but-recommended)
 for the full response shape.
 
 <Tip>
@@ -118,8 +118,8 @@ for the full response shape.
 `POST /api/v1/custom-fields` with a `category`, `model`, and `name` declares
 the field - the *name* your code will use. It does not yet return anything
 anywhere. `name` must be snake_case, 2-128 characters, and unique within the
-`(category, model)`. Full request/response: [API Configuration → Step 4](/how-to/configure-custom-fields-api#step-4-create-the-custom-field),
-or use [Dashboard Configuration → Step 1](/how-to/configure-custom-fields-dashboard#step-1-create-new-field).
+`(category, model)`. Full request/response: [API Configuration → Step 4](/how-to/data-model/configure-custom-fields-api#step-4-create-the-custom-field),
+or use [Dashboard Configuration → Step 1](/custom-fields/dashboard#step-1-create-new-field).
 
 <Tip>
   Name fields the way your product thinks about them, not the way the vendor
@@ -138,8 +138,8 @@ or use [Dashboard Configuration → Step 1](/how-to/configure-custom-fields-dash
   integration-level mapping for one connector. Use for customers whose HRIS is
   configured unusually.
 
-Full request/response for both: [API Configuration → Step 5](/how-to/configure-custom-fields-api#step-5-create-a-mapping),
-or use [Dashboard Configuration → Step 2](/how-to/configure-custom-fields-dashboard#step-2-configure-field-mappings).
+Full request/response for both: [API Configuration → Step 5](/how-to/data-model/configure-custom-fields-api#step-5-create-a-mapping),
+or use [Dashboard Configuration → Step 2](/custom-fields/dashboard#step-2-configure-field-mappings).
 
 <Warning>
   A custom field needs a mapping **per integration**. BambooHR and Workday store
@@ -152,7 +152,7 @@ or use [Dashboard Configuration → Step 2](/how-to/configure-custom-fields-dash
 `GET /api/v1/custom-fields/configuration` for a connector shows which mapping
 is winning and which fields remain unmapped - the fastest way to catch "I
 declared the field but never mapped it for this integration." Full
-request/response: [API Configuration → Step 6](/how-to/configure-custom-fields-api#step-6-verify-the-effective-configuration).
+request/response: [API Configuration → Step 6](/how-to/data-model/configure-custom-fields-api#step-6-verify-the-effective-configuration).
 
 ## Step 7 - Read it back
 
@@ -188,7 +188,7 @@ Read from `custom_fields`, never the root - that namespace is what keeps your fi
 
 Only a mapping's `json_path` is mutable - to change scope, delete the mapping
 and create a new one. Deleting a field cascades to all its mappings. Full
-endpoint table: [API Configuration → Updating and deleting](/how-to/configure-custom-fields-api#updating-and-deleting).
+endpoint table: [API Configuration → Updating and deleting](/how-to/data-model/configure-custom-fields-api#updating-and-deleting).
 
 ## Troubleshooting
 

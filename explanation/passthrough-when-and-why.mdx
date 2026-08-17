@@ -42,7 +42,7 @@ That does not make it wrong. It makes it a decision with a cost, worth taking de
 | Write operation Bindbee doesn't support for that integration | **Yes** |
 | Vendor-specific action - trigger a workflow, approve in-system | **Yes** |
 | Data needed *right now*, cannot wait for a sync | **Yes**, carefully |
-| One extra field on a model Bindbee already syncs | **No** - [custom field](/how-to/map-custom-fields) |
+| One extra field on a model Bindbee already syncs | **No** - [custom field](/how-to/data-model/map-custom-fields) |
 | Field exists but is `null` | **No** - [diagnose it first](/explanation/field-semantics) |
 | "The unified API feels slow" | **No** - passthrough is slower; it hits the vendor live |
 | Bulk reads | **No** - you inherit the vendor's rate limits |
@@ -121,7 +121,7 @@ Treat a growing passthrough adapter layer as technical debt with a clear payoff 
 ## Related
 
 <CardGroup cols={2}>
-  <Card title="Using Passthrough" icon="arrow-left-right" href="/how-to/use-passthrough">
+  <Card title="Using Passthrough" icon="arrow-left-right" href="/how-to/writing-data-back/make-a-passthrough-request">
     The mechanics - request shape, auth, errors.
   </Card>
   <Card title="Custom Fields: The Mental Model" icon="git-fork" href="/explanation/custom-fields-mental-model">

@@ -18,7 +18,7 @@ Bindbee has two fully isolated environments: **Development** and **Production**.
 
 Keys are not interchangeable. A Development key cannot read Production data and vice versa. Connectors and data never cross between them.
 
-See [Development](/how-to/environments/development) and [Production](/how-to/environments/production).
+See [Development](/how-to/setup/environments/development) and [Production](/how-to/setup/environments/production).
 
 ## 2. API key - proves who *you* are
 
@@ -67,7 +67,7 @@ This two-header model is the single most common source of day-one confusion:
 - **API key only** → organization-scoped endpoints (list connectors, list integrations, custom field definitions).
 - **API key + connector token** → any endpoint that reads or writes a customer's data.
 
-See [Authenticate a request](/how-to/authenticate) for the step-by-step.
+See [Authenticate a request](/how-to/setup/authenticate-a-request) for the step-by-step.
 
 ## 5. Sync - how data gets into Bindbee
 

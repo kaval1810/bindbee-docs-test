@@ -1,0 +1,117 @@
+---
+title: "Authenticate a Request"
+description: "Send an authenticated request to the Bindbee unified API using your API key and an end user's connector token."
+---
+
+Every request to the Bindbee unified API needs two headers: your organization's API key, and the connector token for the end user whose data you're reading or writing.
+
+<Info>
+  **Before you start**
+
+  - You have an API key for the environment you're calling - [Development and Production keys are separate](/how-to/setup/environments/development).
+  - At least one connector has completed the [Magic Link](/features/magic-link) flow.
+</Info>
+
+## Steps
+
+<Steps>
+  <Step title="Copy your API key">
+    Open **Settings → API Keys** in the dashboard and copy the key for your current environment.
+
+    **Result:** You have a key string. Store it as a secret - it is never returned again after creation, and regenerating it invalidates the previous key for every connector in that environment.
+  </Step>
+
+  <Step title="Copy the connector token">
+    Open the connector and copy `connector_token` from the **Overview** tab.
+
+    **Result:** You have a token scoped to exactly one end user's connection.
+  </Step>
+
+  <Step title="Send both headers">
+    Pass the API key as a `Bearer` token in `Authorization`, and the connector token in `X-Connector-Token`.
+
+    <CodeGroup>
+      ```bash cURL
+      curl --request GET \
+        --url 'https://api.bindbee.dev/api/hris/v1/employees?page_size=50' \
+        --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+        --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+      ```
+
+      ```python Python
+      import requests
+
+      requests.get(
+          "https://api.bindbee.dev/api/hris/v1/employees",
+          params={"page_size": 50},
+          headers={
+              "Authorization": f"Bearer {BINDBEE_API_KEY}",
+              "X-Connector-Token": CONNECTOR_TOKEN,
+          },
+      )
+      ```
+
+      ```javascript Node
+      await fetch(
+        "https://api.bindbee.dev/api/hris/v1/employees?page_size=50",
+        {
+          headers: {
+            Authorization: `Bearer ${BINDBEE_API_KEY}`,
+            "X-Connector-Token": CONNECTOR_TOKEN,
+          },
+        }
+      );
+      ```
+    </CodeGroup>
+
+    **Result:** A `200` with a paginated list of employees.
+  </Step>
+</Steps>
+
+## Which endpoints need which header
+
+| Endpoint group | `Authorization` | `X-Connector-Token` |
+| --- | --- | --- |
+| Unified data (`/api/hris/*`, `/api/ats/*`, `/api/lms/*`) | Required | Required |
+| [Passthrough](/api-reference/passthrough/make-passthrough-request) | Required | Required |
+| [Connectors](/api-reference/connectors/get-connectors) | Required | Not used |
+| [Integrations](/api-reference/integrations/get-integrations) | Required | Not used |
+
+Connector-scoped endpoints act on one end user. Organization-scoped endpoints act across your whole account, so they take the API key alone.
+
+<Warning>
+  [Rate limits](/api-reference/basics/rate-limits) are enforced per connector token, not per API key. Each end user gets an independent 200 requests per minute.
+</Warning>
+
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="401 Unauthorized">
+    The API key is missing, malformed, or belongs to a different environment.
+
+    Check that the header value includes the `Bearer ` prefix and a single space before the key. Then confirm the key's environment matches the connector's - a Development key on a Production connector returns `401`, not a clearer error.
+  </Accordion>
+
+  <Accordion title="403 Forbidden">
+    The credentials are valid but don't permit this resource. The two common causes are a connector token used against a different API category - an HRIS-only connector called on `/api/ats/v1/*` - and a model whose writes are disabled for that integration.
+
+    For the second case, see [Check Which Writes an Integration Supports](/how-to/writing-data-back/check-write-support).
+  </Accordion>
+
+  <Accordion title="The request succeeds but returns no records">
+    Authentication is fine; the connector has no synced data yet. Development connectors do not sync automatically - see [Sync a Development Connector](/how-to/sync-control/sync-a-development-connector).
+
+    If it's a Production connector, check [Monitor Sync Status](/how-to/troubleshooting/monitor-sync-status).
+  </Accordion>
+
+  <Accordion title="The connector token stopped working after the end user reconnected">
+    Relinking can issue a new token. Fetch the current one from the connector's Overview tab or via [Get Connectors](/api-reference/connectors/get-connectors), and store tokens by connector ID rather than caching them indefinitely.
+
+    {/* VERIFY: confirm whether relinking always rotates the connector_token, or only when credentials change. */}
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Authentication](/api-reference/basics/authentication) - header reference
+- [Environments](/how-to/setup/environments/development) - why keys are environment-scoped

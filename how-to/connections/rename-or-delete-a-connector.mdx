@@ -1,0 +1,94 @@
+---
+title: "Rename or Delete a Connector"
+description: "Change a connector's display name, or remove one permanently - and understand what deletion destroys."
+---
+
+Renaming is cosmetic. Deletion is permanent and destroys the connector's record identities, which breaks every Bindbee ID your system has stored for that customer.
+
+<Warning>
+  Deletion is not a reset. To recover a broken connector, [force a resync](/how-to/sync-control/force-a-resync); to fix expired credentials, [relink it](/how-to/connections/update-credentials). Both preserve the connector and its IDs.
+</Warning>
+
+## Rename a connector
+
+The display name identifies the connection in the dashboard and in webhook payloads as `connector.display_name`. It has no effect on the API - nothing is keyed on it.
+
+Open the connector and edit the name from its page.
+
+{/* VERIFY: confirm the display name is editable after creation, and where the control sits. Ticket 1068 asked and the thread has no answer. */}
+
+<Tip>
+  Name connectors after the end customer rather than the integration. Once an account has several connectors on the same platform, a list of identically-named entries is unusable - and `origin_id`, set at Magic Link creation, is what actually resolves a connector back to your own customer record.
+</Tip>
+
+## Delete a connector
+
+<Info>
+  **Before you start**
+
+  - You've confirmed deletion is what you want, not a resync or a relink.
+  - Nothing downstream still references this connector's record IDs.
+</Info>
+
+<Steps>
+  <Step title="Confirm nothing depends on the stored IDs">
+    Deleting discards the connector's synced data and the record identities built from it. Reconnecting the same customer afterwards produces a **new** connector with new IDs - every employee, employment, and benefit ID you've stored becomes a dangling reference.
+
+    **Result:** You know the blast radius.
+  </Step>
+
+  <Step title="Delete it">
+    ```bash
+    curl --request DELETE \
+      --url 'https://api.bindbee.dev/api/v1/connectors/<CONNECTOR_ID>' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>'
+    ```
+
+    See [Delete Connector](/api-reference/connectors/delete-connector) for the exact request shape.
+
+    From the dashboard, the control is on the connector's page.
+
+    **Result:** The connector is removed.
+  </Step>
+
+  <Step title="Confirm your connector count">
+    In Production, connectors are counted and billed, so deletion is sometimes the point. Filter to **Active Connectors** when checking - incomplete connectors persist and are routinely mistaken for ones that weren't deleted.
+
+    **Result:** The count reflects what you expect.
+  </Step>
+</Steps>
+
+## When deletion is the right call
+
+| Situation | Delete? |
+| --- | --- |
+| An incomplete connector the end user abandoned | Yes |
+| A duplicate created by mistake, never used | Yes |
+| A customer that has genuinely churned | Yes |
+| A test connection in Production that's being billed | No - [move it to Development](/how-to/setup/move-a-connector-between-environments) |
+| Credentials expired | No - [relink](/how-to/connections/update-credentials) |
+| Sync failing or data looks wrong | No - [resync](/how-to/sync-control/force-a-resync) |
+| A long-running sync you want to interrupt | No - wait, then resync |
+
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="You deleted a connector that was still in use">
+    Reconnecting produces a new connector with new record IDs. Re-map your stored references to the new IDs, keying on a stable upstream identifier such as employee number or work email to match old records to new - accepting that neither is unique on every system.
+
+    Contact support before doing this at scale.
+  </Accordion>
+
+  <Accordion title="Connectors you deleted still appear">
+    Check the Connectors tab filter. Incomplete connectors show alongside active ones and are the usual explanation.
+  </Accordion>
+
+  <Accordion title="You want to stop a connector syncing without deleting it">
+    Moving it to Development stops automatic syncs while preserving the connection and its history, and Development connectors aren't billed. See [Move a Connector Between Environments](/how-to/setup/move-a-connector-between-environments).
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Delete Connector](/api-reference/connectors/delete-connector)
+- [Connectors](/features/connectors)

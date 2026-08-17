@@ -4,7 +4,7 @@
   "name": "Bindbee Docs",
   "colors": {
     "primary": "#f57e21",
-    "light": "#FA923D",
+    "light": "#E37114",
     "dark": "#F48C3C"
   },
   "integrations": {
@@ -47,10 +47,10 @@
               "features/dashboard",
               "features/connectors",
               "features/logs",
-              "features/scoping"
+              "features/scoping",
+              "features/magic-link"
             ]
           }
-          
         ]
       },
       {
@@ -111,58 +111,89 @@
             "group": "Setup & Configuration",
             "icon": "settings",
             "pages": [
-              "how-to/authenticate",
-              "how-to/install-sdks",
-              "how-to/connect-a-customer",
+              "how-to/setup/authenticate-a-request",
+              "how-to/setup/install-sdks",
+              "how-to/setup/choose-an-environment",
               {
                 "group": "Environments",
                 "pages": [
-                  "how-to/environments/overview",
-                  "how-to/environments/development",
-                  "how-to/environments/production"
+                  "how-to/setup/environments/overview",
+                  "how-to/setup/environments/development",
+                  "how-to/setup/environments/production"
                 ]
               },
-              {
-                "group": "Connection Experience",
-                "pages": [
-                  "how-to/magic-link",
-                  "how-to/bindbee-embed",
-                  "how-to/embed-brand-customization"
-                ]
-              }
+              "how-to/setup/move-a-connector-between-environments",
+              "how-to/setup/handle-api-errors",
+              "how-to/setup/go-live-checklist"
             ]
           },
           {
-            "group": "Working with Data",
+            "group": "Connections",
+            "icon": "link",
+            "pages": [
+              "how-to/connections/generate-a-magic-link",
+              "how-to/connections/update-credentials",
+              "how-to/connections/connect-a-customer",
+              "how-to/connections/bindbee-embed",
+              "how-to/connections/embed-brand-customization",
+              "how-to/connections/rename-or-delete-a-connector"
+            ]
+          },
+          {
+            "group": "Reading Data",
             "icon": "database",
             "pages": [
-              "how-to/paginate",
-              "how-to/filter-with-modified-after",
-              "how-to/read-employee-directory",
-              "how-to/read-benefits-and-payroll",
-              "how-to/write-data-back",
-              "how-to/map-custom-fields",
-              "how-to/configure-custom-fields-dashboard",
-              "how-to/configure-custom-fields-api",
-              "how-to/use-passthrough"
+              "how-to/reading-data/paginate-through-results",
+              "how-to/reading-data/filter-and-narrow-a-collection",
+              "how-to/reading-data/filter-with-modified-after",
+              "how-to/reading-data/read-employee-data",
+              "how-to/reading-data/read-benefits-and-payroll"
             ]
           },
           {
-            "group": "Reliability",
-            "icon": "activity",
+            "group": "Extending the Data Model",
+            "icon": "git-fork",
             "pages": [
-              "how-to/handle-errors",
-              "how-to/handle-webhooks",
-              "how-to/validate-webhook-signatures",
-              "how-to/monitor-sync-status",
-              "how-to/force-a-resync"
+              "how-to/data-model/inspect-the-raw-upstream-payload",
+              "how-to/data-model/map-a-custom-field-from-the-dashboard",
+              "how-to/data-model/configure-custom-fields-api",
+              "how-to/data-model/map-custom-fields"
             ]
           },
           {
-            "group": "Go-Live",
-            "icon": "rocket",
+            "group": "Writing Data Back",
+            "icon": "square-pen",
             "pages": [
-              "how-to/go-live-checklist"
+              "how-to/writing-data-back/write-data-back",
+              "how-to/writing-data-back/make-a-passthrough-request"
+            ]
+          },
+          {
+            "group": "Sync Control",
+            "icon": "rotate-cw",
+            "pages": [
+              "how-to/sync-control/force-a-resync",
+              "how-to/sync-control/change-sync-frequency"
+            ]
+          },
+          {
+            "group": "Reliability & Webhooks",
+            "icon": "webhook",
+            "pages": [
+              "how-to/reliability/create-a-webhook",
+              "how-to/reliability/choose-webhook-events",
+              "how-to/reliability/validate-webhook-signatures",
+              "how-to/reliability/detect-a-connection-that-needs-relinking",
+              "how-to/reliability/handle-webhooks"
+            ]
+          },
+          {
+            "group": "Troubleshooting",
+            "icon": "stethoscope",
+            "pages": [
+              "how-to/troubleshooting/monitor-sync-status",
+              "how-to/troubleshooting/diagnose-a-partial-sync",
+              "how-to/troubleshooting/resolve-a-permission-error"
             ]
           }
         ]
@@ -208,6 +239,7 @@
               {
                 "group": "Custom Fields",
                 "pages": [
+                  "custom-fields/dashboard",
                   "custom-fields/lookup/list-models",
                   "custom-fields/lookup/list-integrations",
                   "custom-fields/api/create-custom-field",
@@ -698,19 +730,19 @@
     },
     {
       "source": "/get-started/tutorials/connect-your-first-customer",
-      "destination": "/how-to/connect-a-customer"
+      "destination": "/how-to/connections/connect-a-customer"
     },
     {
       "source": "/get-started/tutorials/read-benefits-and-payroll-data",
-      "destination": "/how-to/read-benefits-and-payroll"
+      "destination": "/how-to/reading-data/read-benefits-and-payroll"
     },
     {
       "source": "/get-started/tutorials/handle-webhooks",
-      "destination": "/how-to/handle-webhooks"
+      "destination": "/how-to/reliability/handle-webhooks"
     },
     {
       "source": "/get-started/tutorials/write-data-back",
-      "destination": "/how-to/write-data-back"
+      "destination": "/how-to/writing-data-back/write-data-back"
     },
     {
       "source": "/custom-fields/overview",
@@ -718,31 +750,31 @@
     },
     {
       "source": "/custom-fields/dashboard",
-      "destination": "/how-to/configure-custom-fields-dashboard"
+      "destination": "/custom-fields/dashboard"
     },
     {
       "source": "/custom-fields/api-workflow",
-      "destination": "/how-to/configure-custom-fields-api"
+      "destination": "/how-to/data-model/configure-custom-fields-api"
     },
     {
       "source": "/features/magic-link",
-      "destination": "/how-to/magic-link"
+      "destination": "/features/magic-link"
     },
     {
       "source": "/features/environments/development",
-      "destination": "/how-to/environments/development"
+      "destination": "/how-to/setup/environments/development"
     },
     {
       "source": "/features/environments/production",
-      "destination": "/how-to/environments/production"
+      "destination": "/how-to/setup/environments/production"
     },
     {
       "source": "/sdk/bindbee-embed",
-      "destination": "/how-to/bindbee-embed"
+      "destination": "/how-to/connections/bindbee-embed"
     },
     {
       "source": "/sdk/customizations",
-      "destination": "/how-to/embed-brand-customization"
+      "destination": "/how-to/connections/embed-brand-customization"
     }
   ],
   "api": {

@@ -220,7 +220,7 @@ Call the schema endpoint first and build from it exactly as above.
 Two ways to confirm:
 
 - **Wait for the next sync**, then read the record back. This is the correct behaviour to build around.
-- **Trigger a resync** when a user is watching and expects immediate feedback: `POST /api/embedded/v1/connectors/resync`. Do not do this on a timer - see [Force a resync](/how-to/force-a-resync).
+- **Trigger a resync** when a user is watching and expects immediate feedback: `POST /api/embedded/v1/connectors/resync`. Do not do this on a timer - see [Force a resync](/how-to/sync-control/force-a-resync).
 
 Write the record optimistically in your own UI, and let the sync reconcile it.
 
@@ -244,7 +244,7 @@ This does **not** necessarily mean the write is unsupported - only that the sche
 
 1. Attempt the write with the documented unified fields and read the error.
 2. Contact `support@bindbee.dev` to request the schema.
-3. Use [passthrough](/how-to/use-passthrough) to call the vendor endpoint directly.
+3. Use [passthrough](/how-to/writing-data-back/make-a-passthrough-request) to call the vendor endpoint directly.
 
 Handle `501` explicitly rather than treating it as a generic failure:
 
@@ -264,7 +264,7 @@ except MetaUnavailable:
 | Status | Meaning | Action |
 | --- | --- | --- |
 | `400` / `422` | Body failed validation | Re-read the Meta schema; check `integration_params` |
-| `401` | Bad API key | [Authenticate](/how-to/authenticate) |
+| `401` | Bad API key | [Authenticate](/how-to/setup/authenticate-a-request) |
 | `403` | Missing/invalid connector token | Add `X-Connector-Token` |
 | `429` | Rate limited | Back off using `Retry-After` |
 | `501` | Meta not implemented | See above |
@@ -276,7 +276,7 @@ except MetaUnavailable:
   rather than blind-retrying.
 </Warning>
 
-Full guidance: [Handle errors](/how-to/handle-errors).
+Full guidance: [Handle errors](/how-to/setup/handle-api-errors).
 
 ---
 
@@ -293,7 +293,7 @@ Full guidance: [Handle errors](/how-to/handle-errors).
   <Card title="Meta API: Schema Discovery" icon="wand-sparkles" href="/explanation/meta-api-schema-discovery">
     Why writes work this way.
   </Card>
-  <Card title="Using Passthrough" icon="arrow-left-right" href="/how-to/use-passthrough">
+  <Card title="Using Passthrough" icon="arrow-left-right" href="/how-to/writing-data-back/make-a-passthrough-request">
     For operations with no unified equivalent.
   </Card>
 </CardGroup>

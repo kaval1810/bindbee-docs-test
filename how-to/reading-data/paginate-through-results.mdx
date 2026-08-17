@@ -1,208 +1,137 @@
 ---
 title: "Paginate Through Results"
-description: "Cursor pagination on every Bindbee list endpoint - the loop, the limits, and the mistakes that cause infinite loops or missed records."
+description: "Walk a full collection using cursor-based pagination without skipping or duplicating records."
 ---
 
-Every list endpoint in the Bindbee API is cursor-paginated and returns the same envelope.
+Every collection endpoint is paginated with `cursor` and `page_size`. Follow the cursor until it stops coming back.
 
-## The envelope
+<Info>
+  **Before you start**
 
-```json
-{
-  "cursor": "MDE4YjE4ZWYtYzk5Yy03YTg2LTk5NDYtN2I3YzlkNTQzM2U1",
-  "page_size": 50,
-  "items": [ ... ]
-}
-```
+  - You can make an authenticated request - see [Authenticate a Request](/how-to/setup/authenticate-a-request).
+</Info>
 
-| Field | Meaning |
-| --- | --- |
-| `items` | Records on this page |
-| `page_size` | How many were returned |
-| `cursor` | Opaque token for the next page. **`null` means you are done** |
+## Steps
 
-## Parameters
+<Steps>
+  <Step title="Request the first page">
+    Set `page_size`. The default is 50 and the maximum is 200 - a value above 200 is rejected rather than clamped.
 
-| Parameter | Default | Max | Notes |
-| --- | --- | --- | --- |
-| `page_size` | `50` | `200` | Requests above 200 are rejected |
-| `cursor` | - | - | Pass the previous response's `cursor` verbatim |
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/employees?page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
 
-## The loop
+    **Result:** A response containing `items`, `page_size`, and a `cursor`.
 
-Terminate on `cursor` being falsy. Nothing else.
-
-<CodeGroup>
-
-```python Python
-import os, requests
-
-BASE = "https://api.bindbee.dev"
-
-def paginate(path, connector_token, **filters):
-    headers = {
-        "Authorization": f"Bearer {os.environ['BINDBEE_API_KEY']}",
-        "X-Connector-Token": connector_token,
+    ```json
+    {
+      "cursor": "MDE4YjE4ZWYtYzk5Yy03YTg2LTk5NDYtN2I3YzlkNTQzM2U1",
+      "page_size": 200,
+      "items": [ ... ]
     }
-    cursor = None
-    while True:
-        params = {"page_size": 200, **filters}
-        if cursor:
-            params["cursor"] = cursor
+    ```
+  </Step>
 
-        resp = requests.get(f"{BASE}{path}", headers=headers,
-                            params=params, timeout=30)
-        resp.raise_for_status()
-        body = resp.json()
+  <Step title="Follow the cursor">
+    Pass the returned `cursor` back on the next request, keeping every other parameter identical.
 
-        yield from body["items"]
+    **Result:** The next page.
 
-        cursor = body.get("cursor")
-        if not cursor:
-            return
+    <Warning>
+      Filters must stay the same across pages. Changing `employment_status`, `modified_after`, or any other filter mid-walk invalidates the cursor's position and produces gaps or repeats.
+    </Warning>
+  </Step>
 
-for employee in paginate("/api/hris/v1/employees", token,
-                         employment_status="ACTIVE"):
-    upsert(employee)
-```
+  <Step title="Loop until the cursor is exhausted">
+    <CodeGroup>
+      ```python Python
+      def fetch_all(path, params, api_key, connector_token):
+          headers = {
+              "Authorization": f"Bearer {api_key}",
+              "X-Connector-Token": connector_token,
+          }
+          params = {**params, "page_size": 200}
+          cursor, records = None, []
 
-```javascript Node
-const BASE = "https://api.bindbee.dev";
+          while True:
+              if cursor:
+                  params["cursor"] = cursor
+              r = requests.get(f"https://api.bindbee.dev{path}",
+                               params=params, headers=headers)
+              r.raise_for_status()
+              body = r.json()
+              records.extend(body["items"])
+              cursor = body.get("cursor")
+              if not cursor:
+                  return records
+      ```
 
-async function* paginate(path, connectorToken, filters = {}) {
-  const headers = {
-    Authorization: `Bearer ${process.env.BINDBEE_API_KEY}`,
-    "X-Connector-Token": connectorToken,
-  };
+      ```javascript Node
+      async function fetchAll(path, params, apiKey, connectorToken) {
+        const records = [];
+        let cursor = null;
 
-  let cursor = null;
-  do {
-    const qs = new URLSearchParams({ page_size: "200", ...filters });
-    if (cursor) qs.set("cursor", cursor);
+        while (true) {
+          const qs = new URLSearchParams({ ...params, page_size: "200" });
+          if (cursor) qs.set("cursor", cursor);
 
-    const res = await fetch(`${BASE}${path}?${qs}`, { headers });
-    if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+          const res = await fetch(`https://api.bindbee.dev${path}?${qs}`, {
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              "X-Connector-Token": connectorToken,
+            },
+          });
+          if (!res.ok) throw new Error(`${res.status}`);
 
-    const body = await res.json();
-    yield* body.items;
-    cursor = body.cursor;
-  } while (cursor);
-}
-```
+          const body = await res.json();
+          records.push(...body.items);
+          cursor = body.cursor;
+          if (!cursor) return records;
+        }
+      }
+      ```
+    </CodeGroup>
 
-```bash cURL
-# First page
-curl "https://api.bindbee.dev/api/hris/v1/employees?page_size=200" \
-  -H "Authorization: Bearer $BINDBEE_API_KEY" \
-  -H "X-Connector-Token: $CONNECTOR_TOKEN"
+    Stop when `cursor` is absent or null. Don't stop on a short page - a page returning fewer than `page_size` records is not reliably the last one.
 
-# Next page - pass the cursor back
-curl -G "https://api.bindbee.dev/api/hris/v1/employees" \
-  -H "Authorization: Bearer $BINDBEE_API_KEY" \
-  -H "X-Connector-Token: $CONNECTOR_TOKEN" \
-  --data-urlencode "page_size=200" \
-  --data-urlencode "cursor=MDE4YjE4ZWYtYzk5Yy03YTg2LTk5NDYtN2I3YzlkNTQzM2U1"
-```
+    **Result:** The full collection.
+  </Step>
+</Steps>
 
-</CodeGroup>
+## Reducing how much you page
 
-## Keep filters constant across pages
+Two things cut page count more than tuning `page_size`.
 
-Every filter from the first request must be repeated on every subsequent request. Changing a filter mid-pagination produces undefined results.
+Filter server-side rather than fetching everything and discarding - see [Filter and Narrow a Collection](/how-to/reading-data/filter-and-narrow-a-collection). And on scheduled runs, fetch only what changed - see [Filter with modified_after](/how-to/reading-data/filter-with-modified-after).
 
-```python
-# Wrong - filter dropped after page 1
-params = {"cursor": cursor}
+## If this didn't work
 
-# Right - filters carried through
-params = {"page_size": 200, "cursor": cursor, **filters}
-```
+<AccordionGroup>
+  <Accordion title="Records are missing or repeated across pages">
+    Check every parameter is byte-identical between requests. The most common cause is recomputing a timestamp filter per page - compute it once before the loop.
 
-## Mistakes that cost real time
+    A sync running mid-walk also shifts the underlying data. Page against a stable dataset by gating the run on the sync-completed event - see [Trigger a Job When a Sync Completes](/how-to/sync-control/trigger-a-job-on-sync-complete).
+  </Accordion>
 
-<Warning>
-  **Stopping when `len(items) < page_size`.** A short page does not mean the last
-  page. Only `cursor: null` does. This bug silently truncates imports.
-</Warning>
+  <Accordion title="The loop never terminates">
+    The exit condition must be the absence of a cursor. Terminating on an empty `items` array or a short page will either loop forever or stop early.
+  </Accordion>
 
-<Warning>
-  **Looping while `cursor` is merely present.** If you never reassign `cursor`
-  from the response, you re-request page one forever. Terminate on the value
-  being falsy, and reassign it every iteration.
-</Warning>
+  <Accordion title="429 partway through">
+    Rate limits are 200 requests per minute per connector token. Honour `Retry-After` and resume from the cursor you were on - see [Handle API Errors](/how-to/setup/handle-api-errors).
 
-<Warning>
-  **URL-encoding the cursor twice.** Cursors are base64 and contain characters
-  that need encoding exactly once. Use your HTTP library's parameter handling
-  (`params=`, `URLSearchParams`, `--data-urlencode`) rather than string
-  concatenation.
-</Warning>
+    Different connectors have independent limits, so paging several customers in parallel is fine; paging one customer harder is not.
+  </Accordion>
 
-**Persisting cursors between runs.** Cursors are positional and short-lived. For incremental reads use [`modified_after`](/how-to/filter-with-modified-after), not a stored cursor.
-
-**Requesting `page_size` above 200.** Rejected. Cap at 200.
-
-## Choosing a page size
-
-| `page_size` | When |
-| --- | --- |
-| `200` | Bulk import - fewest requests |
-| `50` (default) | General use |
-| `10`–`25` | Interactive UI, or when using `include_raw_data` |
-
-<Tip>
-  Drop `page_size` when you enable `include_raw_data=true` or
-  `include_custom_fields=true`. Full upstream payloads make responses very large,
-  and 200 of them at once can time out.
-</Tip>
-
-## Rate limits while paginating
-
-200 requests per minute **per connector**. At `page_size=200` that is 40,000 records a minute - pagination alone rarely hits it.
-
-The risk is parallelism across connectors. Each connector has an independent limit, so parallel imports don't contend with each other - but your own infrastructure will. Bound concurrency and handle `429` with `Retry-After`.
-
-```python
-import time
-
-def get_with_backoff(session, url, **kwargs):
-    for attempt in range(5):
-        resp = session.get(url, **kwargs)
-        if resp.status_code != 429:
-            resp.raise_for_status()
-            return resp
-        time.sleep(int(resp.headers.get("Retry-After", 60)))
-    raise RuntimeError("rate limited after 5 attempts")
-```
-
-See [Rate Limits](/api-reference/basics/rate-limits).
-
-## Resuming a failed import
-
-Cursors aren't durable, so don't checkpoint on them. Instead:
-
-- **Upsert as you go**, keyed on `id`. A restart re-writes some records harmlessly.
-- **Checkpoint on a `modified_after` watermark**, not on position.
-
-```python
-started = utcnow_iso()
-try:
-    for employee in paginate("/api/hris/v1/employees", token,
-                             modified_after=load_watermark()):
-        upsert(employee)
-except Exception:
-    raise                      # watermark unchanged - safe to retry whole run
-else:
-    save_watermark(started)    # only on complete success
-```
+  <Accordion title="Pages are slow with expanded relations">
+    `expand` and `include_raw_data` increase response size substantially at `page_size=200`. Drop `page_size` when using them.
+  </Accordion>
+</AccordionGroup>
 
 ## Related
 
-<CardGroup cols={2}>
-  <Card title="Pagination Reference" icon="book" href="/api-reference/basics/pagination">
-    Interactive request example.
-  </Card>
-  <Card title="Filtering with modified_after" icon="filter" href="/how-to/filter-with-modified-after">
-    Reading only what changed.
-  </Card>
-</CardGroup>
+- [Pagination](/api-reference/basics/pagination)
+- [Rate Limits](/api-reference/basics/rate-limits)

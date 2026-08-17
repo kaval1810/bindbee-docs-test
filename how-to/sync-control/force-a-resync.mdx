@@ -1,165 +1,98 @@
 ---
 title: "Force a Resync"
-description: "Trigger a sync on demand - and, more importantly, know the four cases where you should and the several where you shouldn't."
+description: "Trigger an immediate sync on a connector instead of waiting for the next scheduled run."
 ---
 
-```bash
-curl -X POST "https://api.bindbee.dev/api/embedded/v1/connectors/resync" \
-  -H "Authorization: Bearer $BINDBEE_API_KEY" \
-  -H "X-Connector-Token: $CONNECTOR_TOKEN"
-```
+A forced resync starts a sync now. Use it after a relink, after a permission change, after a transient failure, or whenever you need data before the next scheduled run.
 
-The API reference tells you how. This page tells you when.
+<Info>
+  **Before you start**
 
-## When to resync
+  - You have the connector's `connector_token`.
+  - The connector isn't already syncing - check its sync history first.
+</Info>
 
-| Situation | Resync? | Why |
-| --- | --- | --- |
-| User clicked "Sync now" | **Yes** | Explicit intent; they are waiting |
-| You just wrote data back and want to read it | **Yes** | Writes aren't visible until a sync |
-| Development connector - you need any data at all | **Yes** | Dev connectors never sync automatically |
-| Customer says "I fixed permissions in the HRIS" | **Yes** | Confirms the fix without waiting a day |
-| Right after `RELINK_NEEDED` was resolved | **Yes** | Verifies the new credentials work |
-| On a cron/schedule | **No** | Production already syncs automatically |
-| Before every read | **No** | Syncs are not instant; you'd read stale data anyway |
-| Data looks stale | **No** - diagnose first | Check `status` and `last_sync_start_time` |
-| Data looks wrong | **No** | A resync re-runs the same mapping and produces the same result |
-| To make data fresher than the schedule | **No** | See below |
-
-<Warning>
-  **Resyncing does not bypass the vendor's rate limits.** Frequent resyncs can
-  get your customer's connector throttled or temporarily blocked upstream -
-  making their data *less* current, not more.
-</Warning>
-
-<Warning>
-  On **SFTP connectors**, a resync re-processes the most recently delivered file.
-  It does not fetch new data. If the customer's export runs weekly, resyncing
-  daily achieves nothing. See [SFTP vs API](/explanation/sftp-vs-api).
-</Warning>
-
-## Doing it properly
-
-A resync is asynchronous. Triggering it is the beginning, not the end.
+## Steps
 
 <Steps>
-  <Step title="Trigger">
-    `POST /api/embedded/v1/connectors/resync` with the API key and connector
-    token.
+  <Step title="Trigger the sync">
+    `POST` to the resync endpoint with the connector token in the header. The connector is identified by the token, so there's no request body.
+
+    <CodeGroup>
+      ```bash cURL
+      curl --request POST \
+        --url 'https://api.bindbee.dev/api/embedded/v1/connectors/resync' \
+        --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+        --header 'x-connector-token: <CONNECTOR_TOKEN>'
+      ```
+
+      ```python Python
+      import requests
+
+      requests.post(
+          "https://api.bindbee.dev/api/embedded/v1/connectors/resync",
+          headers={
+              "Authorization": f"Bearer {BINDBEE_API_KEY}",
+              "x-connector-token": CONNECTOR_TOKEN,
+          },
+      )
+      ```
+    </CodeGroup>
+
+    **Result:** A `200` and a new run in the connector's sync history.
+
+    <Tip>
+      From the dashboard, the equivalent control is on the connector's page. The API is the better route when you're resyncing several connectors or reacting to an event automatically.
+    </Tip>
   </Step>
-  <Step title="Reflect it in the UI immediately">
-    Set your local state to `syncing` so the user gets instant feedback. Do not
-    wait for the first poll.
+
+  <Step title="Wait for it to finish before reading">
+    A resync is asynchronous - the `200` means the run started, not that data is ready. Reads during a sync return a partially updated dataset.
+
+    Gate downstream work on the sync-completed event rather than a fixed delay. See [Trigger a Job When a Sync Completes](/how-to/sync-control/trigger-a-job-on-sync-complete).
+
+    **Result:** Your pipeline reads a complete dataset.
   </Step>
-  <Step title="Track progress">
-    Poll `GET /api/{category}/v1/connectors` and read `sync_progress` (0–100),
-    or wait for the `connector_synced` webhook.
-  </Step>
-  <Step title="Re-read when done">
-    Once `sync_status` is `Done`, run your normal
-    [`modified_after` read](/how-to/filter-with-modified-after).
+
+  <Step title="Check the outcome">
+    Confirm the run completed rather than failing or partially completing - see [Monitor Sync Status](/how-to/troubleshooting/monitor-sync-status).
+
+    **Result:** You know whether the resync fixed the problem.
   </Step>
 </Steps>
 
-```python
-def trigger_and_wait(connector_token, timeout_s=1800, interval_s=15):
-    requests.post(
-        f"{BASE}/api/embedded/v1/connectors/resync",
-        headers=auth_headers(connector_token),
-        timeout=30,
-    ).raise_for_status()
+## When to use this
 
-    deadline = time.monotonic() + timeout_s
-    while time.monotonic() < deadline:
-        connector = find_connector(connector_token)
-        if connector["sync_status"] == "Done":
-            return connector
-        if connector["sync_status"] == "Failed":
-            raise SyncFailed(connector)
-        time.sleep(interval_s)
+| Situation | Resync? |
+| --- | --- |
+| After the end user relinks | Yes - don't wait for the schedule |
+| After a permission is granted upstream | Yes - permission changes aren't retroactive |
+| A transient or size-related sync failure | Yes, once |
+| The same models fail every run | No - diagnose first, see [Diagnose a Partial Sync](/how-to/troubleshooting/diagnose-a-partial-sync) |
+| A Development connector needs fresh data | Yes - this is the normal mechanism |
+| You want data more often generally | No - change the cadence instead, see [Change Sync Frequency](/how-to/sync-control/change-sync-frequency) |
 
-    raise SyncTimeout(connector_token)
-```
+## If this didn't work
 
-<Tip>
-  Set the user's expectation from `avg_sync_duration` on the connector - the
-  measured average for *that* connection. "This usually takes about 15 minutes"
-  beats an indefinite spinner.
-</Tip>
+<AccordionGroup>
+  <Accordion title="401 or 403">
+    `401` means the API key is missing or from the wrong environment. `403` means the token doesn't permit this operation. See [Authenticate a Request](/how-to/setup/authenticate-a-request).
+  </Accordion>
 
-## Guard the button
+  <Accordion title="The sync doesn't appear to start">
+    Check whether one is already running - a connector syncs one run at a time. Large populations can take substantially longer than expected, so a run may still be in progress from earlier.
+  </Accordion>
 
-A user-triggered resync means a button, and a button means someone will click it repeatedly.
+  <Accordion title="You're resyncing repeatedly to work around a failure">
+    Repeated resyncing on a connector that fails the same way each time won't clear it and adds upstream load. Read the per-model breakdown instead - the failure is usually a permission gap or an extract-size limit, and neither is fixed by retrying.
+  </Accordion>
 
-```python
-MIN_INTERVAL = timedelta(minutes=30)
-
-def can_resync(connector, last_manual_resync):
-    if connector["sync_status"] == "Syncing":
-        return False, "A sync is already running."
-    if last_manual_resync and datetime.now(timezone.utc) - last_manual_resync < MIN_INTERVAL:
-        return False, "Recently synced. Try again in a little while."
-    if connector["status"] == "RELINK_NEEDED":
-        return False, "Reconnect your HR system first."
-    return True, None
-```
-
-Three rules worth enforcing:
-
-1. **Disable while `sync_status` is `Syncing`.**
-2. **Cooldown of at least 15–30 minutes** between manual resyncs per connector.
-3. **Block on `RELINK_NEEDED`** - the sync will fail; offer reconnect instead.
-
-<Warning>
-  Never resync from a page-load handler, a health check, or a retry loop. This is
-  the fastest route to a throttled connector, and the symptom - degraded data -
-  looks nothing like the cause.
-</Warning>
-
-## Resync vs relink
-
-Frequently confused, entirely different:
-
-| | Resync | Relink |
-| --- | --- | --- |
-| Fixes | Stale data | Broken credentials |
-| Who does it | You, via API | The customer, via the connect flow |
-| Use when | `status: COMPLETE` | `status: RELINK_NEEDED` |
-| Effect | New sync job | New credentials on the same connector |
-
-<Warning>
-  Resyncing a `RELINK_NEEDED` connector fails - the credentials are the problem.
-  It also produces a `Failed` sync that can pollute your alerting. Check
-  `status` before triggering.
-</Warning>
-
-Relinking updates the existing connector: the `connector_token` you stored keeps working, and you do not need to re-exchange tokens.
-
-## After writing data back
-
-The most legitimate use.
-
-```python
-create_time_off(connector_token, body)     # POST succeeded
-
-trigger_resync(connector_token)            # make it readable sooner
-# then re-read once sync_status == "Done"
-```
-
-<Warning>
-  A `2xx` from a write means the **source system** accepted it. The record is not
-  readable from Bindbee's unified API until a sync brings it back. Show the write
-  optimistically in your own UI and let the sync reconcile - don't block the user
-  on a round trip.
-</Warning>
+  <Accordion title="You want to reset a connector rather than resync it">
+    Resync is the reset. Deleting and recreating a connector discards its sync history and record identities, changing the IDs your system has already stored - see [Rename or Delete a Connector](/how-to/connections/rename-or-delete-a-connector).
+  </Accordion>
+</AccordionGroup>
 
 ## Related
 
-<CardGroup cols={2}>
-  <Card title="Resync Endpoint" icon="book" href="/api-reference/connectors/resync-connector">
-    Request and response reference.
-  </Card>
-  <Card title="Monitor Sync Status" icon="gauge-circle" href="/how-to/monitor-sync-status">
-    Tracking progress and health.
-  </Card>
-</CardGroup>
+- [Force Resync a Connector](/api-reference/connectors/resync-connector)
+- [Sync Frequency](/api-reference/basics/sync-frequency)

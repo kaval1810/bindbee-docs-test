@@ -27,7 +27,7 @@ curl -G "https://api.bindbee.dev/api/hris/v1/employees" \
 
 | Found in `raw_data`? | Use |
 | --- | --- |
-| Yes | [Custom field](/how-to/map-custom-fields) - no per-vendor code, no vendor rate limit |
+| Yes | [Custom field](/how-to/data-model/map-custom-fields) - no per-vendor code, no vendor rate limit |
 | No | Passthrough |
 
 ## Making a request
@@ -197,7 +197,7 @@ Normalize into your own model at the adapter boundary. Everything downstream the
 
 ## Writes through passthrough
 
-Everything from the [write guidance](/how-to/write-data-back) applies, plus:
+Everything from the [write guidance](/how-to/writing-data-back/write-data-back) applies, plus:
 
 <Warning>
   Passthrough writes are not idempotent and Bindbee does not deduplicate them.
@@ -218,7 +218,7 @@ Keep a visible list of what you passthrough and for which connectors. When the s
   <Card title="When & Why" icon="circle-help" href="/explanation/passthrough-when-and-why">
     The trade-off in full.
   </Card>
-  <Card title="Map Custom Fields" icon="git-fork" href="/how-to/map-custom-fields">
+  <Card title="Map Custom Fields" icon="git-fork" href="/how-to/data-model/map-custom-fields">
     The cheaper alternative, where it applies.
   </Card>
 </CardGroup>

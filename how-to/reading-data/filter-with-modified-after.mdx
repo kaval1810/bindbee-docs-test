@@ -1,167 +1,92 @@
 ---
 title: "Filter with modified_after"
-description: "The incremental read pattern - plus the watermark discipline that stops it from silently losing records."
+description: "Fetch only the records that changed since your last run, instead of re-reading the full dataset."
 ---
 
-`modified_after` returns only records Bindbee synced after a given timestamp. It is how you avoid re-importing an entire directory on every run.
+`modified_after` returns only records **synced by Bindbee** after a given timestamp. That distinction matters more than it first appears - read the next section before building on it.
 
-```bash
-curl -G "https://api.bindbee.dev/api/hris/v1/employees" \
-  -H "Authorization: Bearer $BINDBEE_API_KEY" \
-  -H "X-Connector-Token: $CONNECTOR_TOKEN" \
-  --data-urlencode "modified_after=2026-07-21T00:00:00.000Z"
-```
+<Info>
+  **Before you start**
 
-Format is ISO 8601: `2026-07-21T09:49:30.478Z`.
+  - You can persist a timestamp between runs, per connector.
+</Info>
 
-## What it actually filters on
+## What the timestamp actually means
 
-<Warning>
-  `modified_after` filters on **when Bindbee synced the record** - the
-  `modified_at` field - not on when the third-party system changed it.
-</Warning>
+`modified_after` filters on when Bindbee synced the record, not when the source system changed it.
 
-A sync rewrites the records it processes, so `modified_at` can advance even when no business field changed. That makes this filter:
+Two consequences:
 
-- **Safe** - you will not miss changes.
-- **Not minimal** - you will receive records that look identical to what you already have.
+**A full resync makes everything look new.** After a resync, records re-synced during that run match `modified_after` even if nothing changed upstream. Your incremental read returns the whole dataset. Make downstream processing idempotent - an unchanged record must be safe to reprocess.
 
-Design accordingly: **upsert, always; act, only on a real diff.**
+**Sync cadence is your true resolution.** A record edited in the HRIS is invisible until the next sync picks it up, so a 24-hour cadence means up to 24 hours of latency regardless of how often you poll. Polling more often than the connector syncs adds load without adding freshness.
 
-Background: [Field semantics](/explanation/field-semantics).
+## Steps
 
-## The watermark pattern
+<Steps>
+  <Step title="Capture a timestamp before you read">
+    Record the current UTC time *before* issuing the request, and store it only after the run completes successfully.
 
-```python
-def incremental_sync(connector_token, tenant_id):
-    watermark = load_watermark(tenant_id)     # last successful run's start time
-    started   = utcnow_iso()                  # capture BEFORE the run
+    Taking it afterwards opens a window where records synced mid-run are never returned.
 
-    for employee in paginate("/api/hris/v1/employees", connector_token,
-                             modified_after=watermark):
-        upsert(employee)                      # keyed on employee["id"]
+    **Result:** A watermark per connector.
+  </Step>
 
-    save_watermark(tenant_id, started)        # only after the whole run succeeds
-```
+  <Step title="Pass it as ISO 8601">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/employees?modified_after=2026-08-13T00:00:00Z&page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
 
-Three rules, each preventing a specific data-loss bug:
+    With no timezone offset the value is interpreted as UTC. Send an explicit `Z` rather than relying on that.
 
-<Warning>
-  **1. Capture the timestamp *before* the run, not after.** Records modified
-  while your run is in flight fall between the two times. Saving the end time
-  skips them permanently.
-</Warning>
+    **Result:** Only records synced after that instant.
+  </Step>
 
-<Warning>
-  **2. Save the watermark only on complete success.** A partial run that saves
-  its watermark loses everything it hadn't processed. Leaving it unchanged makes
-  the retry safe.
-</Warning>
+  <Step title="Page with the filter held constant">
+    Compute the timestamp once, before the loop, and reuse the identical string on every page. Recomputing it per page corrupts the cursor's position - see [Paginate Through Results](/how-to/reading-data/paginate-through-results).
 
-<Warning>
-  **3. Store one watermark per connector**, not one globally. Connectors sync on
-  independent schedules; a shared watermark advanced by one connector will skip
-  records on another.
-</Warning>
+    **Result:** A complete, non-overlapping set.
+  </Step>
 
-Use Bindbee's own clock, not your server's, to avoid skew:
+  <Step title="Advance the watermark only on success">
+    Persist the new timestamp after the full page walk succeeds. On failure, keep the old one and let the next run re-read the overlap.
 
-```python
-# Prefer the connector's reported sync time over your local clock
-connector = get_connector(connector_token)
-started = connector["last_sync_start_time"]
-```
+    **Result:** Failures cost duplicate work, never lost records.
+  </Step>
+</Steps>
 
-## Overlap deliberately
+## Pairing it with webhooks
 
-A small backward overlap costs a handful of duplicate upserts and protects against clock skew and boundary conditions.
+Polling on a fixed schedule means either reading too early, while a sync is still running, or waiting longer than necessary.
 
-```python
-from datetime import datetime, timedelta, timezone
+The more reliable pattern is to run the incremental read when the sync-completed event fires, using `modified_after` with your stored watermark. The event tells you data has landed; the filter tells you what's new. See [Trigger a Job When a Sync Completes](/how-to/sync-control/trigger-a-job-on-sync-complete).
 
-def with_overlap(watermark_iso, minutes=5):
-    ts = datetime.fromisoformat(watermark_iso.replace("Z", "+00:00"))
-    return (ts - timedelta(minutes=minutes)).isoformat().replace("+00:00", "Z")
-```
+## If this didn't work
 
-Since your writes are idempotent upserts, the overlap is free.
+<AccordionGroup>
+  <Accordion title="An incremental read returned the entire dataset">
+    Almost always a resync - everything was re-synced, so everything matches. Expected behaviour, not a bug. This is why idempotent processing matters.
+  </Accordion>
 
-## Diff before acting
+  <Accordion title="A record you know changed didn't come back">
+    Check the sync ran after the change. Until the connector syncs, the change doesn't exist in Bindbee - see [Monitor Sync Status](/how-to/troubleshooting/monitor-sync-status).
 
-Duplicates are harmless for storage and dangerous for side effects. Don't send an email, provision an account or fire a notification just because a record came back.
+    On a Development connector there's no schedule at all, so nothing is new until you trigger a sync.
+  </Accordion>
 
-```python
-WATCHED = ("employment_status", "designation", "manager",
-           "work_email", "termination_date", "department")
+  <Accordion title="You're reading a related model that didn't update">
+    `modified_after` is per model. An employee changing doesn't mark their employment or benefit records as synced, so filtering those separately can miss related changes. Where you need related records, either read them without the filter or subscribe to data-change events for the model.
+  </Accordion>
 
-def meaningfully_changed(incoming, stored):
-    if stored is None:
-        return True
-    return any(incoming.get(f) != stored.get(f) for f in WATCHED)
-
-for employee in fetch(modified_after=watermark):
-    stored = load(employee["id"])
-    upsert(employee)                            # always
-    if meaningfully_changed(employee, stored):
-        trigger_downstream(employee)            # only when real
-```
-
-## First run
-
-There is no watermark on the first run. Omit the parameter entirely to get everything:
-
-```python
-watermark = load_watermark(tenant_id)
-filters = {"modified_after": watermark} if watermark else {}
-```
-
-<Warning>
-  Do not fake a first-run watermark with an arbitrary old date. Omitting the
-  parameter is unambiguous; a guessed date can silently exclude records.
-</Warning>
-
-## Combining with other filters
-
-`modified_after` composes with everything else:
-
-```bash
-curl -G "https://api.bindbee.dev/api/hris/v1/employees" \
-  -H "Authorization: Bearer $BINDBEE_API_KEY" \
-  -H "X-Connector-Token: $CONNECTOR_TOKEN" \
-  --data-urlencode "modified_after=2026-07-21T00:00:00.000Z" \
-  --data-urlencode "employment_status=ACTIVE" \
-  --data-urlencode "expand=manager,company" \
-  --data-urlencode "page_size=200"
-```
-
-<Warning>
-  Adding `employment_status=ACTIVE` to an incremental read means you never see
-  terminations - a leaver flips to `INACTIVE` and disappears from your results
-  rather than arriving as a change. If you track offboarding, run the
-  incremental read **without** a status filter and branch on the value.
-</Warning>
-
-## Triggering it
-
-| Trigger | Notes |
-| --- | --- |
-| `connector_synced` webhook | Lowest latency; run the read as the handler |
-| Scheduled sweep | Correctness net for events lost in the retry gap |
-| User clicks "Refresh" | Resync first, then read after `sync_status` is `Done` |
-
-Run both of the first two. They share the same code path, and the sweep costs almost nothing when webhooks are healthy. See [Webhooks vs Polling](/explanation/webhooks-vs-polling).
-
-## Which models support it
-
-`modified_after` is available across the unified list endpoints - HRIS, ATS and LMS. If a particular endpoint does not accept it, the parameter is ignored rather than erroring, so confirm against the endpoint's reference page when building a critical path.
+  <Accordion title="You need to know what changed, not just which records">
+    The filter returns current state, not a diff. To act on specific changes, compare against your own stored copy, or subscribe to the data-change events, which return the IDs of affected records per model.
+  </Accordion>
+</AccordionGroup>
 
 ## Related
 
-<CardGroup cols={2}>
-  <Card title="Paginate Through Results" icon="list-ordered" href="/how-to/paginate">
-    The loop this pattern runs inside.
-  </Card>
-  <Card title="Field Semantics" icon="circle-help" href="/explanation/field-semantics">
-    Why modified_at moves when nothing changed.
-  </Card>
-</CardGroup>
+- [Get Employees](/hris/employee/get-employees) - parameter reference
+- [Sync Frequency](/api-reference/basics/sync-frequency)

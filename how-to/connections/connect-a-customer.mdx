@@ -170,7 +170,7 @@ The `integration` slug comes from the [Integrations](/integrations) list. If you
   </Tab>
 </Tabs>
 
-You can match the flow to your own branding - logo, favicon and brand colour - under [Organization settings](/how-to/embed-brand-customization).
+You can match the flow to your own branding - logo, favicon and brand colour - under [Organization settings](/how-to/connections/embed-brand-customization).
 
 ---
 
@@ -276,10 +276,10 @@ Read `status` and `sync_status` as two separate things:
 
 <Note>
   In **Development**, `sync_status` stays idle until you trigger a sync yourself.
-  See [Force a resync](/how-to/force-a-resync).
+  See [Force a resync](/how-to/sync-control/force-a-resync).
 </Note>
 
-Rather than polling, subscribe to the `connector_synced` webhook - see [Handle Webhooks](/how-to/handle-webhooks).
+Rather than polling, subscribe to the `connector_synced` webhook - see [Handle Webhooks](/how-to/reliability/handle-webhooks).
 
 ---
 
@@ -298,7 +298,7 @@ Once `sync_status` is `Done`, confirm the connection in your UI with real number
 ## Next
 
 <CardGroup cols={2}>
-  <Card title="Read Employee Data" icon="users" href="/how-to/read-employee-directory">
+  <Card title="Read Employee Data" icon="users" href="/how-to/reading-data/read-employee-data">
     Page through, filter, and expand the data you just synced.
   </Card>
   <Card title="Connector States & Lifecycle" icon="network" href="/explanation/connector-lifecycle">

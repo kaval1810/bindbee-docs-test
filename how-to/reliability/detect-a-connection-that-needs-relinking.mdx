@@ -1,0 +1,103 @@
+---
+title: "Detect a Connection That Needs Relinking"
+description: "Get notified when an end user's credentials stop working, and prompt them to reconnect before your pipeline reads stale data."
+---
+
+Source-system credentials expire, get rotated, or lose permissions. When that happens the connector stops syncing, and unless you're listening, your pipeline keeps reading the last successful sync and silently serves stale data.
+
+<Info>
+  **Before you start**
+
+  - You have an HTTPS endpoint that can receive `POST` requests and respond within 10 seconds.
+  - You can map an incoming `connector.id` back to the customer in your own system.
+</Info>
+
+## Steps
+
+<Steps>
+  <Step title="Subscribe to the sync error event">
+    Create a webhook for the environment you're operating in and select **Sync error**. See [Create a Webhook](/how-to/reliability/create-a-webhook).
+
+    **Result:** Your endpoint receives a `connector_sync_error` payload whenever a sync fails.
+  </Step>
+
+  <Step title="Read the connector status from the payload">
+    Each payload carries a `connector` object identifying the connection, and an `error` object describing the failure.
+
+    ```json
+    {
+      "webhook": { "event": "connector_sync_error" },
+      "connector": {
+        "id": "019ebc1c-953a-7ba9-b599-0e6599e30304",
+        "display_name": "Workday",
+        "integration_slug": "workday",
+        "origin_id": "your_internal_customer_id",
+        "connector_status": "COMPLETE",
+        "end_user_name": "Coca Cola"
+      },
+      "data": { "display_status": "Failed" },
+      "error": {
+        "failed_at": "2026-07-07T11:21:35.837448+00:00",
+        "message": "A runtime error occurred during the sync process.",
+        "detail": {}
+      },
+      "sync": { "sync_id": "019f3c4f-...", "sync_type": "AUTOMATED", "sync_name": "#6" }
+    }
+    ```
+
+    Branch on `connector.connector_status`. A status indicating the connection needs re-authentication means the end user must reconnect; any other status is a transient or data-level failure that will retry on the next scheduled sync.
+
+    <Warning>
+      **VERIFY.** Support guidance describes a `RELINK_NEEDED` value on `connector_status` as the signal for re-authentication, but only `COMPLETE` appears in the published payload samples. Confirm the full enum before shipping a branch on this field.
+    </Warning>
+
+    **Result:** You can tell "this user must act" from "this will fix itself".
+  </Step>
+
+  <Step title="Route the connection to your own re-auth flow">
+    Use `connector.origin_id` to resolve the connection back to your customer record. Mark the connection as degraded in your system so downstream jobs skip it, then prompt the customer to reconnect.
+
+    To generate a fresh connection link, see [Update Credentials After an Auth Failure](/how-to/connections/update-credentials).
+
+    **Result:** The affected customer is notified and your pipeline stops treating their data as current.
+  </Step>
+
+  <Step title="Detect syncs that never start">
+    A failed sync fires an event. A sync that simply doesn't run does not.
+
+    Subscribe to **Sync start** as well, record the `sync.sync_id` and timestamp per connector, and alert when the gap since the last start exceeds the connector's configured cadence plus a margin. When you need data sooner than the next scheduled run, call [Force a Resync](/api-reference/connectors/resync-connector).
+
+    **Result:** Silent stalls surface as alerts rather than as stale reads.
+  </Step>
+</Steps>
+
+## What you just did
+
+You closed the three gaps that let stale data reach production undetected: a failed sync, an expired credential, and a sync that never started. The remaining gap is reading data mid-sync - for that, gate your job on `connector_synced` rather than on a clock. See [Trigger a Job When a Sync Completes](/how-to/sync-control/trigger-a-job-on-sync-complete).
+
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="No events arrive at all">
+    Webhooks are environment-specific. A Production webhook receives nothing for Development connectors, and the reverse. Confirm the webhook type matches the connector's environment.
+  </Accordion>
+
+  <Accordion title="Events arrive intermittently">
+    Bindbee retries up to 4 times within 60 seconds, with a 10-second timeout per attempt. Every non-`2xx` response and every network-layer failure counts as a failed attempt.
+
+    If your handler does work before responding, it will exceed the timeout under load. Acknowledge with `200` immediately and process asynchronously. Deliveries that exhaust all retries are not redelivered later - see [Recover a Missed Webhook Delivery](/how-to/reliability/recover-a-missed-delivery).
+  </Accordion>
+
+  <Accordion title="You're on a cron schedule and don't want to move to webhooks">
+    You don't have to move your processing. Subscribe to sync error alone, purely as a signal to skip or defer that customer's run - your cron keeps its schedule, and this stops it from processing a connection that hasn't updated.
+  </Accordion>
+
+  <Accordion title="The error message is generic">
+    `error.message` can be a summary, with `detail` returned as an empty object when nothing more specific is available. Use the connector's sync history for the per-model breakdown - see [Diagnose a Partial Sync](/how-to/troubleshooting/diagnose-a-partial-sync).
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Webhooks](/webhooks/overview) - events, payloads, and retry behaviour
+- [Force Resync a Connector](/api-reference/connectors/resync-connector)

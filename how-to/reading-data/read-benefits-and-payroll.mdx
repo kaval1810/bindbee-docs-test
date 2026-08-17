@@ -332,7 +332,7 @@ for epr in fetch_all("/api/hris/v1/employee-payroll-runs"):
 | `benefit-coverages` empty | Not supported by that connector - see [Integrations & Coverage](/integrations) |
 | Annual cost looks 2x wrong | `frequency` mishandled - see Step 1 |
 
-For anything the unified model does not carry, check `include_raw_data=true` first, then reach for a [custom field](/how-to/map-custom-fields) or [passthrough](/how-to/use-passthrough).
+For anything the unified model does not carry, check `include_raw_data=true` first, then reach for a [custom field](/how-to/data-model/map-custom-fields) or [passthrough](/how-to/writing-data-back/make-a-passthrough-request).
 
 ## Next
 
@@ -340,7 +340,7 @@ For anything the unified model does not carry, check `include_raw_data=true` fir
   <Card title="Benefits Models Explained" icon="list-tree" href="/explanation/benefits-models">
     The full conceptual treatment of the benefits graph.
   </Card>
-  <Card title="Write Data Back" icon="square-pen" href="/how-to/write-data-back">
+  <Card title="Write Data Back" icon="square-pen" href="/how-to/writing-data-back/write-data-back">
     Push time off, timesheets and payroll data into the source system.
   </Card>
 </CardGroup>
