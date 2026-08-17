@@ -322,6 +322,21 @@
                       "hris/groups/get-groups",
                       "hris/groups/get-group-by-id"
                     ]
+                  },
+                  {
+                    "group": "Location",
+                    "pages": [
+                      "hris/locations/get-locations",
+                      "hris/locations/get-location-by-id"
+                    ]
+                  },
+                  {
+                    "group": "Documents",
+                    "pages": [
+                      "hris/documents/get-documents",
+                      "hris/documents/get-document-by-id",
+                      "hris/documents/get-document-download-url"
+                    ]
                   }
                 ]
               },
@@ -363,6 +378,13 @@
                       "hris/employee-payroll-runs/get-employee-payroll-runs-by-id",
                       "hris/employee-payroll-runs/get-create-employee-payroll-run-meta",
                       "hris/employee-payroll-runs/create-employee-payroll-runs"
+                    ]
+                  },
+                  {
+                    "group": "Payroll Codes",
+                    "pages": [
+                      "hris/payroll-codes/get-payroll-codes",
+                      "hris/payroll-codes/get-payroll-code-by-id"
                     ]
                   }
                 ]

@@ -36,6 +36,8 @@ The employee model is the entry point for most integrations. This page covers wh
 
     One expanded request beats N+1 follow-up calls, which is what exhausts the per-connector rate limit on large populations.
 
+    `work_locations` expands into the [Location](/hris/locations/get-locations) model - name, street, city, state, postal code and country - which is what you need for tax jurisdiction or eligibility by state.
+
     **Result:** Related data inline, at the cost of a larger response - lower `page_size` when expanding.
   </Step>
 
@@ -108,6 +110,6 @@ The employee model is the entry point for most integrations. This page covers wh
 
 ## Related
 
-- [Get Employees](/hris/employee/get-employees) · [Get Employments](/hris/employments/get-employments)
+- [Get Employees](/hris/employee/get-employees) · [Get Employments](/hris/employments/get-employments) · [Get Locations](/hris/locations/get-locations)
 - [Filter and Narrow a Collection](/how-to/reading-data/filter-and-narrow-a-collection)
 - [Include raw_data and Custom Fields in a Response](/how-to/reading-data/include-raw-data-and-custom-fields) - when the unified fields aren't enough
