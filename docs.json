@@ -142,7 +142,7 @@
               "how-to/connections/create-a-connector-programmatically",
               "how-to/connections/update-credentials",
               "how-to/connections/rename-or-delete-a-connector",
-              "how-to/connections/customise-the-connection-experience"
+              "how-to/connections/embed-the-connection-flow"
             ]
           },
           {
@@ -267,7 +267,8 @@
                 "group": "Embedded Link",
                 "pages": [
                   "sdk/create-link-token",
-                  "sdk/get-connector-token"
+                  "sdk/get-connector-token",
+                  "sdk/embedded-component"
                 ]
               },
               {
@@ -966,6 +967,10 @@
     {
       "source": "/how-to/setup/environments/production",
       "destination": "/concepts/environments/production"
+    },
+    {
+      "source": "/how-to/connections/customise-the-connection-experience",
+      "destination": "/how-to/connections/embed-the-connection-flow"
     }
   ],
   "api": {

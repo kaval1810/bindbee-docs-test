@@ -1,6 +1,5 @@
 ---
-title: "Customise the Connection Experience"
-sidebarTitle: "Customise the Experience"
+title: "Embed the Connection Flow"
 description: "Embed the connection flow inside your own product and brand it as yours, instead of sending customers to a hosted Magic Link."
 ---
 
@@ -51,6 +50,7 @@ A Magic Link takes your customer to a Bindbee-hosted page. Embedding the same fl
             "category": "HRIS",
             "integration": "bamboohr",
         },
+        timeout=30,
     )
     resp.raise_for_status()
     link_token = resp.json()["link_token"]
@@ -64,7 +64,13 @@ A Magic Link takes your customer to a Bindbee-hosted page. Embedding the same fl
   </Step>
 
   <Step title="Mount the flow in your frontend">
-    Use the React package if you have React, the CDN script otherwise.
+    Use the React package if you have React, the CDN script otherwise. `@bindbee/react-link` is the only SDK Bindbee ships - everything else is a plain HTTP call.
+
+    ```bash
+    npm install --save @bindbee/react-link
+    # or
+    yarn add @bindbee/react-link
+    ```
 
     <CodeGroup>
 
@@ -112,6 +118,14 @@ A Magic Link takes your customer to a Bindbee-hosted page. Embedding the same fl
       --url 'https://api.bindbee.dev/api/embedded/v1/connectors/connector_token/<TEMPORARY_TOKEN>' \
       --header 'Authorization: Bearer <BINDBEE_API_KEY>'
     ```
+
+    The response carries both identifiers:
+
+    ```json
+    { "connector_token": "...", "connector_id": "..." }
+    ```
+
+    Store both. `connector_token` authenticates every later call; `connector_id` is what you use for support, feature-flagging, and keying stored tokens - see [Go-Live Checklist](/how-to/setup/go-live-checklist).
 
     **Result:** a `connector_token`, stored against your customer record. Every later read or write for that customer carries it.
   </Step>

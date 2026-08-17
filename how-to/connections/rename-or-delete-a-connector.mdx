@@ -6,19 +6,19 @@ description: "Change a connector's display name, or remove one permanently - and
 Renaming is cosmetic. Deletion is permanent and destroys the connector's record identities, which breaks every Bindbee ID your system has stored for that customer.
 
 <Warning>
-  Deletion is not a reset. To recover a broken connector, [force a resync](/how-to/sync-control/force-a-resync); to fix expired credentials, [relink it](/how-to/connections/update-credentials). Both preserve the connector and its IDs.
+  Deletion is not a reset. To refresh stale or wrong-looking data, [force a resync](/how-to/sync-control/force-a-resync); to fix a connector in `RELINK_NEEDED`, [relink it](/how-to/connections/update-credentials) - a resync cannot repair credentials. Both preserve the connector and its IDs.
 </Warning>
 
 ## Rename a connector
 
 The display name identifies the connection in the dashboard and in webhook payloads as `connector.display_name`. It has no effect on the API - nothing is keyed on it.
 
-Open the connector and edit the name from its page.
-
-{/* VERIFY: confirm the display name is editable after creation, and where the control sits. Ticket 1068 asked and the thread has no answer. */}
+<Warning>
+  Renaming is not self-serve. There is no control for it in the dashboard - request it through your support channel with the connector and the name you want.
+</Warning>
 
 <Tip>
-  Name connectors after the end customer rather than the integration. Once an account has several connectors on the same platform, a list of identically-named entries is unusable - and `origin_id`, set at Magic Link creation, is what actually resolves a connector back to your own customer record.
+  Because renaming costs a support request, don't rely on the display name to tell connectors apart. `origin_id` is set when the connection is created, comes back on every webhook as `connector.origin_id`, and is what actually resolves a connector to your own customer record - see [Create a Connector Programmatically](/how-to/connections/create-a-connector-programmatically).
 </Tip>
 
 ## Delete a connector
@@ -40,11 +40,11 @@ Open the connector and edit the name from its page.
   <Step title="Delete it">
     ```bash
     curl --request DELETE \
-      --url 'https://api.bindbee.dev/api/v1/connectors/<CONNECTOR_ID>' \
+      --url 'https://api.bindbee.dev/api/hris/v1/connectors/<CONNECTOR_ID>/delete' \
       --header 'Authorization: Bearer <BINDBEE_API_KEY>'
     ```
 
-    See [Delete Connector](/api-reference/connectors/delete-connector) for the exact request shape.
+    The path carries the connector's category - `/api/{category}/v1/connectors/{connector_id}/delete`, where `category` is `hris`, `ats` or `lms`. See [Delete Connector](/api-reference/connectors/delete-connector) for the exact request shape.
 
     From the dashboard, the control is on the connector's page.
 
@@ -90,5 +90,6 @@ Open the connector and edit the name from its page.
 
 ## Related
 
+- [Connector lifecycle](/concepts/connector-lifecycle) - what deletion destroys, and why relinking is almost always the right action
 - [Delete Connector](/api-reference/connectors/delete-connector)
 - [Connectors](/platform/connectors)

@@ -21,15 +21,23 @@ This means a connection problem is usually not yours to fix. Expired credentials
 
 Bindbee offers the same authorisation flow through two surfaces.
 
-**Magic Link** is a hosted, in-browser experience delivered as a secure URL. You supply your customer's details, Bindbee generates the link, and you send it to them. They open it, choose their system, and authorise. This requires no front-end code on your side at all, which makes it the right choice for onboarding handled by a human - an implementation manager emailing a new customer, for instance.
+**Magic Link** is a hosted, in-browser experience delivered as a secure URL. You supply your customer's details, Bindbee generates the link, and you send it to them. They open it and authorise. This requires no front-end code on your side at all, which makes it the right choice for onboarding handled by a human - an implementation manager emailing a new customer, for instance.
 
 **The embedded SDK** puts the same flow inside your own application, so the customer never leaves your product. This is the right choice when connecting an HR system is a step in your own onboarding rather than a separate implementation task.
 
-The distinction is presentation, not capability. Both produce a connector; both put the customer's administrator in control.
+Both produce a connector, both put the customer's administrator in control, and neither lets the end user choose which system to connect - the integration is fixed before the link or session exists.
+
+They differ in one respect that shapes your code: **how you learn the connection succeeded.**
+
+| | Hosted Magic Link | Embedded SDK |
+| --- | --- | --- |
+| Front-end code | None | React hook or CDN script |
+| Completion signal | No callback - a webhook, or fetch the connector by `origin_id` | `onSuccess` fires in the browser with a `temporary_token` |
+| Getting the token | Read `connector_token` from the connector | Exchange the `temporary_token` from your backend |
+
+So the embedded flow can react the moment your customer finishes, while the hosted flow learns about it asynchronously. See [Embed the Connection Flow](/how-to/connections/embed-the-connection-flow) and [Create a Connector Programmatically](/how-to/connections/create-a-connector-programmatically).
 
 {/* VERIFY: link lifetime and expiry behaviour. Confirm how long a generated Magic Link remains valid, what an end user sees after expiry, and whether a link is single-use or reusable. */}
-
-{/* VERIFY: whether the embedded SDK and hosted Magic Link differ in any functional respect beyond presentation - e.g. supported integrations, ability to pre-select an integration, or post-authorisation callbacks. */}
 
 ## What the end user actually does
 
