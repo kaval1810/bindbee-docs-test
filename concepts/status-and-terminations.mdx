@@ -29,6 +29,8 @@ The original string is preserved in raw data. If the local vocabulary carries me
 
 ## Transfers and rehires create new records
 
+{/* DIAGRAM (tier 2): before/after for one person. Before - one Employee, one open Employment. After a transfer - the same Employee with one terminated Employment and one open one. After a rehire on a system that mints a new identifier - two Employee records, which is the duplicate this section warns about. Should make clear that "current" is the employment without a termination date, not the first in the array. */}
+
 Two lifecycle events routinely produce a second record for someone who never left.
 
 A **transfer** between positions, departments, or legal entities is implemented in several systems as terminating the existing employment and creating a new one. The person now has one terminated employment and one active employment. Both are real and both are correct - the employment history is genuinely two segments.

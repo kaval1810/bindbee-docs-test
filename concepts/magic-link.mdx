@@ -29,6 +29,27 @@ Both produce a connector, both put the customer's administrator in control, and 
 
 They differ in one respect that shapes your code: **how you learn the connection succeeded.**
 
+```mermaid
+sequenceDiagram
+    participant B as Your backend
+    participant F as Your frontend
+    participant C as Customer's admin
+    participant S as Source system
+
+    Note over B,S: Hosted Magic Link
+    B->>C: send the link
+    C->>S: authorise
+    S-->>B: webhook, or fetch by origin_id
+
+    Note over B,S: Embedded SDK
+    B->>F: link_token
+    F->>C: flow opens in your product
+    C->>S: authorise
+    S-->>F: onSuccess(temporary_token)
+    F->>B: temporary_token
+    B->>B: exchange for connector_token
+```
+
 | | Hosted Magic Link | Embedded SDK |
 | --- | --- | --- |
 | Front-end code | None | React hook or CDN script |

@@ -9,6 +9,19 @@ A connector is the only object in Bindbee with a lifecycle you have to manage. I
 
 A connector's `status` field carries one of three values. The names below are the ones the API returns.
 
+```mermaid
+stateDiagram-v2
+    [*] --> INCOMPLETE: you create a connection
+    INCOMPLETE --> COMPLETE: customer authorises
+    COMPLETE --> RELINK_NEEDED: credentials stop working
+    RELINK_NEEDED --> COMPLETE: customer relinks
+    COMPLETE --> [*]: delete
+    INCOMPLETE --> [*]: delete
+    RELINK_NEEDED --> [*]: delete
+```
+
+Relinking is the only edge that returns a connector to health, and deletion is the only one that cannot be walked back.
+
 **Pending (`INCOMPLETE`).** Created when you initiate a connection, before your customer has authorised it. No credentials, no data, no syncs.
 
 **Active (`COMPLETE`).** Authorised and syncing on schedule. The normal steady state.

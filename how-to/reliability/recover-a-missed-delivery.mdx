@@ -6,6 +6,19 @@ description: "Recover state after your endpoint was unreachable, since exhausted
 
 Bindbee retries a failed delivery up to 4 times within 60 seconds, with a 10-second timeout per attempt. After that the delivery is abandoned and **not** redelivered later.
 
+```mermaid
+flowchart LR
+    A["Event fires"] --> B["Attempt 1<br/>10s timeout"]
+    B -->|non-2xx or timeout| C["Up to 4 retries<br/>inside 60s"]
+    C -->|any 2xx| D["Delivered"]
+    B -->|2xx| D
+    C -->|still failing at 60s| E["Abandoned<br/>never redelivered"]
+    E -.->|only route back| F["Your reconciliation sweep<br/>reads modified_after"]
+
+    classDef node fill:#F9F9F8,stroke:#E06D10,stroke-width:1.5px,color:#111,rx:8,ry:8
+    class A,B,C,D,E,F node
+```
+
 An outage longer than a minute means permanently lost events. Recovery is a read, not a replay.
 
 <Info>

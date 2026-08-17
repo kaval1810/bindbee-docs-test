@@ -13,6 +13,8 @@ Errors fall into three groups: fix the request, back off and retry, or act on th
 
 ## Steps
 
+{/* DIAGRAM (tier 2, lowest priority - the status table already carries most of this): decision flow from a response to one of three actions - fix the request, back off and retry, act on the connection. Only worth adding if it earns its place beside the table rather than restating it. */}
+
 <Steps>
   <Step title="Classify the status">
     | Status | Meaning | Retry? |

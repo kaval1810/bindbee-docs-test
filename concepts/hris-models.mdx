@@ -9,6 +9,16 @@ The reason is that they change independently of the person, and often more than 
 
 ## The person and their employments
 
+```mermaid
+erDiagram
+    EMPLOYEE ||--o{ EMPLOYMENT : "has, often several"
+    EMPLOYEE ||--o{ COMPENSATION : "changes on its own schedule"
+    EMPLOYEE }o--|| COMPANY : "employed by"
+    EMPLOYEE }o--o{ GROUP : "belongs to"
+    EMPLOYEE }o--o| LOCATION : "works at"
+    GROUP ||--o{ GROUP : "parent, forming a hierarchy"
+```
+
 **Employee** holds what is true of the human: name, contact details, date of birth, dependants, identifiers.
 
 **Employment** holds what is true of a period of work: job title, employment type, effective dates, and the reporting relationship. A person can have several, and this is normal rather than exceptional.

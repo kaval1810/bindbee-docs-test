@@ -9,6 +9,8 @@ Almost everything that surprises people about freshness, latency, and timing fol
 
 ## The initial sync
 
+{/* DIAGRAM (tier 2): timeline from authorisation onward - initial sync (full read of every in-scope model, duration varies by tenant size), then the 24-hour recurring schedule, with on-demand resyncs sitting outside the schedule. Mark the window where reads succeed but return partial data, since that is the failure this page exists to prevent. */}
+
 A connector becomes usable the moment your customer authorises it, but it has no data yet. Bindbee immediately begins an initial sync: a full read of every model in your scope, paginated through the source system's API or assembled from a delivered file.
 
 How long this takes depends on the integration and the size of the customer. A small BambooHR tenant may finish in under a minute. A large Workday tenant with several models enabled can take considerably longer.
