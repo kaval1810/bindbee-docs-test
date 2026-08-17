@@ -3,7 +3,7 @@ title: "Authenticate a Request"
 description: "Send an authenticated request to the Bindbee unified API using your API key and an end user's connector token."
 ---
 
-Every request to the Bindbee unified API needs two headers: your organization's API key, and the connector token for the end user whose data you're reading or writing.
+Every request to the Bindbee unified API carries your organization's API key, and the connector token for the end user whose data you're reading or writing.
 
 <Info>
   **Before you start**
@@ -81,6 +81,8 @@ Every request to the Bindbee unified API needs two headers: your organization's 
 | [Webhooks](/webhooks/overview) and delivery logs | Required | Not used |
 
 `category` is `hris`, `ats` or `lms`. Connector-scoped endpoints act on one end user. Organization-scoped endpoints act across your whole account, so they take the API key alone.
+
+Write endpoints take a third header, `X-Idempotency-Key`. It is not part of authentication - it stops a retried request creating a duplicate record. See [Create an Employee](/how-to/writing-data-back/create-an-employee) for how to derive one.
 
 <Warning>
   [Rate limits](/api-reference/basics/rate-limits) are enforced per connector token, not per API key. Each end user gets an independent 200 requests per minute.
