@@ -1,0 +1,139 @@
+---
+title: "Create a Candidate with a Résumé"
+sidebarTitle: "Create a Candidate"
+description: "Push a sourced candidate into the customer's ATS and attach their résumé, without creating duplicates."
+---
+
+ATS is the write-heavy category - most integrations that touch it push candidates in rather than only reading them out. The write and the attachment are two calls.
+
+<Info>
+  **Before you start**
+
+  - You have confirmed the integration supports candidate writes - see [Check Which Writes an Integration Supports](/how-to/writing-data-back/check-write-support). Probe `GET /api/ats/v1/candidates/create/meta`.
+  - You can generate a stable idempotency key per candidate.
+</Info>
+
+## Steps
+
+<Steps>
+  <Step title="Fetch the write schema">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/ats/v1/candidates/create/meta' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    Build the body from this rather than hardcoding it - required fields differ per integration, and a required `integration_params` block means the write needs platform-specific values you must source first. See [Fetch a Write Schema from the Meta API](/how-to/writing-data-back/fetch-a-write-schema).
+
+    **Result:** The body this integration accepts.
+  </Step>
+
+  <Step title="Check whether the person already exists">
+    Search before writing. Candidates are people, and the same person sourced twice becomes two records that a recruiter then has to merge by hand.
+
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/ats/v1/candidates?email_addresses=ada@example.com' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    **Result:** Either an existing candidate to attach to, or confirmation you're creating a new one.
+  </Step>
+
+  <Step title="Create the candidate">
+    ```bash
+    curl --request POST \
+      --url 'https://api.bindbee.dev/api/ats/v1/candidates' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>' \
+      --header 'X-Idempotency-Key: <STABLE_KEY>' \
+      --header 'Content-Type: application/json' \
+      --data '{
+        "data": {
+          "first_name": "Ada",
+          "last_name": "Lovelace",
+          "email_addresses": ["ada@example.com"],
+          "phone_numbers": ["+1-555-0100"],
+          "title": "Staff Engineer"
+        }
+      }'
+    ```
+
+    The payload nests under `data`. `email_addresses`, `phone_numbers`, `locations`, `urls` and `tags` are arrays even when you have one value.
+
+    <Warning>
+      Derive `X-Idempotency-Key` from your own record for this person - not a random value, not a timestamp. A retry must reuse the same key, or you create a second candidate in the customer's ATS. See [Create an Employee](/how-to/writing-data-back/create-an-employee) for the same rule on the HRIS side.
+    </Warning>
+
+    **Result:** A candidate, with an `id` you store against your own record.
+  </Step>
+
+  <Step title="Attach the résumé">
+    ```bash
+    curl --request POST \
+      --url 'https://api.bindbee.dev/api/ats/v1/candidates/<CANDIDATE_ID>/attachments' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>' \
+      --header 'Content-Type: application/json' \
+      --data '{
+        "file_name": "ada-lovelace-cv.pdf",
+        "file_url": "https://your-app.example.com/files/ada-cv.pdf",
+        "attachment_type": "RESUME",
+        "content_type": "application/pdf"
+      }'
+    ```
+
+    This is JSON, not multipart. Supply either `file_url` for Bindbee to fetch, or `file_content` inline.
+
+    `attachment_type` is one of `RESUME`, `COVER_LETTER`, `OFFER_LETTER`, `OTHER`, or `-`.
+
+    **Result:** The file attached to the candidate.
+  </Step>
+
+  <Step title="Read it back">
+    A `2xx` means the ATS accepted the write, not that it is visible yet.
+
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/ats/v1/candidates?ids=<CANDIDATE_ID>&expand=attachments' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    Don't block your UI on this - see the go-live checklist item on readback in [Go-Live Checklist](/how-to/setup/go-live-checklist).
+
+    **Result:** Confirmation the candidate and file landed.
+  </Step>
+</Steps>
+
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="The write returned 501">
+    The Meta schema isn't published for this integration. That is not the same as the write being unsupported - see [Meta APIs](/meta-apis-for-write-operations#meta-api-not-implemented-for-an-integration).
+  </Accordion>
+
+  <Accordion title="The write returned 422 though the body matches the schema">
+    The ATS enforces rules beyond the structural contract - a required field on their form, a job the candidate must be attached to, a duplicate-detection rule of their own. The `detail` array names the field - see [Handle API Errors](/how-to/setup/handle-api-errors).
+  </Accordion>
+
+  <Accordion title="The candidate appears twice">
+    A retry without a consistent `X-Idempotency-Key`, or no existence check before writing. Merge in the ATS - Bindbee doesn't own the record once created - then fix the key derivation.
+  </Accordion>
+
+  <Accordion title="The attachment was rejected">
+    Confirm `file_url` is reachable without authentication, since Bindbee fetches it. Where it isn't, send `file_content` inline instead.
+  </Accordion>
+
+  <Accordion title="The candidate exists but has no application">
+    Creating a candidate does not apply them to a job. Where the integration supports it, create the application separately - see [Create Application](/ats/application/create-application).
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Check Which Writes an Integration Supports](/how-to/writing-data-back/check-write-support)
+- [Create Candidate](/ats/candidate/create-candidate) · [Write Attachment for Existing Candidate](/ats/candidate/write-attachment-for-existing-candidate)
+- [Read Candidates and Applications](/how-to/ats/read-candidates-and-applications)

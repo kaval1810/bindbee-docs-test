@@ -1,0 +1,117 @@
+---
+title: "Read Candidates and Applications"
+sidebarTitle: "Candidates & Applications"
+description: "Fetch the people and their pursuits as the two separate models they are, without conflating one with the other."
+---
+
+A candidate is a person. An application is that person's pursuit of one job. Conflating them is the single most common ATS integration error, and it produces counts that look plausible and are wrong.
+
+The general techniques are the same as HRIS - see [Paginate Through Results](/how-to/reading-data/paginate-through-results) and [Filter and Narrow a Collection](/how-to/reading-data/filter-and-narrow-a-collection). This page covers what's specific to ATS.
+
+<Info>
+  **Before you start**
+
+  - The connector is an ATS connector. A connector token is category-scoped, so an HRIS token on `/api/ats/v1/*` returns `403` - see [Authenticate a Request](/how-to/setup/authenticate-a-request).
+</Info>
+
+## Steps
+
+<Steps>
+  <Step title="Read candidates">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/ats/v1/candidates?page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    | Filter | Matches |
+    | --- | --- |
+    | `ids` | Bindbee record IDs, comma-separated |
+    | `remote_id` | The ATS's own identifier |
+    | `email_addresses` | Candidate email |
+    | `first_name`, `last_name` | Name |
+    | `company` | The company on the candidate record |
+    | `tag` | A tag applied in the ATS |
+
+    A candidate exists once, however many roles they pursue. `email_addresses`, `phone_numbers`, `locations`, `urls` and `tags` are all arrays.
+
+    **Result:** People, deduplicated by the ATS.
+  </Step>
+
+  <Step title="Read applications">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/ats/v1/applications?job=<JOB_ID>&page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    | Filter | Matches |
+    | --- | --- |
+    | `candidate` | Every application from one person |
+    | `job` | Every application to one opening |
+    | `current_stage` | Applications sitting at a stage |
+    | `source` | Where the application came from |
+    | `credited_to` | The recruiter credited |
+    | `reject_reason` | Applications closed for a given reason |
+
+    Each application carries `candidate`, `job`, `applied_at`, `rejected_at`, `source`, `current_stage` and `reject_reason`.
+
+    **Result:** Pursuits, one per candidate-job pair.
+  </Step>
+
+  <Step title="Count the right model for the question">
+    The two models answer different questions, and picking the wrong one is the error this page exists to prevent.
+
+    | Question | Read |
+    | --- | --- |
+    | How many people are in the pipeline? | Candidates |
+    | How many applications are open? | Applications |
+    | How many people applied to this role? | Applications filtered by `job` |
+    | Has this person applied before? | Applications filtered by `candidate` |
+
+    A candidate who applies to three roles is one candidate and three applications. Counting applications to report pipeline headcount overstates it by however many people applied more than once - which, for a company hiring across several similar roles, is a large share.
+
+    **Result:** Numbers that mean what you think they mean.
+  </Step>
+
+  <Step title="Expand rather than fetching in a loop">
+    `expand` returns related records inline. Comma-separate with no spaces.
+
+    ```
+    ?expand=candidate
+    ?expand=job,candidate
+    ```
+
+    One expanded request beats N follow-up calls, which is what exhausts the per-connector rate limit on a large pipeline - see [Handle API Errors](/how-to/setup/handle-api-errors).
+
+    **Result:** Related records inline, at the cost of a larger response.
+  </Step>
+</Steps>
+
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="Every request returns 403">
+    A connector token is scoped to one API category. An HRIS connector called on `/api/ats/v1/*` returns `403` even though the credentials are valid.
+  </Accordion>
+
+  <Accordion title="The same person appears more than once">
+    Some ATS platforms create a second candidate record rather than a second application when someone applies again, particularly across a long gap or through a different source. Match on `email_addresses` to detect it, and see [Record identity & duplicates](/concepts/record-identity).
+  </Accordion>
+
+  <Accordion title="A candidate has no applications">
+    Expected. Sourced and imported candidates exist before they apply to anything, and the `applications` array is empty until they do.
+  </Accordion>
+
+  <Accordion title="Tags don't match the customer's vocabulary">
+    Tags are free-form and highly customer-specific - see [ATS models](/concepts/ats-models). Map them per connector rather than assuming a standard set.
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [ATS models](/concepts/ats-models) - what each model holds and why they're separate
+- [Track an Application Through Its Stages](/how-to/ats/track-an-application-through-stages)
+- [Get Candidates](/ats/candidate/get-candidates) · [Get Applications](/ats/application/get-applications)

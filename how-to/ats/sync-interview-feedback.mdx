@@ -1,0 +1,103 @@
+---
+title: "Sync Interview Feedback"
+sidebarTitle: "Sync Interview Feedback"
+description: "Join scheduled interviews to their scorecards so you can report on feedback that has actually been submitted."
+---
+
+An interview is an event. A scorecard is the feedback from it. They are separate models, and the gap between them - interviews held with no feedback submitted - is usually the thing a hiring team wants surfaced.
+
+<Info>
+  **Before you start**
+
+  - You can read applications - see [Read Candidates and Applications](/how-to/ats/read-candidates-and-applications).
+  - The customer's ATS exposes scorecards. Coverage varies more than for candidates and applications.
+</Info>
+
+## Steps
+
+<Steps>
+  <Step title="Read the interviews">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/ats/v1/scheduled-interviews?application=<APPLICATION_ID>&page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    Filter by `application`, `organizer`, or `job_interview_stage`. Each record carries `start_at`, `end_at`, `location`, `organizer`, `interviewers`, and a `status`.
+
+    | `status` | Meaning |
+    | --- | --- |
+    | `SCHEDULED` | Booked, not yet held |
+    | `AWAITING_FEEDBACK` | Held, feedback outstanding |
+    | `COMPLETE` | Held and feedback submitted |
+
+    **Result:** The interview events, with where each one stands.
+  </Step>
+
+  <Step title="Read the scorecards">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/ats/v1/scorecards?application=<APPLICATION_ID>&page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    Filter by `application`, `interview`, or `interviewer`. Each carries `interview`, `interviewer`, `submitted_at`, and `overall_recommendation`.
+
+    **Result:** The feedback that exists.
+  </Step>
+
+  <Step title="Join on the interview, not the application">
+    A scorecard's `interview` field points at the scheduled interview it belongs to. Joining on `application` alone collapses several rounds into one and makes per-round reporting impossible.
+
+    ```python
+    by_interview = {s["interview"]: s for s in scorecards}
+    for iv in interviews:
+        feedback = by_interview.get(iv["id"])          # may be absent
+    ```
+
+    **Result:** Feedback attributed to the round it came from.
+  </Step>
+
+  <Step title="Surface the missing feedback">
+    The gap is the useful output. An interview with `AWAITING_FEEDBACK` and no scorecard is a real, actionable state - it is what stalls a pipeline.
+
+    ```python
+    outstanding = [
+        iv for iv in interviews
+        if iv["status"] == "AWAITING_FEEDBACK" and iv["id"] not in by_interview
+    ]
+    ```
+
+    Report on it by interviewer and by age. Treat a missing scorecard as pending rather than as a negative signal - absence is not an evaluation.
+
+    **Result:** A list of chases, rather than a silent gap.
+  </Step>
+</Steps>
+
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="Scorecards return nothing though interviews happened">
+    Either feedback genuinely hasn't been submitted, or this integration doesn't expose scorecards. Check `raw_data` on an interview you know was scored - see [Inspect the Raw Upstream Payload](/how-to/data-model/inspect-the-raw-upstream-payload).
+  </Accordion>
+
+  <Accordion title="overall_recommendation values don't match between customers">
+    Recommendation vocabularies are platform- and customer-specific, like reject reasons. Map them per connector rather than assuming a standard scale, and see [Enum values](/concepts/enum-values) for why unmapped values pass through verbatim.
+  </Accordion>
+
+  <Accordion title="A scorecard has no matching interview">
+    Some platforms allow feedback recorded against an application without a scheduled interview - ad-hoc notes, or an interview arranged outside the ATS. Fall back to the application when `interview` is null rather than dropping the record.
+  </Accordion>
+
+  <Accordion title="Interview counts don't match the recruiter's">
+    Cancelled and rescheduled interviews are modelled inconsistently across platforms - some leave the original record, some replace it. Compare against `raw_data` for one application before trusting a count.
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [ATS models](/concepts/ats-models) - the event and the evaluation are separate
+- [Track an Application Through Its Stages](/how-to/ats/track-an-application-through-stages)
+- [Get Scheduled Interviews](/ats/scheduled-interview/get-scheduled-interviews) · [Get Scorecards](/ats/scorecard/get-scorecards)
