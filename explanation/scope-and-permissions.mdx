@@ -3,61 +3,80 @@ title: "Scope & permissions"
 description: "The two mechanisms that decide which data reaches you, and why a missing permission omits a field rather than raising an error."
 ---
 
-You called an endpoint, got a 200, and the field you needed came back empty - or the whole model came back as an empty list. Nothing failed. There is no error to look up.
+You called an endpoint, got a `200`, and the field you needed came back empty - or the whole model came back as an empty list. Nothing failed. There is no error to look up.
 
-This is almost always one of three filters doing its job. Data has to survive all three to reach you, and only one of them is yours to control.
+This is almost always one of three filters doing its job. **Data has to survive all three, and only one of them is yours to control.**
 
 ## Three filters, in order
 
-Every record Bindbee returns has passed through three independent gates. They apply in this order, and each one narrows what the next one sees.
+```mermaid
+flowchart LR
+    A["Source system<br/>holds the data"] --> B["Integration<br/>exposes it"]
+    B --> C["Your scope<br/>includes it"]
+    C --> D["Credentials<br/>permit it"]
+    D --> E["It reaches you"]
+```
 
-**Integration coverage.** Not every source system exposes every model. If an HRIS has no concept of pay groups, or exposes benefits only through a report you cannot reach programmatically, that model does not exist for that integration. This is a property of the source system and its API, not a setting.
+| Filter | Decided by | Yours to change |
+| --- | --- | --- |
+| **Integration coverage** | What the vendor's API exposes | No |
+| **Scope configuration** | You, for your organisation | **Yes** |
+| **Source-system permissions** | Your customer's admin, at authorisation | No - but you can ask |
 
-**Scope configuration.** You choose which categories, models, and fields Bindbee syncs for your organisation. Anything you have not enabled is never fetched. Scope is configured once and applies across your environments - a change in development is a change in production.
+**Integration coverage** is a property of the source system, not a setting. If an HRIS has no concept of pay groups, or exposes benefits only through a report you cannot reach programmatically, that model does not exist for that integration.
 
-**Source-system permissions.** The credentials your customer's admin authorised carry a set of permissions. Bindbee can only read what those credentials can read. A connector authorised by an admin with restricted role permissions returns less than the same integration authorised by a full administrator.
+**Scope configuration** is the one lever you hold. Anything you have not enabled is never fetched. It is set once for the organisation and applies across both environments, so a change in Development is a change in Production.
 
-A field arrives only if the integration exposes it, your scope includes it, and the credentials permit it.
+**Source-system permissions** come from the credentials your customer's admin authorised. A connector authorised by an admin with a restricted role returns less than the same integration authorised by a full administrator.
 
-## Why a missing permission looks like empty data
+## Why absence is ambiguous
 
-When credentials lack permission for a field or model, the source system does not usually say so. It returns a response with that data absent, or returns a 403 on one endpoint while every other endpoint succeeds. Bindbee syncs what it received.
+When credentials lack permission, the source system usually does not say so. It returns a response with the data simply absent, and Bindbee syncs what it received. A permission problem and a genuinely empty field look identical from your side.
 
-The result is that a permission problem and a genuinely empty field look identical from your side. An employee with no compensation record and an employee whose compensation you are not permitted to read both return the same shape.
+The one signal that disambiguates cheaply is whether the value survived anywhere:
 
-<Info>
-This is the single most common cause of "the data is in the HRIS but not in the API." Before assuming a coverage gap, check whether the connector's credentials were authorised with sufficient permissions. The connector's logs will show a 403 on the specific endpoint if the source system reported one.
-</Info>
+| What you see | What it usually means |
+| --- | --- |
+| Value in `raw_data`, missing from the unified field | A mapping gap, not a permission problem |
+| Absent from both the unified field and `raw_data` | Scope excluded it, or the credentials could not read it |
+| A whole model returning an empty list | Coverage, scope, or permission - check in that order |
+| A sync error naming an authorisation failure | Permission, reported outright rather than silently |
 
-The exception is when a source system fails the whole request rather than trimming the response. Then you get a sync error rather than silence, and the connector surfaces the upstream status code and message.
+That first row is worth internalising: it separates the two causes that get confused most often, and it costs one request with `include_raw_data=true`.
 
-## Scope is a contract, not a filter on responses
+The connector's logs carry the failing request, the response, and its status code where the source system returned one - see [Resolve a Permission Error](/how-to/troubleshooting/resolve-a-permission-error).
 
-It is tempting to think of scope as a filter applied to data Bindbee already holds. It is not. Data outside your scope is never fetched and never stored.
+## Scope is a contract, not a filter
 
-Two consequences follow. First, narrowing scope does not just hide data - it stops collecting it, which reduces sync time and the volume of PII you hold. Second, widening scope does not immediately reveal data that was previously hidden, because that data was never there. Newly enabled models are populated on the next sync.
+It is tempting to read scope as a filter over data Bindbee already holds. It is not. **Data outside your scope is never fetched and never stored** - it appears in neither the unified response nor `raw_data`.
 
-{/* VERIFY: does enabling a new model trigger an immediate backfill, or wait for the next scheduled sync? Merge triggers a full sync on scope expansion. */}
+Two consequences follow:
+
+- **Narrowing scope stops collection**, rather than hiding a copy. Sync time drops, and so does the volume of personal data you hold and have to justify.
+- **Widening scope reveals nothing immediately**, because the data was never there. Newly enabled models populate on the next sync.
+
+{/* VERIFY: both this page and restrict-models-and-fields state that widening scope waits for the next scheduled sync rather than triggering a backfill. The two are docs-side and could be wrong together - needs engineering confirmation. Merge triggers a full sync on scope expansion. */}
 
 ## Why it works this way
 
-Silent omission is a deliberate choice, and it is the less obvious of the two options.
+**Silent omission is deliberate, and it is the less obvious of the two options.**
 
-The alternative is to fail loudly - return an error whenever any part of a request could not be satisfied. That produces a system where a single missing permission on one field breaks reads for every field, across every employee, for that connector. One customer's restrictive IT policy would take down your whole integration for them.
+The alternative is to fail loudly - error whenever any part of a request cannot be satisfied. That produces a system where one missing permission on one field breaks reads for every field, for every employee, on that connector. One customer's restrictive IT policy would take down your entire integration for them.
 
-Partial success keeps the integration running on whatever the credentials do permit, and pushes the diagnosis to the point where someone can act on it - the connector's logs, and the permission setup your customer's admin controls. The cost is that absence is ambiguous, which is why the diagnosis has to start with the credentials rather than with the data.
+Partial success keeps the integration running on whatever the credentials do permit, and moves the diagnosis to where someone can act on it. The cost is exactly the ambiguity above, which is why diagnosis starts with the credentials rather than with the data.
 
-Scope exists for a different reason. Unified APIs make it trivially easy to request far more personal data than a use case needs, and the default of "sync everything" is both a compliance liability and a performance cost. Making scope an explicit, up-front decision means the narrow default is the easy one.
+**Scope exists for a different reason.** Unified APIs make it trivially easy to request far more personal data than a use case needs, and a default of "sync everything" is both a compliance liability and a performance cost. Making scope an explicit, up-front decision keeps the narrow option the easy one.
 
 ## What this means for you
 
-- **An empty field is a permissions question first, a coverage question second.** Check the connector's authorising credentials before assuming the integration does not support the field.
-- **Scope changes are organisation-wide and cross-environment.** Enabling a model in development enables it in production. Plan scope before connecting production customers.
-- **Narrow scope deliberately.** Every model you do not enable is data you do not sync, do not store, and do not have to justify holding.
-- **Coverage varies by integration, not just by category.** Two HRIS connectors under the same scope configuration will not return the same models.
+- **An empty field is a permissions question first, a coverage question second.** Check the authorising credentials before assuming the integration lacks the field.
+- **Check `raw_data` before escalating.** If the value is there, it is a mapping question, not a permission one.
+- **Scope changes are organisation-wide and cross-environment.** Plan scope before connecting production customers.
+- **Narrow scope deliberately.** Every model you do not enable is data you do not sync, do not store, and do not have to account for.
+- **Coverage varies by integration, not just by category.** Two HRIS connectors under identical scope will not return the same models.
 
 ## Related
 
-- [Configure scoping](/how-to/data-model/restrict-models-and-fields) - how to set scope for your organisation
-- [Get Connectors](/api-reference/connectors/get-connectors) - inspect a connector's state and integration
+- [Configure scoping](/how-to/data-model/restrict-models-and-fields) - setting scope for your organisation
+- [Resolve a Permission Error](/how-to/troubleshooting/resolve-a-permission-error) - diagnosing the credentials case
 - [Unified model & raw data](/explanation/unified-model) - why the value you get differs from the source

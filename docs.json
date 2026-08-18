@@ -66,18 +66,10 @@
             "icon": "lightbulb",
             "pages": [
               "explanation/core-concepts",
-              {
-                "group": "Environments",
-                "pages": [
-                  "explanation/environments/overview",
-                  "explanation/environments/development",
-                  "explanation/environments/production"
-                ]
-              },
+              "explanation/environments",
               "explanation/unified-model",
               "explanation/scope-and-permissions",
               "explanation/integration-versions",
-              "explanation/multi-entity",
               "explanation/magic-link"
             ]
           },
@@ -954,19 +946,19 @@
     },
     {
       "source": "/concepts/environments",
-      "destination": "/explanation/environments/overview"
+      "destination": "/explanation/environments"
     },
     {
       "source": "/how-to/setup/environments/overview",
-      "destination": "/explanation/environments/overview"
+      "destination": "/explanation/environments"
     },
     {
       "source": "/how-to/setup/environments/development",
-      "destination": "/explanation/environments/development"
+      "destination": "/explanation/environments#development"
     },
     {
       "source": "/how-to/setup/environments/production",
-      "destination": "/explanation/environments/production"
+      "destination": "/explanation/environments#production"
     },
     {
       "source": "/how-to/connections/customise-the-connection-experience",
@@ -1006,15 +998,15 @@
     },
     {
       "source": "/concepts/environments/development",
-      "destination": "/explanation/environments/development"
+      "destination": "/explanation/environments#development"
     },
     {
       "source": "/concepts/environments/overview",
-      "destination": "/explanation/environments/overview"
+      "destination": "/explanation/environments"
     },
     {
       "source": "/concepts/environments/production",
-      "destination": "/explanation/environments/production"
+      "destination": "/explanation/environments#production"
     },
     {
       "source": "/concepts/errors-issues-and-limits",
@@ -1087,6 +1079,18 @@
     {
       "source": "/concepts/write-support",
       "destination": "/explanation/write-support"
+    },
+    {
+      "source": "/explanation/environments/overview",
+      "destination": "/explanation/environments"
+    },
+    {
+      "source": "/explanation/environments/development",
+      "destination": "/explanation/environments#development"
+    },
+    {
+      "source": "/explanation/environments/production",
+      "destination": "/explanation/environments#production"
     }
   ],
   "api": {

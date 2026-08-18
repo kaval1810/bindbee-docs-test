@@ -5,29 +5,29 @@ description: "Why your customer's admin authorises the connection rather than yo
 
 You are not the one who connects to your customer's HR system. They are.
 
-That inversion is easy to skim past, and it shapes a surprising amount - where credentials live, who to contact when a connection breaks, what happens when an employee with admin rights leaves, and why you cannot simply fix a permissions problem yourself.
+That inversion is easy to skim past, and it shapes a surprising amount - where credentials live, who to contact when a connection breaks, and **why you cannot simply fix a permissions problem yourself.**
 
 ## Authorisation belongs to the customer
 
-Reaching a company's HR data requires credentials from that company. Only someone with administrative access to their HRIS can grant it, and in almost every case they cannot delegate that to a third party even if they wanted to.
+Reaching a company's HR data requires credentials from that company. Only someone with administrative access to their HRIS can grant them, and in almost every case they cannot delegate that to a third party even if they wanted to.
 
-So the flow puts your customer's administrator in the middle. You initiate a connection for a named customer, they authorise it against their own system, and Bindbee holds the resulting credentials. Those credentials never pass through your infrastructure and are never yours to store.
+So the flow puts your customer's administrator in the middle. You initiate a connection for a named customer, they authorise it against their own system, and Bindbee holds the resulting credentials. **Those credentials never pass through your infrastructure and are never yours to store.**
 
 <Info>
-This means a connection problem is usually not yours to fix. Expired credentials, insufficient permissions, and revoked access all resolve on the customer's side, and your role is to detect the condition and prompt the right person.
+A connection problem is therefore usually not yours to fix. Expired credentials, insufficient permissions and revoked access all resolve on the customer's side. Your job is to detect the condition and prompt the right person.
 </Info>
 
 ## Two ways to present it
 
-Bindbee offers the same authorisation flow through two surfaces.
+The same authorisation flow reaches your customer through two surfaces, and the choice is independent of how the link was created.
 
-**Magic Link** is a hosted, in-browser experience delivered as a secure URL. You supply your customer's details, Bindbee generates the link, and you send it to them. They open it and authorise. This requires no front-end code on your side at all, which makes it the right choice for onboarding handled by a human - an implementation manager emailing a new customer, for instance.
+**The hosted page** opens in the customer's browser at a Bindbee URL. You send it to them or redirect them to it. No front-end code either way.
 
-**The embedded SDK** puts the same flow inside your own application, so the customer never leaves your product. This is the right choice when connecting an HR system is a step in your own onboarding rather than a separate implementation task.
+**The embedded SDK** runs the same flow inside your own product, so the customer never leaves it.
 
-Both produce a connector, both put the customer's administrator in control, and neither lets the end user choose which system to connect - the integration is fixed before the link or session exists.
+Both produce a connector, both put the administrator in control, and **neither lets the end user choose which system to connect** - `create-link-token` requires the integration slug, so the target is fixed before the session exists.
 
-They differ in one respect that shapes your code: **how you learn the connection succeeded.**
+They differ in the thing that shapes your code: **how you learn the connection succeeded.**
 
 ```mermaid
 sequenceDiagram
@@ -36,8 +36,8 @@ sequenceDiagram
     participant C as Customer's admin
     participant S as Source system
 
-    Note over B,S: Hosted Magic Link
-    B->>C: send the link
+    Note over B,S: Hosted page
+    B->>C: send or redirect to the link
     C->>S: authorise
     S-->>B: webhook, or fetch by origin_id
 
@@ -50,13 +50,18 @@ sequenceDiagram
     B->>B: exchange for connector_token
 ```
 
-| | Hosted Magic Link | Embedded SDK |
+| | Hosted page | Embedded SDK |
 | --- | --- | --- |
 | Front-end code | None | React hook or CDN script |
-| Completion signal | No callback - a webhook, or fetch the connector by `origin_id` | `onSuccess` fires in the browser with a `temporary_token` |
+| Link created by | Dashboard, or `create-link-token` | `create-link-token` |
+| Completion signal | Webhook, or fetch by `origin_id` | `onSuccess` fires in the browser |
 | Getting the token | Read `connector_token` from the connector | Exchange the `temporary_token` from your backend |
 
-So the embedded flow can react the moment your customer finishes, while the hosted flow learns about it asynchronously. See [Embed the Connection Flow](/how-to/connections/embed-the-connection-flow) and [Create a Connector Programmatically](/how-to/connections/create-a-connector-programmatically).
+The embedded flow reacts the moment your customer finishes; the hosted page learns about it asynchronously.
+
+Note the second row: **hosted does not mean manual.** Creating links by hand suits human-led implementation, but you can generate them from `create-link-token` and still redirect to the hosted page - self-serve onboarding with no front-end at all.
+
+See [Create a Connector Programmatically](/how-to/connections/create-a-connector-programmatically) and [Embed the Connection Flow](/how-to/connections/embed-the-connection-flow).
 
 {/* VERIFY: link lifetime and expiry behaviour. Confirm how long a generated Magic Link remains valid, what an end user sees after expiry, and whether a link is single-use or reusable. */}
 
@@ -64,24 +69,28 @@ So the embedded flow can react the moment your customer finishes, while the host
 
 The person opening the link is your customer's HR or IT administrator, not a developer. They see their own system, are asked to authorise access, and are done.
 
-What varies underneath is considerable. Some systems use OAuth and the whole thing takes seconds. Others require the administrator to generate an API key inside their HRIS first, or create a dedicated integration user with specific role permissions, or configure a file delivery. For those, the flow guides them but cannot complete the work for them - some of it happens in their HR system, not in Bindbee.
+What varies underneath is considerable. Some systems use OAuth and it takes seconds. Others need the administrator to generate an API key inside their HRIS first, create a dedicated integration user with specific role permissions, or configure a file delivery.
 
-This is why per-system setup instructions exist separately, written for an administrator rather than a developer, and why the harder integrations have a longer tail between "link sent" and "connector active".
+For those, **the flow guides them but cannot complete the work for them** - some of it happens in their HR system, not in Bindbee.
+
+That is why per-system setup guides are written for an administrator rather than a developer, and why the harder integrations have a long tail between "link sent" and "connector active".
 
 ## Why it works this way
 
-The alternative - collecting your customers' HRIS credentials yourself and passing them to Bindbee - is simpler to build and considerably worse in every other respect.
+The alternative - collecting your customers' HRIS credentials yourself and passing them to Bindbee - is simpler to build and worse in every other respect.
 
-It makes you a custodian of credentials that grant access to an entire company's employee records, including compensation and bank details. That is a security liability you have no reason to accept and a compliance burden your customers will eventually ask hard questions about. It also fails on its own terms: OAuth-based systems will not issue credentials to anyone but the authorising administrator, so a credential-collection flow cannot support them at all.
+**It makes you the custodian of credentials that open an entire company's employee records**, including compensation and bank details - a security liability you have no reason to accept.
 
-Delegating authorisation means the credential exists only between the customer's system and Bindbee. You get access to normalised data without ever holding the keys to the source, and your customer retains the ability to revoke it without involving you.
+It also fails on its own terms. OAuth-based systems will not issue credentials to anyone but the authorising administrator, so a credential-collection flow cannot support them at all.
 
-The cost is a dependency on someone outside your company completing a task, and a class of failure you can detect but not repair. Building for that - noticing an inactive connector and prompting the right person quickly - is most of what operationalising this well requires.
+Delegating authorisation means the credential exists only between the customer's system and Bindbee. You get normalised data without ever holding the keys to the source, and your customer can revoke access without involving you.
+
+The cost is a dependency on someone outside your company, and a class of failure you can detect but not repair. **Noticing an inactive connector and prompting the right person quickly is most of what operationalising this well requires.**
 
 ## What this means for you
 
 - **Connection failures are customer-side.** Detect and prompt; do not expect to fix them yourself.
-- **Choose the surface by who is doing the connecting.** Human-led implementation suits the hosted link; self-serve onboarding suits the embedded SDK.
+- **Choose the surface by where onboarding happens**, not by whether you want to automate. Hosted links can be generated programmatically too.
 - **Budget time between sending a link and data arriving.** Some systems need administrator work inside the HRIS first.
 - **Point administrators at the per-system setup guides**, which are written for them rather than for developers.
 
