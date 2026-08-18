@@ -3,57 +3,83 @@ title: "Payroll & time models"
 description: "How payroll runs, employee payroll runs, pay groups, payroll codes, calendars, timesheets and time off fit together."
 ---
 
-Eight models cover payroll and time, and they divide into two groups that are often confused: what was paid, and what was worked. They are related but neither derives from the other, and in many organisations they come from different systems entirely.
+Eight models cover payroll and time, and they divide into two groups that are constantly confused: **what was paid, and what was worked.** They are related, neither derives from the other, and in many organisations they come from different systems entirely.
 
 ## What was paid
 
-**Payroll run** is one processing event for a population of employees - a run type, a pay period, and a check date. It is the employer's event.
-
-**Employee payroll run** is one person's line within it: gross, net, earnings, deductions, and taxes. This is where the money is.
-
-**Pay group** is the population and cadence. Weekly hourly staff and monthly salaried staff are usually separate pay groups, processed on separate schedules. An employee belongs to one, and it determines when they are paid.
-
-**Payroll run calendar** is the forward schedule - periods and check dates that have not happened yet. It is the only model here that describes the future, which makes it the one to read when you need to know when the next opportunity to submit something is.
-
-**Payroll code** is the customer's own vocabulary for earnings and deductions. Every line on a payslip references one, and the codes are defined in the customer's payroll configuration rather than by any standard.
+| Model | Holds | Note |
+| --- | --- | --- |
+| **Payroll run** | The employer's processing event - period, check date, `run_type`, `run_state` | A run exists before it is paid |
+| **Employee payroll run** | One person's line: gross, net, earnings, deductions, taxes | Where the money is |
+| **Pay group** | `name` and `description` only | A label, not a schedule |
+| **Payroll run calendar** | The forward schedule of periods and check dates | The only model here describing the future |
+| **Payroll code** | The customer's earning and deduction codes | Classified, but not portable |
 
 <Warning>
-Payroll codes do not carry portable meaning. A code that identifies a 401(k) deduction at one customer identifies something else at another, and there is no reliable mapping from code to purpose. Any logic that interprets deductions must be configured per customer.
+`run_state` is `PAID`, `DRAFT`, `APPROVED`, `FAILED`, `CLOSED` or `NOT_STARTED`. **A payroll run existing does not mean anybody was paid.** Reading runs without checking `run_state` counts drafts as money that moved.
 </Warning>
 
-This is the single largest source of difficulty in payroll integrations. The data is structurally clean and semantically local.
+Two things commonly assumed about **pay group** are not in the model. It carries a name and a description - no cadence, and no employee list.
+
+The link runs the other way: employees and compensation records reference a pay group, and pay frequency lives on **compensation** as `pay_frequency`, not on the group.
+
+## Payroll codes are classified but not portable
+
+Every payslip line references a code, and Bindbee does normalise these. `type` is `EARNING`, `DEDUCTION` or `TAX`, and `sub_type` narrows it - `RETIREMENT`, `HEALTH`, `GARNISHMENT`, `OVERTIME`, `SEVERANCE` and so on.
+
+What it cannot normalise is the customer's own `code` and `name`, which are defined in their payroll configuration rather than by any standard.
+
+<Warning>
+The classification tells you a deduction is `RETIREMENT`. It does not tell you **which plan** it belongs to. A code identifying a specific 401(k) at one customer identifies something else at another, and there is no reliable mapping from code to plan. Any logic connecting deductions to benefit enrolments must be configured per customer.
+</Warning>
+
+That gap is the single largest source of difficulty in payroll integrations. The data is structurally clean and semantically local.
 
 ## What was worked
 
-**Timesheet entry** is recorded work: date, start and end, hours, breaks.
+**Timesheet entry** is recorded work: `date`, `hours_worked`, `start_time`, `end_time`, `break_duration`.
 
-**Time off** is a leave request: type, dates, duration, status, approver. Note that it is a request with a lifecycle, not just a period of absence - pending, approved, and rejected requests all exist, and reading time off without filtering on status counts leave that was never taken.
+**Time off** is a request with a lifecycle, not a period of absence. Its `status` is `REQUESTED`, `APPROVED`, `DECLINED`, `CANCELLED` or `DELETED`, and `units` is `HOURS` or `DAYS` - so `amount` means nothing without reading it.
 
-**Time off balance** is entitlement remaining, by policy. It is a derived figure the source system calculates, and how it treats accrual, carryover, and pending requests differs by system. Two customers with the same policy can report balances that mean subtly different things.
+<Warning>
+Reading time off without filtering on `status` counts leave that was never taken. `REQUESTED` is not approved, and `DECLINED`, `CANCELLED` and `DELETED` are all still in the data.
+</Warning>
 
-Timesheet data is also where normalisation works hardest. Source systems record time as punches, as durations, as intervals with breaks nested inside, or as daily totals with no detail. Reconstructing a consistent entry shape from these is lossy, and the original always survives in raw data.
+**Time off balance** is entitlement remaining, by `policy_type`. It is a figure the source system calculates, and how it treats accrual, carryover and pending requests differs by system - two customers on the same policy can report balances meaning subtly different things.
+
+Timesheets are also where normalisation works hardest. Source systems record time as punches, durations, intervals with nested breaks, or daily totals with no detail. Reconstructing one shape from these is lossy, and the original survives in `raw_data`.
 
 ## The two halves do not join cleanly
 
-Hours worked and hours paid diverge routinely and legitimately. Overtime is calculated by rules the timesheet does not encode. Salaried employees are paid without any timesheet at all. Corrections apply to a later run than the period they fix. Time off may or may not appear as a payroll line depending on the policy.
+Hours worked and hours paid diverge routinely and legitimately:
 
-Any reconciliation between the two is arithmetic your application performs with knowledge of the customer's rules. The models sit alongside each other; they do not derive from one another.
+- Overtime is calculated by rules the timesheet does not encode.
+- Salaried employees are paid with no timesheet at all.
+- Corrections apply to a later run than the period they fix.
+- Time off may or may not appear as a payroll line, depending on policy.
+
+Any reconciliation is arithmetic **your application** performs with knowledge of the customer's rules. The models sit alongside each other; they do not derive from one another.
 
 ## Why it works this way
 
-The run and employee-run split mirrors how payroll actually executes: an employer-level event that produces per-employee results. Collapsing them would repeat the period, check date, and status on every employee line, and offer no way to represent a run that exists before its results do.
+The run and employee-run split mirrors how payroll executes: an employer-level event producing per-employee results. Collapsing them would repeat the period, check date and state on every line, and offer no way to represent a run that exists before its results do.
 
-Payroll codes are surfaced rather than interpreted, and that is a deliberate refusal. Bindbee could attempt to classify codes into standard categories - pre-tax deduction, employer contribution, taxable earning - and be wrong in ways that matter. A misclassified deduction in a benefits or retirement context produces incorrect contribution reporting, and the error is silent and downstream. Passing the customer's own code through unmodified means the classification decision sits with whoever has the configuration knowledge to make it correctly.
+**Payroll codes are classified only as far as classification is safe.** Sorting a code into earning, deduction or tax is something the source system's own metadata supports.
 
-Time off as a request rather than an absence follows the source systems, which model approval workflow rather than outcome. Flattening it to "days absent" would lose the pending state, which is precisely what most applications need to act on.
+Going further - deciding which retirement plan a `RETIREMENT` deduction funds - would require configuration knowledge Bindbee does not have, and being wrong there is silent and downstream. A misattributed contribution surfaces as a reporting discrepancy weeks later, not as an error.
+
+So the classification is offered and the customer's raw `code` is preserved beside it, leaving the last step to whoever holds the mapping.
+
+Time off as a request rather than an absence follows the source systems, which model approval workflow rather than outcome. Flattening it to "days absent" would lose the pending state, which is exactly what most applications need to act on.
 
 ## What this means for you
 
-- **Filter time off by status.** Pending and rejected requests are in the data.
-- **Never assume a payroll code means the same thing across customers.** Configure the mapping per customer.
+- **Check `run_state` before treating a payroll run as money that moved.** Drafts are in the data.
+- **Filter time off by `status`**, and read `units` before interpreting `amount`.
+- **Do not expect a cadence on pay group.** Pay frequency is on compensation.
+- **Use `type` and `sub_type` to categorise a code, never to identify a plan.** That mapping is per customer.
 - **Read the calendar for future periods.** Runs only describe what has happened.
 - **Do not reconcile timesheets against payroll arithmetically** without encoding the customer's overtime and salary rules.
-- **Treat balances as the source system's calculation**, not a portable figure.
 
 ## Related
 

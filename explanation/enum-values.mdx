@@ -1,68 +1,82 @@
 ---
 title: "Enum values"
-description: "Why normalisation collapses source values into a fixed set, and what UNKNOWN and OTHER actually mean."
+description: "Why normalisation collapses source values into a fixed set, and what the OTHER and - fallbacks actually mean."
 ---
 
-An employee your customer classifies as "Active PT" arrives with a status of active. A pay period they call "Semi-Monthly (2nd/16th)" arrives as semi-monthly. A benefit plan type they have named for their broker arrives as other.
+An employee your customer classifies as "Active PT" arrives as `ACTIVE`. A pay period they call "Semi-Monthly (2nd/16th)" arrives as `SEMIMONTHLY`. A benefit plan they have named for their broker arrives as `OTHER`.
 
-Nothing was lost, exactly. It was set aside.
+**Nothing was lost, exactly. It was set aside.**
 
 ## What an enum is doing
 
-A unified enum is a fixed set of values that every source system's local vocabulary maps into. It exists so your code can branch on a known set rather than on strings it has never seen.
+A unified enum is a fixed set that every source system's local vocabulary maps into. It exists so your code can branch on known values rather than on strings it has never seen.
 
-Source vocabularies are unbounded. Customers define their own statuses, pay period names, benefit types, and employment classifications, and they do so to encode information their business cares about - division, contract type, shift pattern, broker. None of that is expressible in a fixed set, and all of it arrives at the mapping.
+Source vocabularies are unbounded. Customers define their own statuses, pay period names, benefit types and classifications, and they do it to encode things their business cares about - division, contract type, shift pattern, broker.
 
-So the enum is a projection. Values with a clear equivalent map to it. Values without one land on a fallback.
+None of that is expressible in a fixed set, and all of it arrives at the mapping.
 
-## `OTHER` and `UNKNOWN` are different
+So the enum is a projection. Values with a clear equivalent map to it; values without one land on a fallback.
 
-They look interchangeable and are not.
+## Two fallbacks, and they mean different things
 
-**`OTHER`** means the source provided a value and it did not correspond to any unified value. The information exists; the unified field could not represent it. This is a mapping outcome.
+| Value | Means | What it points at |
+| --- | --- | --- |
+| `OTHER` | The source gave a value with no unified equivalent | A **mapping gap** - the original is in `raw_data` |
+| `-` | The source gave nothing usable - absent, empty or unset | **Source configuration or permissions** |
 
-**`UNKNOWN`** means the source did not provide a usable value at all - the field was absent, empty, or unset. This is an absence.
+`OTHER` is a mapping outcome: the information exists and the unified field could not represent it. `-` is an absence: there was nothing to represent in the first place.
 
-The distinction is diagnostically useful. A field returning `OTHER` across a customer's population means they use a vocabulary the mapping does not cover, and the original is available. A field returning `UNKNOWN` means the data is not being populated at source, which is a permissions or configuration question.
+The distinction is diagnostically useful, and the two have completely different fixes. A field returning `OTHER` across a customer's population means they use a vocabulary the mapping does not cover. A field returning `-` means the data is not being populated at source.
+
+<Warning>
+**Not every enum carries both, and some carry neither.** `-` appears in 18 enums and `OTHER` in 8; only a handful - gender, ethnicity, marital status among them - have both. Employment status has `-` and no `OTHER`; benefit plan category has `OTHER` and no `-`.
+
+Do not write a handler that assumes a particular fallback exists on a given field.
+</Warning>
+
+{/* VERIFY: what happens when an unmappable source value hits an enum with no fallback at all? Group type (DEPARTMENT, TEAM, DIVISION, BUSINESS_UNIT, COST_CENTER) has neither OTHER nor "-", as do JobDisplayStatus and ConnectorStatus. Does the field come back null, omitted, or does the record fail to sync? */}
 
 <Info>
-A high proportion of `OTHER` on one integration is worth investigating rather than accepting. It often means a mapping gap that affects every customer on that system, not just the one that reported it.
+A high proportion of `OTHER` on one integration is worth investigating rather than accepting. It usually means a mapping gap affecting every customer on that system, not just the one who reported it.
 </Info>
 
-## The original is always in raw data
+## The original is in raw data, if you ask for it
 
-Whatever the source system sent survives unmodified alongside the normalised value.
+Whatever the source system sent survives unmodified - but `raw_data` is **not returned by default.** You need `include_raw_data=true`, and the same is true of custom fields.
 
-This is the recovery path when the enum is insufficient. If the local vocabulary carries meaning your application needs - full-time versus part-time encoded in the status, contract type encoded in employment classification - read it from the payload and promote it into a custom field so it arrives as a stable field rather than something your code digs for.
+That is the recovery path when the enum is too coarse. If the local vocabulary carries meaning you need - full-time versus part-time encoded in a status, contract type encoded in a classification - read it from the payload and promote it into a custom field, then request it with `include_custom_fields=true`.
 
-What you should not do is branch on the raw string directly. That is integration-specific handling, and it will break when a customer edits their vocabulary.
+What you should **not** do is branch on the raw string directly. That is integration-specific handling, and it breaks the moment a customer edits their vocabulary.
 
 ## Enums can gain values
 
 The fixed set is fixed at a point in time, not permanently. Values are added as coverage broadens and as source systems introduce concepts the model does not yet carry.
 
-Code that treats the enum as exhaustive - a switch with no default, an exception on an unrecognised value - will break when a value is added. Handling the unrecognised case gracefully costs little and removes an entire class of future failure.
+**Code that treats an enum as exhaustive will break** - a switch with no default, an exception on an unrecognised value. Handling the unrecognised case costs little and removes a class of future failure.
 
 ## Why it works this way
 
 The alternative is to pass source strings through untouched, and it fails on its own terms.
 
-Your code would then handle "Active", "ACTIVE", "Active FT", "A", and "Currently Employed" as five separate cases, all meaning employed, varying by integration and by customer within an integration. Every new customer would be a potential new string. That is precisely the per-integration branching a unified API exists to remove, and it moves the mapping work from Bindbee to you without making it easier.
+Your code would handle "Active", "ACTIVE", "Active FT", "A" and "Currently Employed" as five separate cases, all meaning employed, varying by integration *and* by customer within an integration. Every new customer would be a potential new string.
 
-Mapping to a fixed set means one comparison works everywhere. The cost is that nuance below the enum's resolution disappears from the unified field, which is why the fallback values exist and why raw data is retained rather than discarded. The design accepts that the projection will sometimes be too coarse, and makes the loss recoverable instead of pretending it does not happen.
+That is precisely the per-integration branching a unified API exists to remove. It moves the mapping work from Bindbee to you without making it easier.
 
-`OTHER` and `UNKNOWN` are kept separate for the same reason. Collapsing them into one value would be simpler and would hide the difference between "we could not represent this" and "there was nothing to represent" - two problems with entirely different fixes.
+Mapping to a fixed set means one comparison works everywhere. The cost is that nuance below the enum's resolution disappears from the unified field - **which is why the fallbacks exist and why raw data is retained** rather than discarded.
+
+Keeping `OTHER` and `-` separate follows the same logic. Collapsing them would hide the difference between "we could not represent this" and "there was nothing to represent", which are two problems with entirely different fixes.
 
 ## What this means for you
 
-- **Handle unrecognised enum values gracefully.** The set can grow.
-- **Treat `OTHER` as a signal**, particularly if it clusters on one integration.
-- **`UNKNOWN` points at source configuration or permissions**, not at a mapping gap.
-- **Promote local vocabulary into a custom field** if you need it. Do not branch on raw strings.
-- **Do not infer from an enum what it cannot carry.** Part-time status is not reliably in an employment status field.
+- **Handle unrecognised enum values gracefully.** The set can grow, and not every field has a fallback.
+- **Treat `OTHER` as a signal**, particularly when it clusters on one integration.
+- **`-` points at source configuration or permissions**, not at a mapping gap.
+- **Never default an unrecognised value to a meaningful one.** Defaulting an unknown employment status to inactive can deprovision a working employee.
+- **Promote local vocabulary into a custom field** if you need it, and request it explicitly. Do not branch on raw strings.
 
 ## Related
 
+- [Add raw_data & Custom Fields](/how-to/reading-data/include-raw-data-and-custom-fields) - the parameters that return them
 - [Inspect the raw payload](/how-to/data-model/inspect-the-raw-upstream-payload) - see the original value
-- [Get Employees](/hris/employee/get-employees) - enum fields and their values
+- [Status & terminations](/explanation/status-and-terminations) - the enum where this matters most
 - [Unified model & raw data](/explanation/unified-model) - why normalisation loses information

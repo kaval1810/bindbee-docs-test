@@ -4,63 +4,83 @@ sidebarTitle: "Identity & duplicates"
 description: "How Bindbee keys a record, why one person can become two records, and how to reconcile when upstream identifiers change."
 ---
 
-Your employee count went up by forty overnight and nobody was hired. Or an employee you have been tracking for months suddenly appears twice, with the same name and different identifiers.
+Your employee count went up by forty overnight and nobody was hired. Or an employee you have tracked for months suddenly appears twice, same name, different identifiers.
 
-Neither is a bug in the usual sense. Both follow from how Bindbee decides that two things it has seen are the same thing.
+Neither is a bug in the usual sense. Both follow from **how Bindbee decides that two things it has seen are the same thing.**
 
-## What makes a record the same record
+## Three identifiers
 
-Every synced record carries two identifiers that matter.
+| Identifier | What it is | Stable | Use it for |
+| --- | --- | --- | --- |
+| `id` | Bindbee's UUID | **Yes** - survives upstream change | Your foreign key |
+| `remote_id` | The source system's API ID | No - can be reassigned | Tracing a record back to the source |
+| `employee_number` | What the customer sees in their HRIS UI | No - **not unique on every system** | Finding a record a human described |
 
-**`remote_id`** is the source system's own identifier for that object. Bindbee does not invent it and does not modify it.
+The third is worth knowing because **it is the identifier your customer will quote at you** - "employee 1042 is missing" means the number on their screen.
 
-**`id`** is Bindbee's identifier. It is stable, it is what you should store, and it is what you use to read the record back.
+It is also the one you can least rely on. The UI value is often not what the API returns, so confirm it against `raw_data` before trusting a match.
 
-Identity is resolved per connector. Bindbee treats a record as the one it already holds when the `remote_id` matches within that connector. A new `remote_id` is a new record, always - there is no name matching, no fuzzy comparison, no attempt to recognise that two identifiers describe the same human.
+Use it to locate a record when a person describes one. Never use it as a key.
+
+## Identity is resolved per connector
+
+Bindbee treats a record as one it already holds when the `remote_id` matches **within that connector**. A new `remote_id` is a new record, always.
+
+There is no name matching, no fuzzy comparison, no attempt to recognise that two identifiers describe the same human.
 
 <Info>
-This also means the same person appearing under two connectors is two records with two different `id` values. A customer running separate HRIS tenants for two legal entities will have their shared employees duplicated across those connectors, and reconciling them is your application's job.
+The same person appearing under two connectors is therefore two records with two different `id` values. A customer running separate HRIS tenants for two legal entities will have shared employees duplicated across them, and reconciling is your application's job.
 </Info>
 
-{/* VERIFY: does identity key composition vary by model? Confirmed as connector + remote_id for employees; unconfirmed for models with composite or derived source identifiers. */}
+{/* VERIFY: does identity key composition vary by model? Checked: every synced model schema in spec.json carries remote_id (44 of 44; only HrisConnectorResponse lacks it, and it is not a synced model), so the field is universal. What is still unconfirmed is the keying logic - whether connector + remote_id is the key for every model, or whether models with composite or derived source identifiers resolve differently. */}
 
 ## Why duplicates appear
 
 Three situations produce a second record for someone who already exists.
 
-**The upstream identifier changed.** Some HR systems allow an employee ID to be edited, or reassign identifiers during a migration or a payroll provider switch. From Bindbee's side this is indistinguishable from a new person arriving and the old one going quiet. The original record remains, now stale; the new one syncs alongside it.
+**The upstream identifier changed.** Some HR systems let an employee ID be edited, or reassign identifiers during a migration or payroll provider switch. From Bindbee's side that is indistinguishable from a new person arriving while the old one goes quiet.
 
-**The employee was recreated upstream.** A rehire entered as a new record rather than a reactivation, or a record deleted and re-added to correct an error, produces a new source identifier and therefore a new record.
+**The employee was recreated upstream.** A rehire entered as a new record rather than a reactivation, or a record deleted and re-added to fix an error, produces a new source identifier.
 
-**A transfer created a new employment.** In several systems, moving someone between positions or entities terminates one record and creates another rather than editing in place. Both persist.
+**A transfer created a new employment.** Several systems move someone between positions or entities by terminating one record and creating another rather than editing in place.
 
-The common thread is that the source system changed its own notion of identity. Bindbee followed it.
+The common thread: **the source system changed its own notion of identity, and Bindbee followed it.**
 
-## Reconciling when identifiers do not line up
+## Reconciling when identifiers change
 
-Because Bindbee will not merge records on your behalf, reconciliation has to happen in your application, and it has to use something other than the identifier that changed.
+Because Bindbee will not merge records for you, reconciliation happens in your application - and it has to use something other than the identifier that changed.
 
-The practical approach is to match on stable personal attributes - work email, date of birth, full name, or a national identifier where you hold one and are permitted to use it. Email is usually the strongest single signal in an HR context; names alone are not sufficient at any meaningful scale.
+Match on stable personal attributes: work email, date of birth, full name, or a national identifier where you hold one and may use it.
 
-Two operational habits make this considerably easier. Store Bindbee's `id` as your foreign key rather than the `remote_id`, so an upstream identifier change does not break your own references. And treat a sudden jump in record count as a signal to check for duplicates rather than as growth - a headcount that moves without a corresponding hiring event is the clearest early warning you get.
+**Email is usually the strongest single signal** in an HR context. Names alone are not sufficient at any meaningful scale.
+
+Two habits make this much easier:
+
+- **Store Bindbee's `id` as your foreign key**, so an upstream identifier change does not break your own references.
+- **Treat a sudden jump in record count as a duplicate signal**, not as growth. A headcount that moves without a hiring event is the clearest early warning you get.
 
 ## Why it works this way
 
-Automatic merging is the obvious feature to want here, and it is the one thing a data platform in this position should not do.
+Automatic merging is the obvious feature to want here, and the one thing a platform in this position should not do.
 
-Merging two records means asserting that two humans are the same human, on evidence that is often ambiguous. Names repeat. Personal emails get reused. Contractors get rehired as employees with new records deliberately, because the business needs them separated. A platform that merges on similarity will eventually merge two different people, and the consequence in an HR or payroll context is that one person's compensation, benefits, or bank details surface under another person's identity. That failure is far worse than a duplicate, and it is silent.
+**Merging asserts that two humans are the same human, on evidence that is often ambiguous.** Names repeat. Personal emails get reused. Contractors are rehired as employees with deliberately separate records, because the business needs them separated.
 
-Following the source system's identity exactly means Bindbee is never the thing that introduced an error. If the HRIS says these are two records, you get two records, and you retain the ability to decide otherwise using context Bindbee does not have - your own user accounts, your own onboarding history, your own tolerance for a false match.
+A platform that merges on similarity will eventually merge two different people - one person's compensation, benefits or bank details surfacing under another's identity. **Far worse than a duplicate, and silent.**
+
+Following the source system's identity exactly means Bindbee is never the thing that introduced an error. If the HRIS says these are two records, you get two records.
+
+You keep the ability to decide otherwise using context Bindbee does not have: your own user accounts, your onboarding history, your tolerance for a false match.
 
 ## What this means for you
 
-- **Store `id`, not `remote_id`.** Bindbee's identifier survives upstream identifier changes; the source system's does not.
-- **Build reconciliation into your data layer from the start**, keyed on work email where available. Retrofitting it after duplicates accumulate is materially harder.
+- **Store `id`, not `remote_id`.** Bindbee's identifier survives upstream changes; the source system's does not.
+- **Never key on `employee_number`.** It is not unique on every system, and the UI value often differs from the API value.
+- **Build reconciliation into your data layer from the start**, keyed on work email where available. Retrofitting after duplicates accumulate is materially harder.
 - **Treat unexplained count changes as a duplicate signal**, not as growth.
-- **The same person under two connectors is two records.** If your customers run multiple tenants, this is a normal state, not an error.
+- **The same person under two connectors is two records.** For customers running multiple tenants, that is normal, not an error.
 
 ## Related
 
 - [Detect duplicate records](/how-to/troubleshooting/trace-an-unexpected-record) - find and reconcile duplicates for a connector
-- [Get Employees](/hris/employee/get-employees) - the identifier fields on the employee model
+- [Filter a Collection](/how-to/reading-data/filter-and-narrow-a-collection) - filtering by `remote_id` and `employee_number`
 - [Status & terminations](/explanation/status-and-terminations) - why the stale record is still returned
