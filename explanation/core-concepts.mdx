@@ -3,64 +3,75 @@ title: "Core concepts"
 description: "How categories, integrations, connectors, models and records relate, and where organisations and environments sit."
 ---
 
-Five words carry most of the weight in Bindbee's API, and three of them sound interchangeable. Getting them straight early saves a great deal of confusion later, particularly when reading error messages or configuring custom fields, where the difference between an integration and a connector determines what your change affects.
+Five words carry most of the weight in Bindbee's API, and three of them sound interchangeable. The one that matters most: **an integration is a vendor system, a connector is one customer's connection to it.** That difference decides whether a change affects one customer or all of them.
 
 ## The five levels
 
-**Category** is the kind of system: HRIS, ATS, or LMS. Categories determine which models exist. Employees and payroll runs belong to HRIS; candidates and offers belong to ATS. A category appears in endpoint paths and in custom field configuration.
+```mermaid
+flowchart LR
+    INT["Integration<br/>BambooHR, Workday"] --> CON["Connector<br/>one customer's connection"]
+    CAT["Category<br/>HRIS · ATS · LMS"] --> CON
+    CAT --> MOD["Model<br/>employee, benefit"]
+    CON --> REC["Record<br/>one synced instance"]
+    MOD --> REC
+```
 
-**Integration** is a specific vendor system - BambooHR, Workday, Greenhouse. An integration belongs to a category and defines what data is available and how it is retrieved. Integrations are identified by a slug, and that slug is what you use when configuring something that should apply to every customer on that system.
+- **Category** - the kind of system. Determines which models exist, and appears in every endpoint path.
+- **Integration** - a vendor system, identified by a slug.
+- **Connector** - one customer's connection to one integration, in one category. Holds their credentials and owns their sync schedule.
+- **Model** - a unified object type, identical across every integration in its category.
+- **Record** - one instance of a model, synced from one connector.
 
-**Connector** is one of your customers' authorised connections to one integration. If forty of your customers use BambooHR, you have one BambooHR integration and forty BambooHR connectors. A connector holds the credentials, owns the sync schedule, and is identified by a connector token.
+If 40 of your customers use BambooHR, you have **1** BambooHR integration and **40** BambooHR connectors.
 
-**Model** is a unified object type - employee, employment, benefit, candidate. Models are consistent across every integration in a category, which is the whole point of a unified API.
+<Note>
+A vendor can be offered in more than one category, so a connector is pinned to a category as well as an integration. A customer using SAP SuccessFactors for both HR and recruiting has **two** connectors, not one - see [Integrations](/integrations).
+</Note>
 
-**Record** is a single instance of a model, synced from one connector.
+## Where settings live
 
-Reading upward from a record: this employee came from this connector, which is your customer's connection to this integration, which belongs to this category.
+Above all of this sits your **organisation** - your company's account. It has two **environments**, Development and Production, holding separate connectors, keys and logs.
 
-<Info>
-The integration-versus-connector distinction is the one that matters operationally. Anything scoped to an integration affects every customer on that system. Anything scoped to a connector affects one customer. Custom field mappings use exactly this split, and so does most of what you will configure.
-</Info>
+Every setting sits at exactly one level, and that level is its blast radius.
 
-## Organisation and environment
+| Set at | What lives there | Changing it affects |
+| --- | --- | --- |
+| **Organisation** | Scope, custom field definitions | Every customer, both environments |
+| **Integration** | Custom field mappings, usually | Every customer on that vendor system |
+| **Connector** | Credentials, sync schedule | One customer |
+| **Environment** | Connectors, API keys, logs | That side only - **not** configuration |
 
-Above all of this sits your **organisation** - your company's account. Scope configuration and custom field definitions belong here, which is why they apply across everything below.
+<Warning>
+Environments separate *data*, not *configuration*. Scope and custom fields are organisation-level, so **a change made while testing in Development is a change in Production too.** Decide your scope before you start testing, not after.
+</Warning>
 
-Each organisation has two **environments**: Development and Production. They hold separate connectors, keys and logs, so testing against a sandbox tenant never touches live customer data.
-
-What they do not hold separately is configuration. Scope and custom fields are organisation-level, so a change made while testing in Development is a change in Production as well. This surprises people who expect environments to be fully independent, and it is worth internalising before you start configuring.
-
-A connector's environment is settled when it is created, but it is not permanent: it can be switched without the end user reconnecting, though not from the dashboard. [Environments](/explanation/environments/overview) covers what each side holds and what a move does.
+A connector's environment is set at creation but can be switched later, without the end user reconnecting - though not from the dashboard. See [Environments](/explanation/environments/overview).
 
 ## Two tokens
 
-Requests carry two pieces of authentication, and they answer different questions.
+Requests carry two credentials, answering different questions.
 
-Your **API key** identifies your organisation. It is secret, it belongs on your server, and it never reaches a browser.
+- **API key** - identifies your organisation. Secret, server-side, never in a browser.
+- **Connector token** - names whose data you want. Issued per connector, and distinct from the connector's `id`, which is how you refer to the connector itself in a URL.
 
-The **connector token** identifies which customer's data you are asking about. Without it, Bindbee knows who is asking but not whose employees you want.
+Anything that touches one customer's data needs **both** - one for authority, one for subject. Without the token, Bindbee knows who is asking but not whose employees you want.
 
-This is why reading employees is not simply a matter of holding an API key. Anything scoped to one customer's data needs both - one for authority, one for subject.
-
-Organisation-level endpoints need only the key, because there is no subject to name: listing your connectors, listing integrations, and configuring custom fields are all questions about your account rather than about one customer. See [Authenticate a Request](/how-to/setup/authenticate-a-request) for which endpoints take which.
+A few endpoints need only the key, because there is no subject to name: listing connectors, listing integrations, configuring custom fields, reading webhook logs. See [Authenticate a Request](/how-to/setup/authenticate-a-request).
 
 ## Why it works this way
 
-The layering exists so that configuration can be expressed at the level where it is actually true.
+**A setting lives at the level where it stays true.** Scope does not vary by customer, so storing it per connector would just be hundreds of copies to keep in step. Credentials differ for every customer, so there is nowhere else they could sit.
 
-Scope is a decision about your product: which data your application needs at all. That is organisation-level because it does not vary by customer. A custom field mapping is usually a fact about a source system - where BambooHR keeps its cost centre - which makes it integration-level. Occasionally it is a fact about one customer's unusual tenant configuration, which makes it connector-level. Credentials are always about one customer, so they live on the connector and nowhere else.
+Collapsing the levels would force a bad trade: configure once and be wrong for every exception, or configure per customer and drown in it.
 
-Flattening these would force a choice between configuring everything once and getting it wrong for the exceptions, or configuring everything per customer and drowning in it. The hierarchy lets each setting sit at its natural scope, with narrower scopes overriding wider ones where they exist.
-
-The two-token split is a security boundary rather than an organisational one. Connector tokens are safe to hand to a specific request path because they grant access to exactly one customer's data. An API key is not, because it grants access to all of it. Keeping them separate means the identifier that travels most widely is the one with the least authority.
+**The two tokens are a security boundary.** A connector token reaches one customer's data; an API key reaches all of it. Splitting them keeps the credential that travels most widely as the one with the least authority.
 
 ## What this means for you
 
-- **Integration-scoped changes affect every customer on that system.** Check the scope before applying a mapping fix.
-- **Configuration crosses environments; data does not.** Plan scope before you begin testing, not after.
-- **Keep API keys server-side.** Connector tokens identify a customer, not your organisation.
-- **When reading an error, note which level it refers to.** A connector problem is one customer; an integration problem is all of them.
+- **Before changing a custom field mapping, check whether it is set on the integration or the connector.** The first changes every customer on that vendor; the second changes one.
+- **Set your scope before you start testing.** Scope is organisation-level, so narrowing it in Development narrows Production at the same moment.
+- **Keep the API key on your server, never in a browser.** It reaches every customer's data - a connector token reaches only one.
+- **When something breaks, ask which level it sits at.** One customer failing is a connector problem; every customer on BambooHR failing is an integration problem.
 
 ## Related
 

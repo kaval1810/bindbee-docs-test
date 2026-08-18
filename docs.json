@@ -272,6 +272,7 @@
               {
                 "group": "Integrations",
                 "pages": [
+                  "integrations",
                   "api-reference/integrations/get-integrations"
                 ]
               },
