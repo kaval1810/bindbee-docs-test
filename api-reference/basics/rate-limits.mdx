@@ -63,10 +63,17 @@ X-RateLimit-Reset: 1700000060
 Retry-After: 60
 
 {
-  "error": "Rate limit exceeded",
-  "message": "You have exceeded the rate limit of 200 requests per minute"
+  "detail": "Rate limit exceeded"
 }
 ```
+
+<Note>
+  `429` uses the same body shape as every other error status - a single
+  `detail` string. The exception is `422`, where `detail` is an array of
+  per-field objects rather than a string, so code that reads `detail` as text
+  breaks on the first validation error. See [Handle API
+  Errors](/how-to/setup/handle-api-errors).
+</Note>
 
 ## Best Practices
 

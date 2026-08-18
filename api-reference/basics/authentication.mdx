@@ -13,8 +13,9 @@ There are two primary authentication protocols:
 2. Connector Tokens
 
 <Info>
-  Credentials obtained through these protocols must be incorporated into the
-  headers of each request sent to the Bindbee API.
+  Every request carries the API key. The connector token is carried only by
+  requests that reach one customer's data - see [Which endpoints take
+  what](#which-endpoints-take-what) below.
 </Info>
 
 ## Bindbee API Key
@@ -26,7 +27,7 @@ For any communication with the Bindbee API, it is crucial to have an API key to 
   Bindbee
 </Note>
 
-In case you no longer have access to your key, you have the option to regenerate you Bindbee API Key in [API Key](https://app.bindbee.dev/settings/keys) Tab in Settings.
+In case you no longer have access to your key, you have the option to regenerate your Bindbee API Key in [API Key](https://app.bindbee.dev/settings/keys) Tab in Settings.
 
 <img
   src="https://images.unifyx.dev/documentation_images/api_keys.png"
@@ -40,11 +41,13 @@ When creating your own requests, it is essential to include your API key with a 
 
 ## Connector Tokens
 
-When issuing requests to the Bindbee API concerning your end users' data, access or manipulation, authorization is granted only if the users have undergone the [Bindbee's Magic Link](/how-to/connections/generate-a-magic-link) process and successfully stored their `connector_token`, as this token is a prerequisite for the successful execution of such requests.
+Requests that read or write one customer's data need that customer's `connector_token` in addition to your API key. The token is issued once the end user has authorised the connection, however that connection was created - a hosted [Magic Link](/how-to/connections/generate-a-magic-link), the [embedded component](/how-to/connections/embed-the-connection-flow), or a link generated [programmatically](/how-to/connections/create-a-connector-programmatically).
 
 <Tip>
-  You can find your `connector_token` inside the **Overview** section of your
-  connector
+  You can find a `connector_token` in the connector's **Connector Details**
+  panel, masked behind a reveal control with a copy button. It is also returned
+  by [Get Connectors](/api-reference/connectors/get-connectors), and by the
+  [token exchange](/sdk/get-connector-token) in the embedded flow.
 </Tip>
 
 <img
@@ -53,6 +56,38 @@ When issuing requests to the Bindbee API concerning your end users' data, access
   className="block"
 />
 
-When creating your own requests, it is essential to include your your user's `connector_token` as a header named `X-Connector-Token` for authorizing your Bindbee API requests effectively. Ensure that this specific header is incorporated in every request, adhering to the following format:
+Include your user's `connector_token` as a header named `X-Connector-Token`, in this format:
 
 `X-Connector-Token: END_USER_CONNECTOR_TOKEN`
+
+## Which endpoints take what
+
+The API key is always required. The connector token is required only where the request names a customer.
+
+| Endpoint group | `Authorization` | `X-Connector-Token` |
+| --- | --- | --- |
+| **Unified data** (`/api/{category}/v1/*`) | Required | Required |
+| [Passthrough](/api-reference/passthrough/make-passthrough-request) | Required | Required |
+| [Force a resync](/api-reference/connectors/resync-connector) | Required | Required |
+| [Connector list](/api-reference/connectors/get-connectors) and [delete](/api-reference/connectors/delete-connector) | Required | Not used |
+| [Integrations](/api-reference/integrations/get-integrations) | Required | Not used |
+| [Custom fields](/custom-fields/api/list-custom-fields) and mappings | Required | Not used |
+| [Link token](/sdk/create-link-token) and [token exchange](/sdk/get-connector-token) | Required | Not used |
+
+`category` is `hris`, `ats` or `lms`. Sending a connector token on an endpoint that does not use one is harmless; omitting it where it is required returns an error rather than an empty result.
+
+<Warning>
+  A connector token is scoped to one API category. An HRIS connector's token
+  used against `/api/ats/v1/*` returns `403` even though both credentials are
+  valid - see [Handle API Errors](/how-to/setup/handle-api-errors).
+</Warning>
+
+## A third header on writes
+
+Write endpoints also take `X-Idempotency-Key`. It is not part of authentication - it stops a retried request creating a duplicate record in the customer's system.
+
+`X-Idempotency-Key: YOUR_STABLE_KEY`
+
+Derive it from your own record for the thing being created, not from a random value or a timestamp, and reuse the same key on every retry. See [Create an Employee](/how-to/writing-data-back/create-an-employee).
+
+Passthrough does not accept an idempotency key - a retried passthrough write reaches the provider as a second write.
