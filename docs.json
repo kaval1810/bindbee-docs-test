@@ -316,7 +316,7 @@
             "pages": [
               "hris/overview",
               {
-                "group": "People",
+                "group": "Employee Data",
                 "pages": [
                   {
                     "group": "Employee",
@@ -389,7 +389,8 @@
                     "pages": [
                       "hris/locations/get-locations",
                       "hris/locations/get-location-by-id"
-                    ]
+                    ],
+                    "tag": "BETA"
                   }
                 ]
               },
@@ -431,7 +432,8 @@
                     "pages": [
                       "hris/payroll-codes/get-payroll-codes",
                       "hris/payroll-codes/get-payroll-code-by-id"
-                    ]
+                    ],
+                    "tag": "BETA"
                   }
                 ]
               },
@@ -464,7 +466,8 @@
                     "pages": [
                       "hris/benefit-coverages/get-benefit-coverages",
                       "hris/benefit-coverages/get-benefit-coverage-by-id"
-                    ]
+                    ],
+                    "tag": "BETA"
                   }
                 ]
               },
