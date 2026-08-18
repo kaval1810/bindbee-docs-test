@@ -19,11 +19,18 @@ The practical pattern is to fetch the schema, render a form or validate against 
 
 Meta endpoints currently exist for create employee, create employee payroll run, create time off, create timesheet entry, and create candidate.
 
-{/* VERIFY: the employee model exposes two similarly-named endpoints - one returning the request schema and one returning "the data points required". Confirm the intended distinction and which one callers should use, or whether one is superseded. This pair will be confused. */}
+<Note>
+  The employee model exposes two: `/employees/meta/post` and
+  `/employees/create/meta`. Use `meta/post` - it is the form the other three
+  HRIS writes follow, and the one every how-to on this site calls. The
+  `create/meta` variant exists only for employees and ATS candidates.
+
+  {/* VERIFY: is create/meta superseded, or does it serve a purpose meta/post does not? Both return MetaApiResponseModel. Worth deprecating one if not. */}
+</Note>
 
 ## Where there is no meta endpoint
 
-Most write operations do not have one. The ATS creates in particular are largely uncovered.
+Most write operations do not have one. The ATS creates in particular are largely uncovered - of the seventeen ATS create endpoints, only create candidate has a schema.
 
 For those, the request shape comes from the API reference, and the per-integration variation you would have learned from a schema has to be discovered another way - by attempting the write and reading the failure. This is unsatisfying and it is the current state.
 

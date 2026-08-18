@@ -41,7 +41,9 @@ Your **API key** identifies your organisation. It is secret, it belongs on your 
 
 The **connector token** identifies which customer's data you are asking about. Without it, Bindbee knows who is asking but not whose employees you want.
 
-This is why reading employees is not simply a matter of holding an API key. Every data request needs both - one for authority, one for subject.
+This is why reading employees is not simply a matter of holding an API key. Anything scoped to one customer's data needs both - one for authority, one for subject.
+
+Organisation-level endpoints need only the key, because there is no subject to name: listing your connectors, listing integrations, and configuring custom fields are all questions about your account rather than about one customer. See [Authenticate a Request](/how-to/setup/authenticate-a-request) for which endpoints take which.
 
 ## Why it works this way
 

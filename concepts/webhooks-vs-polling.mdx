@@ -25,7 +25,9 @@ Sync-status events are the more useful of the two and the more overlooked. They 
 
 **Fine-grained change detail.** An event tells you a record changed, not which field or what it was before. If you need before-and-after, you need your own copy to compare against.
 
-{/* VERIFY: delivery guarantees - confirm whether failed deliveries are retried, the retry schedule, and whether events can arrive out of order or more than once. Handler idempotency guidance depends on this. */}
+**Exactly-once delivery.** A failed delivery is retried up to four times within 60 seconds, with a 10-second timeout per attempt, and every non-`2xx` counts as a failure. That means duplicates are normal and your handler has to be idempotent. It also means an outage longer than a minute loses the event permanently - retries stop, and nothing is redelivered later. See [Recover a Missed Webhook Delivery](/how-to/reliability/recover-a-missed-delivery).
+
+{/* VERIFY: ordering - can events for one connector arrive out of sequence? Retry behaviour is documented; ordering is not, and it determines whether a handler can trust event order or must re-read state. */}
 
 ## When to poll instead
 

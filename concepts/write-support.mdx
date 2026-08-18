@@ -35,7 +35,7 @@ The write surface is creates. There is no general facility for updating or delet
 
 This is a larger constraint than it first appears. Correcting a mistyped hire, updating a title, or cancelling a submitted time-off request are not operations the unified write API performs. Where they are possible at all, they go through passthrough and are written against that integration's own API.
 
-{/* VERIFY: update support is referenced for some integrations in customer-facing material. Confirm whether any update operations exist on unified models, or whether all updates are passthrough-only. */}
+The API surface confirms this: there is no `PATCH` or `PUT` on any unified HRIS, ATS or LMS model. The only update operation anywhere in the API is on a custom field mapping, which is Bindbee configuration rather than customer data.
 
 ## What a failed write leaves behind
 

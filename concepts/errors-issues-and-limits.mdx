@@ -15,11 +15,13 @@ Something did not work. Before you can fix it you need to know whose failure it 
 
 ## The upstream envelope
 
-When the failure came from the source system, the response carries the source system's own answer rather than a Bindbee interpretation of it. Three fields do the work:
+When the failure came from the source system, the record of it carries the source system's own answer rather than a Bindbee interpretation of it. Three fields do the work:
 
 - **`integration_status_code`** - the HTTP status the source system returned
 - **`integration_endpoint`** - which upstream endpoint was being called
 - **`integration_response`** - the source system's response body, unmodified
+
+{/* VERIFY: where do these three fields actually appear? None of them exist in spec.json, and the documented error bodies are ErrorResponse ({detail: string}) and HTTPValidationError ({detail: [...]}) - see how-to/setup/handle-api-errors, which describes those two shapes and no upstream envelope. If the integration_* fields are on log entries and sync errors rather than on API error responses, this section should say so; as written it reads as the response body. */}
 
 That last field is the one to read first. It contains the HR system's own error format, whatever that happens to be. BambooHR returns a structured problem document. Dayforce returns its own process-result codes inside a 403. Workday returns SOAP faults. None of these are normalised, and the variation is the point - the upstream message frequently names the exact permission or field at fault, which a translated message would lose.
 
@@ -41,7 +43,16 @@ Not every failure surfaces on a response. A sync that fails partway through happ
 
 Logs hold the per-request record: which endpoint, which status, what came back. This is where you go to answer "why is this connector not returning benefits" when nothing in your own application errored.
 
-{/* VERIFY: Issues is surfaced in the product as automated error tracking and resolution, but has no documented state model. Confirm whether an Issue has a lifecycle (open/resolved), whether it is API-accessible, and how it differs from a log entry, before this section ships. */}
+Issues are the layer above. Where a log entry is one request and its response, an issue is a failure Bindbee has raised against a connector with a likely cause attached, and it carries the request and response behind it so you and support are reading the same evidence. See [Issues](/platform/issues).
+
+<Warning>
+  Issues are a Dashboard surface. There is no issues endpoint in the API, so
+  anything your own monitoring needs to act on has to come from sync-status
+  webhooks or the connector's `status` instead - see
+  [Connector lifecycle](/concepts/connector-lifecycle).
+</Warning>
+
+{/* VERIFY: do issues have an explicit lifecycle - are they closed by Bindbee when the underlying failure clears, or dismissed by hand? The Dashboard shows "currently open issues", which implies a state, but the transition is undocumented. */}
 
 ## Rate limits
 
