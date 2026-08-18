@@ -314,8 +314,9 @@
             "group": "HR & Payroll (HRIS)",
             "icon": "users",
             "pages": [
+              "hris/overview",
               {
-                "group": "Core",
+                "group": "Employee",
                 "pages": [
                   {
                     "group": "Employee",
@@ -334,6 +335,40 @@
                       "hris/employments/get-employment-by-id"
                     ]
                   },
+                  {
+                    "group": "Compensation",
+                    "pages": [
+                      "hris/compensation/get-compensations",
+                      "hris/compensation/get-compensation-by-id"
+                    ]
+                  },
+                  {
+                    "group": "Dependents",
+                    "pages": [
+                      "hris/dependents/get-dependents",
+                      "hris/dependents/get-dependent-by-id"
+                    ]
+                  },
+                  {
+                    "group": "Bank Info",
+                    "pages": [
+                      "hris/bank-info/get-bank-info-list",
+                      "hris/bank-info/get-bank-info-by-id"
+                    ]
+                  },
+                  {
+                    "group": "Documents",
+                    "pages": [
+                      "hris/documents/get-documents",
+                      "hris/documents/get-document-by-id",
+                      "hris/documents/get-document-download-url"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Organization",
+                "pages": [
                   {
                     "group": "Company",
                     "pages": [
@@ -354,39 +389,26 @@
                       "hris/locations/get-locations",
                       "hris/locations/get-location-by-id"
                     ]
-                  },
-                  {
-                    "group": "Documents",
-                    "pages": [
-                      "hris/documents/get-documents",
-                      "hris/documents/get-document-by-id",
-                      "hris/documents/get-document-download-url"
-                    ]
                   }
                 ]
               },
               {
-                "group": "Compensation & Payroll",
+                "group": "Payroll",
                 "pages": [
-                  {
-                    "group": "Compensation",
-                    "pages": [
-                      "hris/compensation/get-compensations",
-                      "hris/compensation/get-compensation-by-id"
-                    ]
-                  },
-                  {
-                    "group": "Pay Groups",
-                    "pages": [
-                      "hris/pay-groups/get-pay-groups",
-                      "hris/pay-groups/get-pay-group-by-id"
-                    ]
-                  },
                   {
                     "group": "Payroll Runs",
                     "pages": [
                       "hris/payroll-runs/get-payroll-runs",
                       "hris/payroll-runs/get-payroll-run-by-id"
+                    ]
+                  },
+                  {
+                    "group": "Employee Payroll Runs",
+                    "pages": [
+                      "hris/employee-payroll-runs/get-employee-payroll-runs",
+                      "hris/employee-payroll-runs/get-employee-payroll-runs-by-id",
+                      "hris/employee-payroll-runs/get-create-employee-payroll-run-meta",
+                      "hris/employee-payroll-runs/create-employee-payroll-runs"
                     ]
                   },
                   {
@@ -397,12 +419,10 @@
                     ]
                   },
                   {
-                    "group": "Employee Payroll Runs",
+                    "group": "Pay Groups",
                     "pages": [
-                      "hris/employee-payroll-runs/get-employee-payroll-runs",
-                      "hris/employee-payroll-runs/get-employee-payroll-runs-by-id",
-                      "hris/employee-payroll-runs/get-create-employee-payroll-run-meta",
-                      "hris/employee-payroll-runs/create-employee-payroll-runs"
+                      "hris/pay-groups/get-pay-groups",
+                      "hris/pay-groups/get-pay-group-by-id"
                     ]
                   },
                   {
@@ -436,13 +456,6 @@
                     "pages": [
                       "hris/dependent-benefits/get-dependent-benefits",
                       "hris/dependent-benefits/get-dependent-benefit-by-id"
-                    ]
-                  },
-                  {
-                    "group": "Dependents",
-                    "pages": [
-                      "hris/dependents/get-dependents",
-                      "hris/dependents/get-dependent-by-id"
                     ]
                   },
                   {
@@ -483,18 +496,6 @@
                     ]
                   }
                 ]
-              },
-              {
-                "group": "Banking",
-                "pages": [
-                  {
-                    "group": "Bank Info",
-                    "pages": [
-                      "hris/bank-info/get-bank-info-list",
-                      "hris/bank-info/get-bank-info-by-id"
-                    ]
-                  }
-                ]
               }
             ]
           },
@@ -502,6 +503,7 @@
             "group": "Recruiting (ATS)",
             "icon": "user-plus",
             "pages": [
+              "ats/overview",
               {
                 "group": "Talent Acquisition",
                 "pages": [
@@ -658,6 +660,7 @@
             "group": "Learning (LMS)",
             "icon": "graduation-cap",
             "pages": [
+              "lms/overview",
               {
                 "group": "People",
                 "pages": [

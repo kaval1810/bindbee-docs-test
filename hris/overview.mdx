@@ -1,0 +1,55 @@
+---
+title: "HR & Payroll (HRIS)"
+sidebarTitle: "Overview"
+description: "The 21 HRIS models, how they are grouped, and which ones accept writes."
+---
+
+Everything under `https://api.bindbee.dev/api/hris/v1/`. Twenty-one models, grouped by what they describe rather than by which endpoint returns them.
+
+Every collection endpoint is paginated and takes the same filters for `ids`, `remote_id` and `modified_after` - see [Pagination](/api-reference/basics/pagination). Every request needs both an API key and a connector token - see [Authentication](/api-reference/basics/authentication).
+
+## The models
+
+| Group | Models | What it answers |
+| --- | --- | --- |
+| **Employee** | Employee, Employment, Compensation, Dependents, Bank Info, Documents | Who the person is and what is true of them |
+| **Organization** | Company, Group, Location | The structures they sit in |
+| **Payroll** | Payroll Run, Employee Payroll Run, Payroll Run Calendar, Pay Group, Payroll Codes | What was paid, when, and on what schedule |
+| **Benefits** | Employer Benefit, Benefit, Dependent Benefit, Benefit Coverage | What is offered, who enrolled, and for how much |
+| **Time & Attendance** | Time Off, Time Off Balance, Timesheet Entry | Hours worked and leave taken |
+
+<Info>
+  The split that catches people most often is **Employee versus Employment**. An employee is a person; an employment is one period of work. One person routinely has several - see [HRIS models](/concepts/hris-models).
+</Info>
+
+## What accepts writes
+
+Four models. Everything else is read-only through the unified API.
+
+| Model | Endpoint |
+| --- | --- |
+| Employee | `POST /api/hris/v1/employees` |
+| Employee Payroll Run | `POST /api/hris/v1/employee-payroll-runs` |
+| Time Off | `POST /api/hris/v1/time-off` |
+| Timesheet Entry | `POST /api/hris/v1/timesheet-entry` |
+
+Each has a Meta endpoint returning the request schema for that connector's integration - build the body from it rather than hardcoding one, since required fields differ per integration. See [Fetch a Write Schema from the Meta API](/how-to/writing-data-back/fetch-a-write-schema).
+
+There is no update or delete on unified models. Where a correction is possible at all, it goes through [Passthrough](/concepts/passthrough).
+
+## Where to start
+
+<CardGroup cols={2}>
+  <Card title="Read Employee Data" icon="user" href="/how-to/reading-data/read-employee-data">
+    The entry point for most integrations.
+  </Card>
+  <Card title="Paginate Through Results" icon="list" href="/how-to/reading-data/paginate-through-results">
+    Every collection endpoint works this way.
+  </Card>
+  <Card title="HRIS models" icon="sitemap" href="/concepts/hris-models">
+    How the models relate, and where fields actually live.
+  </Card>
+  <Card title="Scope & permissions" icon="filter" href="/concepts/scope-and-permissions">
+    Why a field you expected came back empty.
+  </Card>
+</CardGroup>

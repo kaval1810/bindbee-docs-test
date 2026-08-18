@@ -1,0 +1,49 @@
+---
+title: "Recruiting (ATS)"
+sidebarTitle: "Overview"
+description: "The 16 ATS models, how they are grouped, and why this is the write-heavy category."
+---
+
+Everything under `https://api.bindbee.dev/api/ats/v1/`. Sixteen models covering candidates, the jobs they apply to, and the process in between.
+
+A connector token is category-scoped: an HRIS token used on an ATS path returns `403` even though the credentials are valid.
+
+## The models
+
+| Group | Models | What it answers |
+| --- | --- | --- |
+| **Talent Acquisition** | Candidate, Application, Job, Job Interview Stage, Scheduled Interview, Screening Question | Who applied, to what, and where they are in the process |
+| **Evaluation** | Activity, Scorecard, EEOC, Reject Reason, Attachment, Tag | What was recorded about them |
+| **Outcomes** | Offer | What was offered |
+| **Organization** | Department, Office, Remote User | The recruiting side's own structure |
+
+<Info>
+  **Candidate and Application are not the same thing.** A candidate is a person and exists once; an application is one candidate's pursuit of one job. Someone applying to three roles is one candidate and three applications - see [ATS models](/concepts/ats-models).
+</Info>
+
+<Warning>
+  **EEOC** holds `race`, `gender`, `veteran_status` and `disability_status`, collected for compliance reporting and legally restricted in how it may be used. Most applications should exclude it from scope entirely - see [Exclude EEOC Data](/how-to/ats/exclude-eeoc-data).
+</Warning>
+
+## This is the write-heavy category
+
+Fifteen of the sixteen models accept creates - candidates, applications, jobs, interviews, scorecards, offers and the rest. That is a far larger write surface than HRIS, where four models accept writes.
+
+Only Create Candidate has a Meta endpoint (`GET /api/ats/v1/candidates/create/meta`). For the others the request shape comes from the reference page, and the per-integration variation a schema would have told you has to be found by attempting the write - see [Check Which Writes an Integration Supports](/how-to/writing-data-back/check-write-support).
+
+## Where to start
+
+<CardGroup cols={2}>
+  <Card title="Read Candidates and Applications" icon="users" href="/how-to/ats/read-candidates-and-applications">
+    The core read, and the counting trap.
+  </Card>
+  <Card title="Create a Candidate" icon="user-plus" href="/how-to/ats/create-a-candidate">
+    The core write, with the résumé attachment.
+  </Card>
+  <Card title="Track Application Stages" icon="list-check" href="/how-to/ats/track-an-application-through-stages">
+    Stages belong to jobs, not the organisation.
+  </Card>
+  <Card title="ATS models" icon="sitemap" href="/concepts/ats-models">
+    What each model holds and why they are separate.
+  </Card>
+</CardGroup>
