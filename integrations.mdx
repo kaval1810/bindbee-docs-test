@@ -21,7 +21,7 @@ Use your browser's find (`Ctrl`/`⌘` + `F`) to search this page for a system na
 | **API** | Bindbee calls the vendor's API | Bindbee's sync schedule | Often supported |
 | **SFTP** | The customer's system exports a file on a schedule | The customer's export schedule | Generally not |
 
-Slugs ending in `_sftp`, plus file-export variants like `workday_raas` and `paychex_flock`, are file-based. See [SFTP vs API](/concepts/sftp-and-file-connectors).
+Slugs ending in `_sftp`, plus file-export variants like `workday_raas` and `paychex_flock`, are file-based. See [SFTP vs API](/explanation/sftp-and-file-connectors).
 
 ---
 
@@ -278,7 +278,7 @@ That returns the fields populated for that customer - usually the question you a
   A model returning zero records is not proof it is unsupported. It can also mean
   the connection lacks permission for that scope, or the customer genuinely has
   no such records. Benefits, compensation and bank details are commonly separate
-  permission scopes. See [Field semantics](/concepts/enum-values).
+  permission scopes. See [Field semantics](/explanation/enum-values).
 </Warning>
 
 ### Exists vs populated
@@ -314,7 +314,7 @@ Contact `support@bindbee.dev` with:
 ## Related
 
 <CardGroup cols={2}>
-  <Card title="SFTP vs API" icon="file-up" href="/concepts/sftp-and-file-connectors">
+  <Card title="SFTP vs API" icon="file-up" href="/explanation/sftp-and-file-connectors">
     Why file-based connectors behave differently.
   </Card>
 </CardGroup>

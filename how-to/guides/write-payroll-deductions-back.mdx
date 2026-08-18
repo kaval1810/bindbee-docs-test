@@ -50,7 +50,7 @@ This is the round trip behind most benefits products: read the enrolment, calcul
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    Each code carries `name`, `code`, `type` and `sub_type`. Match against your own stored mapping for this customer - the link from plan to code is configuration you own, not something the API can tell you. The model is currently **BETA** - it works, but field names and shapes are not yet frozen, so pin what you depend on and expect to revisit it. See [Unified model & raw data](/concepts/unified-model).
+    Each code carries `name`, `code`, `type` and `sub_type`. Match against your own stored mapping for this customer - the link from plan to code is configuration you own, not something the API can tell you. The model is currently **BETA** - it works, but field names and shapes are not yet frozen, so pin what you depend on and expect to revisit it. See [Unified model & raw data](/explanation/unified-model).
 
     ```python
     code = customer_mapping[connector_id][plan_id]      # established at onboarding

@@ -59,62 +59,62 @@
         ]
       },
       {
-        "tab": "Concepts",
+        "tab": "Explanation",
         "groups": [
           {
             "group": "Foundations",
             "icon": "lightbulb",
             "pages": [
-              "concepts/core-concepts",
+              "explanation/core-concepts",
               {
                 "group": "Environments",
                 "pages": [
-                  "concepts/environments/overview",
-                  "concepts/environments/development",
-                  "concepts/environments/production"
+                  "explanation/environments/overview",
+                  "explanation/environments/development",
+                  "explanation/environments/production"
                 ]
               },
-              "concepts/unified-model",
-              "concepts/scope-and-permissions",
-              "concepts/integration-versions",
-              "concepts/multi-entity",
-              "concepts/magic-link"
+              "explanation/unified-model",
+              "explanation/scope-and-permissions",
+              "explanation/integration-versions",
+              "explanation/multi-entity",
+              "explanation/magic-link"
             ]
           },
           {
             "group": "Sync engine",
             "icon": "network",
             "pages": [
-              "concepts/how-syncing-works",
-              "concepts/connector-lifecycle",
-              "concepts/sftp-and-file-connectors",
-              "concepts/webhooks-vs-polling",
-              "concepts/errors-issues-and-limits"
+              "explanation/how-syncing-works",
+              "explanation/connector-lifecycle",
+              "explanation/sftp-and-file-connectors",
+              "explanation/webhooks-vs-polling",
+              "explanation/errors-issues-and-limits"
             ]
           },
           {
             "group": "Data models",
             "icon": "list-tree",
             "pages": [
-              "concepts/record-identity",
-              "concepts/status-and-terminations",
-              "concepts/hris-models",
-              "concepts/benefits-models",
-              "concepts/payroll-and-time-models",
-              "concepts/effective-dating",
-              "concepts/enum-values",
-              "concepts/ats-models",
-              "concepts/lms-models"
+              "explanation/record-identity",
+              "explanation/status-and-terminations",
+              "explanation/hris-models",
+              "explanation/benefits-models",
+              "explanation/payroll-and-time-models",
+              "explanation/effective-dating",
+              "explanation/enum-values",
+              "explanation/ats-models",
+              "explanation/lms-models"
             ]
           },
           {
             "group": "Extending & writing",
             "icon": "puzzle",
             "pages": [
-              "concepts/how-custom-fields-work",
-              "concepts/how-meta-apis-work",
-              "concepts/write-support",
-              "concepts/passthrough"
+              "explanation/how-custom-fields-work",
+              "explanation/how-meta-apis-work",
+              "explanation/write-support",
+              "explanation/passthrough"
             ]
           }
         ]
@@ -833,7 +833,7 @@
     },
     {
       "source": "/get-started/core-concepts",
-      "destination": "/concepts/core-concepts"
+      "destination": "/explanation/core-concepts"
     },
     {
       "source": "/get-started/set-up-your-environment",
@@ -865,7 +865,7 @@
     },
     {
       "source": "/custom-fields/overview",
-      "destination": "/concepts/custom-fields"
+      "destination": "/explanation/how-custom-fields-work"
     },
     {
       "source": "/custom-fields/dashboard",
@@ -888,104 +888,84 @@
       "destination": "/how-to/sync-control/force-a-resync"
     },
     {
-      "source": "/explanation/benefits-models",
-      "destination": "/concepts/benefits-models"
-    },
-    {
-      "source": "/explanation/connector-lifecycle",
-      "destination": "/concepts/connector-lifecycle"
-    },
-    {
-      "source": "/explanation/core-concepts",
-      "destination": "/concepts/core-concepts"
-    },
-    {
       "source": "/explanation/custom-fields-mental-model",
-      "destination": "/concepts/how-custom-fields-work"
+      "destination": "/explanation/how-custom-fields-work"
     },
     {
       "source": "/explanation/field-semantics",
-      "destination": "/concepts/enum-values"
-    },
-    {
-      "source": "/explanation/how-syncing-works",
-      "destination": "/concepts/how-syncing-works"
+      "destination": "/explanation/enum-values"
     },
     {
       "source": "/explanation/hris-model-relationships",
-      "destination": "/concepts/hris-models"
+      "destination": "/explanation/hris-models"
     },
     {
       "source": "/explanation/meta-api-schema-discovery",
-      "destination": "/concepts/how-meta-apis-work"
+      "destination": "/explanation/how-meta-apis-work"
     },
     {
       "source": "/explanation/passthrough-when-and-why",
-      "destination": "/concepts/passthrough"
+      "destination": "/explanation/passthrough"
     },
     {
       "source": "/explanation/sftp-vs-api",
-      "destination": "/concepts/sftp-and-file-connectors"
+      "destination": "/explanation/sftp-and-file-connectors"
     },
     {
       "source": "/explanation/unified-model-and-raw-data",
-      "destination": "/concepts/unified-model"
-    },
-    {
-      "source": "/explanation/webhooks-vs-polling",
-      "destination": "/concepts/webhooks-vs-polling"
+      "destination": "/explanation/unified-model"
     },
     {
       "source": "/explanation/what-data-you-get",
-      "destination": "/concepts/scope-and-permissions"
+      "destination": "/explanation/scope-and-permissions"
     },
     {
       "source": "/concepts/unified-model-and-raw-data",
-      "destination": "/concepts/unified-model"
+      "destination": "/explanation/unified-model"
     },
     {
       "source": "/concepts/what-data-you-get",
-      "destination": "/concepts/scope-and-permissions"
+      "destination": "/explanation/scope-and-permissions"
     },
     {
       "source": "/concepts/custom-fields-mental-model",
-      "destination": "/concepts/how-custom-fields-work"
+      "destination": "/explanation/how-custom-fields-work"
     },
     {
       "source": "/concepts/sftp-vs-api",
-      "destination": "/concepts/sftp-and-file-connectors"
+      "destination": "/explanation/sftp-and-file-connectors"
     },
     {
       "source": "/concepts/field-semantics",
-      "destination": "/concepts/enum-values"
+      "destination": "/explanation/enum-values"
     },
     {
       "source": "/concepts/hris-model-relationships",
-      "destination": "/concepts/hris-models"
+      "destination": "/explanation/hris-models"
     },
     {
       "source": "/concepts/meta-api-schema-discovery",
-      "destination": "/concepts/how-meta-apis-work"
+      "destination": "/explanation/how-meta-apis-work"
     },
     {
       "source": "/concepts/passthrough-when-and-why",
-      "destination": "/concepts/passthrough"
+      "destination": "/explanation/passthrough"
     },
     {
       "source": "/concepts/environments",
-      "destination": "/concepts/environments/overview"
+      "destination": "/explanation/environments/overview"
     },
     {
       "source": "/how-to/setup/environments/overview",
-      "destination": "/concepts/environments/overview"
+      "destination": "/explanation/environments/overview"
     },
     {
       "source": "/how-to/setup/environments/development",
-      "destination": "/concepts/environments/development"
+      "destination": "/explanation/environments/development"
     },
     {
       "source": "/how-to/setup/environments/production",
-      "destination": "/concepts/environments/production"
+      "destination": "/explanation/environments/production"
     },
     {
       "source": "/how-to/connections/customise-the-connection-experience",
@@ -998,6 +978,114 @@
     {
       "source": "/how-to/writing-data-back/make-a-passthrough-request",
       "destination": "/how-to/data-model/make-a-passthrough-request"
+    },
+    {
+      "source": "/concepts/ats-models",
+      "destination": "/explanation/ats-models"
+    },
+    {
+      "source": "/concepts/benefits-models",
+      "destination": "/explanation/benefits-models"
+    },
+    {
+      "source": "/concepts/connector-lifecycle",
+      "destination": "/explanation/connector-lifecycle"
+    },
+    {
+      "source": "/concepts/core-concepts",
+      "destination": "/explanation/core-concepts"
+    },
+    {
+      "source": "/concepts/effective-dating",
+      "destination": "/explanation/effective-dating"
+    },
+    {
+      "source": "/concepts/enum-values",
+      "destination": "/explanation/enum-values"
+    },
+    {
+      "source": "/concepts/environments/development",
+      "destination": "/explanation/environments/development"
+    },
+    {
+      "source": "/concepts/environments/overview",
+      "destination": "/explanation/environments/overview"
+    },
+    {
+      "source": "/concepts/environments/production",
+      "destination": "/explanation/environments/production"
+    },
+    {
+      "source": "/concepts/errors-issues-and-limits",
+      "destination": "/explanation/errors-issues-and-limits"
+    },
+    {
+      "source": "/concepts/how-custom-fields-work",
+      "destination": "/explanation/how-custom-fields-work"
+    },
+    {
+      "source": "/concepts/how-meta-apis-work",
+      "destination": "/explanation/how-meta-apis-work"
+    },
+    {
+      "source": "/concepts/how-syncing-works",
+      "destination": "/explanation/how-syncing-works"
+    },
+    {
+      "source": "/concepts/hris-models",
+      "destination": "/explanation/hris-models"
+    },
+    {
+      "source": "/concepts/integration-versions",
+      "destination": "/explanation/integration-versions"
+    },
+    {
+      "source": "/concepts/lms-models",
+      "destination": "/explanation/lms-models"
+    },
+    {
+      "source": "/concepts/magic-link",
+      "destination": "/explanation/magic-link"
+    },
+    {
+      "source": "/concepts/multi-entity",
+      "destination": "/explanation/multi-entity"
+    },
+    {
+      "source": "/concepts/passthrough",
+      "destination": "/explanation/passthrough"
+    },
+    {
+      "source": "/concepts/payroll-and-time-models",
+      "destination": "/explanation/payroll-and-time-models"
+    },
+    {
+      "source": "/concepts/record-identity",
+      "destination": "/explanation/record-identity"
+    },
+    {
+      "source": "/concepts/scope-and-permissions",
+      "destination": "/explanation/scope-and-permissions"
+    },
+    {
+      "source": "/concepts/sftp-and-file-connectors",
+      "destination": "/explanation/sftp-and-file-connectors"
+    },
+    {
+      "source": "/concepts/status-and-terminations",
+      "destination": "/explanation/status-and-terminations"
+    },
+    {
+      "source": "/concepts/unified-model",
+      "destination": "/explanation/unified-model"
+    },
+    {
+      "source": "/concepts/webhooks-vs-polling",
+      "destination": "/explanation/webhooks-vs-polling"
+    },
+    {
+      "source": "/concepts/write-support",
+      "destination": "/explanation/write-support"
     }
   ],
   "api": {

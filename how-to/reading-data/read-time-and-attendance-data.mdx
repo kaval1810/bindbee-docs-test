@@ -59,7 +59,7 @@ For amounts paid rather than hours worked, see [Read Payroll Data](/how-to/readi
 
     Each record carries `amount` and `units`, where `units` is `HOURS` or `DAYS`. The unit is the source system's choice, so it varies by connector and sometimes by policy within one connector - read it per record rather than assuming.
 
-    `request_type` is the normalised leave category: `VACATION`, `SICK`, `PERSONAL`, `MATERNITY`, `PATERNITY`, `BEREAVEMENT`, `FMLA` and others. Unmapped upstream values pass through verbatim - see [Enum values](/concepts/enum-values).
+    `request_type` is the normalised leave category: `VACATION`, `SICK`, `PERSONAL`, `MATERNITY`, `PATERNITY`, `BEREAVEMENT`, `FMLA` and others. Unmapped upstream values pass through verbatim - see [Enum values](/explanation/enum-values).
 
     **Result:** Leave requests with their approval state.
   </Step>
@@ -96,7 +96,7 @@ The same caution applies to payroll. Hours worked and hours paid diverge legitim
   </Accordion>
 
   <Accordion title="Balances don't match what the employee sees">
-    Balances are a point-in-time snapshot from the last sync, and accrual is calculated upstream on the source system's own schedule. A balance that is stale by one sync interval is expected, not a defect - see [How syncing works](/concepts/how-syncing-works).
+    Balances are a point-in-time snapshot from the last sync, and accrual is calculated upstream on the source system's own schedule. A balance that is stale by one sync interval is expected, not a defect - see [How syncing works](/explanation/how-syncing-works).
   </Accordion>
 
   <Accordion title="Leave totals are too high">
@@ -114,6 +114,6 @@ The same caution applies to payroll. Hours worked and hours paid diverge legitim
 
 ## Related
 
-- [Payroll & time models](/concepts/payroll-and-time-models) - why hours worked and hours paid don't join
+- [Payroll & time models](/explanation/payroll-and-time-models) - why hours worked and hours paid don't join
 - [Get Timesheet Entries](/hris/timesheet-entries/get-timesheet-entries-list) · [Get Time Off](/hris/time-off/get-time-off-list) · [Get Time Off Balances](/hris/time-off-balance/get-time-off-balances-list)
 - [Create a Time Off Request](/how-to/writing-data-back/create-a-time-off-request) - the write side

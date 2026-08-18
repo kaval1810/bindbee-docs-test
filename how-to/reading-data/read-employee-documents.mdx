@@ -8,7 +8,7 @@ tag: "BETA"
 Documents carries files held against an employee - tax forms, signed agreements, whatever the source system stores. Two things make it different from every other read: the file itself comes from a separate, short-lived URL, and for some documents Bindbee returns the *parsed contents* as structured fields rather than only the file.
 
 <Warning>
-  Documents is **BETA**. It works, but field names and shapes are not yet frozen - see [Unified model & raw data](/concepts/unified-model).
+  Documents is **BETA**. It works, but field names and shapes are not yet frozen - see [Unified model & raw data](/explanation/unified-model).
 </Warning>
 
 <Info>
@@ -158,12 +158,12 @@ Documents carries files held against an employee - tax forms, signed agreements,
   </Accordion>
 
   <Accordion title="type is a value not in the enum">
-    Unmapped provider categories pass through verbatim, as they do on every enum - see [Enum values](/concepts/enum-values). `remote_type` always carries the source system's own category.
+    Unmapped provider categories pass through verbatim, as they do on every enum - see [Enum values](/explanation/enum-values). `remote_type` always carries the source system's own category.
   </Accordion>
 </AccordionGroup>
 
 ## Related
 
 - [Get Documents](/hris/documents/get-documents) · [Get Document By Id](/hris/documents/get-document-by-id) · [Get Document Download URL](/hris/documents/get-document-download-url)
-- [HRIS models](/concepts/hris-models) - where Documents sits among the sensitive models
+- [HRIS models](/explanation/hris-models) - where Documents sits among the sensitive models
 - [Restrict Which Models and Fields Sync](/how-to/data-model/restrict-models-and-fields) - deciding whether to sync it at all

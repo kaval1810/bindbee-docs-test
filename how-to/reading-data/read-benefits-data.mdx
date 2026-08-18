@@ -94,7 +94,7 @@ Similarly, a **dependent** existing does not mean they're covered. Coverage is a
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    Each record carries `amount` and `currency`, plus `is_employee_covered` and `covered_dependents` to say who the amount applies to. Filter by `benefit_id` to get the coverages for one enrolment. The model is currently **BETA** - it works, but field names and shapes are not yet frozen, so pin what you depend on and expect to revisit it. See [Unified model & raw data](/concepts/unified-model).
+    Each record carries `amount` and `currency`, plus `is_employee_covered` and `covered_dependents` to say who the amount applies to. Filter by `benefit_id` to get the coverages for one enrolment. The model is currently **BETA** - it works, but field names and shapes are not yet frozen, so pin what you depend on and expect to revisit it. See [Unified model & raw data](/explanation/unified-model).
 
     <Warning>
       Reading only the enrolment produces a plausible but incomplete picture - it has the contribution and the tier, and no sums assured. This is the most common modelling error on benefits, and nothing in the response signals the gap.
@@ -138,6 +138,6 @@ The edge case that breaks naive implementations: a deduction paid in January can
 
 ## Related
 
-- [Benefits models](/concepts/benefits-models) - which model holds what, and why they're separate
+- [Benefits models](/explanation/benefits-models) - which model holds what, and why they're separate
 - [Get Benefits](/hris/benefits/get-benefits) · [Get Employer Benefits](/hris/employer-benefits/get-employer-benefits)
 - [Get Dependents](/hris/dependents/get-dependents) · [Get Dependent Benefits](/hris/dependent-benefits/get-dependent-benefits) · [Get Benefit Coverages](/hris/benefit-coverages/get-benefit-coverages)

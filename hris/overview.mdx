@@ -19,7 +19,7 @@ Every collection endpoint is paginated and takes the same filters for `ids`, `re
 | **Time & Attendance** | Time Off, Time Off Balance, Timesheet Entry | Hours worked and leave taken |
 
 <Info>
-  The split that catches people most often is **Employee versus Employment**. An employee is a person; an employment is one period of work. One person routinely has several - see [HRIS models](/concepts/hris-models).
+  The split that catches people most often is **Employee versus Employment**. An employee is a person; an employment is one period of work. One person routinely has several - see [HRIS models](/explanation/hris-models).
 </Info>
 
 ## What accepts writes
@@ -35,7 +35,7 @@ Four models. Everything else is read-only through the unified API.
 
 Each has a Meta endpoint returning the request schema for that connector's integration - build the body from it rather than hardcoding one, since required fields differ per integration. See [Fetch a Write Schema from the Meta API](/how-to/writing-data-back/fetch-a-write-schema).
 
-There is no update or delete on unified models. Where a correction is possible at all, it goes through [Passthrough](/concepts/passthrough).
+There is no update or delete on unified models. Where a correction is possible at all, it goes through [Passthrough](/explanation/passthrough).
 
 ## Where to start
 
@@ -46,10 +46,10 @@ There is no update or delete on unified models. Where a correction is possible a
   <Card title="Paginate Through Results" icon="list" href="/how-to/reading-data/paginate-through-results">
     Every collection endpoint works this way.
   </Card>
-  <Card title="HRIS models" icon="sitemap" href="/concepts/hris-models">
+  <Card title="HRIS models" icon="sitemap" href="/explanation/hris-models">
     How the models relate, and where fields actually live.
   </Card>
-  <Card title="Scope & permissions" icon="filter" href="/concepts/scope-and-permissions">
+  <Card title="Scope & permissions" icon="filter" href="/explanation/scope-and-permissions">
     Why a field you expected came back empty.
   </Card>
 </CardGroup>

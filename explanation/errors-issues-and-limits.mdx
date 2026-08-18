@@ -49,7 +49,7 @@ Issues are the layer above. Where a log entry is one request and its response, a
   Issues are a Dashboard surface. There is no issues endpoint in the API, so
   anything your own monitoring needs to act on has to come from sync-status
   webhooks or the connector's `status` instead - see
-  [Connector lifecycle](/concepts/connector-lifecycle).
+  [Connector lifecycle](/explanation/connector-lifecycle).
 </Warning>
 
 {/* VERIFY: do issues have an explicit lifecycle - are they closed by Bindbee when the underlying failure clears, or dismissed by hand? The Dashboard shows "currently open issues", which implies a state, but the transition is undocumented. */}
@@ -82,4 +82,4 @@ The trade is that your error handling has to be layered. Handle the envelope gen
 
 - [Diagnose a failing sync](/how-to/troubleshooting/diagnose-a-partial-sync) - work through a connector's logs
 - [Rate Limits](/api-reference/basics/rate-limits) - Bindbee's published limits
-- [Scope & permissions](/concepts/scope-and-permissions) - why data goes missing without an error
+- [Scope & permissions](/explanation/scope-and-permissions) - why data goes missing without an error
