@@ -3,70 +3,109 @@ title: "Webhooks vs polling"
 description: "What a webhook tells you, what it doesn't, and when polling is the better instrument."
 ---
 
-Bindbee can notify you when a sync finishes and when records change. It is tempting to treat this as a real-time data feed and build on it accordingly. That expectation produces a system that mostly works and occasionally loses data, which is the worst kind.
+Bindbee can notify you when a sync finishes and when records change. It is tempting to treat that as a real-time data feed. **That expectation produces a system that mostly works and occasionally loses data**, which is the worst kind.
+
+## Two questions, not one
+
+Teams conflate these, and the conflation is what produces the wrong architecture.
+
+| Question | Determined by |
+| --- | --- |
+| How fresh is the data? | The sync cadence - every 24 hours by default |
+| How do I learn it changed? | Webhooks or polling |
+
+Webhooks answer the second only. **No delivery mechanism makes data fresher than the sync allows** - if a customer needs hourly data, the sync frequency has to change.
 
 ## A webhook is a signal, not a delivery
 
-Two things arrive by webhook: sync-status events telling you a connector's sync completed or failed, and data-change events telling you records were created or modified.
+Two things arrive: sync-status events saying a connector's sync completed or failed, and data-change events saying records were created or modified.
 
-Neither carries the data. A change event tells you something happened and gives you enough to go and read it. Your handler's job is to fetch, not to consume a payload.
+Neither carries the data. A change event tells you something happened and gives you enough to go and read it. **Your handler's job is to fetch, not to consume a payload.**
 
-This is a deliberate constraint rather than an omission, and it removes an entire class of bug. If a webhook carried the record, that record would be a snapshot from the moment the event fired, and by the time your handler processed it the value might already have moved. Fetching on receipt means you always act on current state.
+That is a deliberate constraint, and it removes a class of bug. A record carried in a webhook is a snapshot from the moment the event fired, and may be stale by the time your handler runs.
+
+Fetching on receipt means you always act on current state.
 
 <Info>
 Sync-status events are the more useful of the two and the more overlooked. They are the only reliable way to know an initial sync has finished, and the only push signal that a connector has stopped working.
 </Info>
 
-## What webhooks cannot tell you
+## What polling means here
 
-**That nothing happened.** Silence is ambiguous. No events could mean no changes, or a delivery failure, or a connector that broke three weeks ago. A system that only reacts to events cannot distinguish these.
+You are polling **Bindbee, not the source system** - so it costs you nothing upstream and cannot exhaust a vendor's rate limit. Bindbee's own limit is 200 requests per minute per connector.
 
-**That you received everything.** Webhook delivery over the public internet is best-effort. Endpoints go down, deploys drop requests, networks fail. Any design that assumes every event arrives will eventually be wrong.
+It is not a freshness lever, though. Polling every five minutes against a 24-hour sync produces 288 identical responses a day. What makes polling worthwhile is that it answers questions webhooks cannot:
 
-**Fine-grained change detail.** An event tells you a record changed, not which field or what it was before. If you need before-and-after, you need your own copy to compare against.
+- **Poll the connector list, not the data endpoints.** One request returns every connector's `status`, `sync_status`, `last_sync_start_time` and `next_sync_start_time`.
+- **Use `next_sync_start_time` to time the poll.** It tells you when new data will exist, so you read once after the sync lands rather than guessing an interval.
+- **Then read with `modified_after`** for the connectors whose `last_sync_start_time` moved.
 
-**Exactly-once delivery.** A failed delivery is retried up to four times within 60 seconds, with a 10-second timeout per attempt, and every non-`2xx` counts as a failure. That means duplicates are normal and your handler has to be idempotent. It also means an outage longer than a minute loses the event permanently - retries stop, and nothing is redelivered later. See [Recover a Missed Webhook Delivery](/how-to/reliability/recover-a-missed-delivery).
+## The honest comparison
+
+| | Webhooks | Polling |
+| --- | --- | --- |
+| Latency after a sync | Seconds | Up to your poll interval |
+| Wasted requests | None | Most polls return nothing new |
+| Infrastructure | Public HTTPS endpoint, signature verification, a queue | An HTTP client and a cron |
+| Failure mode | **Silent** - you don't know what you missed | **Loud** - the next poll retries |
+| Missed events | Possible, permanently | Not possible |
+| Local development | Needs a tunnel | Just works |
+| Detecting absence | Cannot | Yes |
+
+Polling's real advantage is that failure is self-healing. If your poller is down for six hours, the next run catches everything. If your endpoint is down for six hours, those events are gone.
+
+<Warning>
+Deliveries are retried **up to 4 times within 60 seconds**, with a 10-second timeout per attempt, and every non-`2xx` counts as a failure. After that they are dropped. A deploy that takes your endpoint down for two minutes loses those events permanently, with no error anywhere - not in your logs, and not in Bindbee's.
+</Warning>
 
 {/* VERIFY: ordering - can events for one connector arrive out of sequence? Retry behaviour is documented; ordering is not, and it determines whether a handler can trust event order or must re-read state. */}
 
-## When to poll instead
+## What webhooks cannot tell you
 
-Polling is not the primitive option. For several jobs it is the correct one.
+**That nothing happened.** Silence is ambiguous - no events could mean no changes, a delivery failure, or a connector that broke three weeks ago.
 
-**Reconciliation.** A periodic full read that compares against your copy is how you catch what webhooks dropped. Even a well-built event pipeline benefits from a nightly sweep.
+**That you received everything.** Delivery over the public internet is best-effort.
 
-**Bulk operations.** Payroll cycles, benefits open enrolment, and reporting runs want a consistent view at a moment in time, not a stream of individual changes.
+**Which field changed.** An event says a record changed, not which attribute or what it was before.
 
-**Detecting absence.** Records that vanish, connectors that go quiet, syncs that stopped running - these are all non-events, and only a scheduled check finds them.
+**That a record was deleted.** Disappearance is a non-event. Only a scheduled read finds it.
 
-**Initial load.** Reading everything once is a read, not a stream.
+## Choosing by what you're building
 
-The durable pattern is both: webhooks to react quickly to what you hear about, scheduled reads to catch what you did not. Events reduce latency; polling provides the floor.
+| You are building | Strategy |
+| --- | --- |
+| A read-through UI, fetching when a user opens a page | **Neither.** Read on demand, cache briefly, show data age |
+| A mirrored database | **Both.** `connector_synced` plus a daily sweep |
+| Joiner/leaver provisioning | **Both.** Missing a leaver is a security problem |
+| A nightly payroll or billing batch | **Polling only.** You run on a schedule anyway |
+| A connection-health surface | **Polling.** Absence and `RELINK_NEEDED` are what you're watching for |
+| A prototype | **Polling only.** Add webhooks when you can name the latency requirement |
 
-## Freshness is bounded by the sync, not the webhook
+The durable pattern is both: webhooks to react quickly to what you hear about, scheduled reads to catch what you did not.
 
-One expectation worth correcting. A webhook fires when Bindbee's sync detects a change, and syncs run on a schedule measured in hours. The event is prompt relative to the sync, not relative to the customer's action.
-
-An employee updated in the HRIS at 9am does not generate a webhook at 9am. It generates one when the next sync picks the change up. Webhooks remove polling overhead; they do not make data fresher than the sync cadence allows.
+Both paths do the same thing - read with `modified_after`, upsert on `id`. Because the read is watermarked and the write is idempotent, running both is harmless, and it is one code path rather than two.
 
 ## Why it works this way
 
 Signal-not-payload follows from Bindbee holding a synced copy rather than proxying.
 
-If webhooks carried full records, they would become a second, parallel data channel with its own consistency problems - events arriving out of order, a stale payload overwriting a newer read, your copy and Bindbee's disagreeing with no obvious authority between them. Keeping the API the single source of truth means there is always one right answer to what a record currently says.
+If webhooks carried full records they would become a second data channel with its own consistency problems - events out of order, a stale payload overwriting a newer read, no authority between your copy and Bindbee's.
 
-Best-effort delivery is a property of webhooks in general rather than a Bindbee limitation, and pretending otherwise would encourage exactly the wrong architecture. Being explicit that events can be missed is what pushes you toward the reconciliation sweep that makes the system actually reliable.
+**Keeping the API the single source of truth means there is always one right answer.**
+
+Best-effort delivery is a property of webhooks generally, not a Bindbee limitation. Being explicit that events can be missed is what pushes you toward the reconciliation sweep that makes the system reliable.
 
 ## What this means for you
 
 - **Fetch on receipt.** Do not build handlers around event payloads.
-- **Run a scheduled reconciliation** regardless of how good your event handling is.
+- **Run a scheduled reconciliation** however good your event handling is. The retry window is 60 seconds.
+- **Poll the connector list, not the data endpoints**, and time it off `next_sync_start_time`.
 - **Gate first-run logic on sync-status events**, not on data appearing.
-- **Make handlers idempotent.** Assume events can repeat or arrive out of order.
-- **Do not promise real-time.** Freshness is bounded by sync cadence.
+- **Make handlers idempotent** and respond within 10 seconds - acknowledge, then process on a queue.
+- **Register both environments.** Production webhooks never fire for Development connectors.
 
 ## Related
 
-- [Receive a webhook](/get-started/tutorials/receive-a-webhook) - set up and verify an endpoint
-- [Webhooks](/webhooks/overview) - event types and payload shapes
+- [Choose Webhook Events](/how-to/reliability/choose-webhook-events) - the five events and which to take
+- [Recover a Missed Delivery](/how-to/reliability/recover-a-missed-delivery) - closing the retry gap
 - [How syncing works](/explanation/how-syncing-works) - what determines cadence

@@ -3,11 +3,9 @@ title: "Connector lifecycle"
 description: "The states a connector moves through, and what expiry, relink and deletion each do to data already synced."
 ---
 
-A connector is the only object in Bindbee with a lifecycle you have to manage. It is created by someone outside your company, it can stop working without anything on your side changing, and one of the recovery actions available to you destroys data.
+A connector is the only object in Bindbee with a lifecycle you have to manage. Someone outside your company creates it, it can break without anything on your side changing, and **one of the two recovery actions destroys data.**
 
 ## The states
-
-A connector's `status` field carries one of three values. The names below are the ones the API returns.
 
 ```mermaid
 stateDiagram-v2
@@ -20,62 +18,78 @@ stateDiagram-v2
     RELINK_NEEDED --> [*]: delete
 ```
 
-Relinking is the only edge that returns a connector to health, and deletion is the only one that cannot be walked back.
+**Relinking is the only edge that returns a connector to health, and deletion is the only one that cannot be walked back.**
 
 **Pending (`INCOMPLETE`).** Created when you initiate a connection, before your customer has authorised it. No credentials, no data, no syncs.
 
 **Active (`COMPLETE`).** Authorised and syncing on schedule. The normal steady state.
 
-**Broken (`RELINK_NEEDED`).** Credentials that no longer work. This covers several underlying causes that behave identically from your side: an OAuth token that expired and could not refresh, an API key the customer rotated, an integration user that was deactivated, or permissions that were narrowed after authorisation.
+**Broken (`RELINK_NEEDED`).** Credentials that no longer work - an expired OAuth token, a rotated API key, a deactivated integration user, narrowed permissions. All behave identically from your side.
 
-A broken connector does not lose the data it already synced. It stops acquiring new data, and everything you have goes stale in place - which is precisely why this failure is easy to miss. Reads keep succeeding.
+A broken connector keeps the data it already synced - it just stops acquiring more, and what you hold goes stale in place. `relink_needed_at` records when the credentials were deemed invalid, so you can measure how long.
+
+## Two fields, two questions
+
+`status` is not the whole picture. A connector carries a second, independent field, and **a healthy `status` does not mean data is arriving.**
+
+| Field | Values | Answers | The bad value |
+| --- | --- | --- | --- |
+| `status` | `INCOMPLETE`, `COMPLETE`, `RELINK_NEEDED` | Are the credentials good? | `RELINK_NEEDED` - only your customer can fix it |
+| `sync_status` | `Syncing`, `Done`, `Failed` | Did the last run succeed? | `Failed` - usually permissions or an upstream outage |
+
+A connector sitting at `COMPLETE` with `sync_status: Failed` has working credentials and is still not updating. That is a different problem with a different fix, and monitoring only `status` misses it entirely.
 
 <Warning>
-There is no error on the data endpoints when a connector is broken. Your application will keep reading successfully from a connector that stopped syncing weeks ago. Sync-status webhooks and the connector's own `status` are the only reliable signals.
+There is no error on the data endpoints in either case. Your application keeps reading successfully from a connector that stopped syncing weeks ago. **These two fields and the sync-status webhooks are the only reliable signals.**
 </Warning>
+
+{/* VERIFY: what does is_active mean, and how does it relate to status? The spec describes it only as "Flag to indicate if connector is active or not". If it can be false while status is COMPLETE, it is a third signal this page should cover. */}
 
 ## Relinking versus deleting
 
 When a connector breaks, both actions available to you look like they mean "fix it". They do not.
 
-**Relinking** sends your customer back through authorisation to supply working credentials. The connector keeps its identity, its history, its synced records, and its `connector_token` - so nothing your application has stored needs updating. Existing data reconciles against what the source system now returns, and normal syncing resumes. This is the correct response to essentially every broken connector.
+**Relinking** sends your customer back through authorisation. The connector keeps its identity, history, records and `connector_token`, so nothing you stored needs updating. Data reconciles and syncing resumes.
 
-**Deleting** removes the connector and its data. The customer's identifiers, the records synced under it, the sync history - all of it. Recovering means creating a new connector and running a fresh initial sync, and every record comes back with a new Bindbee `id`, breaking any foreign key you stored.
+This is the correct response to essentially every broken connector.
 
-Deletion is the right action when a customer churns or when a connection was created in error. It is the wrong instinct for a broken one, and it is not reversible.
+**Deleting** removes the connector *and its data* - identifiers, records, sync history. Recovery means a new connector and a fresh initial sync, and **every record returns with a new Bindbee `id`**, breaking any foreign key you stored.
 
-This is also why a token that stops working after a customer "reconnects" is worth investigating rather than refetching. Relinking preserves the token; only deletion and re-creation replace it.
+Deletion is right when a customer churns or a connection was created in error, and it is your data-removal mechanism. But the same operation that satisfies a removal request destroys a recoverable integration - so it is the wrong reflex for a broken one.
+
+<Note>
+Because relinking preserves the token, a `connector_token` that stops working after a customer "reconnects" is worth investigating rather than refetching. Only deletion and re-creation replace it.
+</Note>
 
 ## Credential rotation is routine
 
-Customers rotate API keys, cycle service accounts, and offboard the administrator who originally authorised the connection. Each of these breaks a connector through no fault of anyone's.
+Customers rotate API keys, cycle service accounts, and offboard the administrator who originally authorised the connection. Each breaks a connector through nobody's fault.
 
-The last one is worth planning for specifically. When authorisation is tied to an individual's account rather than a dedicated integration user, that person leaving the company takes the connection with them. It is one of the more common causes of a connector breaking months after a clean setup, and it tends to be discovered late because nothing announces it.
-
-## What deletion actually removes
-
-Deleting a connector removes the synced records associated with it. This is worth stating plainly because it is sometimes what you want - a churned customer's employee data should not persist indefinitely, and connector deletion is the mechanism for removing it.
-
-It is also why deletion cannot be the reflex for a broken connection. The same operation that satisfies a data-removal request destroys a recoverable integration.
+The last one deserves planning. **When authorisation is tied to an individual's account rather than a dedicated integration user, that person leaving takes the connection with them** - a common cause of a connector breaking months after a clean setup, found late because nothing announces it.
 
 ## Why it works this way
 
-Keeping data through a broken state is the decision that produces the silent-staleness problem, and it is still the right one.
+Keeping data through a broken state is what produces the silent-staleness problem, and it is still the right call.
 
-The alternative is to make data unavailable the moment credentials fail - reads start erroring, and the problem is impossible to miss. That is louder, and it converts a degradation into an outage. Your application stops working for that customer entirely because their IT department rotated a key, even though the data you hold is minutes old and perfectly usable. For most applications, slightly stale data is enormously better than no data.
+The alternative is to make data unavailable the moment credentials fail. Louder, but it converts a degradation into an outage: your application stops working for that customer because their IT department rotated a key, while the data you hold is minutes old and perfectly usable.
 
-Preserving data through relink is what makes recovery cheap. Because the connector keeps its identity, a customer who fixes their credentials gets continuity rather than a new set of identifiers and a broken join in your database. The trade is that failure is quiet, which puts the burden on monitoring rather than on error handling.
+**For most applications, slightly stale data is enormously better than no data.**
+
+Preserving data through relink also makes recovery cheap. The connector keeps its identity, so a customer who fixes their credentials gets continuity rather than new identifiers and a broken join in your database.
+
+The trade is that failure is quiet, which **puts the burden on monitoring rather than error handling.**
 
 ## What this means for you
 
-- **Monitor `status`, not read success.** Reads succeed regardless, so `RELINK_NEEDED` is the signal - not an error from the data endpoints.
+- **Monitor both fields, not read success.** Reads succeed regardless; `RELINK_NEEDED` and `sync_status: Failed` are different problems.
+- **Use `relink_needed_at` to measure staleness**, not just to detect it. How long it has been broken decides how urgent it is.
 - **Relink to fix; delete to remove.** They are not interchangeable, and deletion is not reversible.
 - **Encourage dedicated integration users at setup** rather than authorisation tied to an individual's account.
-- **Treat connector deletion as your data-removal mechanism** for churned customers.
 - **Surface stale connectors to whoever manages the customer relationship**, since the fix is on their side.
 
 ## Related
 
 - [Relink a broken connector](/how-to/connections/update-credentials) - walk a customer through re-authorisation
+- [Monitor sync status](/how-to/troubleshooting/monitor-sync-status) - building the health surface
 - [Delete Connector](/api-reference/connectors/delete-connector) - remove a connector and its data
 - [Magic Link & end-user auth](/explanation/magic-link) - why the fix belongs to your customer
