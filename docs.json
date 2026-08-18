@@ -155,6 +155,7 @@
               "how-to/reading-data/include-raw-data-and-custom-fields",
               "how-to/reading-data/read-employee-data",
               "how-to/reading-data/read-benefits-data",
+              "how-to/reading-data/read-employee-documents",
               "how-to/reading-data/read-payroll-data",
               "how-to/reading-data/read-time-and-attendance-data"
             ]
@@ -168,7 +169,8 @@
               "how-to/data-model/map-custom-fields-with-the-api",
               "how-to/data-model/test-a-jmespath",
               "how-to/data-model/scope-a-mapping",
-              "how-to/data-model/restrict-models-and-fields"
+              "how-to/data-model/restrict-models-and-fields",
+              "how-to/data-model/make-a-passthrough-request"
             ]
           },
           {
@@ -180,8 +182,7 @@
               "how-to/writing-data-back/create-a-time-off-request",
               "how-to/writing-data-back/create-an-employee",
               "how-to/writing-data-back/create-an-employee-payroll-run",
-              "how-to/writing-data-back/create-a-timesheet-entry",
-              "how-to/writing-data-back/make-a-passthrough-request"
+              "how-to/writing-data-back/create-a-timesheet-entry"
             ]
           },
           {
@@ -993,6 +994,10 @@
     {
       "source": "/how-to/reading-data/read-payroll-and-timesheet-data",
       "destination": "/how-to/reading-data/read-payroll-data"
+    },
+    {
+      "source": "/how-to/writing-data-back/make-a-passthrough-request",
+      "destination": "/how-to/data-model/make-a-passthrough-request"
     }
   ],
   "api": {

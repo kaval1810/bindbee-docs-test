@@ -29,7 +29,7 @@ The original string is preserved in raw data. If the local vocabulary carries me
 
 ## Transfers and rehires create new records
 
-{/* DIAGRAM (tier 2): before/after for one person. Before - one Employee, one open Employment. After a transfer - the same Employee with one terminated Employment and one open one. After a rehire on a system that mints a new identifier - two Employee records, which is the duplicate this section warns about. Should make clear that "current" is the employment without a termination date, not the first in the array. */}
+{/* DIAGRAM (tier 2): before/after for one person. Before - one Employee, one open Employment. After a transfer - the same Employee with one terminated Employment and one open one. After a rehire on a system that mints a new identifier - two Employee records, which is the duplicate this section warns about. Should make clear that "current" is the employment with the latest effective_date, not the first in the array - employment carries no termination date; the employee does. */}
 
 Two lifecycle events routinely produce a second record for someone who never left.
 
@@ -37,9 +37,7 @@ A **transfer** between positions, departments, or legal entities is implemented 
 
 A **rehire** is similar, and inconsistent between systems. Some reactivate the original record and clear the termination date. Others create a new record entirely, sometimes with a new identifier. The second case produces a duplicate at the employee level, not just the employment level.
 
-{/* VERIFY: HrisEmployment in spec.json has no termination_date - only effective_date. termination_date and termination_reason are on HrisEmployeeResponse. Either the spec omits the field on employment, or termination is employee-level only and the current-employment selection rule below needs rewriting around effective_date. Confirm with engineering before this ships. */}
-
-Where an employee has multiple employments, the current one is the one without a termination date, or the one with the latest effective start where several are open. Do not assume the first element of the array.
+Where an employee has multiple employments, the current one is the one with the latest `effective_date`. Do not assume the first element of the array, and do not look for a termination date on the employment - there isn't one. The employee carries `termination_date` and `termination_reason`; the employments carry only when each began.
 
 ## Disappearing employees
 
@@ -63,7 +61,7 @@ The enum collapse is the same trade seen elsewhere in the unified model. A statu
 
 - **Filter on employment status explicitly.** An unfiltered list is everyone who has ever worked there.
 - **Do not key headcount or billing to raw record count.**
-- **Expect multiple employments per person**, and select the current one by termination date rather than by position in the array.
+- **Expect multiple employments per person**, and select the current one by the latest `effective_date` rather than by position in the array.
 - **If a customer's local status vocabulary carries meaning you need**, promote it into a custom field. The enum will not preserve it.
 - **A disappearing employee is a permissions question first**, an identity question second.
 

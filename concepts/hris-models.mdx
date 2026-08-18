@@ -25,10 +25,10 @@ erDiagram
 
 Multiple employments arise from promotions recorded as new positions, transfers between departments or legal entities, moves between full-time and part-time, and rehires. Each is a segment of a career, and the history is often exactly what an HR system exists to preserve.
 
-{/* VERIFY: HrisEmployment in spec.json has no termination_date - only effective_date. termination_date and termination_reason are on HrisEmployeeResponse. Either the spec omits the field on employment, or termination is employee-level only and the current-employment selection rule below needs rewriting around effective_date. Confirm with engineering before this ships. */}
-
 <Warning>
-Do not read the first employment in the array and treat it as current. Ordering is not guaranteed to mean anything. The current employment is the one without a termination date, or where several are open, the one with the latest effective start.
+Do not read the first employment in the array and treat it as current. Ordering is not guaranteed to mean anything. Employment carries `effective_date` and no end date of its own, so the current one is the one with the latest `effective_date`.
+
+Whether the person still works there is a separate, employee-level question: `employment_status`, `termination_date` and `termination_reason` all sit on the employee, not on any employment.
 </Warning>
 
 Compensation follows the same logic in a separate model, because pay changes on its own schedule - a raise without a title change produces a new compensation record and no new employment.
@@ -67,7 +67,7 @@ The Group collapse is the opposite trade. Here the unified model gives up expres
 
 ## What this means for you
 
-- **Select the current employment explicitly**, by termination date. Never by array position.
+- **Select the current employment by the latest `effective_date`.** Never by array position, and never by a termination date - employment does not carry one.
 - **Filter groups by type** rather than looking for a department or cost-centre model.
 - **Expect compensation to change without employment changing.** They are independent.
 - **Treat location as orthogonal to organisational structure.**

@@ -1,0 +1,169 @@
+---
+title: "Read Employee Documents"
+sidebarTitle: "Read Documents"
+description: "List an employee's documents, download the file behind one, and read parsed W-4 values where they are available."
+tag: "BETA"
+---
+
+Documents carries files held against an employee - tax forms, signed agreements, whatever the source system stores. Two things make it different from every other read: the file itself comes from a separate, short-lived URL, and for some documents Bindbee returns the *parsed contents* as structured fields rather than only the file.
+
+<Warning>
+  Documents is **BETA**. It works, but field names and shapes are not yet frozen - see [Unified model & raw data](/concepts/unified-model).
+</Warning>
+
+<Info>
+  **Before you start**
+
+  - The model is in scope for your organisation - see [Restrict Which Models and Fields Sync](/how-to/data-model/restrict-models-and-fields). Documents holds personal tax data, so it is worth an explicit decision rather than a default.
+</Info>
+
+## Steps
+
+<Steps>
+  <Step title="List documents for an employee">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/documents?employee_id=<EMPLOYEE_ID>&page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    | Filter | Matches |
+    | --- | --- |
+    | `employee_id` | One employee's documents. Comma-separate for several |
+    | `type` | `W4`, `I9`, `OTHER` or `-`. Comma-separate for several |
+    | `data_status` | `AVAILABLE`, `PENDING`, `UNSUPPORTED`, `FAILED` |
+    | `ids`, `remote_id` | Specific records |
+    | `modified_after` | Sync recency - see [Filter with modified_after](/how-to/reading-data/filter-with-modified-after) |
+
+    `type` is normalised. Where you need the source system's own category, `remote_type` carries it verbatim.
+
+    **Result:** The document records, without file contents.
+  </Step>
+
+  <Step title="Check data_status before reading anything">
+    This field decides what you do next, and it is returned on both the list and the detail endpoint so you can branch before fetching.
+
+    | `data_status` | What to do |
+    | --- | --- |
+    | `AVAILABLE` | Read `data` from the detail endpoint |
+    | `PENDING` | Extraction is still running - wait for the `document.data.available` webhook rather than polling |
+    | `UNSUPPORTED` | Bindbee does not parse this type. Download the file |
+    | `FAILED` | Extraction was attempted and did not succeed. Download the file |
+
+    Only `AVAILABLE` gives you structured values. The other three all end with the file.
+
+    **Result:** You know whether to expect parsed fields or a download.
+  </Step>
+
+  <Step title="Read parsed values from the detail endpoint">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/documents/<DOCUMENT_ID>' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    `data` is **only** returned here, not on the list endpoint, and only when `data_status` is `AVAILABLE`. It is discriminated on `type`, and `W4` is the only type with a schema today.
+
+    ```json
+    {
+      "type": "W4",
+      "data_status": "AVAILABLE",
+      "data": {
+        "source": "FORM_FIELDS",
+        "form_version": "2020",
+        "form_year": 2025,
+        "filing_status": "MARRIED_FILING_JOINTLY",
+        "multiple_jobs": false,
+        "dependents_total_amount": 4000,
+        "extra_withholding": 50,
+        "is_exempt": false
+      }
+    }
+    ```
+
+    <Warning>
+      Check `source` before feeding any of this into a withholding calculation. `FORM_FIELDS` means the values were read deterministically off the PDF's own form fields. `OCR` means they were inferred from a scan, and should be treated as a suggestion to confirm rather than a figure to compute with.
+    </Warning>
+
+    **Result:** Structured values, with their provenance.
+  </Step>
+
+  <Step title="Handle both W-4 eras">
+    `form_version` is `2020` or `PRE_2020`, and they are not the same form.
+
+    The redesigned 2020 form populates Step 3 and Step 4 fields - `qualifying_children_amount`, `other_dependents_amount`, `other_income`, `deductions`, `extra_withholding`. The pre-2020 form has none of those and instead carries `allowances`. Fields belonging to the other era come back null.
+
+    `dependents_total_amount` is the Step 3 total, and is **not** always the sum of 3(a) and 3(b) - employees write a total that does not reconcile more often than you would expect. Read the total rather than computing it.
+
+    **Result:** Logic that does not silently produce nulls on half the population.
+  </Step>
+
+  <Step title="Download the file">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/documents/<DOCUMENT_ID>/download?ttl_seconds=300' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    Returns a signed URL plus `expires_at`, `filename`, `content_type` and `size_bytes` - not the file itself.
+
+    ```json
+    {
+      "url": "https://...",
+      "expires_at": "2026-08-18T12:05:00Z",
+      "filename": "w4-2025.pdf",
+      "content_type": "application/pdf",
+      "size_bytes": 184320
+    }
+    ```
+
+    `ttl_seconds` defaults to 300 and accepts 60 to 3600. Fetch the file before `expires_at`, and don't store or forward the URL - anyone holding it can retrieve the document until it expires. Request a fresh one instead.
+
+    **Result:** The file, via a URL that stops working shortly afterwards.
+  </Step>
+
+  <Step title="Handle deletions">
+    Documents removed upstream are tombstoned rather than dropped: the record stays with `is_deleted` set, so an incremental read can observe the deletion.
+
+    Filter them out of anything user-facing, and treat the transition as a signal where retention matters - a document that has disappeared from the source system is one you may no longer be entitled to hold a copy of.
+
+    **Result:** Deletions you can see rather than infer from absence.
+  </Step>
+</Steps>
+
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="data is null even though data_status is AVAILABLE">
+    `data` is returned only by the detail endpoint. The list endpoint carries `data_status` so you can decide what to fetch, but never the parsed values.
+  </Accordion>
+
+  <Accordion title="data_status has been PENDING for a long time">
+    Extraction runs after the document syncs. Subscribe to `document.data.available` rather than polling the record - see [Choose Webhook Events](/how-to/reliability/choose-webhook-events). If it never resolves, download the file; the document is usable regardless of whether parsing succeeded.
+  </Accordion>
+
+  <Accordion title="The download URL returns 403">
+    It expired. `ttl_seconds` defaults to 300, and the URL is single-purpose - request a fresh one rather than caching it.
+  </Accordion>
+
+  <Accordion title="W-4 fields are null for some employees">
+    Usually the other form era. A pre-2020 form has no Step 3 or Step 4 fields and carries `allowances` instead; a 2020 form has no `allowances`. Branch on `form_version`.
+  </Accordion>
+
+  <Accordion title="Documents returns nothing for a connector that has them">
+    Check the model is in scope, then check permissions - document access is frequently a separate grant from general employee read, and several platforms return an empty set rather than an error. See [Resolve a Source-System Permission Error](/how-to/troubleshooting/resolve-a-permission-error).
+  </Accordion>
+
+  <Accordion title="type is a value not in the enum">
+    Unmapped provider categories pass through verbatim, as they do on every enum - see [Enum values](/concepts/enum-values). `remote_type` always carries the source system's own category.
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Get Documents](/hris/documents/get-documents) · [Get Document By Id](/hris/documents/get-document-by-id) · [Get Document Download URL](/hris/documents/get-document-download-url)
+- [HRIS models](/concepts/hris-models) - where Documents sits among the sensitive models
+- [Restrict Which Models and Fields Sync](/how-to/data-model/restrict-models-and-fields) - deciding whether to sync it at all

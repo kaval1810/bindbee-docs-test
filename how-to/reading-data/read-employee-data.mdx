@@ -97,8 +97,6 @@ The employee model is the entry point for most integrations. This page covers wh
 
   <Accordion title="Terminated employees are still returned">
     Expected - records persist after termination and carry a terminal status. Filter on `employment_status` for the population you want, and read `termination_date` from the employee record.
-
-    {/* VERIFY: HrisEmployment in spec.json has no termination_date - only effective_date. termination_date and termination_reason are on HrisEmployeeResponse. Either the spec omits the field on employment, or termination is employee-level only and the current-employment selection rule below needs rewriting around effective_date. Confirm with engineering before this ships. */}
   </Accordion>
 
   <Accordion title="The population is larger than the customer's headcount">
