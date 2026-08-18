@@ -51,7 +51,7 @@ description: "Pull a clean employee census with the demographics carriers need, 
 
     Fetch each status you've agreed on separately - filters are inclusive only, so there is no way to exclude contingent workers in one request. `ACTIVE_EXTERNAL` is usually out; `LEAVE` is usually in, because those employees retain eligibility.
 
-    Expanding `work_locations` gets the rating geography inline instead of N follow-up calls - see [Read Employee Data](/how-to/reading-data/read-employee-data).
+    Expanding `work_locations` gets the rating geography inline instead of N follow-up calls - see [Read Employee Data](/how-to/reading-data/read-employee-data). Location is currently **BETA**; since the census depends on it for rating geography, pin the fields you extract and re-check them when the contract settles.
 
     **Result:** The quoted population, per the agreed definition.
   </Step>
