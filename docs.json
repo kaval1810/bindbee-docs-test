@@ -316,7 +316,7 @@
             "pages": [
               "hris/overview",
               {
-                "group": "Employee",
+                "group": "People",
                 "pages": [
                   {
                     "group": "Employee",
@@ -362,7 +362,8 @@
                       "hris/documents/get-documents",
                       "hris/documents/get-document-by-id",
                       "hris/documents/get-document-download-url"
-                    ]
+                    ],
+                    "tag": "BETA"
                   }
                 ]
               },
@@ -438,7 +439,7 @@
                 "group": "Benefits",
                 "pages": [
                   {
-                    "group": "Benefits",
+                    "group": "Employee Benefits",
                     "pages": [
                       "hris/benefits/get-benefits",
                       "hris/benefits/get-benefit-by-id"
