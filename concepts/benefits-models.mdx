@@ -3,64 +3,89 @@ title: "Benefits models"
 description: "The difference between benefits, employer benefits, dependent benefits and benefit coverages, and when to use each."
 ---
 
-Five models carry benefits data, and their names are close enough that picking the wrong one is easy. The distinction that matters is not what the benefit is - it is whose fact it is.
+Four models carry benefits data, and their names are close enough that picking the wrong one is easy. The failure mode is not an error - it is a number that looks reasonable and is wrong.
 
-## Whose fact is it
+The distinction that matters is not what the benefit is. It is whose fact it is.
 
-**Employer benefit** is the plan itself, as the employer offers it. A medical plan with a carrier, a name, and a plan year. It exists whether or not anyone has enrolled.
+## The four models
 
-**Benefit** is one employee's enrolment in a plan. This is where the employee's contribution amount, coverage tier, and effective dates live. One employee enrolled in medical, dental, and vision has three.
+| Model | Whose fact | Answers |
+| --- | --- | --- |
+| **Employer benefit** | The employer's | What plans are offered? |
+| **Benefit** | One employee's | Who enrolled, and what do they pay? |
+| **Dependent benefit** | A dependant's | Which plans is that person covered under? |
+| **Benefit coverage** | A covered party's | How much is each person insured for? |
 
-**Dependent benefit** is a dependant's coverage under an employee's enrolment - the enrolled spouse or child, as distinct from the employee's own enrolment.
+An employer benefit is a catalogue entry - it exists whether or not anyone enrols. A benefit is one employee's enrolment in it, so an employee on medical, dental and vision has three.
 
-**Dependent** is the person: name, relationship, date of birth. Independent of any benefit, because a dependant exists whether or not they are covered.
+<Note>
+Dependants themselves are not a benefits model. A dependant is a person attached to an employee, and exists whether or not they are covered by anything. Coverage is the dependent benefit; the person is [an employee relation](/concepts/hris-models).
+</Note>
 
-**Benefit coverage** carries coverage detail at a finer grain - amounts and terms tied to a specific coverage target rather than to the enrolment as a whole. This matters for plans like life insurance, where the sum assured differs between the employee, the spouse, and each child under a single enrolment.
+## How they link
 
-The shortest way to choose: employer benefit for what is offered, benefit for who enrolled, dependent benefit for who else is covered, dependent for who they are, benefit coverage for how much.
+```mermaid
+erDiagram
+    EMPLOYER_BENEFIT ||--o{ BENEFIT : "employer_benefit"
+    EMPLOYER_BENEFIT ||--o{ DEPENDENT_BENEFIT : "employer_benefit"
+    BENEFIT ||--o{ BENEFIT_COVERAGE : "benefit"
+    DEPENDENT ||--o{ DEPENDENT_BENEFIT : "dependent"
+```
 
-<Info>
-The most common modelling error is looking for coverage amounts on the enrolment. On plans with per-person amounts, the enrolment carries the contribution and the coverage model carries the amounts. Reading only the enrolment produces a plausible, incomplete picture.
-</Info>
+The asymmetry is the point, and the names hide it. **Benefit coverage attaches to the enrolment. Dependent benefit attaches to the plan.**
+
+<Warning>
+There is no link from a dependant's coverage to the employee's enrolment in the same plan. To group them, join both on `employer_benefit` and resolve the person through the dependant's own employee relation.
+</Warning>
+
+That asymmetry also explains where amounts live. Some plans insure different sums for the employee, the spouse and each child - life insurance is the usual case - and **an amount that varies per person cannot be a field on the enrolment** without capping how many people a plan can cover.
+
+So it becomes one benefit coverage record per covered party instead. Read only the enrolment and you get the contribution and the tier but no sums assured, with nothing in the response to signal the gap.
 
 ## Plan years bound everything
 
-Benefits are the most time-bound data in an HR system. A plan year opens, enrolments run against it, contributions are deducted during it, and then the whole structure is replaced at renewal.
+Benefits are the most time-bound data in an HR system. A plan year opens, enrolments run against it, contributions are deducted during it, and the whole structure is replaced at renewal.
 
-Two consequences follow.
+Two consequences follow, and both break naive reads.
 
-**Enrolments accumulate.** An employee in their third year has three medical enrolments, not one that was updated. The current one is bounded by the current plan year. An unfiltered read returns benefits history, and treating it as current state overstates coverage.
+**Enrolments accumulate rather than update.** An employee in their third year has three medical enrolments, not one that was edited twice. An unfiltered read returns benefits history, and treating it as current state overstates coverage.
 
-**Renewal changes identity.** At renewal, most systems create new plan records rather than editing existing ones. Plans that look identical across years are distinct objects with distinct identifiers.
+**Renewal changes identity.** Most systems create new plan records at renewal instead of editing existing ones, so plans that look identical across years are distinct objects. Any plan identifier you stored last year will not resolve this year.
 
-## Where deductions live
+The same time-boundedness shows up inside a single enrolment. An employee elects during open enrolment, but coverage begins at the plan year boundary - so **an enrolment's start date and its effective date are a waiting period apart**, not the same day.
 
-Benefits do not carry the money movement. What was actually withheld from a paycheque lives in payroll - deductions on an employee payroll run.
+## Where benefits end and payroll begins
 
-Connecting them is a real piece of work, because the deduction carries a payroll code and the enrolment carries a plan, and the correspondence between them is defined in the customer's configuration rather than in either record. Reconciling a deduction to a plan year additionally requires the payment date, since a January deduction may belong to either plan year depending on how the customer's calendar falls.
+**Benefits data describes an intent** - who is enrolled in what, and what they agreed to contribute. **Payroll data describes money that moved** - what was actually withheld from a paycheque, as deductions on an employee payroll run.
 
-This is the boundary between benefits data and payroll data, and it does not resolve cleanly in either direction.
+Nothing joins the two for you:
+
+- The deduction carries a **payroll code**.
+- The enrolment carries a **plan**.
+- The correspondence between them lives in **the customer's own configuration**, not in either record.
+
+Attributing a deduction to a plan year needs the payment date as well, since a January deduction may belong to either year depending on how the customer's calendar falls.
+
+This is a genuine boundary between two categories of data, not a gap waiting to be filled. **Expect to hold the mapping yourself.**
 
 ## Why it works this way
 
-Splitting the plan from the enrolment is what makes the data usable at scale.
+**Splitting the plan from the enrolment is what makes the data usable at scale.** Folding them together would copy the plan's name, carrier and terms onto every enrolled employee's record - inconsistent the moment one copy is updated and another is not. Stating the plan once means a correction to it is a correction everywhere.
 
-Folding them together would put the plan's name, carrier, and terms on every employee's record - duplicated across everyone enrolled, and inconsistent the moment one copy is updated and another is not. Separating them means the plan is stated once and enrolments reference it, so a correction to the plan is a correction everywhere.
+**The separate coverage model exists because coverage genuinely isn't an attribute of the enrolment.** On a life insurance plan, a model with its own covered party is the only shape that holds every case without capping how many people a plan can cover.
 
-The separate coverage model exists because coverage is genuinely not an attribute of the enrolment on many plans. Life insurance with different sums assured for employee, spouse, and children cannot be expressed as fields on a single enrolment record without either fixing the number of covered persons in the schema or nesting arbitrarily. A separate model with its own target is the shape that holds all of it, at the cost of one more read.
-
-Keeping dependants separate from dependant benefits reflects the same principle. A dependant is a person who exists independently of coverage - they may be enrolled in some plans and not others, added mid-year, or recorded without being covered at all.
+**Keeping dependants outside the benefits cluster follows the same principle.** A dependant is a person who exists independently of coverage - enrolled in some plans and not others, added mid-year, or recorded without being covered at all.
 
 ## What this means for you
 
-- **Filter enrolments by plan year.** Unfiltered reads return history.
 - **Read benefit coverages when amounts matter**, not just enrolments.
+- **Join dependants to employees through the plan**, not through the employee's benefit row.
+- **Filter enrolments by plan year.** Unfiltered reads return history.
 - **Do not expect plan identifiers to survive renewal.** Match on plan attributes, not identity.
-- **Deduction-to-plan reconciliation needs payroll data and payment dates**, and depends on the customer's own code configuration.
-- **A dependant may exist without coverage.** The models are separate for a reason.
+- **Own the plan-to-payroll-code mapping.** Neither model supplies it.
 
 ## Related
 
 - [Read benefits data](/how-to/reading-data/read-benefits-data) - enrolments, coverages, and dependants
-- [Get Benefit Coverages](/hris/benefit-coverages/get-benefit-coverages) - the coverage model
+- [HRIS models](/concepts/hris-models) - where dependants sit, as an employee relation
 - [Payroll & time models](/concepts/payroll-and-time-models) - where deductions live
