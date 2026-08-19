@@ -70,17 +70,9 @@ Every request to the Bindbee unified API carries your organization's API key, an
 
 ## Which endpoints need which header
 
-| Endpoint group | `Authorization` | `X-Connector-Token` |
-| --- | --- | --- |
-| **Unified data** (`/api/{category}/v1/*`) | Required | Required |
-| [Passthrough](/api-reference/passthrough/make-passthrough-request) | Required | Required |
-| [Force a resync](/api-reference/connectors/resync-connector) | Required | Required |
-| [Connector list](/api-reference/connectors/get-connectors) and [delete](/api-reference/connectors/delete-connector) | Required | Not used |
-| [Integrations](/api-reference/integrations/get-integrations) | Required | Not used |
-| [Custom fields](/custom-fields/api/list-custom-fields) and mappings | Required | Not used |
-| [Webhooks](/webhooks/overview) and delivery logs | Required | Not used |
+The rule is short enough to hold in your head: **if the request names one customer, it needs the connector token.** Unified data, passthrough and force-resync do. Everything acting across your whole account - connectors, integrations, custom fields, webhooks, link tokens - takes the API key alone.
 
-`category` is `hris`, `ats` or `lms`. Connector-scoped endpoints act on one end user. Organization-scoped endpoints act across your whole account, so they take the API key alone.
+For the endpoint-by-endpoint breakdown, see [Which endpoints take what](/api-reference/basics/authentication#which-endpoints-take-what).
 
 Write endpoints take a third header, `X-Idempotency-Key`. It is not part of authentication - it stops a retried request creating a duplicate record. See [Create an Employee](/how-to/writing-data-back/create-an-employee) for how to derive one.
 

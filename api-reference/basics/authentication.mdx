@@ -1,33 +1,20 @@
 ---
 title: "Authentication"
-description: "Learn about the process of authenticating your requests to the Bindbee API."
+description: "The headers every Bindbee API request carries, and which endpoints require which one."
 ---
 
-## Overview
+Every request to the Bindbee API carries an API key. Requests that reach one customer's data carry a connector token as well.
 
-When initiating requests to the Bindbee API, it is essential to include the necessary authentication parameters to establish your identity as an authorized user.
-
-There are two primary authentication protocols:
-
-1. Bindbee API Key
-2. Connector Tokens
-
-<Info>
-  Every request carries the API key. The connector token is carried only by
-  requests that reach one customer's data - see [Which endpoints take
-  what](#which-endpoints-take-what) below.
-</Info>
+| Header | Format | Identifies |
+| --- | --- | --- |
+| `Authorization` | `Bearer YOUR_BINDBEE_API_KEY` | Your organisation |
+| `X-Connector-Token` | `END_USER_CONNECTOR_TOKEN` | One customer's connection |
 
 ## Bindbee API Key
 
-For any communication with the Bindbee API, it is crucial to have an API key to authenticate yourself as an authorized user.
+The API key authenticates you as an authorised user, and every endpoint requires it.
 
-<Note>
-  It is recommended to securely store your access key after its creation in
-  Bindbee
-</Note>
-
-In case you no longer have access to your key, you have the option to regenerate your Bindbee API Key in [API Key](https://app.bindbee.dev/settings/keys) Tab in Settings.
+Create and regenerate keys in the [API Keys](https://app.bindbee.dev/settings/keys) tab under Settings. The key is shown once on creation - store it securely, and regenerate if you lose access to it.
 
 <img
   src="https://images.unifyx.dev/documentation_images/api_keys.png"
@@ -35,13 +22,11 @@ In case you no longer have access to your key, you have the option to regenerate
   className="block"
 />
 
-When creating your own requests, it is essential to include your API key with a **"Bearer "** prefix as a header named `Authorization`. This practice is crucial for authorizing your Bindbee API requests effectively. Ensure that this specific header is incorporated in every request, adhering to the following format:
-
-`Authorization: Bearer YOUR_BINDBEE_API_KEY`
+Keys are scoped to an environment. A development key does not work against production data - see [Environments](/explanation/environments).
 
 ## Connector Tokens
 
-Requests that read or write one customer's data need that customer's `connector_token` in addition to your API key. The token is issued once the end user has authorised the connection, however that connection was created - a hosted [Magic Link](/how-to/connections/generate-a-magic-link), the [embedded component](/how-to/connections/embed-the-connection-flow), or a link generated [programmatically](/how-to/connections/create-a-connector-programmatically).
+The `connector_token` names which customer's connection a request acts on. It is issued once the end user has authorised the connection, however that connection was created - a hosted [Magic Link](/how-to/connections/generate-a-magic-link), the [embedded component](/how-to/connections/embed-the-connection-flow), or a link generated [programmatically](/how-to/connections/create-a-connector-programmatically).
 
 <Tip>
   You can find a `connector_token` in the connector's **Connector Details**
@@ -56,9 +41,11 @@ Requests that read or write one customer's data need that customer's `connector_
   className="block"
 />
 
-Include your user's `connector_token` as a header named `X-Connector-Token`, in this format:
-
-`X-Connector-Token: END_USER_CONNECTOR_TOKEN`
+<Warning>
+  A connector token is scoped to one API category. An HRIS connector's token
+  used against `/api/ats/v1/*` returns `403` even though both credentials are
+  valid - see [Handle API Errors](/how-to/setup/handle-api-errors).
+</Warning>
 
 ## Which endpoints take what
 
@@ -66,28 +53,39 @@ The API key is always required. The connector token is required only where the r
 
 | Endpoint group | `Authorization` | `X-Connector-Token` |
 | --- | --- | --- |
-| **Unified data** (`/api/{category}/v1/*`) | Required | Required |
-| [Passthrough](/api-reference/passthrough/make-passthrough-request) | Required | Required |
-| [Force a resync](/api-reference/connectors/resync-connector) | Required | Required |
+| **Unified data** (`/api/{category}/v1/*`) | Required | **Required** |
+| [Passthrough](/api-reference/passthrough/make-passthrough-request) | Required | **Required** |
+| [Force a resync](/api-reference/connectors/resync-connector) | Required | **Required** |
 | [Connector list](/api-reference/connectors/get-connectors) and [delete](/api-reference/connectors/delete-connector) | Required | Not used |
 | [Integrations](/api-reference/integrations/get-integrations) | Required | Not used |
-| [Custom fields](/custom-fields/api/list-custom-fields) and mappings | Required | Not used |
+| [Custom fields](/custom-fields/api/list-custom-fields), mappings and [lookup](/custom-fields/lookup/list-integrations) | Required | Not used |
+| [Webhooks](/webhooks/overview) and delivery logs | Required | Not used |
 | [Link token](/sdk/create-link-token) and [token exchange](/sdk/get-connector-token) | Required | Not used |
 
-`category` is `hris`, `ats` or `lms`. Sending a connector token on an endpoint that does not use one is harmless; omitting it where it is required returns an error rather than an empty result.
+`category` is `hris`, `ats` or `lms`. Connector-scoped endpoints act on one end user; the rest act across your whole account, so they take the API key alone.
 
-<Warning>
-  A connector token is scoped to one API category. An HRIS connector's token
-  used against `/api/ats/v1/*` returns `403` even though both credentials are
-  valid - see [Handle API Errors](/how-to/setup/handle-api-errors).
-</Warning>
+Sending a connector token where it is not used is harmless. Omitting it where it is required returns an error rather than an empty result.
 
 ## A third header on writes
 
-Write endpoints also take `X-Idempotency-Key`. It is not part of authentication - it stops a retried request creating a duplicate record in the customer's system.
+Write endpoints take `X-Idempotency-Key`. It is not part of authentication - it stops a retried request creating a duplicate record in the customer's system.
 
 `X-Idempotency-Key: YOUR_STABLE_KEY`
 
 Derive it from your own record for the thing being created, not from a random value or a timestamp, and reuse the same key on every retry. See [Create an Employee](/how-to/writing-data-back/create-an-employee).
 
+{/* VERIFY: spec.json declares x-idempotency-key on exactly four operations, all HRIS -
+    POST /employees, /employee-payroll-runs, /time-off, /timesheet-entry. None of the
+    seventeen ATS create endpoints declare it, yet how-to/ats/create-a-candidate.mdx
+    instructs readers to send it. Either the header is honoured on ATS and the spec is
+    incomplete, or the ATS how-to is telling people to send a header that does nothing -
+    in which case duplicate candidates on retry are unprotected. Confirm with engineering
+    before narrowing or broadening the claim on this page. */}
+
 Passthrough does not accept an idempotency key - a retried passthrough write reaches the provider as a second write.
+
+## Related
+
+- [Authenticate a Request](/how-to/setup/authenticate-a-request) - sending both headers, and what each failure looks like
+- [Rate Limits](/api-reference/basics/rate-limits) - enforced per connector token, not per API key
+- [Environments](/explanation/environments) - why a key works against one and not the other
