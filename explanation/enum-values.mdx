@@ -1,43 +1,41 @@
 ---
 title: "Enum values"
-description: "Why normalisation collapses source values into a fixed set, and what the OTHER and - fallbacks actually mean."
+description: "Why normalisation collapses source values into a fixed set, and what arrives when a value does not fit."
 ---
 
-An employee your customer classifies as "Active PT" arrives as `ACTIVE`. A pay period they call "Semi-Monthly (2nd/16th)" arrives as `SEMIMONTHLY`. A benefit plan they have named for their broker arrives as `OTHER`.
+An employee your customer classifies as "Active PT" arrives as `ACTIVE`. A pay period they call "Semi-Monthly (2nd/16th)" arrives as `SEMIMONTHLY`.
 
-**Nothing was lost, exactly. It was set aside.**
+**Nothing was lost, exactly. It was set aside** - and where it could not be mapped at all, it arrives untouched.
 
-## What an enum is doing
+## The enum is a documented set, not a constraint
 
-A unified enum is a fixed set that every source system's local vocabulary maps into. It exists so your code can branch on known values rather than on strings it has never seen.
+A unified enum exists so your code can branch on known values rather than on strings it has never seen. Source vocabularies are unbounded: customers define their own statuses, pay period names and classifications to encode things their business cares about - division, contract type, shift pattern, broker.
 
-Source vocabularies are unbounded. Customers define their own statuses, pay period names, benefit types and classifications, and they do it to encode things their business cares about - division, contract type, shift pattern, broker.
+None of that is expressible in a fixed set. So the enum is a projection, and values with a clear equivalent map into it.
 
-None of that is expressible in a fixed set, and all of it arrives at the mapping.
+<Warning>
+Values without an equivalent are **passed through verbatim.** More than thirty enum fields say so in their own description: *"If the value is not one of the defined enum values, the original value passed through will be returned."*
 
-So the enum is a projection. Values with a clear equivalent map to it; values without one land on a fallback.
+The fields are typed as plain strings, so **the enum list documents what you can expect, not what you can receive.** A switch that assumes the documented set will meet values outside it.
+</Warning>
 
-## Two fallbacks, and they mean different things
+That is the single most important thing about enums here, and it changes how you write the handler: you are matching against known values with a real default branch, not exhausting a closed set.
+
+## Two values that are part of the set
+
+Some enums carry explicit fallback members, and they are not the same thing as a pass-through.
 
 | Value | Means | What it points at |
 | --- | --- | --- |
-| `OTHER` | The source gave a value with no unified equivalent | A **mapping gap** - the original is in `raw_data` |
-| `-` | The source gave nothing usable - absent, empty or unset | **Source configuration or permissions** |
+| `OTHER` | The source has its own "other" category and used it | A deliberate choice upstream, not a mapping gap |
+| `-` | No usable value came from the source - absent, empty or unset | Source configuration or permissions |
 
-`OTHER` is a mapping outcome: the information exists and the unified field could not represent it. `-` is an absence: there was nothing to represent in the first place.
+Neither appears on every enum. Gender, ethnicity and marital status carry both; employment status carries `-` and no `OTHER`; benefit plan category carries `OTHER` and no `-`. Group type carries neither.
 
-The distinction is diagnostically useful, and the two have completely different fixes. A field returning `OTHER` across a customer's population means they use a vocabulary the mapping does not cover. A field returning `-` means the data is not being populated at source.
-
-<Warning>
-**Not every enum carries both, and some carry neither.** `-` appears in 18 enums and `OTHER` in 8; only a handful - gender, ethnicity, marital status among them - have both. Employment status has `-` and no `OTHER`; benefit plan category has `OTHER` and no `-`.
-
-Do not write a handler that assumes a particular fallback exists on a given field.
-</Warning>
-
-{/* VERIFY: what happens when an unmappable source value hits an enum with no fallback at all? Group type (DEPARTMENT, TEAM, DIVISION, BUSINESS_UNIT, COST_CENTER) has neither OTHER nor "-", as do JobDisplayStatus and ConnectorStatus. Does the field come back null, omitted, or does the record fail to sync? */}
+**So a field can return four different kinds of thing**: a documented value, `OTHER`, `-`, or an arbitrary string from the source system.
 
 <Info>
-A high proportion of `OTHER` on one integration is worth investigating rather than accepting. It usually means a mapping gap affecting every customer on that system, not just the one who reported it.
+A high proportion of `OTHER` or of pass-through values on one integration is worth investigating rather than accepting. It usually means a mapping gap affecting every customer on that system, not just the one who reported it.
 </Info>
 
 ## The original is in raw data, if you ask for it
@@ -46,32 +44,32 @@ Whatever the source system sent survives unmodified - but `raw_data` is **not re
 
 That is the recovery path when the enum is too coarse. If the local vocabulary carries meaning you need - full-time versus part-time encoded in a status, contract type encoded in a classification - read it from the payload and promote it into a custom field, then request it with `include_custom_fields=true`.
 
-What you should **not** do is branch on the raw string directly. That is integration-specific handling, and it breaks the moment a customer edits their vocabulary.
+What you should **not** do is branch on the raw string directly, whether you read it from `raw_data` or receive it as a pass-through. That is integration-specific handling, and it breaks the moment a customer edits their vocabulary.
 
 ## Enums can gain values
 
-The fixed set is fixed at a point in time, not permanently. Values are added as coverage broadens and as source systems introduce concepts the model does not yet carry.
+The documented set is fixed at a point in time, not permanently. Values are added as coverage broadens and as source systems introduce concepts the model does not yet carry.
 
-**Code that treats an enum as exhaustive will break** - a switch with no default, an exception on an unrecognised value. Handling the unrecognised case costs little and removes a class of future failure.
+A value that passes through verbatim today may become a mapped enum value later - which is a second reason the default branch matters.
 
 ## Why it works this way
 
-The alternative is to pass source strings through untouched, and it fails on its own terms.
+The alternative is to pass every source string through untouched, and it fails on its own terms.
 
-Your code would handle "Active", "ACTIVE", "Active FT", "A" and "Currently Employed" as five separate cases, all meaning employed, varying by integration *and* by customer within an integration. Every new customer would be a potential new string.
+Your code would handle "Active", "ACTIVE", "Active FT", "A" and "Currently Employed" as five separate cases, all meaning employed, varying by integration *and* by customer within an integration.
 
-That is precisely the per-integration branching a unified API exists to remove. It moves the mapping work from Bindbee to you without making it easier.
+That is precisely the per-integration branching a unified API exists to remove. Mapping to a fixed set means one comparison works for the common cases.
 
-Mapping to a fixed set means one comparison works everywhere. The cost is that nuance below the enum's resolution disappears from the unified field - **which is why the fallbacks exist and why raw data is retained** rather than discarded.
+**Passing the remainder through, rather than forcing it into a bucket, is the honest half of that trade.** Coercing an unmappable status into `-` or `OTHER` would destroy information while looking like a clean result. Returning the original says plainly that the model did not cover this one, and leaves the value recoverable.
 
-Keeping `OTHER` and `-` separate follows the same logic. Collapsing them would hide the difference between "we could not represent this" and "there was nothing to represent", which are two problems with entirely different fixes.
+Keeping `OTHER` and `-` distinct follows the same logic: one says the source made a choice, the other says the source said nothing, and they have entirely different fixes.
 
 ## What this means for you
 
-- **Handle unrecognised enum values gracefully.** The set can grow, and not every field has a fallback.
-- **Treat `OTHER` as a signal**, particularly when it clusters on one integration.
-- **`-` points at source configuration or permissions**, not at a mapping gap.
+- **Always write the default branch.** The documented set is not the set of possible values.
 - **Never default an unrecognised value to a meaningful one.** Defaulting an unknown employment status to inactive can deprovision a working employee.
+- **Treat `OTHER` and pass-through values as signals**, particularly when they cluster on one integration.
+- **`-` points at source configuration or permissions**, not at a mapping gap.
 - **Promote local vocabulary into a custom field** if you need it, and request it explicitly. Do not branch on raw strings.
 
 ## Related
