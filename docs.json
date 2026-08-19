@@ -69,7 +69,7 @@
               "explanation/environments",
               "explanation/unified-model",
               "explanation/scope-and-permissions",
-              "explanation/integration-versions",
+              "explanation/integration-variants",
               "explanation/magic-link"
             ]
           },
@@ -1030,7 +1030,7 @@
     },
     {
       "source": "/concepts/integration-versions",
-      "destination": "/explanation/integration-versions"
+      "destination": "/explanation/integration-variants"
     },
     {
       "source": "/concepts/lms-models",
@@ -1091,6 +1091,10 @@
     {
       "source": "/explanation/environments/production",
       "destination": "/explanation/environments#production"
+    },
+    {
+      "source": "/explanation/integration-versions",
+      "destination": "/explanation/integration-variants"
     }
   ],
   "api": {
