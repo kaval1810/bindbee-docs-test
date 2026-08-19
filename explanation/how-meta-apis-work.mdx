@@ -3,7 +3,9 @@ title: "How Meta APIs work"
 description: "Why Bindbee asks the connector what a write request should look like instead of publishing a fixed schema."
 ---
 
-Reading is symmetrical: every integration returns the same employee shape. Writing is not. What a source system requires to create an employee differs by system, and within a system it differs by tenant, because customers configure their own mandatory fields.
+Reading is symmetrical: every integration returns the same employee shape. **Writing is not.**
+
+What a source system requires to create an employee differs by system - and within a system, by tenant, because customers configure their own mandatory fields.
 
 A fixed request schema cannot express that. So for writes, Bindbee tells you what the schema is at the moment you ask, for the connector you are asking about.
 
@@ -11,13 +13,33 @@ A fixed request schema cannot express that. So for writes, Bindbee tells you wha
 
 A meta endpoint returns the request schema for a create operation on a specific connector: which fields exist, which are required, and where the value set is constrained, what the permitted values are.
 
-That last part matters more than it sounds. Many required fields are not free text but references into the customer's own configuration - a location identifier, a pay group, an employment type defined in their tenant. You cannot know those values in advance, and they differ between two customers on the same system.
+That last part matters more than it sounds. Many required fields are not free text but **references into the customer's own configuration** - a location identifier, a pay group, an employment type defined in their tenant.
+
+You cannot know those values in advance, and they differ between two customers on the same system.
+
+The response is an envelope - `success`, `data` and `error` - with the schema itself inside `data`, so unwrap before you validate against it.
 
 <Info>
-The practical pattern is to fetch the schema, render a form or validate against it, then submit. Hardcoding a request body that worked for one customer is the most common way to build a write integration that breaks on the second customer.
+The practical pattern is to fetch the schema, render a form or validate against it, then submit. Hardcoding a request body that worked for one customer is the most common way to build a write integration that breaks on the second.
 </Info>
 
-Meta endpoints currently exist for create employee, create employee payroll run, create time off, create timesheet entry, and create candidate.
+Five operations have one:
+
+| Operation | Endpoint |
+| --- | --- |
+| Create employee | `/hris/v1/employees/meta/post` |
+| Create employee payroll run | `/hris/v1/employee-payroll-runs/meta/post` |
+| Create time off | `/hris/v1/time-off/meta/post` |
+| Create timesheet entry | `/hris/v1/timesheet-entry/meta/post` |
+| Create candidate | `/ats/v1/candidates/create/meta` |
+
+<Warning>
+**A meta endpoint existing does not mean a schema exists for your connector.** Where the schema has not been published for that integration and model, the request returns `501 Not Implemented` - which means *unknown*, not *unsupported*. The write itself may still work.
+
+Handle `501` as its own branch rather than folding it into a general error path - see [Meta APIs](/meta-apis-for-write-operations#meta-api-not-implemented-for-an-integration).
+</Warning>
+
+{/* VERIFY: 501 is documented in four places - meta-apis-for-write-operations, go-live-checklist, write-payroll-deductions-back and create-a-candidate - but it is not in the documented response list for any meta endpoint in the live spec, which lists only 200, 422, 401, 403 and 429. Confirm the status code and get it into the spec. */}
 
 <Note>
   The employee model exposes two: `/employees/meta/post` and
@@ -25,14 +47,16 @@ Meta endpoints currently exist for create employee, create employee payroll run,
   HRIS writes follow, and the one every how-to on this site calls. The
   `create/meta` variant exists only for employees and ATS candidates.
 
-  {/* VERIFY: is create/meta superseded, or does it serve a purpose meta/post does not? Both return MetaApiResponseModel. Worth deprecating one if not. */}
+  {/* VERIFY: is create/meta superseded, or does it serve a purpose meta/post does not? Both return MetaApiResponseModel, but the live spec gives them different summaries - "Get Create Employee Meta" / "Returns request schema for POST Employee request" versus "Get Create Employee Request Body" / "Returns the data points required to add new employee in HRIS" - which reads as two names for one thing rather than two behaviours. Worth deprecating one if so.
+
+  Separately, a spec bug: /ats/v1/candidates/create/meta carries the same description, "Returns the data points required to add new employee in HRIS", on the candidates endpoint. Still wrong on live. */}
 </Note>
 
 ## Where there is no meta endpoint
 
 Most write operations do not have one. The ATS creates in particular are largely uncovered - of the seventeen ATS create endpoints, only create candidate has a schema.
 
-For those, the request shape comes from the API reference, and the per-integration variation you would have learned from a schema has to be discovered another way - by attempting the write and reading the failure. This is unsatisfying and it is the current state.
+For those the request shape comes from the API reference, and the per-tenant variation a schema would have told you has to be discovered by attempting the write and reading the failure. Unsatisfying, and the current state.
 
 {/* VERIFY: is meta-endpoint coverage expanding to remaining write operations, and in what order? Affects whether teams should build against schemas or against fixed bodies for ATS writes. */}
 
@@ -40,17 +64,23 @@ For those, the request shape comes from the API reference, and the per-integrati
 
 Some writes need values that exist in one source system and nowhere else - a pay adjustment code, a system-specific flag governing how the record is processed.
 
-These travel in a dedicated parameters object rather than being added to the unified body. The separation is deliberate: the unified fields stay portable across integrations, and the escape hatch is visibly an escape hatch. Code passing integration-specific parameters is code that knows which integration it is talking to, and it should be obvious in the request that this is the case.
+These travel in a dedicated parameters object rather than joining the unified body. The separation is deliberate: unified fields stay portable, and the escape hatch is visibly an escape hatch.
+
+Code passing integration-specific parameters knows which integration it is talking to, and the request should show that.
 
 ## Why it works this way
 
 Publishing one fixed schema per model would be simpler to document and simpler to code against, and it would be wrong for a substantial share of customers.
 
-The alternative to runtime discovery is the intersection: require only the fields every integration requires, and hope the rest are optional. They are not. A tenant that has made cost centre mandatory will reject a create that omits it, and no amount of schema design on Bindbee's side changes that. You would learn the requirement from a 400, which is what runtime discovery exists to avoid.
+The alternative is the intersection - require only what every integration requires, and hope the rest are optional. They are not.
 
-The other option is the union - accept every field any system might want and pass through what applies. That produces a schema too large to be useful and gives no signal about what is actually required for the customer in front of you.
+A tenant that has made cost centre mandatory rejects a create that omits it, and no schema design on Bindbee's side changes that. You would learn the requirement from a `400`, which is what runtime discovery exists to avoid.
 
-Asking the connector puts the answer where the truth is. The cost is an extra call and a more dynamic integration than a static schema would give you. In return, a write built against the schema works for a tenant configured in ways you never anticipated, which is most of them.
+The other option is the union - accept every field any system might want. That produces a schema too large to be useful, and no signal about what the customer in front of you actually requires.
+
+**Asking the connector puts the answer where the truth is.** The cost is an extra call and a more dynamic integration than a static schema would need.
+
+In return, a write built against the schema works for tenants configured in ways you never anticipated - which is most of them.
 
 ## What this means for you
 
@@ -58,6 +88,7 @@ Asking the connector puts the answer where the truth is. The cost is an extra ca
 - **Render forms from the schema** rather than hardcoding fields.
 - **Do not reuse a working request body across customers** without checking it against their schema.
 - **Keep integration-specific parameters out of the unified body.** They belong in the dedicated object.
+- **Treat `501` as unknown, not unsupported.** The write may still succeed.
 - **Where no meta endpoint exists**, expect to discover requirements from failures, and log them.
 
 ## Related
