@@ -3,17 +3,23 @@ title: "Write support"
 description: "What it means for a model to support writes, and why support differs by category and by integration."
 ---
 
-Reading is close to uniform: if a model exists for a category, most integrations return something. Writing is not. Write support is sparse, uneven, and distributed in a way that runs against most people's expectations.
+Reading is close to uniform: if a model exists for a category, most integrations return something.
+
+**Writing is not.** Write support is sparse, uneven, and distributed in a way that runs against most people's expectations.
 
 ## The shape of it today
 
-**ATS is the write-heavy category.** Around seventeen models accept creates - candidates, applications, jobs, offers, scheduled interviews, scorecards, departments, offices, tags, and more. Recruiting workflows are built around external systems pushing data in, and ATS vendors expose write APIs accordingly.
+| Category | Creates | What accepts them |
+| --- | --- | --- |
+| **ATS** | 17 endpoints, 16 models | Candidates, applications, jobs, offers, interviews, scorecards, departments, offices, tags and more |
+| **HRIS** | 4 | Employee, employee payroll run, time off, timesheet entry |
+| **LMS** | 0 | Read-only |
 
-**HRIS accepts four creates:** employee, employee payroll run, time off, and timesheet entry.
+Attachments account for the seventeenth endpoint: they can be created standalone or against a candidate.
 
-**LMS accepts none.** It is read-only.
+The asymmetry surprises people who assume HRIS, being the largest category, is the most capable. **The constraint is not Bindbee's** - it reflects what source systems permit.
 
-The asymmetry surprises people who assume HRIS, being the largest category, is the most capable. The constraint is not Bindbee's - it reflects what source systems permit. HR systems are systems of record for compensation, employment, and personal data, and most of them expose narrow, heavily-validated write surfaces or none at all.
+HR systems are systems of record for compensation, employment and personal data, and most expose narrow, heavily-validated write surfaces or none at all. Recruiting systems are built around external tools pushing data in, so their write APIs are correspondingly open.
 
 ## Two layers of support
 
@@ -33,31 +39,37 @@ Do not infer write capability from read capability, or from the endpoint being d
 
 The write surface is creates. There is no general facility for updating or deleting a record through the unified models.
 
-This is a larger constraint than it first appears. Correcting a mistyped hire, updating a title, or cancelling a submitted time-off request are not operations the unified write API performs. Where they are possible at all, they go through passthrough and are written against that integration's own API.
+This is a larger constraint than it first appears. Correcting a mistyped hire, updating a title, cancelling a submitted time-off request - none are operations the unified write API performs.
 
-The API surface confirms this: there is no `PATCH` or `PUT` on any unified HRIS, ATS or LMS model. The only update operation anywhere in the API is on a custom field mapping, which is Bindbee configuration rather than customer data.
+Where they are possible at all, they go through passthrough, against that integration's own API.
+
+The API surface confirms it. **Exactly one `PATCH` exists in the whole API**, and it is on a custom field mapping - Bindbee configuration, not customer data. There is no `PUT` anywhere, and no `PATCH` on any unified HRIS, ATS or LMS model.
 
 ## What a failed write leaves behind
 
-A rejected write leaves nothing in Bindbee, but it may not leave nothing in the source system.
+A rejected write leaves nothing in Bindbee. **It may not leave nothing in the source system.**
 
-Some creates are multi-step upstream - a person record, then an employment, then a compensation entry. A failure partway through can leave a partial record in the customer's HR system, visible in their UI, which Bindbee did not create and will not clean up.
+Some creates are multi-step upstream: a person record, then an employment, then a compensation entry. A failure partway through can leave **a partial record in the customer's HR system** - visible in their UI, which Bindbee did not create and will not clean up.
 
-The operational consequence is that a failed write is not automatically safe to retry. Retrying may produce a duplicate rather than completing the original. Where a create fails with an ambiguous error, checking the source system's state before retrying is the safe order.
+So a failed write is not automatically safe to retry - retrying may produce a duplicate rather than completing the original.
+
+Where a create fails ambiguously, check the source system's state before retrying.
 
 ## Reads and writes are not the same path
 
 A successful write does not immediately appear in your reads. The record was created in the source system; Bindbee learns about it on the next sync.
 
-Confirming a write by reading back straight away will find nothing, and that absence means nothing. Trust the write response, or force a resync if the record must be visible promptly.
+Reading back straight away finds nothing, and **that absence means nothing**. Trust the write response, or force a resync if the record must appear promptly.
 
 ## Why it works this way
 
 The narrowness is inherited rather than chosen, and expanding it is bounded by what source systems allow.
 
-Reading is forgiving: a request that returns the wrong thing produces a bad response, and nothing changes. Writing is not. A malformed create in a payroll system produces a real employee who will be paid, or a time-off request that consumes real entitlement. Source systems reflect that asymmetry - read APIs are broad and write APIs are narrow, heavily validated, and frequently restricted to specific integration partners.
+**Reading is forgiving.** A request that returns the wrong thing produces a bad response, and nothing changes.
 
-Model-by-model expansion follows from the same logic. Each write model requires understanding one system's validation rules, its required-field configuration, and its failure modes well enough to not corrupt a customer's system of record. That work does not generalise across models, so support arrives incrementally rather than all at once.
+Writing is not. A malformed create in a payroll system produces a real employee who will be paid, or a time-off request that consumes real entitlement. Source systems reflect that asymmetry: read APIs are broad, write APIs are narrow, heavily validated and often restricted to named integration partners.
+
+Model-by-model expansion follows. Each write requires understanding one system's validation rules, required-field configuration and failure modes well enough not to corrupt a system of record - and **that work does not generalise across models**, so support arrives incrementally.
 
 Passthrough exists as the pressure valve. When the unified write surface does not cover an operation, the escape hatch is available - with the trade-off of integration-specific code.
 
