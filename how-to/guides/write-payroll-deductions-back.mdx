@@ -50,12 +50,16 @@ This is the round trip behind most benefits products: read the enrolment, calcul
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    Each code carries `name`, `code`, `type` and `sub_type`. Match against your own stored mapping for this customer - the link from plan to code is configuration you own, not something the API can tell you. The model is currently **BETA** - it works, but field names and shapes are not yet frozen, so pin what you depend on and expect to revisit it. See [Unified model & raw data](/explanation/unified-model).
+    Each code carries `name`, `code`, `type` and `sub_type`. The model is currently **BETA** - it works, but field names and shapes are not yet frozen, so pin what you depend on and expect to revisit it.
+
+    **Read the plan first.** The employer benefit carries `payroll_codes`, referencing the codes that represent it in payroll, and `deduction_code` for the raw string. Use those rather than a mapping you maintain by hand. Keep your own only as the fallback for connectors where the field is empty.
 
     ```python
-    code = customer_mapping[connector_id][plan_id]      # established at onboarding
-    if code not in {c["code"] for c in payroll_codes}:
-        raise MappingStale(plan_id, code)               # fail loudly, don't guess
+    codes = employer_benefit.get("payroll_codes") or []
+    if not codes:                                        # not populated on this connector
+        code = customer_mapping[connector_id][plan_id]   # fall back to onboarding config
+        if code not in {c["code"] for c in payroll_codes}:
+            raise MappingStale(plan_id, code)            # fail loudly, don't guess
     ```
 
     **Result:** A code that exists in this customer's payroll configuration.
@@ -121,7 +125,7 @@ This is the round trip behind most benefits products: read the enrolment, calcul
 
 ## Constraints specific to this combination
 
-**Plan-to-deduction-code mapping is yours to own.** You can read the codes the customer has defined - [Get Payroll Codes](/hris/payroll-codes/get-payroll-codes) returns each one's `name`, `code`, `type` and `sub_type`. What no model gives you is the link from a benefit plan to the code that represents it in payroll. Codes are defined per customer and don't follow a standard, so establish the mapping with each customer explicitly during onboarding and store it against the connector. A wrong code posts a real deduction against the wrong plan, and it surfaces as a payroll discrepancy weeks later rather than as an API error.
+**Plan-to-deduction-code mapping is yours to own only where the plan does not supply it.** The employer benefit carries `payroll_codes`, referencing the codes that represent that plan, plus `deduction_code` for the raw string - read those first. Both are nullable, so where a connector leaves them empty you do need a mapping established with the customer at onboarding and stored against the connector. A wrong code posts a real deduction against the wrong plan, and it surfaces as a payroll discrepancy weeks later rather than as an API error.
 
 **Plan year cannot be derived from the payroll date.** Payroll runs carry period and check dates; benefits carry coverage and effective dates. A deduction paid in January can belong to the prior plan year because payroll timing and plan year boundaries don't align. Assign the plan year from the benefit's effective dates, never from the payment date.
 

@@ -28,6 +28,7 @@ Dependants themselves are not a benefits model. A dependant is a person attached
 erDiagram
     EMPLOYER_BENEFIT ||--o{ BENEFIT : "employer_benefit"
     EMPLOYER_BENEFIT ||--o{ DEPENDENT_BENEFIT : "employer_benefit"
+    EMPLOYER_BENEFIT ||--o{ PAYROLL_CODE : "payroll_codes"
     BENEFIT ||--o{ BENEFIT_COVERAGE : "benefit"
     DEPENDENT ||--o{ DEPENDENT_BENEFIT : "dependent"
 ```
@@ -37,6 +38,8 @@ The asymmetry is the point, and the names hide it. **Benefit coverage attaches t
 <Warning>
 There is no link from a dependant's coverage to the employee's enrolment in the same plan. To group them, join both on `employer_benefit` and resolve the person through the dependant's own employee relation.
 </Warning>
+
+Note also that **dependent benefit carries no money at all** - no contribution fields, only dates and which plan covers whom. Benefits are paid by the employee, so the contribution sits on their enrolment, and a dependant's coverage extends it rather than forming a separate financial relationship.
 
 That asymmetry also explains where amounts live. Some plans insure different sums for the employee, the spouse and each child - life insurance is the usual case - and **an amount that varies per person cannot be a field on the enrolment** without capping how many people a plan can cover.
 
@@ -54,19 +57,22 @@ Two consequences follow, and both break naive reads.
 
 The same time-boundedness shows up inside a single enrolment. An employee elects during open enrolment, but coverage begins at the plan year boundary - so **an enrolment's start date and its effective date are a waiting period apart**, not the same day.
 
-## Where benefits end and payroll begins
+## The payroll code is the join
 
-**Benefits data describes an intent** - who is enrolled in what, and what they agreed to contribute. **Payroll data describes money that moved** - what was actually withheld from a paycheque, as deductions on an employee payroll run.
+**Benefits data describes an intent** - who is enrolled in what, and what they agreed to contribute. **Payroll data describes money that moved** - what was withheld from a paycheque, as deductions on an employee payroll run.
 
-Nothing joins the two for you:
+The employer benefit carries the link between them:
 
-- The deduction carries a **payroll code**.
-- The enrolment carries a **plan**.
-- The correspondence between them lives in **the customer's own configuration**, not in either record.
+- **`payroll_codes`** - references to the payroll code records associated with this plan.
+- **`deduction_code`** - the customer's own code string for it, such as `MEDPPO`.
 
-Attributing a deduction to a plan year needs the payment date as well, since a January deduction may belong to either year depending on how the customer's calendar falls.
+So the plan tells you which codes represent it in payroll, and a deduction line resolves back to a plan through them.
 
-This is a genuine boundary between two categories of data, not a gap waiting to be filled. **Expect to hold the mapping yourself.**
+<Warning>
+Both fields are nullable and not every integration populates them. Where they are empty, the mapping genuinely is yours to hold - **check before assuming the join is available** on a given connector.
+</Warning>
+
+What the codes still cannot give you is the **plan year**. Attributing a deduction to one needs the payment date, since a January deduction may belong to either year depending on how the customer's calendar falls.
 
 ## Why it works this way
 
@@ -84,7 +90,7 @@ Stating the plan once means a correction to it is a correction everywhere.
 - **Join dependants to employees through the plan**, not through the employee's benefit row.
 - **Filter enrolments by plan year.** Unfiltered reads return history.
 - **Do not expect plan identifiers to survive renewal.** Match on plan attributes, not identity.
-- **Own the plan-to-payroll-code mapping.** Neither model supplies it.
+- **Read `payroll_codes` on the plan before building your own mapping.** Fall back to your own only where it is null.
 
 ## Related
 

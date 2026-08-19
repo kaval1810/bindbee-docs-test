@@ -30,7 +30,9 @@ Every payslip line references a code, and Bindbee does normalise these. `type` i
 What it cannot normalise is the customer's own `code` and `name`, which are defined in their payroll configuration rather than by any standard.
 
 <Warning>
-The classification tells you a deduction is `RETIREMENT`. It does not tell you **which plan** it belongs to. A code identifying a specific 401(k) at one customer identifies something else at another, and there is no reliable mapping from code to plan. Any logic connecting deductions to benefit enrolments must be configured per customer.
+The classification tells you a deduction is `RETIREMENT`. It does not tell you **which plan** it belongs to - a code identifying a specific 401(k) at one customer identifies something else at another.
+
+The link comes from the other direction: **employer benefit carries `payroll_codes`**, referencing the codes that represent that plan. Resolve a deduction to a plan through there, and fall back to per-customer configuration only where the field is empty - see [Benefits models](/explanation/benefits-models).
 </Warning>
 
 That gap is the single largest source of difficulty in payroll integrations. The data is structurally clean and semantically local.
@@ -66,9 +68,9 @@ The run and employee-run split mirrors how payroll executes: an employer-level e
 
 **Payroll codes are classified only as far as classification is safe.** Sorting a code into earning, deduction or tax is something the source system's own metadata supports.
 
-Going further - deciding which retirement plan a `RETIREMENT` deduction funds - would require configuration knowledge Bindbee does not have, and being wrong there is silent and downstream. A misattributed contribution surfaces as a reporting discrepancy weeks later, not as an error.
+Going further - inferring which retirement plan a `RETIREMENT` deduction funds from the code alone - would mean guessing, and being wrong there is silent and downstream. A misattributed contribution surfaces as a reporting discrepancy weeks later, not as an error.
 
-So the classification is offered and the customer's raw `code` is preserved beside it, leaving the last step to whoever holds the mapping.
+So the classification is offered, the customer's raw `code` is preserved beside it, and the plan association is stated explicitly on the employer benefit rather than inferred here.
 
 Time off as a request rather than an absence follows the source systems, which model approval workflow rather than outcome. Flattening it to "days absent" would lose the pending state, which is exactly what most applications need to act on.
 
@@ -77,7 +79,7 @@ Time off as a request rather than an absence follows the source systems, which m
 - **Check `run_state` before treating a payroll run as money that moved.** Drafts are in the data.
 - **Filter time off by `status`**, and read `units` before interpreting `amount`.
 - **Do not expect a cadence on pay group.** Pay frequency is on compensation.
-- **Use `type` and `sub_type` to categorise a code, never to identify a plan.** That mapping is per customer.
+- **Use `type` and `sub_type` to categorise a code, not to identify a plan.** For the plan, read `payroll_codes` on the employer benefit.
 - **Read the calendar for future periods.** Runs only describe what has happened.
 - **Do not reconcile timesheets against payroll arithmetically** without encoding the customer's overtime and salary rules.
 
