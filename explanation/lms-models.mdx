@@ -11,6 +11,8 @@ Learning data answers two questions: what training exists, and who has done it. 
 
 **Completion** is an achievement - someone finished, with `completed_at`, `time_duration`, and where the system records them, `score` and `grade` (`A` to `F`, `PASS`, `FAIL`, or `-`).
 
+A completion references a `course` **and** a `content`, so finishing one module inside a course is a completion in its own right. Counting completions per learner without checking which of the two is set will overstate how many courses they finished.
+
 Reading enrolments and treating them as training records is the most common error here, and in a compliance context a consequential one. **An enrolment means the training was assigned, which is exactly what someone out of compliance also has.**
 
 <Warning>
@@ -22,17 +24,23 @@ Enrollment carries a `completion` reference, so **outstanding training is a null
 | Model | Holds |
 | --- | --- |
 | **Course** | The unit of learning people are assigned and complete |
-| **Content** | Material within a course - modules, videos, documents |
+| **Content** | Material inside courses - modules, videos, documents |
 | **Category** | Groups courses, using the customer's own taxonomy |
 | **Skill** | A competency, associated with courses that develop or assess it |
 
+Content and course reference each other in both directions - a course has `contents`, a content item has `courses` - so the relationship is many-to-many. One video used across three courses is one record, not three.
+
 Coverage thins out towards the bottom of that list. Where a system does not distinguish content from courses, content may be sparse or absent, and **many LMS platforms have no skill concept at all** - the model will be empty for those integrations.
+
+<Warning>
+Course, content, category, skill and user all carry a `status` of `ACTIVE`, `PENDING` or `INACTIVE`. **An unfiltered catalogue read includes retired and unpublished courses**, and an unfiltered user read includes deactivated learners - so a compliance denominator built without filtering counts people and courses that are no longer live.
+</Warning>
 
 ## LMS users are not HRIS employees
 
 **User** is a learner in the LMS, and this is a separate identity from the HRIS employee even when it is the same person.
 
-The systems are provisioned independently and the identifiers do not correspond. Joining learning data to employee data means matching on a stable attribute - work email is usually the only reliable one.
+The systems are provisioned independently and the identifiers do not correspond. Joining learning data to employee data means matching on a stable attribute, and `email_address` on the user is usually the only reliable one.
 
 **Accept that some learners will not match.** Contractors, former employees and external participants often have LMS accounts and no HRIS record. That is worth designing for explicitly rather than treating unmatched users as errors.
 
@@ -59,6 +67,7 @@ Read coverage is the category's mature capability; **write coverage largely does
 - **Report on completions, not enrolments.** They answer different questions.
 - **Find outstanding training by checking `completion` on the enrolment.** No join required.
 - **Match learners to employees on email**, and design for the unmatched case.
+- **Filter on `status`.** Catalogue and user reads include `INACTIVE` and `PENDING` records by default.
 - **Expect skills and content to be thin or absent** on several integrations.
 - **Plan for read-only.** Any write need goes through passthrough.
 
