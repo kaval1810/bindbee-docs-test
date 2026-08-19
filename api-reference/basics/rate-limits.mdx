@@ -1,59 +1,28 @@
 ---
 title: "Rate Limits"
-description: "Understanding and managing API rate limits in Bindbee"
+description: "Bindbee's request limit, the headers every response carries, and the shape of a 429."
 ---
 
-## Overview
+**200 requests per minute, per connector.**
 
-Bindbee enforces rate limits to ensure fair usage and maintain service reliability for all customers. All API endpoints are subject to rate limiting to protect our infrastructure and provide consistent performance.
+The limit is keyed to the `connector_token` in the request header, not to your API key, so each of your end users has an independent budget and one customer's traffic cannot exhaust another's. It applies across all endpoints - every request carrying the same connector token counts against the same 200.
 
-## Rate Limit Policy
+Requests beyond the limit are rejected with `429 Too Many Requests` until the window resets.
 
-**Current Rate Limit:** **200** requests **per minute** per connector
+## Response headers
 
-The Bindbee API enforces rate limits based on the **connector** (as indicated by the `connector_token` in the request header). This means each of your end users has their own independent rate limit of 200 requests per minute.
+Every response carries the first three. `Retry-After` appears on `429` only.
 
-This rate limit applies across all endpoints and is enforced strictly. Once a connector reaches the limit, subsequent requests for that connector will be rejected with a `429 Too Many Requests` error until the rate limit window resets.
+| Header | Value |
+| --- | --- |
+| `X-RateLimit-Limit` | Maximum requests per minute - `200` |
+| `X-RateLimit-Remaining` | Requests left in the current window. Always `0` on a `429` |
+| `X-RateLimit-Reset` | Unix timestamp, in seconds, when the window resets |
+| `Retry-After` | Seconds to wait before retrying |
 
-<Note>
-  Rate limits are applied **per connector token**, not per API key. This ensures
-  fair resource allocation across all your end users' connections.
-</Note>
+`Retry-After` is authoritative. Prefer it over computing a delay from `X-RateLimit-Reset`, and over a fixed sleep.
 
-## Rate Limit Headers
-
-Bindbee includes rate limit information in the response headers of every API request, allowing you to monitor your usage and implement appropriate backoff strategies.
-
-### Successful Requests (2xx Status)
-
-When your request is successful, the following headers are included:
-
-| Header                  | Description                                                | Example      |
-| ----------------------- | ---------------------------------------------------------- | ------------ |
-| `X-RateLimit-Limit`     | The maximum number of requests allowed per minute          | `200`        |
-| `X-RateLimit-Remaining` | The number of requests remaining in the current window     | `157`        |
-| `X-RateLimit-Reset`     | Unix timestamp (in seconds) when the rate limit will reset | `1700000000` |
-
-**Example Response Headers:**
-
-```
-X-RateLimit-Limit: 200
-X-RateLimit-Remaining: 157
-X-RateLimit-Reset: 1700000000
-```
-
-### Rate Limit Exceeded (429 Status)
-
-When you exceed the rate limit, you'll receive a `429 Too Many Requests` response with the following headers:
-
-| Header                  | Description                                       | Example      |
-| ----------------------- | ------------------------------------------------- | ------------ |
-| `X-RateLimit-Limit`     | The maximum number of requests allowed per minute | `200`        |
-| `X-RateLimit-Remaining` | Always `0` when rate limited                      | `0`          |
-| `X-RateLimit-Reset`     | Unix timestamp (in seconds) when you can retry    | `1700000060` |
-| `Retry-After`           | Number of seconds to wait before retrying         | `60`         |
-
-**Example 429 Response:**
+## A 429 response
 
 ```json
 HTTP/1.1 429 Too Many Requests
@@ -75,62 +44,19 @@ Retry-After: 60
   Errors](/how-to/setup/handle-api-errors).
 </Note>
 
-## Best Practices
+## The other limit, which is not yours
 
-### 1. Monitor Rate Limit Headers
+Bindbee's 200 per minute governs how fast **you** can read. The source systems have their own limits, usually far tighter, and those govern how fast Bindbee can **sync**.
 
-Always check the `X-RateLimit-Remaining` header to track your usage and adjust your request frequency accordingly.
+You never see a `429` from that second limit - it surfaces as sync duration instead, and it is the main reason cadence is measured in hours rather than minutes. Neither you nor Bindbee can configure it away. See [Errors, issues & limits](/explanation/errors-issues-and-limits).
 
-### 2. Implement Retry Logic with Backoff
+## Higher limits
 
-When you receive a `429` response, wait for the duration specified in the `Retry-After` header before retrying.
+Custom limits are available for enterprise use cases. Contact [support@bindbee.dev](mailto:support@bindbee.dev) or your account manager.
 
-### 3. Distribute Requests Across Multiple Connectors
+## Related
 
-Since rate limits are per connector, requests for different end users (different connector tokens) have independent rate limits. You can process multiple connectors in parallel without affecting each other's rate limits.
-
-### 4. Batch Requests When Possible
-
-Reduce the number of API calls by using batch endpoints or requesting multiple resources in a single call where supported.
-
-### 5. Implement Rate Limit Tracking
-
-Track rate limit usage across your application to proactively avoid hitting limits.
-
-## Calculating Time Until Reset
-
-The `X-RateLimit-Reset` header contains a Unix timestamp. You can calculate the wait time as follows:
-
-```python
-import time
-from datetime import datetime
-
-reset_timestamp = int(response.headers.get('X-RateLimit-Reset'))
-current_time = int(time.time())
-seconds_until_reset = reset_timestamp - current_time
-
-print(f"Rate limit resets in {seconds_until_reset} seconds")
-print(f"Reset time: {datetime.fromtimestamp(reset_timestamp)}")
-```
-
-## Need Higher Limits?
-
-If your application requires higher rate limits for specific connectors or use cases, please contact our support team at [support@bindbee.dev](mailto:support@bindbee.dev) or reach out to your account manager. We offer custom rate limits for enterprise customers based on your specific needs.
-
-## Common Questions
-
-### What happens if I exceed the rate limit?
-
-Your requests for that specific connector will be rejected with a `429 Too Many Requests` status code until the rate limit window resets (60 seconds from when you first exceeded the limit).
-
-### Does the rate limit apply per endpoint or across all endpoints?
-
-The rate limit applies across all endpoints for a given connector. All requests made with the same `X-Connector-Token` count toward the same 200 requests per minute limit.
-
-### Are rate limits shared across different connector tokens?
-
-No, each connector token has its own independent rate limit of 200 requests per minute. This means different end users (different connectors) do not affect each other's rate limits.
-
-### Can I make requests without a connector token?
-
-Some endpoints may not require a connector token (such as organization-level endpoints), but any endpoint that accesses or manipulates end user data requires both the API key and the connector token. Check the specific endpoint documentation for requirements.
+- [Handle API Errors](/how-to/setup/handle-api-errors) - retry logic that honours `Retry-After`, with backoff and jitter
+- [Paginate Through Results](/how-to/reading-data/paginate-through-results) - resuming a walk interrupted by a `429`
+- [Errors, issues & limits](/explanation/errors-issues-and-limits) - the two limits, and why upstream errors pass through
+- [Authentication](/api-reference/basics/authentication) - the connector token the limit is keyed to
