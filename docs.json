@@ -23,20 +23,13 @@
         "pages": [
           "get-started/what-is-bindbee",
           "get-started/quickstart",
+          "platform/overview",
           {
             "group": "Core concepts",
             "pages": [
               "explanation/core-concepts",
               "explanation/unified-model",
               "explanation/environments"
-            ]
-          },
-          {
-            "group": "Platform",
-            "pages": [
-              "platform/overview",
-              "platform/dashboard",
-              "platform/logs"
             ]
           },
           {
@@ -70,7 +63,6 @@
           {
             "group": "Connections",
             "pages": [
-              "platform/connectors",
               "explanation/connector-lifecycle",
               "explanation/multi-entity",
               "explanation/magic-link",
@@ -89,7 +81,6 @@
               "how-to/reading-data/filter-with-modified-after",
               "how-to/reading-data/filter-and-narrow-a-collection",
               "how-to/reading-data/include-raw-data-and-custom-fields",
-              "platform/scoping",
               "explanation/scope-and-permissions",
               {
                 "group": "How records are shaped",
@@ -141,7 +132,6 @@
           {
             "group": "Webhooks",
             "pages": [
-              "platform/webhooks",
               "explanation/webhooks-vs-polling",
               "how-to/reliability/create-a-webhook",
               "how-to/reliability/choose-webhook-events",
@@ -155,7 +145,6 @@
           {
             "group": "Custom fields",
             "pages": [
-              "platform/custom-fields",
               "explanation/how-custom-fields-work",
               "how-to/data-model/inspect-the-raw-upstream-payload",
               "how-to/data-model/map-a-custom-field-from-the-dashboard",
@@ -200,7 +189,6 @@
           {
             "group": "Troubleshooting",
             "pages": [
-              "platform/issues",
               "explanation/errors-issues-and-limits",
               "how-to/troubleshooting/monitor-sync-status",
               "how-to/troubleshooting/diagnose-a-partial-sync",
@@ -723,31 +711,31 @@
     },
     {
       "source": "/features/dashboard",
-      "destination": "/platform/dashboard"
+      "destination": "/platform/overview"
     },
     {
       "source": "/features/connectors",
-      "destination": "/platform/connectors"
+      "destination": "/platform/overview"
     },
     {
       "source": "/features/logs",
-      "destination": "/platform/logs"
+      "destination": "/platform/overview"
     },
     {
       "source": "/features/issues",
-      "destination": "/platform/issues"
+      "destination": "/platform/overview"
     },
     {
       "source": "/features/scoping",
-      "destination": "/platform/scoping"
+      "destination": "/platform/overview"
     },
     {
       "source": "/features/custom-fields",
-      "destination": "/platform/custom-fields"
+      "destination": "/platform/overview"
     },
     {
       "source": "/features/webhooks",
-      "destination": "/platform/webhooks"
+      "destination": "/platform/overview"
     },
     {
       "source": "/features/overview",
@@ -759,7 +747,7 @@
     },
     {
       "source": "/get-started/tutorials/scope-your-data",
-      "destination": "/platform/scoping"
+      "destination": "/platform/overview"
     },
     {
       "source": "/get-started/tutorials/read-employee-data",
@@ -787,7 +775,7 @@
     },
     {
       "source": "/get-started/scope-your-data",
-      "destination": "/platform/scoping"
+      "destination": "/platform/overview"
     },
     {
       "source": "/get-started/connect-a-test-account",
@@ -1091,7 +1079,7 @@
     },
     {
       "source": "/get-started/tutorials/scope-the-data-you-need",
-      "destination": "/platform/scoping"
+      "destination": "/platform/overview"
     },
     {
       "source": "/get-started/tutorials/add-a-field-the-unified-model-doesnt-have",
@@ -1100,6 +1088,34 @@
     {
       "source": "/get-started/tutorials/receive-a-webhook",
       "destination": "/how-to/reliability/create-a-webhook"
+    },
+    {
+      "source": "/platform/dashboard",
+      "destination": "/platform/overview"
+    },
+    {
+      "source": "/platform/connectors",
+      "destination": "/platform/overview"
+    },
+    {
+      "source": "/platform/logs",
+      "destination": "/platform/overview"
+    },
+    {
+      "source": "/platform/issues",
+      "destination": "/platform/overview"
+    },
+    {
+      "source": "/platform/scoping",
+      "destination": "/platform/overview"
+    },
+    {
+      "source": "/platform/custom-fields",
+      "destination": "/platform/overview"
+    },
+    {
+      "source": "/platform/webhooks",
+      "destination": "/platform/overview"
     }
   ],
   "api": {

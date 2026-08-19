@@ -17,13 +17,31 @@ flowchart LR
     MOD --> REC
 ```
 
-- **Category** - the kind of system. Determines which models exist, and appears in every endpoint path.
-- **Integration** - a vendor system, identified by a slug.
-- **Connector** - one customer's connection to one integration, in one category. Holds their credentials and owns their sync schedule.
-- **Model** - a unified object type, identical across every integration in its category.
-- **Record** - one instance of a model, synced from one connector.
-
 If 40 of your customers use BambooHR, you have **1** BambooHR integration and **40** BambooHR connectors.
+
+## Glossary
+
+Every term Bindbee's docs use with a specific meaning. This table is the single definition of each - other pages use the words without redefining them.
+
+| Term | Means |
+| --- | --- |
+| **Category** | The kind of system - `hris`, `ats` or `lms`. Determines which models exist, and appears in every endpoint path |
+| **Integration** | A vendor system, identified by a slug such as `bamboohr`. One integration, however many customers use it |
+| **Connector** | One customer's connection to one integration, in one category. Holds their credentials and owns their sync schedule |
+| **Model** | A unified object type - employee, benefit, candidate. Identical across every integration in its category |
+| **Record** | One instance of a model, synced from one connector |
+| **Organisation** | Your Bindbee account. Scope and custom fields are configured at this level |
+| **Environment** | Development or Production. Separate connectors, keys and logs; **shared** scope and custom field configuration |
+| **API key** | Authenticates your organisation. Sent as `Authorization: Bearer`. Every endpoint requires it |
+| **Connector token** | Names which customer's connection a request acts on. Sent as `X-Connector-Token`. Required wherever the request reaches one customer's data |
+| **Scope** | The models and fields Bindbee requests from a connected system. Set once per organisation; a field outside scope is absent from responses, not `null` |
+| **Sync** | The job that pulls scoped data from the source system and normalizes it. Scheduled in Production, manual in Development |
+| **Custom field** | A value the unified model does not carry, mapped out of the raw payload with a JMESPath expression and returned alongside the record |
+| **Magic Link** | A hosted URL where your customer authorizes their own system, with no front-end code on your side |
+| **Passthrough** | A request forwarded to the source system's own API using the credentials already held on a connector |
+| **Issue** | A failure automatically raised against a connector, carrying the request and response behind it |
+| **Meta API** | Returns the request schema a write endpoint expects for a given connector, since required fields differ by system |
+| **`id`** vs **`remote_id`** | `id` is Bindbee's identifier - stable, same shape everywhere, the one to store. `remote_id` is the source system's own, useful for reconciliation |
 
 <Note>
 A vendor can be offered in more than one category, so a connector is pinned to a category as well as an integration. A customer using SAP SuccessFactors for both HR and recruiting has **two** connectors, not one - see [Integrations](/integrations).

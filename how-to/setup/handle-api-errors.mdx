@@ -141,7 +141,7 @@ Errors fall into three groups: fix the request, back off and retry, or act on th
   <Step title="Log enough to diagnose">
     Capture status, response body, `X-RateLimit-Remaining`, the connector ID, and the endpoint. A `403` without the endpoint is nearly undiagnosable later.
 
-    The dashboard's **Logs** view shows each request and response per connector with the error code, which is the fastest way to check a specific failure - see [Logs](/platform/logs).
+    The dashboard's **Logs** view shows each request and response per connector with the error code, which is the fastest way to check a specific failure - see [Logs](/platform/overview).
 
     **Result:** Failures you can investigate after the fact.
   </Step>
@@ -178,4 +178,4 @@ Where a zero count is implausible, check sync status rather than assuming absenc
 ## Related
 
 - [Rate Limits](/api-reference/basics/rate-limits)
-- [Logs](/platform/logs)
+- [Logs](/platform/overview)

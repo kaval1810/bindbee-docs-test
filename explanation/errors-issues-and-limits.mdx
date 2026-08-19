@@ -55,7 +55,7 @@ Not every failure surfaces on a response. A sync that fails partway through happ
 
 **Logs** hold the per-request record: which endpoint, which status, what came back. This is where you answer "why is this connector not returning benefits" when nothing in your own application errored.
 
-**Issues** are the layer above. Where a log entry is one request and its response, an issue is a failure Bindbee raised against a connector with a likely cause attached - carrying the evidence, so you and support read the same thing. See [Issues](/platform/issues).
+**Issues** are the layer above. Where a log entry is one request and its response, an issue is a failure Bindbee raised against a connector with a likely cause attached - carrying the evidence, so you and support read the same thing. See [Issues](/platform/overview).
 
 <Warning>
 Issues are a Dashboard surface. **There is no issues endpoint in the API**, so anything your own monitoring must act on has to come from sync-status webhooks or the connector's `status` - see [Connector lifecycle](/explanation/connector-lifecycle).
