@@ -39,15 +39,7 @@ The corollary matters more than it sounds: an unfiltered employee count is a **l
 
 The other trap is `-`. It is not "no status" - it is a real status in the source system with no unified equivalent, so it means *unknown*, not *inactive*. **Defaulting it to inactive can deprovision a working employee.** See [Enum values](/explanation/enum-values).
 
-## Custom statuses collapse into a fixed set
-
-Source systems let customers define their own vocabularies. One tenant runs Active, Active PT, Leave, Inactive. Another runs a dozen values encoding division and contract type alongside employment state.
-
-Every local vocabulary maps into the nine values above, and anything without a clean equivalent lands on `-`. A tenant distinguishing full-time from part-time *through status* loses that here - both become `ACTIVE`.
-
-That particular distinction is usually recoverable elsewhere: `employment_type` on the employment record carries `FULL_TIME`, `PART_TIME`, `CONTRACTOR`, `INTERN`, `FREELANCE`, `REGULAR`, `FURLOUGHED` and `TERMINATED`.
-
-Where the meaning is genuinely tenant-specific, the original string survives in `raw_data` - promote it into a custom field rather than trying to recover it from the enum.
+A tenant that distinguishes full-time from part-time *through status* loses that here - both arrive as `ACTIVE`. Look on the employment instead, where `employment_type` carries `FULL_TIME`, `PART_TIME`, `CONTRACTOR` and the rest.
 
 ## Transfers and rehires create new records
 
@@ -75,14 +67,6 @@ The employee carries `termination_date` and `termination_reason`; employments ca
 
 The rehire case is the one to design for. Two employee records for one human is not something the API can fix - see [Record identity](/explanation/record-identity).
 
-## Disappearing employees
-
-An active employee vanishing has a small number of causes, and this is the order to check them in.
-
-1. **Scope or permissions narrowed.** The most common and least dramatic. Workers the credentials lost access to stop syncing entirely rather than arriving marked inactive.
-2. **The upstream identifier changed.** The person is still there under a new identity; the old record is what went quiet.
-3. **A file-based connector stopped listing them.** For file-delivered integrations, absence from the current file is itself the signal - see [SFTP & file connectors](/explanation/sftp-and-file-connectors).
-
 ## Why it works this way
 
 Bindbee reports status rather than filtering on it, and that generates most of the surprise here.
@@ -102,7 +86,7 @@ Mapping to a fixed set is what makes one code path work, and raw data is what ma
 - **Do not key headcount or billing to raw record count.** An unfiltered list is everyone who ever worked there.
 - **Expect multiple employments per person**, and select the current one by latest `effective_date`.
 - **Check `employment_type` before reaching for raw data** when you need full-time versus part-time.
-- **A disappearing employee is a permissions question first**, an identity question second.
+- **An employee who vanishes entirely is a different problem.** Check in this order: [scope or permissions narrowed](/explanation/scope-and-permissions), [the upstream identifier changed](/explanation/record-identity), or [a file connector stopped listing them](/explanation/sftp-and-file-connectors).
 
 ## Related
 

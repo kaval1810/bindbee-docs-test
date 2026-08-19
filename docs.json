@@ -89,10 +89,10 @@
             "icon": "list-tree",
             "pages": [
               "explanation/record-identity",
-              "explanation/status-and-terminations",
               "explanation/hris-models",
               "explanation/benefits-models",
               "explanation/payroll-and-time-models",
+              "explanation/status-and-terminations",
               "explanation/effective-dating",
               "explanation/enum-values",
               "explanation/ats-models",
