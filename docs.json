@@ -1098,6 +1098,18 @@
     {
       "source": "/explanation/hris-models",
       "destination": "/explanation/employee-and-org-models"
+    },
+    {
+      "source": "/custom-fields/api-workflow",
+      "destination": "/how-to/data-model/map-custom-fields-with-the-api"
+    },
+    {
+      "source": "/features/environments/development",
+      "destination": "/explanation/environments#development"
+    },
+    {
+      "source": "/features/environments/production",
+      "destination": "/explanation/environments#production"
     }
   ],
   "api": {
