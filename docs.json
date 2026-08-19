@@ -36,43 +36,7 @@
             "pages": [
               "platform/overview",
               "platform/dashboard",
-              {
-                "group": "Connectors",
-                "pages": [
-                  "platform/connectors",
-                  "explanation/connector-lifecycle",
-                  "explanation/multi-entity"
-                ]
-              },
-              "platform/logs",
-              {
-                "group": "Issues",
-                "pages": [
-                  "platform/issues",
-                  "explanation/errors-issues-and-limits"
-                ]
-              },
-              {
-                "group": "Scoping",
-                "pages": [
-                  "platform/scoping",
-                  "explanation/scope-and-permissions"
-                ]
-              },
-              {
-                "group": "Custom Fields",
-                "pages": [
-                  "platform/custom-fields",
-                  "explanation/how-custom-fields-work"
-                ]
-              },
-              {
-                "group": "Webhooks",
-                "pages": [
-                  "platform/webhooks",
-                  "explanation/webhooks-vs-polling"
-                ]
-              }
+              "platform/logs"
             ]
           },
           {
@@ -89,10 +53,10 @@
         ]
       },
       {
-        "tab": "How-To",
-        "groups": [
+        "tab": "Guides",
+        "pages": [
           {
-            "group": "Setup & Configuration",
+            "group": "Setup",
             "pages": [
               "how-to/setup/authenticate-a-request",
               "how-to/setup/choose-an-environment",
@@ -106,21 +70,27 @@
           {
             "group": "Connections",
             "pages": [
+              "platform/connectors",
+              "explanation/connector-lifecycle",
+              "explanation/multi-entity",
               "explanation/magic-link",
               "how-to/connections/generate-a-magic-link",
               "how-to/connections/embed-the-connection-flow",
+              "sdk/embedded-component",
               "how-to/connections/create-a-connector-programmatically",
               "how-to/connections/update-credentials",
               "how-to/connections/rename-or-delete-a-connector"
             ]
           },
           {
-            "group": "Reading Data",
+            "group": "Reading data",
             "pages": [
               "how-to/reading-data/paginate-through-results",
               "how-to/reading-data/filter-with-modified-after",
               "how-to/reading-data/filter-and-narrow-a-collection",
               "how-to/reading-data/include-raw-data-and-custom-fields",
+              "platform/scoping",
+              "explanation/scope-and-permissions",
               {
                 "group": "How records are shaped",
                 "pages": [
@@ -169,39 +139,45 @@
             ]
           },
           {
-            "group": "Webhooks & Reliability",
+            "group": "Webhooks",
             "pages": [
+              "platform/webhooks",
+              "explanation/webhooks-vs-polling",
               "how-to/reliability/create-a-webhook",
               "how-to/reliability/choose-webhook-events",
+              "webhooks/overview",
               "how-to/reliability/validate-webhook-signatures",
-              "how-to/reliability/distinguish-created-from-modified",
               "how-to/reliability/recover-a-missed-delivery",
+              "how-to/reliability/distinguish-created-from-modified",
               "how-to/reliability/detect-a-connection-that-needs-relinking"
             ]
           },
           {
-            "group": "Extending the Data Model",
+            "group": "Custom fields",
             "pages": [
+              "platform/custom-fields",
+              "explanation/how-custom-fields-work",
               "how-to/data-model/inspect-the-raw-upstream-payload",
               "how-to/data-model/map-a-custom-field-from-the-dashboard",
               "how-to/data-model/map-custom-fields-with-the-api",
               "how-to/data-model/test-a-jmespath",
               "how-to/data-model/scope-a-mapping",
-              "how-to/data-model/restrict-models-and-fields",
-              {
-                "group": "Passthrough",
-                "pages": [
-                  "explanation/passthrough",
-                  "how-to/data-model/make-a-passthrough-request"
-                ]
-              }
+              "how-to/data-model/restrict-models-and-fields"
             ]
           },
           {
-            "group": "Writing Data Back",
+            "group": "Passthrough",
+            "pages": [
+              "explanation/passthrough",
+              "how-to/data-model/make-a-passthrough-request"
+            ]
+          },
+          {
+            "group": "Writing back",
             "pages": [
               "explanation/write-support",
               "explanation/how-meta-apis-work",
+              "meta-apis-for-write-operations",
               "how-to/writing-data-back/check-write-support",
               "how-to/writing-data-back/fetch-a-write-schema",
               "how-to/writing-data-back/create-an-employee",
@@ -224,6 +200,8 @@
           {
             "group": "Troubleshooting",
             "pages": [
+              "platform/issues",
+              "explanation/errors-issues-and-limits",
               "how-to/troubleshooting/monitor-sync-status",
               "how-to/troubleshooting/diagnose-a-partial-sync",
               "how-to/troubleshooting/resolve-a-permission-error",
@@ -269,8 +247,7 @@
                 "group": "Embedded Link",
                 "pages": [
                   "sdk/create-link-token",
-                  "sdk/get-connector-token",
-                  "sdk/embedded-component"
+                  "sdk/get-connector-token"
                 ]
               },
               {
@@ -291,9 +268,7 @@
                   "custom-fields/api/get-configuration"
                 ]
               },
-              "api-reference/passthrough/make-passthrough-request",
-              "webhooks/overview",
-              "meta-apis-for-write-operations"
+              "api-reference/passthrough/make-passthrough-request"
             ]
           },
           {
