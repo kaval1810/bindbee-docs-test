@@ -66,7 +66,7 @@ The employer benefit carries the link between them:
 - **`payroll_codes`** - references to the payroll code records associated with this plan.
 - **`deduction_code`** - the customer's own code string for it, such as `MEDPPO`.
 
-So the plan tells you which codes represent it in payroll, and a deduction line resolves back to a plan through them.
+So the plan tells you which codes represent it in payroll. A deduction line on an employee payroll run carries `payroll_code` - the ID of the same record - so the two match on identifiers rather than on the code string.
 
 <Warning>
 Both fields are nullable and not every integration populates them. Where they are empty, the mapping genuinely is yours to hold - **check before assuming the join is available** on a given connector.
