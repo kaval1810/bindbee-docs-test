@@ -27,20 +27,22 @@ Reading the most recently created compensation or employment record does not giv
 
 ## The selection rule differs by model
 
-There is no single "effective period contains today" test, because **most models do not carry an end date.** Only benefits have a true period.
+There is no single "effective period contains today" test, because **most models do not carry an end date.** Only benefits and dependent benefits have a true period.
 
-| Model | Date fields | Pick the current one by |
-| --- | --- | --- |
-| **Employment** | `effective_date` | Latest `effective_date` on or before today |
-| **Compensation** | `start_date` | Latest `start_date` on or before today |
-| **Benefit** | `start_date`, `effective_date`, `end_date` | Period containment - start on or before today, end absent or later |
-| **Employee** | `start_date`, `termination_date` | A `termination_date` in the future means **still employed** |
+| Model | Date fields | Pick the current one by | Filter server-side |
+| --- | --- | --- | --- |
+| **Employment** | `effective_date` | Latest on or before today | **No** - filter in your code |
+| **Compensation** | `start_date` | Latest on or before today | `start_date_to` |
+| **Benefit**, **Dependent benefit** | `start_date`, `effective_date`, `end_date` | Period containment | All three pairs |
+| **Employee** | `start_date`, `termination_date` | A future `termination_date` means **still employed** | No |
 
-For employment and compensation the rule is *latest one that has already begun*: filter out anything dated ahead of today, then take the most recent of what remains.
+For employment and compensation the rule is *latest one that has already begun*: discard anything dated ahead of today, then take the most recent of what remains. Taking the newest record outright is the most common way to show someone a salary they are not yet earning.
 
-Taking the newest record outright is the most common way to show someone a salary they are not yet earning.
+<Warning>
+Note the last column. **Employment - the model this rule matters most for - has no date filter at all**, so you page through everything and select in your own code. Compensation and benefits let you bound the query, which is worth doing on large tenants.
+</Warning>
 
-Terminations behave the same way. **An employee with a future termination date is currently employed**, and treating any termination date as past tense will offboard people who are still working.
+Terminations behave the same way. An employee with a future `termination_date` is currently employed, and treating any termination date as past tense will offboard people who are still working.
 
 ## Sync timing is a separate problem
 
@@ -54,7 +56,7 @@ If the customer swears they made the change and you cannot see it anywhere, that
 
 ## Where the future is legitimate
 
-Some models are forward-looking by design and should be read that way. Payroll run calendars describe periods that have not happened. Benefit plan years often open before they begin. Scheduled interviews sit in the future by definition.
+Some models are forward-looking by design and should be read that way. Payroll run calendars describe periods that have not happened, benefit plan years often open before they begin, approved time off is usually ahead of today, and scheduled interviews sit in the future by definition.
 
 For these, **filtering out future records discards the data's purpose.**
 
