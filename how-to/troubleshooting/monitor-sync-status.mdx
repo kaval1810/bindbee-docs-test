@@ -1,5 +1,6 @@
 ---
 title: "Monitor Sync Status"
+sidebarTitle: "Sync status"
 description: "Check whether a connector's most recent sync succeeded, what it loaded, and when the next one runs."
 ---
 
@@ -48,7 +49,7 @@ Before investigating missing or unexpected data, establish what the last sync ac
     **Result:** You know whether the data you're reading is current or waiting on the next run.
 
     <Warning>
-      Development connectors do not sync on a schedule. If this is a Development connector, the last sync is the last one someone triggered - see [Sync a Development Connector](/how-to/sync-control/sync-a-development-connector).
+      Development connectors do not sync on a schedule. If this is a Development connector, the last sync is the last one someone triggered - see [Development connectors](/how-to/sync-control/sync-a-development-connector).
     </Warning>
   </Step>
 
@@ -69,15 +70,15 @@ See [Choose Webhook Events](/webhooks/events).
 
 <AccordionGroup>
   <Accordion title="The last sync is older than the configured cadence">
-    Check whether the connector is Development, which doesn't auto-sync. On a Production connector, this indicates a stall - see [Detect a Connection That Needs Relinking](/how-to/reliability/detect-a-connection-that-needs-relinking), then [force a resync](/api-reference/connectors/resync-connector) if you need the data now.
+    Check whether the connector is Development, which doesn't auto-sync. On a Production connector, this indicates a stall - see [Connections needing relink](/how-to/reliability/detect-a-connection-that-needs-relinking), then [force a resync](/api-reference/connectors/resync-connector) if you need the data now.
   </Accordion>
 
   <Accordion title="The status is Partial">
-    Some models failed while others succeeded. See [Diagnose a Partial Sync](/how-to/troubleshooting/diagnose-a-partial-sync).
+    Some models failed while others succeeded. See [Partial syncs](/how-to/troubleshooting/diagnose-a-partial-sync).
   </Accordion>
 
   <Accordion title="The sync says Done but a model has zero records">
-    The sync succeeded and the model genuinely returned nothing. Usually the model is out of scope for the connector, or the credentials lack permission for that endpoint - a permission failure often returns an empty set rather than an error. See [Resolve a Source-System Permission Error](/how-to/troubleshooting/resolve-a-permission-error).
+    The sync succeeded and the model genuinely returned nothing. Usually the model is out of scope for the connector, or the credentials lack permission for that endpoint - a permission failure often returns an empty set rather than an error. See [Permission errors](/how-to/troubleshooting/resolve-a-permission-error).
   </Accordion>
 
   <Accordion title="The sync has been running for a long time">

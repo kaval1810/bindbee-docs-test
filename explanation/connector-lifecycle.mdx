@@ -1,9 +1,68 @@
 ---
-title: "Connector lifecycle"
-description: "The states a connector moves through, and what expiry, relink and deletion each do to data already synced."
+title: "Connections"
+sidebarTitle: "Overview"
+description: "Who authorises a connection, the two surfaces that flow reaches your customer through, and the states a connector moves through afterwards."
 ---
 
-A connector is the only object in Bindbee with a lifecycle you have to manage. Someone outside your company creates it, it can break without anything on your side changing, and **one of the two recovery actions destroys data.**
+You are not the one who connects to your customer's HR system. They are.
+
+That inversion shapes a surprising amount - where credentials live, who to contact when a connection breaks, and **why you cannot simply fix a permissions problem yourself.** A connector is also the only object in Bindbee with a lifecycle you have to manage: it can break without anything on your side changing, and one of the two recovery actions destroys data.
+
+## Authorisation belongs to the customer
+
+Reaching a company's HR data requires credentials from that company. Only someone with administrative access to their HRIS can grant them, and in almost every case they cannot delegate that to a third party even if they wanted to.
+
+So the flow puts your customer's administrator in the middle. You initiate a connection for a named customer, they authorise it against their own system, and Bindbee holds the resulting credentials. **Those credentials never pass through your infrastructure and are never yours to store.**
+
+<Info>
+A connection problem is therefore usually not yours to fix. Expired credentials, insufficient permissions and revoked access all resolve on the customer's side. Your job is to detect the condition and prompt the right person.
+</Info>
+
+## Two ways to connect
+
+The same authorisation flow reaches your customer through two surfaces, and the choice is independent of how the link was created.
+
+**[Magic Link](/explanation/magic-link)** opens in the customer's browser at a Bindbee URL. You send it to them or redirect them to it. No front-end code either way.
+
+**[Embedded Link](/how-to/connections/embed-the-connection-flow)** runs the same flow inside your own product, so the customer never leaves it.
+
+Both produce a connector, both put the administrator in control, and **neither lets the end user choose which system to connect** - the link token requires the integration slug, so the target is fixed before the session exists.
+
+They differ in the thing that shapes your code: **how you learn the connection succeeded.**
+
+```mermaid
+sequenceDiagram
+    participant B as Your backend
+    participant F as Your frontend
+    participant C as Customer's admin
+    participant S as Source system
+
+    Note over B,S: Magic Link
+    B->>C: send or redirect to the link
+    C->>S: authorise
+    S-->>B: webhook, or fetch by origin_id
+
+    Note over B,S: Embedded Link
+    B->>F: link_token
+    F->>C: flow opens in your product
+    C->>S: authorise
+    S-->>F: onSuccess(temporary_token)
+    F->>B: temporary_token
+    B->>B: exchange for connector_token
+```
+
+| | Magic Link | Embedded Link |
+| --- | --- | --- |
+| Front-end code | None | React hook or CDN script |
+| Link created by | Dashboard, or `create-link-token` | `create-link-token` |
+| Completion signal | Webhook, or fetch by `origin_id` | `onSuccess` fires in the browser |
+| Getting the token | Read `connector_token` from the connector | Exchange the `temporary_token` from your backend |
+
+The embedded flow reacts the moment your customer finishes; the hosted page learns about it asynchronously.
+
+Note the second row: **hosted does not mean manual.** Creating links by hand suits human-led implementation, but you can generate them from `create-link-token` and still redirect to the hosted page - self-serve onboarding with no front-end at all.
+
+A third route skips the end-user surface entirely, for systems where you already hold what authorisation needs - see [Create programmatically](/how-to/connections/create-a-connector-programmatically).
 
 ## The states
 
@@ -69,18 +128,20 @@ The last one deserves planning. **When authorisation is tied to an individual's 
 
 ## Why it works this way
 
-Keeping data through a broken state is what produces the silent-staleness problem, and it is still the right call.
+The alternative to delegated authorisation - collecting your customers' HRIS credentials yourself and passing them to Bindbee - is simpler to build and worse in every other respect.
 
-The alternative is to make data unavailable the moment credentials fail. Louder, but it converts a degradation into an outage: your application stops working for that customer because their IT department rotated a key, while the data you hold is minutes old and perfectly usable.
+**It makes you the custodian of credentials that open an entire company's employee records**, including compensation and bank details - a security liability you have no reason to accept. It also fails on its own terms: OAuth-based systems will not issue credentials to anyone but the authorising administrator, so a credential-collection flow cannot support them at all.
 
-**For most applications, slightly stale data is enormously better than no data.**
+**Keeping data through a broken state** is what produces the silent-staleness problem, and it is still the right call. Making data unavailable the moment credentials fail is louder, but it converts a degradation into an outage: your application stops working for that customer because their IT department rotated a key, while the data you hold is minutes old and perfectly usable. For most applications, slightly stale data is enormously better than no data.
 
 Preserving data through relink also makes recovery cheap. The connector keeps its identity, so a customer who fixes their credentials gets continuity rather than new identifiers and a broken join in your database.
 
-The trade is that failure is quiet, which **puts the burden on monitoring rather than error handling.**
+The trade on both counts is that failure is quiet, which **puts the burden on monitoring rather than error handling.**
 
 ## What this means for you
 
+- **Connection failures are customer-side.** Detect and prompt; do not expect to fix them yourself.
+- **Choose the surface by where onboarding happens**, not by whether you want to automate. Hosted links can be generated programmatically too.
 - **Monitor both fields, not read success.** Reads succeed regardless; `RELINK_NEEDED` and `sync_status: Failed` are different problems.
 - **Use `relink_needed_at` to measure staleness**, not just to detect it. How long it has been broken decides how urgent it is.
 - **Relink to fix; delete to remove.** They are not interchangeable, and deletion is not reversible.
@@ -89,7 +150,7 @@ The trade is that failure is quiet, which **puts the burden on monitoring rather
 
 ## Related
 
-- [Relink a broken connector](/how-to/connections/update-credentials) - walk a customer through re-authorisation
-- [Monitor sync status](/how-to/troubleshooting/monitor-sync-status) - building the health surface
-- [Delete Connector](/api-reference/connectors/delete-connector) - remove a connector and its data
-- [Magic Link & end-user auth](/explanation/magic-link) - why the fix belongs to your customer
+- [Magic Link](/explanation/magic-link) - the hosted flow, and what your customer sees
+- [Embedded Link](/how-to/connections/embed-the-connection-flow) - the same flow inside your product
+- [Update credentials](/how-to/connections/update-credentials) - walk a customer through re-authorisation
+- [Sync status](/how-to/troubleshooting/monitor-sync-status) - building the health surface

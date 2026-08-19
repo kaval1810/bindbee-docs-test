@@ -1,5 +1,6 @@
 ---
 title: "Rename or Delete a Connector"
+sidebarTitle: "Rename or delete"
 description: "Change a connector's display name, or remove one permanently - and understand what deletion destroys."
 ---
 
@@ -18,7 +19,7 @@ The display name identifies the connection in the dashboard and in webhook paylo
 </Warning>
 
 <Tip>
-  Because renaming costs a support request, don't rely on the display name to tell connectors apart. `origin_id` is set when the connection is created, comes back on every webhook as `connector.origin_id`, and is what actually resolves a connector to your own customer record - see [Create a Connector Programmatically](/how-to/connections/create-a-connector-programmatically).
+  Because renaming costs a support request, don't rely on the display name to tell connectors apart. `origin_id` is set when the connection is created, comes back on every webhook as `connector.origin_id`, and is what actually resolves a connector to your own customer record - see [Create programmatically](/how-to/connections/create-a-connector-programmatically).
 </Tip>
 
 ## Delete a connector
@@ -84,12 +85,12 @@ The display name identifies the connection in the dashboard and in webhook paylo
   </Accordion>
 
   <Accordion title="You want to stop a connector syncing without deleting it">
-    Moving it to Development stops automatic syncs while preserving the connection and its history, and Development connectors aren't billed. See [Move a Connector Between Environments](/how-to/setup/move-a-connector-between-environments).
+    Moving it to Development stops automatic syncs while preserving the connection and its history, and Development connectors aren't billed. See [Move between environments](/how-to/setup/move-a-connector-between-environments).
   </Accordion>
 </AccordionGroup>
 
 ## Related
 
-- [Connector lifecycle](/explanation/connector-lifecycle) - what deletion destroys, and why relinking is almost always the right action
+- [Connections](/explanation/connector-lifecycle) - what deletion destroys, and why relinking is almost always the right action
 - [Delete Connector](/api-reference/connectors/delete-connector)
 - [Connectors](/platform/overview)

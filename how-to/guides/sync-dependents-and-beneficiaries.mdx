@@ -52,7 +52,7 @@ description: "Build an accurate picture of who is covered under each employee, n
   <Step title="Page both collections fully">
     Both are paginated. A partial walk understates coverage, which is the direction that causes problems.
 
-    Follow the cursor until it stops coming back, and don't stop on a short page - see [Paginate Through Results](/how-to/reading-data/paginate-through-results).
+    Follow the cursor until it stops coming back, and don't stop on a short page - see [Pagination](/how-to/reading-data/paginate-through-results).
 
     **Result:** Complete sets, not first pages.
   </Step>
@@ -75,7 +75,7 @@ description: "Build an accurate picture of who is covered under each employee, n
   <Step title="Map attributes the model doesn't carry">
     Beneficiary designations, allocation percentages, and relationship detail are frequently in the raw payload but not unified.
 
-    Find the path with the raw-data endpoint, then map it - see [Inspect the Raw Upstream Payload](/how-to/data-model/inspect-the-raw-upstream-payload). Read the results with `include_custom_fields=true`.
+    Find the path with the raw-data endpoint, then map it - see [Inspect raw data](/how-to/data-model/inspect-the-raw-upstream-payload). Read the results with `include_custom_fields=true`.
 
     **Result:** The attributes your file format needs.
   </Step>
@@ -109,11 +109,11 @@ description: "Build an accurate picture of who is covered under each employee, n
   </Accordion>
 
   <Accordion title="Dependents exist but no dependent benefits">
-    Either they genuinely aren't enrolled, or the integration doesn't expose dependent coverage. Check `raw_data` on someone you know is covered - see [Inspect the Raw Upstream Payload](/how-to/data-model/inspect-the-raw-upstream-payload).
+    Either they genuinely aren't enrolled, or the integration doesn't expose dependent coverage. Check `raw_data` on someone you know is covered - see [Inspect raw data](/how-to/data-model/inspect-the-raw-upstream-payload).
   </Accordion>
 
   <Accordion title="date_of_birth is null for every dependent">
-    A sensitive-data permission rather than absence. See [Resolve a Source-System Permission Error](/how-to/troubleshooting/resolve-a-permission-error).
+    A sensitive-data permission rather than absence. See [Permission errors](/how-to/troubleshooting/resolve-a-permission-error).
   </Accordion>
 
   <Accordion title="A dependent was added but nothing fired">
@@ -123,6 +123,6 @@ description: "Build an accurate picture of who is covered under each employee, n
 
 ## Related
 
-- [Read Benefits Data](/how-to/reading-data/read-benefits-data)
+- [Reading benefits](/how-to/reading-data/read-benefits-data)
 - [Get Dependents](/hris/dependents/get-dependents) · [Get Dependent Benefits](/hris/dependent-benefits/get-dependent-benefits)
 - [Sync Census Data for Quoting](/how-to/guides/sync-census-data-for-quoting)

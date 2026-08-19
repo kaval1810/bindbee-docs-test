@@ -1,15 +1,15 @@
 ---
-title: "Embed the Connection Flow"
-description: "Embed the connection flow inside your own product and brand it as yours, instead of sending customers to a hosted Magic Link."
+title: "Embedded Link"
+description: "Embed the connection flow inside your own product and brand it as yours, with the full reference for the React hook and the CDN global."
 ---
 
-A Magic Link takes your customer to a Bindbee-hosted page. Embedding the same flow keeps them inside your product, under your own logo and colours, and hands your backend the `connector_token` directly.
+A [Magic Link](/explanation/magic-link) takes your customer to a Bindbee-hosted page. Embedding the same flow keeps them inside your product, under your own logo and colours, and hands your backend the `connector_token` directly.
 
 <Info>
   **Before you start**
 
-  - An API key for the environment you are connecting in - see [Choose an Environment](/how-to/setup/choose-an-environment)
-  - The category and integration slug you are connecting - see [Look Up an Integration Slug](/how-to/setup/look-up-an-integration-slug)
+  - An API key for the environment you are connecting in - see [Environments](/how-to/setup/choose-an-environment)
+  - The category and integration slug you are connecting - see [Integration slugs & variants](/how-to/setup/look-up-an-integration-slug)
   - A frontend you can add a script or an npm package to
 </Info>
 
@@ -125,7 +125,7 @@ A Magic Link takes your customer to a Bindbee-hosted page. Embedding the same fl
     { "connector_token": "...", "connector_id": "..." }
     ```
 
-    Store both. `connector_token` authenticates every later call; `connector_id` is what you use for support, feature-flagging, and keying stored tokens - see [Go-Live Checklist](/how-to/setup/go-live-checklist).
+    Store both. `connector_token` authenticates every later call; `connector_id` is what you use for support, feature-flagging, and keying stored tokens - see [Go-live checklist](/how-to/setup/go-live-checklist).
 
     **Result:** a `connector_token`, stored against your customer record. Every later read or write for that customer carries it.
   </Step>
@@ -139,15 +139,61 @@ A Magic Link takes your customer to a Bindbee-hosted page. Embedding the same fl
   </Step>
 </Steps>
 
+## React reference
+
+`@bindbee/react-link` is the only SDK Bindbee publishes.
+
+```jsx
+import { useBindbeeMagiclink } from "@bindbee/react-link";
+
+const { open } = useBindbeeMagiclink({
+  linkToken,
+  onSuccess: (temporaryToken) => sendToBackend(temporaryToken),
+  onClose: () => {},
+});
+```
+
+| Option | Type | Required | Purpose |
+| --- | --- | --- | --- |
+| `linkToken` | `string` | Yes | The `link_token` for this end customer. One token initialises one session |
+| `onSuccess` | `(temporaryToken: string) => void` | Yes | Fires in the browser when authorisation completes. Send the value to your backend |
+| `onClose` | `() => void` | No | Fires when the customer dismisses the flow without finishing |
+| `serverUrl` | `string` | No | Region override. Defaults to `https://api.bindbee.dev`; set `https://api-eu.bindbee.dev` for EU |
+
+The hook returns `open` - call it to launch the flow, typically from a button handler.
+
+## CDN reference
+
+For any framework other than React, load the script and use the `BindbeeEmbed` global. An unminified build is served at `initialize.js` with its own `integrity` hash.
+
+| Method | Purpose |
+| --- | --- |
+| `BindbeeEmbed.initialize(options)` | Configure the flow. Takes `linkToken`, `onSuccess` and `onClose`, as above |
+| `BindbeeEmbed.open()` | Launch the flow |
+| `BindbeeEmbed.destroy()` | Tear it down and release its listeners |
+
+<Warning>
+  The `integrity` hash must match the build you reference, or the browser
+  refuses to execute the script and the flow never renders. If your CSP blocks
+  the load, allow `cdn.bindbee.dev`.
+</Warning>
+
+## Notes
+
+- The API key never reaches the browser. Only the `link_token` does, and it initialises one session for one end customer.
+- `category` and `integration` are fixed when the `link_token` is created. The end user does not choose a system.
+- A `temporary_token` is not a `connector_token` and cannot read data.
+- Branding comes from **Settings → Organization**, not from these options.
+
 ## If this didn't work
 
 <AccordionGroup>
   <Accordion title="The connector was created in the wrong environment">
-    The environment follows the API key that created the `link_token`, not anything in the frontend. A Development key produces a Development connector, which will not sync on a schedule. See [Choose an Environment](/how-to/setup/choose-an-environment).
+    The environment follows the API key that created the `link_token`, not anything in the frontend. A Development key produces a Development connector, which will not sync on a schedule. See [Environments](/how-to/setup/choose-an-environment).
   </Accordion>
 
   <Accordion title="The flow opens but the integration list is wrong or empty">
-    `category` and `integration` are fixed when the token is created, not chosen by the user. Check the slug - see [Look Up an Integration Slug](/how-to/setup/look-up-an-integration-slug).
+    `category` and `integration` are fixed when the token is created, not chosen by the user. Check the slug - see [Integration slugs & variants](/how-to/setup/look-up-an-integration-slug).
   </Accordion>
 
   <Accordion title="onSuccess fired but API calls still return 403">
@@ -159,11 +205,12 @@ A Magic Link takes your customer to a Bindbee-hosted page. Embedding the same fl
   </Accordion>
 
   <Accordion title="You need a link without building a frontend">
-    Send a hosted link instead - see [Generate a Magic Link](/how-to/connections/generate-a-magic-link) - or create connectors from your backend with [Create a Connector Programmatically](/how-to/connections/create-a-connector-programmatically).
+    Send a hosted link instead - see [Magic Link](/explanation/magic-link) - or create connectors from your backend with [Create programmatically](/how-to/connections/create-a-connector-programmatically).
   </Accordion>
 </AccordionGroup>
 
 ## Related
 
+- [Create Link Token](/sdk/create-link-token) - the endpoint used in step 1
+- [Get Connector Token](/sdk/get-connector-token) - the exchange in step 3
 - [Authentication](/api-reference/basics/authentication) - how the API key and connector token differ
-- [Core concepts](/explanation/core-concepts) - where connectors and tokens sit in the model

@@ -44,7 +44,7 @@ The one signal that disambiguates cheaply is whether the value survived anywhere
 
 That first row is worth internalising: it separates the two causes that get confused most often, and it costs one request with `include_raw_data=true`.
 
-The connector's logs carry the failing request, the response, and its status code where the source system returned one - see [Resolve a Permission Error](/how-to/troubleshooting/resolve-a-permission-error).
+The connector's logs carry the failing request, the response, and its status code where the source system returned one - see [Permission errors](/how-to/troubleshooting/resolve-a-permission-error).
 
 ## Scope is a contract, not a filter
 
@@ -78,5 +78,5 @@ Partial success keeps the integration running on whatever the credentials do per
 ## Related
 
 - [Configure scoping](/how-to/data-model/restrict-models-and-fields) - setting scope for your organisation
-- [Resolve a Permission Error](/how-to/troubleshooting/resolve-a-permission-error) - diagnosing the credentials case
+- [Permission errors](/how-to/troubleshooting/resolve-a-permission-error) - diagnosing the credentials case
 - [Unified model & raw data](/explanation/unified-model) - why the value you get differs from the source

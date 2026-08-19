@@ -1,69 +1,56 @@
 ---
-title: "Magic Link & end-user auth"
-description: "Why your customer's admin authorises the connection rather than you, and how the hosted link and embedded SDK differ."
+title: "Magic Link"
+description: "Create a hosted authorisation link your customer opens to connect their HRIS, and understand what they see on the other side of it."
 ---
 
-You are not the one who connects to your customer's HR system. They are.
-
-That inversion is easy to skim past, and it shapes a surprising amount - where credentials live, who to contact when a connection breaks, and **why you cannot simply fix a permissions problem yourself.**
-
-## Authorisation belongs to the customer
-
-Reaching a company's HR data requires credentials from that company. Only someone with administrative access to their HRIS can grant them, and in almost every case they cannot delegate that to a third party even if they wanted to.
-
-So the flow puts your customer's administrator in the middle. You initiate a connection for a named customer, they authorise it against their own system, and Bindbee holds the resulting credentials. **Those credentials never pass through your infrastructure and are never yours to store.**
+A Magic Link is a hosted URL your customer opens to authorise their HRIS. They enter their own credentials; you never handle them. When they finish, a connector appears in your account - with no front-end code on your side.
 
 <Info>
-A connection problem is therefore usually not yours to fix. Expired credentials, insufficient permissions and revoked access all resolve on the customer's side. Your job is to detect the condition and prompt the right person.
+  **Before you start**
+
+  - You know which environment this connection belongs in - see [Environments](/how-to/setup/choose-an-environment). It's fixed at creation, though a connector can be moved later without the end user reconnecting - see [Move between environments](/how-to/setup/move-a-connector-between-environments).
+  - You know which integration the customer uses - see [Integration slugs & variants](/how-to/setup/look-up-an-integration-slug).
 </Info>
 
-## Two ways to present it
+## Steps
 
-The same authorisation flow reaches your customer through two surfaces, and the choice is independent of how the link was created.
+<Steps>
+  <Step title="Confirm the environment">
+    Check the dashboard is in the environment you intend. A link generated in Development creates a Development connector.
 
-**The hosted page** opens in the customer's browser at a Bindbee URL. You send it to them or redirect them to it. No front-end code either way.
+    **Result:** You're in the right environment.
+  </Step>
 
-**The embedded SDK** runs the same flow inside your own product, so the customer never leaves it.
+  <Step title="Create the link">
+    Go to **Magic Link** and start a new link. Select the integration, then fill in the end user's details.
 
-Both produce a connector, both put the administrator in control, and **neither lets the end user choose which system to connect** - `create-link-token` requires the integration slug, so the target is fixed before the session exists.
+    Set `origin_id` to your own internal identifier for this customer. Webhook payloads carry it back, which is how you resolve an incoming event to a customer record without maintaining a separate mapping table.
 
-They differ in the thing that shapes your code: **how you learn the connection succeeded.**
+    **Result:** A link on the `link.bindbee.dev` domain.
+  </Step>
 
-```mermaid
-sequenceDiagram
-    participant B as Your backend
-    participant F as Your frontend
-    participant C as Customer's admin
-    participant S as Source system
+  <Step title="Send it to the customer">
+    Forward the URL to the person who administers their HRIS - not necessarily your day-to-day contact. They'll need credentials or admin rights in the source system.
 
-    Note over B,S: Hosted page
-    B->>C: send or redirect to the link
-    C->>S: authorise
-    S-->>B: webhook, or fetch by origin_id
+    Send the matching setup guide from [help.bindbee.dev](https://help.bindbee.dev) alongside it. Those guides are white-labelled and carry no Bindbee branding, so they're safe to forward.
 
-    Note over B,S: Embedded SDK
-    B->>F: link_token
-    F->>C: flow opens in your product
-    C->>S: authorise
-    S-->>F: onSuccess(temporary_token)
-    F->>B: temporary_token
-    B->>B: exchange for connector_token
-```
+    **Result:** The customer has the link and instructions for their platform.
+  </Step>
 
-| | Hosted page | Embedded SDK |
-| --- | --- | --- |
-| Front-end code | None | React hook or CDN script |
-| Link created by | Dashboard, or `create-link-token` | `create-link-token` |
-| Completion signal | Webhook, or fetch by `origin_id` | `onSuccess` fires in the browser |
-| Getting the token | Read `connector_token` from the connector | Exchange the `temporary_token` from your backend |
+  <Step title="Confirm the connection completed">
+    The customer sees a confirmation screen once authorisation succeeds. The connector then appears under **Connectors** - see [Platform](/platform/overview) for what that screen shows.
 
-The embedded flow reacts the moment your customer finishes; the hosted page learns about it asynchronously.
-
-Note the second row: **hosted does not mean manual.** Creating links by hand suits human-led implementation, but you can generate them from `create-link-token` and still redirect to the hosted page - self-serve onboarding with no front-end at all.
-
-See [Create a Connector Programmatically](/how-to/connections/create-a-connector-programmatically) and [Embed the Connection Flow](/how-to/connections/embed-the-connection-flow).
+    **Result:** An active connector, with a `connector_token` in its **Connector Details** panel - that's what you pass as `X-Connector-Token`. See [Authentication](/api-reference/basics/authentication).
+  </Step>
+</Steps>
 
 {/* VERIFY: link lifetime and expiry behaviour. Confirm how long a generated Magic Link remains valid, what an end user sees after expiry, and whether a link is single-use or reusable. */}
+
+## Hosted does not mean manual
+
+Creating links by hand suits human-led implementation, but the same hosted page can be reached from a link created programmatically - self-serve onboarding with no front-end at all. See [Create programmatically](/how-to/connections/create-a-connector-programmatically).
+
+The alternative surface keeps the customer inside your product instead - see [Embedded Link](/how-to/connections/embed-the-connection-flow).
 
 ## What the end user actually does
 
@@ -73,29 +60,38 @@ What varies underneath is considerable. Some systems use OAuth and it takes seco
 
 For those, **the flow guides them but cannot complete the work for them** - some of it happens in their HR system, not in Bindbee.
 
-That is why per-system setup guides are written for an administrator rather than a developer, and why the harder integrations have a long tail between "link sent" and "connector active".
+That is why per-system setup guides are written for an administrator rather than a developer, and why the harder integrations have a long tail between "link sent" and "connector active". Budget time between sending a link and data arriving.
 
-## Why it works this way
+## If this didn't work
 
-The alternative - collecting your customers' HRIS credentials yourself and passing them to Bindbee - is simpler to build and worse in every other respect.
+<AccordionGroup>
+  <Accordion title="The connector shows as incomplete">
+    The customer opened the link but didn't finish authorising. Incomplete connectors persist and appear alongside active ones, which skews connector counts - filter to **Active Connectors** when reviewing.
 
-**It makes you the custodian of credentials that open an entire company's employee records**, including compensation and bank details - a security liability you have no reason to accept.
+    Follow up with the customer, or delete the incomplete connector and issue a fresh link.
+  </Accordion>
 
-It also fails on its own terms. OAuth-based systems will not issue credentials to anyone but the authorising administrator, so a credential-collection flow cannot support them at all.
+  <Accordion title="The customer says the screen looks different from your instructions">
+    The connection screen changes as integrations are updated. Point them at the current [help centre](https://help.bindbee.dev) guide rather than a screenshot captured earlier - screenshots embedded in your own onboarding material go stale silently.
+  </Accordion>
 
-Delegating authorisation means the credential exists only between the customer's system and Bindbee. You get normalised data without ever holding the keys to the source, and your customer can revoke access without involving you.
+  <Accordion title="The customer's credentials were wrong, or have since changed">
+    Don't issue a new link. Relink the existing connector, which preserves its ID and history - see [Update credentials](/how-to/connections/update-credentials).
+  </Accordion>
 
-The cost is a dependency on someone outside your company, and a class of failure you can detect but not repair. **Noticing an inactive connector and prompting the right person quickly is most of what operationalising this well requires.**
+  <Accordion title="You need to generate links in bulk or from your own product">
+    Two options. Create connectors programmatically - see [Create programmatically](/how-to/connections/create-a-connector-programmatically). Or embed the connection flow directly in your product, white-labelled with your own branding - see [Embedded Link](/how-to/connections/embed-the-connection-flow).
 
-## What this means for you
+    Manually generated links are a reasonable way to launch; teams commonly start there and move to the embedded flow once volume justifies it.
+  </Accordion>
 
-- **Connection failures are customer-side.** Detect and prompt; do not expect to fix them yourself.
-- **Choose the surface by where onboarding happens**, not by whether you want to automate. Hosted links can be generated programmatically too.
-- **Budget time between sending a link and data arriving.** Some systems need administrator work inside the HRIS first.
-- **Point administrators at the per-system setup guides**, which are written for them rather than for developers.
+  <Accordion title="The integration needs credentials the customer has to generate first">
+    Some platforms require an API key, certificate, or private key created in their system before the link can be completed. The customer generates those first, then opens the link. The per-system guide in the help centre lists what's needed.
+  </Accordion>
+</AccordionGroup>
 
 ## Related
 
-- [Connect a test account](/get-started/quickstart) - walk the flow yourself
-- [Magic Link](/how-to/connections/generate-a-magic-link) - generating and sending a link
-- [Connector lifecycle](/explanation/connector-lifecycle) - what happens after authorisation
+- [Connections](/explanation/connector-lifecycle) - why authorisation belongs to your customer, and what happens after
+- [Embedded Link](/how-to/connections/embed-the-connection-flow) - the same flow, inside your product
+- [help.bindbee.dev](https://help.bindbee.dev) - per-system setup guides

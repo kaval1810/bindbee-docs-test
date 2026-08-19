@@ -1,12 +1,12 @@
 ---
 title: "Read Candidates and Applications"
-sidebarTitle: "Candidates & Applications"
+sidebarTitle: "Candidates & applications"
 description: "Fetch the people and their pursuits as the two separate models they are, without conflating one with the other."
 ---
 
 A candidate is a person. An application is that person's pursuit of one job. Conflating them is the single most common ATS integration error, and it produces counts that look plausible and are wrong.
 
-The general techniques are the same as HRIS - see [Paginate Through Results](/how-to/reading-data/paginate-through-results) and [Filter and Narrow a Collection](/how-to/reading-data/filter-and-narrow-a-collection). This page covers what's specific to ATS.
+The general techniques are the same as HRIS - see [Pagination](/how-to/reading-data/paginate-through-results) and [Filtering](/how-to/reading-data/filter-and-narrow-a-collection). This page covers what's specific to ATS.
 
 <Info>
   **Before you start**
@@ -84,7 +84,7 @@ The general techniques are the same as HRIS - see [Paginate Through Results](/ho
     ?expand=job,candidate
     ```
 
-    One expanded request beats N follow-up calls, which is what exhausts the per-connector rate limit on a large pipeline - see [Handle API Errors](/how-to/setup/handle-api-errors).
+    One expanded request beats N follow-up calls, which is what exhausts the per-connector rate limit on a large pipeline - see [Errors & issues](/explanation/errors-issues-and-limits).
 
     **Result:** Related records inline, at the cost of a larger response.
   </Step>
@@ -113,5 +113,5 @@ The general techniques are the same as HRIS - see [Paginate Through Results](/ho
 ## Related
 
 - [ATS models](/explanation/ats-models) - what each model holds and why they're separate
-- [Track an Application Through Its Stages](/how-to/ats/track-an-application-through-stages)
+- [Application stages](/how-to/ats/track-an-application-through-stages)
 - [Get Candidates](/ats/candidate/get-candidates) · [Get Applications](/ats/application/get-applications)

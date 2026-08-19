@@ -1,5 +1,6 @@
 ---
 title: "Paginate Through Results"
+sidebarTitle: "Pagination"
 description: "Walk a full collection using cursor-based pagination without skipping or duplicating records."
 ---
 
@@ -121,7 +122,7 @@ Every collection endpoint is paginated with `cursor` and `page_size`. Follow the
 
 Two things cut page count more than tuning `page_size`.
 
-Filter server-side rather than fetching everything and discarding - see [Filter and Narrow a Collection](/how-to/reading-data/filter-and-narrow-a-collection). And on scheduled runs, fetch only what changed - see [Filter with modified_after](/how-to/reading-data/filter-with-modified-after).
+Filter server-side rather than fetching everything and discarding - see [Filtering](/how-to/reading-data/filter-and-narrow-a-collection). And on scheduled runs, fetch only what changed - see [Filter with modified_after](/how-to/reading-data/filter-with-modified-after).
 
 ## If this didn't work
 
@@ -129,7 +130,7 @@ Filter server-side rather than fetching everything and discarding - see [Filter 
   <Accordion title="Records are missing or repeated across pages">
     Check every parameter is byte-identical between requests. The most common cause is recomputing a timestamp filter per page - compute it once before the loop.
 
-    A sync running mid-walk also shifts the underlying data. Page against a stable dataset by gating the run on the sync-completed event - see [Trigger a Job When a Sync Completes](/how-to/sync-control/trigger-a-job-on-sync-complete).
+    A sync running mid-walk also shifts the underlying data. Page against a stable dataset by gating the run on the sync-completed event - see [Trigger a job on completion](/how-to/sync-control/trigger-a-job-on-sync-complete).
   </Accordion>
 
   <Accordion title="The loop never terminates">
@@ -137,7 +138,7 @@ Filter server-side rather than fetching everything and discarding - see [Filter 
   </Accordion>
 
   <Accordion title="429 partway through">
-    Rate limits are 200 requests per minute per connector token. Honour `Retry-After` and resume from the cursor you were on - see [Handle API Errors](/how-to/setup/handle-api-errors).
+    Rate limits are 200 requests per minute per connector token. Honour `Retry-After` and resume from the cursor you were on - see [Errors & issues](/explanation/errors-issues-and-limits).
 
     Different connectors have independent limits, so paging several customers in parallel is fine; paging one customer harder is not.
   </Accordion>

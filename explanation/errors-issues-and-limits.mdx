@@ -1,6 +1,6 @@
 ---
-title: "Errors, issues & limits"
-description: "Where a failure is reported, how to tell whether it originated with Bindbee or the source system, and what rate limits protect."
+title: "Errors & issues"
+description: "Tell whether a failure originated with you, Bindbee or the source system, read the response body correctly, and build retry behaviour that doesn't make things worse."
 ---
 
 Something did not work. Before you can fix it you need to know whose failure it was - **yours, Bindbee's, or the source system's.** Those three arrive through different channels and look nothing like each other.
@@ -19,11 +19,121 @@ Bindbee holds a synced copy, so an upstream refusal happened in the background -
 
 The third row has no error to look up at all - see [Scope & permissions](/explanation/scope-and-permissions) for how to tell those apart.
 
-## What a Bindbee error body looks like
+## Classify the status
 
-Errors Bindbee returns to you carry a `detail` field in one of two shapes: a string for most failures, an array of per-field objects for validation errors.
+Errors fall into three groups: fix the request, back off and retry, or act on the connection. Treating them uniformly - retrying everything, or failing on everything - causes the two most common integration problems.
 
-That is the whole documented surface - see [Handle API Errors](/how-to/setup/handle-api-errors).
+| Status | Meaning | Retry? |
+| --- | --- | --- |
+| `401` | Missing, malformed, or wrong-environment API key | No - fix credentials |
+| `403` | Valid credentials without access to this resource | No - see below |
+| `404` | Resource doesn't exist for this connector | No |
+| `422` | Validation failed - an invalid query or path parameter, or a write body the schema rejects | No - the body names the field |
+| `429` | Rate limit exceeded | Yes, after `Retry-After` |
+| `5xx` | Server-side | Yes, with backoff |
+
+Retrying a `4xx` other than `429` will never succeed and consumes the connector's rate limit while failing.
+
+<Note>
+  `422` is not a write-only code. A bad query parameter on a read returns `422`,
+  not `400` - so a filter value the API rejects lands in the same branch as a
+  malformed write body.
+</Note>
+
+## Read the response body, not just the status
+
+Every error Bindbee returns carries a `detail` field, and **its type depends on the status.** On `401`, `403`, `404` and `429` it is a string:
+
+```json
+{ "detail": "Rate limit exceeded" }
+```
+
+On `422` it is an array, one entry per rejected field - here, a `page_size` above the maximum of 200:
+
+```json
+{
+  "detail": [
+    {
+      "loc": ["query", "page_size"],
+      "msg": "Input should be less than or equal to 200",
+      "type": "less_than_equal"
+    }
+  ]
+}
+```
+
+`loc` is the path to the offending field and `msg` says what was expected - together they usually identify the fault without any further digging.
+
+<Warning>
+  The same key holds two different types. Code that treats `detail` as a string
+  - logging it, matching on it, lower-casing it - works against every other
+  status and then throws on the first `422`. Branch on the status before
+  touching `detail`.
+</Warning>
+
+## Handle 429 using the headers
+
+Every response carries rate limit headers, not just the failures:
+
+| Header | Meaning |
+| --- | --- |
+| `X-RateLimit-Limit` | Requests allowed per minute - currently 200 |
+| `X-RateLimit-Remaining` | Left in the current window |
+| `X-RateLimit-Reset` | Unix timestamp when the window resets |
+| `Retry-After` | Seconds to wait - on `429` responses |
+
+Wait `Retry-After` seconds, then resume. Don't retry immediately, and don't use a fixed delay - the header is authoritative.
+
+Better still, watch `X-RateLimit-Remaining` on successful responses and slow down before you hit zero. Throttling proactively is cheaper than recovering.
+
+## The two causes of 403
+
+A `403` means the credentials are valid but don't permit this resource. Two very different situations produce it:
+
+- **A connector token used against the wrong API category** - an HRIS connector called on `/api/ats/v1/*`. That's a bug in your code.
+- **A model whose writes are disabled for that integration** - see [Check write support](/how-to/writing-data-back/check-write-support).
+
+Neither is retryable, and neither is a source-system permission problem - those surface as sync failures or empty results rather than `403`. See [Permission errors](/how-to/troubleshooting/resolve-a-permission-error).
+
+## Back off exponentially on 5xx
+
+Retry with exponential backoff and jitter, capped at a few attempts. Jitter matters when many connectors fail together - without it, every client retries in lockstep.
+
+```python Python
+import random, time, requests
+
+RETRY_ON = {429, 500, 502, 503, 504}
+
+def request_with_retry(method, url, *, max_attempts=4, timeout=30, **kwargs):
+    for attempt in range(max_attempts):
+        # Without a timeout a hung connection never reaches the retry logic
+        resp = requests.request(method, url, timeout=timeout, **kwargs)
+        if resp.status_code not in RETRY_ON:
+            return resp
+        if attempt == max_attempts - 1:
+            resp.raise_for_status()
+
+        # 429 tells you how long to wait; 5xx does not, so back off
+        retry_after = resp.headers.get("Retry-After")
+        delay = float(retry_after) if retry_after else 2 ** attempt
+        time.sleep(delay + random.uniform(0, 0.5))   # jitter
+```
+
+<Warning>
+  Retrying a write is only safe with an idempotency key. A `5xx` can be returned
+  after the record was already created upstream, so a retry without
+  `X-Idempotency-Key` creates a duplicate in the customer's HRIS. Send the same
+  key on the retry that you sent on the original request - see
+  [Employee](/how-to/writing-data-back/create-an-employee).
+</Warning>
+
+Capture status, response body, `X-RateLimit-Remaining`, the connector ID, and the endpoint. A `403` without the endpoint is nearly undiagnosable later.
+
+## An empty result is not an error
+
+The failure mode that costs most is a `200` with no records. Permission gaps, out-of-scope models, and stalled syncs all present this way, and code that only branches on status treats it as "the customer has no employees".
+
+Where a zero count is implausible, check sync status rather than assuming absence - see [Missing records](/how-to/troubleshooting/trace-a-missing-record).
 
 ## Upstream failures keep the source system's own answer
 
@@ -37,7 +147,7 @@ That body is the thing to read first. It contains the HR system's own error form
 An upstream `403` almost always means the authorising credentials lack a permission - not that Bindbee is unauthorised. **The fix is with your customer's HRIS administrator, not with your API keys.**
 </Warning>
 
-{/* VERIFY: the field names carrying the upstream envelope. This page previously named integration_status_code, integration_endpoint and integration_response as response-body fields. None of the three appear anywhere in spec.json, and the only documented error schemas are ErrorResponse ({detail: string}) and HTTPValidationError ({detail: [ValidationError]}) - consistent with how-to/setup/handle-api-errors. The upstream detail is visible in connector logs per how-to/troubleshooting/resolve-a-permission-error, but the field names are unconfirmed, so the prose above describes the content without naming fields. Confirm the names and where they appear, then restore them. */}
+{/* VERIFY: the field names carrying the upstream envelope. This page previously named integration_status_code, integration_endpoint and integration_response as response-body fields. None of the three appear anywhere in spec.json, and the only documented error schemas are ErrorResponse ({detail: string}) and HTTPValidationError ({detail: [ValidationError]}). The upstream detail is visible in connector logs per how-to/troubleshooting/resolve-a-permission-error, but the field names are unconfirmed, so the prose above describes the content without naming fields. Confirm the names and where they appear, then restore them. */}
 
 ## Write failures are source-shaped
 
@@ -55,10 +165,10 @@ Not every failure surfaces on a response. A sync that fails partway through happ
 
 **Logs** hold the per-request record: which endpoint, which status, what came back. This is where you answer "why is this connector not returning benefits" when nothing in your own application errored.
 
-**Issues** are the layer above. Where a log entry is one request and its response, an issue is a failure Bindbee raised against a connector with a likely cause attached - carrying the evidence, so you and support read the same thing. See [Issues](/platform/overview).
+**Issues** are the layer above. Where a log entry is one request and its response, an issue is a failure Bindbee raised against a connector with a likely cause attached - carrying the evidence, so you and support read the same thing. See [Platform](/platform/overview).
 
 <Warning>
-Issues are a Dashboard surface. **There is no issues endpoint in the API**, so anything your own monitoring must act on has to come from sync-status webhooks or the connector's `status` - see [Connector lifecycle](/explanation/connector-lifecycle).
+Issues are a Dashboard surface. **There is no issues endpoint in the API**, so anything your own monitoring must act on has to come from sync-status webhooks or the connector's `status` - see [Connections](/explanation/connector-lifecycle).
 </Warning>
 
 {/* VERIFY: do issues have an explicit lifecycle - are they closed by Bindbee when the underlying failure clears, or dismissed by hand? The Dashboard shows "currently open issues", which implies a state, but the transition is undocumented. */}
@@ -67,7 +177,7 @@ Issues are a Dashboard surface. **There is no issues endpoint in the API**, so a
 
 They protect different things, and only one of them is about you.
 
-**Bindbee's limit** is 200 requests per minute per connector, and it is what a `429` from Bindbee refers to. It is generous relative to normal application traffic.
+**Bindbee's limit** is 200 requests per minute per connector token, not per API key, and it is what a `429` from Bindbee refers to. Each end user has an independent budget, so parallelising across customers is fine - hammering one customer's connector is what trips it.
 
 **The source system's limits** are usually far tighter, and they constrain how fast Bindbee can *sync* rather than how fast you can read. Most HR systems permit a small number of requests per minute per tenant.
 
@@ -85,15 +195,38 @@ The trade is that your error handling has to be layered. Handle the envelope gen
 
 ## What this means for you
 
+- **Branch on status before touching `detail`.** It is a string on most errors and an array on `422`.
 - **Read the upstream response body first** when a failure came from the source system. It usually names the fix.
 - **Route upstream `403`s to the customer's HRIS administrator**, not to your own credentials.
 - **Do not expect source-system failures on your own responses.** They happen during syncs; watch logs and sync-status webhooks.
+- **Never retry a write without an idempotency key.**
 - **Do not build generic user-facing messages for write failures.** The useful detail is source-specific.
 - **A successful response with missing data is not an error case** - it is a scope or permissions question.
 
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="401 with a key you're sure is correct">
+    Environment mismatch - a Development key against a Production connector returns `401` rather than a clearer error. See [Authentication](/api-reference/basics/authentication).
+
+    Also check the header includes the `Bearer ` prefix.
+  </Accordion>
+
+  <Accordion title="429 despite low request volume">
+    The limit is per connector. Several of your services calling the same connector share one budget, and a page walk at `page_size=50` uses four times the requests of one at 200.
+  </Accordion>
+
+  <Accordion title="Intermittent 5xx on one integration only">
+    May reflect the source system rather than Bindbee. Capture the connector ID and timestamps and report it - the pattern across connectors on the same integration is what identifies it.
+  </Accordion>
+
+  <Accordion title="422 on a write that matches the schema">
+    The schema is the structural contract; the source system enforces rules beyond it - codes that must exist in their configuration, closed periods, approval states. See [Fetch a schema](/how-to/writing-data-back/fetch-a-write-schema).
+  </Accordion>
+</AccordionGroup>
+
 ## Related
 
-- [Handle API Errors](/how-to/setup/handle-api-errors) - the two shapes Bindbee returns
-- [Diagnose a failing sync](/how-to/troubleshooting/diagnose-a-partial-sync) - work through a connector's logs
 - [Rate Limits](/api-reference/basics/rate-limits) - Bindbee's published limits
+- [Partial syncs](/how-to/troubleshooting/diagnose-a-partial-sync) - work through a connector's logs
 - [Scope & permissions](/explanation/scope-and-permissions) - why data goes missing without an error

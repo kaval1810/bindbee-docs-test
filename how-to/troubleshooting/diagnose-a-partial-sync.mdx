@@ -1,5 +1,6 @@
 ---
 title: "Diagnose a Partial Sync"
+sidebarTitle: "Partial syncs"
 description: "Work out which model failed during a sync that completed only in part, and what to do about it."
 ---
 
@@ -8,7 +9,7 @@ A partial sync means some models loaded and others didn't. The connector is auth
 <Info>
   **Before you start**
 
-  - You've confirmed the run is marked Partial in the connector's sync history - see [Monitor Sync Status](/how-to/troubleshooting/monitor-sync-status). Partial is a dashboard label; `sync_status` does not carry it.
+  - You've confirmed the run is marked Partial in the connector's sync history - see [Sync status](/how-to/troubleshooting/monitor-sync-status). Partial is a dashboard label; `sync_status` does not carry it.
 </Info>
 
 ## Steps
@@ -25,10 +26,10 @@ A partial sync means some models loaded and others didn't. The connector is auth
 
     | Pattern | Likely cause | Where to go |
     | --- | --- | --- |
-    | One model family fails, e.g. all payroll or all benefits | The credentials lack permission for that area of the source API | [Resolve a Permission Error](/how-to/troubleshooting/resolve-a-permission-error) |
+    | One model family fails, e.g. all payroll or all benefits | The credentials lack permission for that area of the source API | [Permission errors](/how-to/troubleshooting/resolve-a-permission-error) |
     | A model fails only on large populations | Upstream request size or timeout limits | Step 3 |
     | Different models fail on different runs | Transient upstream errors or rate limiting at the source | Step 4 |
-    | Every model fails | Not a partial sync - treat it as a failed sync | [Detect a Connection That Needs Relinking](/how-to/reliability/detect-a-connection-that-needs-relinking) |
+    | Every model fails | Not a partial sync - treat it as a failed sync | [Connections needing relink](/how-to/reliability/detect-a-connection-that-needs-relinking) |
 
     **Result:** You know whether this needs a configuration change on the customer's side, a retry, or an escalation.
   </Step>
@@ -43,7 +44,7 @@ A partial sync means some models loaded and others didn't. The connector is auth
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    See [Force a Resync](/how-to/sync-control/force-a-resync).
+    See [Force a resync](/how-to/sync-control/force-a-resync).
 
     **Result:** A new run starts. If the same models fail again with the same error, it isn't transient - go back to step 2.
 
@@ -55,7 +56,7 @@ A partial sync means some models loaded and others didn't. The connector is auth
   <Step title="Check whether the succeeded models are internally consistent">
     A partial sync can leave related models out of step - employees loaded but employments didn't, or benefits loaded but dependents didn't. Reads against the succeeded models will look complete while the relationships between them are incomplete.
 
-    Treat the connector's data as provisional until a run completes cleanly, and gate downstream processing on the sync-completed event rather than a clock. See [Trigger a Job When a Sync Completes](/how-to/sync-control/trigger-a-job-on-sync-complete).
+    Treat the connector's data as provisional until a run completes cleanly, and gate downstream processing on the sync-completed event rather than a clock. See [Trigger a job on completion](/how-to/sync-control/trigger-a-job-on-sync-complete).
 
     **Result:** Downstream systems don't act on a half-loaded dataset.
   </Step>
@@ -75,7 +76,7 @@ A partial sync means some models loaded and others didn't. The connector is auth
   </Accordion>
 
   <Accordion title="Records loaded but fields are empty">
-    That isn't a partial sync. The model loaded; the fields weren't populated or aren't exposed at the current permission level. See [Trace a Missing Record](/how-to/troubleshooting/trace-a-missing-record) and [Inspect the Raw Upstream Payload](/how-to/data-model/inspect-the-raw-upstream-payload).
+    That isn't a partial sync. The model loaded; the fields weren't populated or aren't exposed at the current permission level. See [Missing records](/how-to/troubleshooting/trace-a-missing-record) and [Inspect raw data](/how-to/data-model/inspect-the-raw-upstream-payload).
   </Accordion>
 
   <Accordion title="The partial sync coincides with a spike in your own API calls">

@@ -1,6 +1,6 @@
 ---
 title: "Trace an Unexpected or Duplicate Record"
-sidebarTitle: "Trace a Duplicate Record"
+sidebarTitle: "Unexpected records"
 description: "Diagnose records that appear twice, or records you didn't expect at all."
 ---
 
@@ -20,7 +20,7 @@ Most apparent duplicates aren't duplicates. Work out which of these you have bef
 
     Systems that terminate-and-recreate on transfer produce several employment records for one continuous tenure. If you're joining employees to employments and rendering the result, one person appears once per employment.
 
-    Fetch employees alone and count. If the duplication disappears, this is your answer - and the fix is selecting the right employment rather than deduplicating people. See [Read Employee Data](/how-to/reading-data/read-employee-data).
+    Fetch employees alone and count. If the duplication disappears, this is your answer - and the fix is selecting the right employment rather than deduplicating people. See [Reading employees](/how-to/reading-data/read-employee-data).
 
     **Result:** You know whether you have one person or two records.
   </Step>
@@ -38,7 +38,7 @@ Most apparent duplicates aren't duplicates. Work out which of these you have bef
   </Step>
 
   <Step title="Check the raw payload">
-    Fetch `raw_data` for both records - see [Inspect the Raw Upstream Payload](/how-to/data-model/inspect-the-raw-upstream-payload).
+    Fetch `raw_data` for both records - see [Inspect raw data](/how-to/data-model/inspect-the-raw-upstream-payload).
 
     Two genuinely distinct upstream records means the source system holds two, and the fix belongs in the customer's HRIS. This is common after a merger, a payroll migration, or a rehire processed as a new person.
 
@@ -48,7 +48,7 @@ Most apparent duplicates aren't duplicates. Work out which of these you have bef
   <Step title="Check whether you created it">
     If you write to this connector, a duplicate may be yours - a retried write without a consistent idempotency key creates a second record.
 
-    Check the creation timestamps against your own write logs. See [Create an Employee](/how-to/writing-data-back/create-an-employee).
+    Check the creation timestamps against your own write logs. See [Employee](/how-to/writing-data-back/create-an-employee).
 
     **Result:** You know whether the duplicate originated with you.
   </Step>
@@ -70,7 +70,7 @@ Most apparent duplicates aren't duplicates. Work out which of these you have bef
 
 **Send idempotency keys on writes**, derived from your own record identity rather than randomly.
 
-**Don't delete and recreate connectors.** That discards record identities and produces an entirely new set of IDs, which looks like every record was duplicated - see [Rename or Delete a Connector](/how-to/connections/rename-or-delete-a-connector).
+**Don't delete and recreate connectors.** That discards record identities and produces an entirely new set of IDs, which looks like every record was duplicated - see [Rename or delete](/how-to/connections/rename-or-delete-a-connector).
 
 ## If this didn't work
 
@@ -95,4 +95,4 @@ Most apparent duplicates aren't duplicates. Work out which of these you have bef
 ## Related
 
 - [Get Employees](/hris/employee/get-employees)
-- [Reconcile Record Counts Against the Source](/how-to/troubleshooting/reconcile-record-counts)
+- [Record counts](/how-to/troubleshooting/reconcile-record-counts)

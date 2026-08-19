@@ -69,7 +69,7 @@ The HRIS doesn't announce a qualifying event. It records a status change, a date
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    A dependent record means the employee recorded that person; a dependent benefit means they were actually enrolled - see [Read Benefits Data](/how-to/reading-data/read-benefits-data).
+    A dependent record means the employee recorded that person; a dependent benefit means they were actually enrolled - see [Reading benefits](/how-to/reading-data/read-benefits-data).
 
     **Result:** Every qualified beneficiary, not everyone on file.
   </Step>
@@ -103,7 +103,7 @@ The HRIS doesn't announce a qualifying event. It records a status change, a date
 
 **Only some qualifying events are visible in an HRIS.** Termination and reduction of hours are detectable from employment status and hours. A dependent aging out is derivable from date of birth. Death is sometimes carried as a status. Divorce and legal separation usually are not - they surface, if at all, as a dependent silently disappearing or a coverage tier changing, with no field stating the reason. Build detection for what's observable and accept that some events must reach you another way.
 
-**Detection latency is the sync cadence, and the clock is statutory.** Continuation notice deadlines run from the event date, not from when you learned about it. A 24-hour cadence plus your own processing interval can consume several days of a fixed window before you begin. For customers where this matters, shorten the cadence - see [Change Sync Frequency](/how-to/sync-control/change-sync-frequency) - and treat a stalled connector as a compliance risk rather than a data-freshness issue.
+**Detection latency is the sync cadence, and the clock is statutory.** Continuation notice deadlines run from the event date, not from when you learned about it. A 24-hour cadence plus your own processing interval can consume several days of a fixed window before you begin. For customers where this matters, shorten the cadence - see [Sync schedules](/how-to/sync-control/change-sync-frequency) - and treat a stalled connector as a compliance risk rather than a data-freshness issue.
 
 **A dependent record is not coverage.** Whether a dependent loses coverage depends on their dependent benefit records, not on their existence as a dependent. Reading dependents alone overstates who is affected.
 
@@ -119,7 +119,7 @@ The HRIS doesn't announce a qualifying event. It records a status change, a date
   </Accordion>
 
   <Accordion title="date_of_birth is null for every dependent">
-    Almost always a permission, not absence - sensitive fields are commonly gated behind a separate grant. Without it, aging-out cannot be detected at all. See [Resolve a Source-System Permission Error](/how-to/troubleshooting/resolve-a-permission-error).
+    Almost always a permission, not absence - sensitive fields are commonly gated behind a separate grant. Without it, aging-out cannot be detected at all. See [Permission errors](/how-to/troubleshooting/resolve-a-permission-error).
   </Accordion>
 
   <Accordion title="The notice window was already half gone">
@@ -133,6 +133,6 @@ The HRIS doesn't announce a qualifying event. It records a status change, a date
 
 ## Related
 
-- [Read Benefits Data](/how-to/reading-data/read-benefits-data)
+- [Reading benefits](/how-to/reading-data/read-benefits-data)
 - [Choose Webhook Events](/webhooks/events)
 - [Cascade a Termination Downstream](/how-to/guides/cascade-a-termination-downstream)

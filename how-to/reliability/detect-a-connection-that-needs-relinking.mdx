@@ -1,6 +1,6 @@
 ---
 title: "Detect a Connection That Needs Relinking"
-sidebarTitle: "Detect Connections to Relink"
+sidebarTitle: "Connections needing relink"
 description: "Get notified when an end user's credentials stop working, and prompt them to reconnect before your pipeline reads stale data."
 ---
 
@@ -59,7 +59,7 @@ Source-system credentials expire, get rotated, or lose permissions. When that ha
     <Note>
       Relinking preserves the `connector_token`, so a connector recovering from
       `RELINK_NEEDED` needs no change to anything you've stored - see
-      [Connector lifecycle](/explanation/connector-lifecycle).
+      [Connections](/explanation/connector-lifecycle).
     </Note>
 
     **Result:** You can tell "this user must act" from "this will fix itself".
@@ -68,7 +68,7 @@ Source-system credentials expire, get rotated, or lose permissions. When that ha
   <Step title="Route the connection to your own re-auth flow">
     Use `connector.origin_id` to resolve the connection back to your customer record. Mark the connection as degraded in your system so downstream jobs skip it, then prompt the customer to reconnect.
 
-    To generate a fresh connection link, see [Update Credentials After an Auth Failure](/how-to/connections/update-credentials).
+    To generate a fresh connection link, see [Update credentials](/how-to/connections/update-credentials).
 
     **Result:** The affected customer is notified and your pipeline stops treating their data as current.
   </Step>
@@ -76,7 +76,7 @@ Source-system credentials expire, get rotated, or lose permissions. When that ha
   <Step title="Detect syncs that never start">
     A failed sync fires an event. A sync that simply doesn't run does not.
 
-    Subscribe to **Sync start** as well, record the `sync.sync_id` and timestamp per connector, and alert when the gap since the last start exceeds the connector's configured cadence plus a margin. When you need data sooner than the next scheduled run, call [Force a Resync](/api-reference/connectors/resync-connector).
+    Subscribe to **Sync start** as well, record the `sync.sync_id` and timestamp per connector, and alert when the gap since the last start exceeds the connector's configured cadence plus a margin. When you need data sooner than the next scheduled run, call [Force a resync](/api-reference/connectors/resync-connector).
 
     **Result:** Silent stalls surface as alerts rather than as stale reads.
   </Step>
@@ -84,7 +84,7 @@ Source-system credentials expire, get rotated, or lose permissions. When that ha
 
 ## What this leaves open
 
-Three gaps are now covered: a failed sync, an expired credential, and a sync that never started. The one still open is reading data mid-sync - for that, gate your job on `connector_synced` rather than on a clock. See [Trigger a Job When a Sync Completes](/how-to/sync-control/trigger-a-job-on-sync-complete).
+Three gaps are now covered: a failed sync, an expired credential, and a sync that never started. The one still open is reading data mid-sync - for that, gate your job on `connector_synced` rather than on a clock. See [Trigger a job on completion](/how-to/sync-control/trigger-a-job-on-sync-complete).
 
 ## If this didn't work
 
@@ -104,11 +104,11 @@ Three gaps are now covered: a failed sync, an expired credential, and a sync tha
   </Accordion>
 
   <Accordion title="The error message is generic">
-    `error.message` can be a summary, with `detail` returned as an empty object when nothing more specific is available. Use the connector's sync history for the per-model breakdown - see [Diagnose a Partial Sync](/how-to/troubleshooting/diagnose-a-partial-sync).
+    `error.message` can be a summary, with `detail` returned as an empty object when nothing more specific is available. Use the connector's sync history for the per-model breakdown - see [Partial syncs](/how-to/troubleshooting/diagnose-a-partial-sync).
   </Accordion>
 </AccordionGroup>
 
 ## Related
 
-- [Webhook Events & Payloads](/webhooks/overview) - events, payloads, and retry behaviour
+- [Events & payloads](/webhooks/overview) - events, payloads, and retry behaviour
 - [Force Resync a Connector](/api-reference/connectors/resync-connector)

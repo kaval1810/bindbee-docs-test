@@ -1,5 +1,6 @@
 ---
 title: "Choose an Environment"
+sidebarTitle: "Environments"
 description: "Decide whether a connection belongs in Development or Production, and understand what changes between them."
 ---
 
@@ -50,7 +51,7 @@ Development and Production are fully isolated. Keys, connectors, data, and webho
   </Step>
 
   <Step title="Create the connection">
-    Generate a Magic Link while the dashboard is in the chosen environment - see [Generate a Magic Link](/how-to/connections/generate-a-magic-link). The environment is fixed at creation.
+    Generate a Magic Link while the dashboard is in the chosen environment - see [Magic Link](/explanation/magic-link). The environment is fixed at creation.
 
     **Result:** The connector exists in the intended environment.
   </Step>
@@ -60,11 +61,11 @@ Development and Production are fully isolated. Keys, connectors, data, and webho
 
 <AccordionGroup>
   <Accordion title="A connector is in the wrong environment">
-    It can be moved without recreating it or asking the end user to reconnect, but the switch isn't self-serve today. See [Move a Connector Between Environments](/how-to/setup/move-a-connector-between-environments).
+    It can be moved without recreating it or asking the end user to reconnect, but the switch isn't self-serve today. See [Move between environments](/how-to/setup/move-a-connector-between-environments).
   </Accordion>
 
   <Accordion title="A Development connector is returning stale data">
-    Working as designed - Development connectors don't sync on a schedule. See [Sync a Development Connector](/how-to/sync-control/sync-a-development-connector).
+    Working as designed - Development connectors don't sync on a schedule. See [Development connectors](/how-to/sync-control/sync-a-development-connector).
   </Accordion>
 
   <Accordion title="Your connector count is higher than the connections you recognise">
@@ -78,5 +79,5 @@ Development and Production are fully isolated. Keys, connectors, data, and webho
 
 ## Related
 
-- [Move a Connector Between Environments](/how-to/setup/move-a-connector-between-environments) - if this one ends up in the wrong place
+- [Move between environments](/how-to/setup/move-a-connector-between-environments) - if this one ends up in the wrong place
 - [Authentication](/api-reference/basics/authentication)

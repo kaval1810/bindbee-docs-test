@@ -1,6 +1,6 @@
 ---
 title: "Restrict Which Models and Fields Sync"
-sidebarTitle: "Restrict Models & Fields"
+sidebarTitle: "Restrict what syncs"
 description: "Limit a connector to the models and fields you actually need, so sensitive data you don't require is never pulled."
 ---
 
@@ -53,7 +53,7 @@ Scoping controls what Bindbee syncs. Narrowing it reduces sync time, reduces loa
   </Step>
 
   <Step title="Resync and verify">
-    Scope changes apply to subsequent syncs, not retroactively. Trigger a run - see [Force a Resync](/how-to/sync-control/force-a-resync) - then read a record and confirm the excluded fields are absent.
+    Scope changes apply to subsequent syncs, not retroactively. Trigger a run - see [Force a resync](/how-to/sync-control/force-a-resync) - then read a record and confirm the excluded fields are absent.
 
     Newly enabled models are populated on the next sync rather than appearing immediately, so widening scope needs the same step.
 
@@ -65,9 +65,9 @@ Scoping controls what Bindbee syncs. Narrowing it reduces sync time, reduces loa
 
 Scoping determines what Bindbee **pulls from the source system**. A field outside scope is not synced, so it appears in neither the unified response nor `raw_data`.
 
-That last point matters for custom fields: a mapping pointing at an out-of-scope field resolves to nothing, and the symptom is a field that previews correctly against an integration sample but returns nothing in production. See [Test a JMESPath Before Saving It](/how-to/data-model/test-a-jmespath).
+That last point matters for custom fields: a mapping pointing at an out-of-scope field resolves to nothing, and the symptom is a field that previews correctly against an integration sample but returns nothing in production. See [Test an expression](/how-to/data-model/test-a-jmespath).
 
-Scoping is also not a substitute for source-system permissions. The credentials still govern what Bindbee *can* read; scoping governs what it *does* read. For customers who want a hard guarantee, restricting the integration user's permissions upstream is the stronger control - see [Resolve a Source-System Permission Error](/how-to/troubleshooting/resolve-a-permission-error).
+Scoping is also not a substitute for source-system permissions. The credentials still govern what Bindbee *can* read; scoping governs what it *does* read. For customers who want a hard guarantee, restricting the integration user's permissions upstream is the stronger control - see [Permission errors](/how-to/troubleshooting/resolve-a-permission-error).
 
 ## If this didn't work
 

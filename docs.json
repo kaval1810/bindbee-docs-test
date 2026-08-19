@@ -55,48 +55,72 @@
         "tab": "Guides",
         "pages": [
           {
-            "group": "Setup",
-            "pages": [
-              "how-to/setup/choose-an-environment",
-              "how-to/setup/move-a-connector-between-environments",
-              "how-to/setup/handle-api-errors",
-              "how-to/setup/look-up-an-integration-slug",
-              "explanation/integration-variants",
-              "how-to/setup/go-live-checklist"
-            ]
-          },
-          {
             "group": "Connections",
             "pages": [
               "explanation/connector-lifecycle",
-              "explanation/multi-entity",
               "explanation/magic-link",
-              "how-to/connections/generate-a-magic-link",
               "how-to/connections/embed-the-connection-flow",
-              "sdk/embedded-component",
               "how-to/connections/create-a-connector-programmatically",
-              "how-to/connections/update-credentials",
-              "how-to/connections/rename-or-delete-a-connector"
+              {
+                "group": "Managing connectors",
+                "pages": [
+                  "how-to/connections/update-credentials",
+                  "how-to/connections/rename-or-delete-a-connector",
+                  "how-to/setup/move-a-connector-between-environments",
+                  "explanation/multi-entity"
+                ]
+              }
             ]
           },
           {
             "group": "Reading data",
             "pages": [
-              "how-to/reading-data/paginate-through-results",
-              "how-to/reading-data/filter-with-modified-after",
-              "how-to/reading-data/filter-and-narrow-a-collection",
-              "how-to/reading-data/include-raw-data-and-custom-fields",
-              "explanation/scope-and-permissions",
               {
-                "group": "How records are shaped",
+                "group": "Querying",
                 "pages": [
+                  "how-to/reading-data/paginate-through-results",
+                  "how-to/reading-data/filter-and-narrow-a-collection",
+                  "how-to/reading-data/filter-with-modified-after",
+                  "how-to/reading-data/include-raw-data-and-custom-fields"
+                ]
+              },
+              {
+                "group": "What you get",
+                "pages": [
+                  "explanation/scope-and-permissions",
+                  "how-to/data-model/restrict-models-and-fields",
                   "explanation/record-identity",
                   "explanation/enum-values",
                   "explanation/effective-dating"
                 ]
               },
               {
-                "group": "Employee & org data",
+                "group": "Syncing",
+                "pages": [
+                  "explanation/how-syncing-works",
+                  "how-to/sync-control/change-sync-frequency",
+                  "how-to/sync-control/force-a-resync",
+                  "how-to/sync-control/sync-a-development-connector",
+                  "explanation/sftp-and-file-connectors",
+                  "how-to/sync-control/trigger-a-job-on-sync-complete"
+                ]
+              },
+              {
+                "group": "Webhooks",
+                "pages": [
+                  "webhooks/overview",
+                  "webhooks/events",
+                  "webhooks/delivery",
+                  "how-to/reliability/distinguish-created-from-modified"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Data models",
+            "pages": [
+              {
+                "group": "Employee & org",
                 "pages": [
                   "explanation/employee-and-org-models",
                   "explanation/status-and-terminations",
@@ -119,85 +143,95 @@
                   "how-to/reading-data/read-benefits-data"
                 ]
               },
+              {
+                "group": "Recruiting",
+                "pages": [
+                  "explanation/ats-models",
+                  "how-to/ats/read-candidates-and-applications",
+                  "how-to/ats/track-an-application-through-stages",
+                  "how-to/ats/sync-interview-feedback",
+                  "how-to/ats/exclude-eeoc-data"
+                ]
+              },
               "explanation/lms-models"
             ]
           },
           {
-            "group": "Syncing",
+            "group": "Extending the model",
             "pages": [
-              "explanation/how-syncing-works",
-              "explanation/sftp-and-file-connectors",
-              "how-to/sync-control/change-sync-frequency",
-              "how-to/sync-control/set-a-sync-start-time",
-              "how-to/sync-control/force-a-resync",
-              "how-to/sync-control/sync-a-development-connector",
-              "how-to/sync-control/trigger-a-job-on-sync-complete"
+              {
+                "group": "Custom fields",
+                "pages": [
+                  "explanation/how-custom-fields-work",
+                  "how-to/data-model/inspect-the-raw-upstream-payload",
+                  "how-to/data-model/test-a-jmespath",
+                  "how-to/data-model/map-a-custom-field-from-the-dashboard",
+                  "how-to/data-model/map-custom-fields-with-the-api",
+                  "how-to/data-model/scope-a-mapping"
+                ]
+              },
+              {
+                "group": "Passthrough",
+                "pages": [
+                  "explanation/passthrough",
+                  "how-to/data-model/make-a-passthrough-request"
+                ]
+              }
             ]
           },
           {
-            "group": "Webhooks",
-            "pages": [
-              "webhooks/overview",
-              "webhooks/events",
-              "webhooks/delivery",
-              "how-to/reliability/distinguish-created-from-modified"
-            ]
-          },
-          {
-            "group": "Custom fields",
-            "pages": [
-              "explanation/how-custom-fields-work",
-              "how-to/data-model/inspect-the-raw-upstream-payload",
-              "how-to/data-model/map-a-custom-field-from-the-dashboard",
-              "how-to/data-model/map-custom-fields-with-the-api",
-              "how-to/data-model/test-a-jmespath",
-              "how-to/data-model/scope-a-mapping",
-              "how-to/data-model/restrict-models-and-fields"
-            ]
-          },
-          {
-            "group": "Passthrough",
-            "pages": [
-              "explanation/passthrough",
-              "how-to/data-model/make-a-passthrough-request"
-            ]
-          },
-          {
-            "group": "Writing back",
+            "group": "Writing data",
             "pages": [
               "explanation/write-support",
-              "explanation/how-meta-apis-work",
-              "meta-apis-for-write-operations",
-              "how-to/writing-data-back/check-write-support",
-              "how-to/writing-data-back/fetch-a-write-schema",
-              "how-to/writing-data-back/create-an-employee",
-              "how-to/writing-data-back/create-a-time-off-request",
-              "how-to/writing-data-back/create-an-employee-payroll-run",
-              "how-to/writing-data-back/create-a-timesheet-entry"
+              {
+                "group": "Meta APIs",
+                "pages": [
+                  "explanation/how-meta-apis-work",
+                  "how-to/writing-data-back/fetch-a-write-schema",
+                  "how-to/writing-data-back/check-write-support"
+                ]
+              },
+              {
+                "group": "Writes",
+                "pages": [
+                  "how-to/writing-data-back/create-an-employee",
+                  "how-to/writing-data-back/create-a-time-off-request",
+                  "how-to/writing-data-back/create-an-employee-payroll-run",
+                  "how-to/writing-data-back/create-a-timesheet-entry",
+                  "how-to/ats/create-a-candidate"
+                ]
+              }
             ]
           },
           {
-            "group": "Recruiting (ATS)",
+            "group": "Going live",
             "pages": [
-              "explanation/ats-models",
-              "how-to/ats/read-candidates-and-applications",
-              "how-to/ats/track-an-application-through-stages",
-              "how-to/ats/create-a-candidate",
-              "how-to/ats/sync-interview-feedback",
-              "how-to/ats/exclude-eeoc-data"
+              "how-to/setup/choose-an-environment",
+              "how-to/setup/look-up-an-integration-slug",
+              "how-to/setup/go-live-checklist"
             ]
           },
           {
             "group": "Troubleshooting",
             "pages": [
               "explanation/errors-issues-and-limits",
-              "how-to/troubleshooting/monitor-sync-status",
-              "how-to/reliability/detect-a-connection-that-needs-relinking",
-              "how-to/troubleshooting/diagnose-a-partial-sync",
-              "how-to/troubleshooting/resolve-a-permission-error",
-              "how-to/troubleshooting/trace-a-missing-record",
-              "how-to/troubleshooting/trace-an-unexpected-record",
-              "how-to/troubleshooting/reconcile-record-counts"
+              {
+                "group": "Monitoring",
+                "pages": [
+                  "how-to/troubleshooting/monitor-sync-status",
+                  "how-to/reliability/detect-a-connection-that-needs-relinking"
+                ]
+              },
+              {
+                "group": "Reconciling data",
+                "pages": [
+                  "how-to/troubleshooting/trace-a-missing-record",
+                  "how-to/troubleshooting/trace-an-unexpected-record",
+                  "how-to/troubleshooting/diagnose-a-partial-sync",
+                  "how-to/troubleshooting/reconcile-record-counts"
+                ]
+              },
+              "how-to/troubleshooting/resolve-a-permission-error"
             ]
           }
         ]
@@ -809,11 +843,11 @@
     },
     {
       "source": "/features/magic-link",
-      "destination": "/how-to/connections/generate-a-magic-link"
+      "destination": "/explanation/magic-link"
     },
     {
       "source": "/how-to/magic-link",
-      "destination": "/how-to/connections/generate-a-magic-link"
+      "destination": "/explanation/magic-link"
     },
     {
       "source": "/how-to/configure-custom-fields-dashboard",
@@ -973,7 +1007,7 @@
     },
     {
       "source": "/concepts/integration-versions",
-      "destination": "/explanation/integration-variants"
+      "destination": "/how-to/setup/look-up-an-integration-slug"
     },
     {
       "source": "/concepts/lms-models",
@@ -1037,7 +1071,7 @@
     },
     {
       "source": "/explanation/integration-versions",
-      "destination": "/explanation/integration-variants"
+      "destination": "/how-to/setup/look-up-an-integration-slug"
     },
     {
       "source": "/explanation/hris-models",
@@ -1142,6 +1176,30 @@
     {
       "source": "/how-to/setup/authenticate-a-request",
       "destination": "/api-reference/basics/authentication"
+    },
+    {
+      "source": "/how-to/connections/generate-a-magic-link",
+      "destination": "/explanation/magic-link"
+    },
+    {
+      "source": "/sdk/embedded-component",
+      "destination": "/how-to/connections/embed-the-connection-flow"
+    },
+    {
+      "source": "/meta-apis-for-write-operations",
+      "destination": "/explanation/how-meta-apis-work"
+    },
+    {
+      "source": "/explanation/integration-variants",
+      "destination": "/how-to/setup/look-up-an-integration-slug"
+    },
+    {
+      "source": "/how-to/setup/handle-api-errors",
+      "destination": "/explanation/errors-issues-and-limits"
+    },
+    {
+      "source": "/how-to/sync-control/set-a-sync-start-time",
+      "destination": "/how-to/sync-control/change-sync-frequency"
     }
   ],
   "api": {

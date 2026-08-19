@@ -1,5 +1,6 @@
 ---
 title: "Filter with modified_after"
+sidebarTitle: "modified_after"
 description: "Fetch only the records that changed since your last run, instead of re-reading the full dataset."
 ---
 
@@ -46,7 +47,7 @@ Two consequences:
   </Step>
 
   <Step title="Page with the filter held constant">
-    Compute the timestamp once, before the loop, and reuse the identical string on every page. Recomputing it per page corrupts the cursor's position - see [Paginate Through Results](/how-to/reading-data/paginate-through-results).
+    Compute the timestamp once, before the loop, and reuse the identical string on every page. Recomputing it per page corrupts the cursor's position - see [Pagination](/how-to/reading-data/paginate-through-results).
 
     **Result:** A complete, non-overlapping set.
   </Step>
@@ -62,7 +63,7 @@ Two consequences:
 
 Polling on a fixed schedule means either reading too early, while a sync is still running, or waiting longer than necessary.
 
-The more reliable pattern is to run the incremental read when the sync-completed event fires, using `modified_after` with your stored watermark. The event tells you data has landed; the filter tells you what's new. See [Trigger a Job When a Sync Completes](/how-to/sync-control/trigger-a-job-on-sync-complete).
+The more reliable pattern is to run the incremental read when the sync-completed event fires, using `modified_after` with your stored watermark. The event tells you data has landed; the filter tells you what's new. See [Trigger a job on completion](/how-to/sync-control/trigger-a-job-on-sync-complete).
 
 ## If this didn't work
 
@@ -72,7 +73,7 @@ The more reliable pattern is to run the incremental read when the sync-completed
   </Accordion>
 
   <Accordion title="A record you know changed didn't come back">
-    Check the sync ran after the change. Until the connector syncs, the change doesn't exist in Bindbee - see [Monitor Sync Status](/how-to/troubleshooting/monitor-sync-status).
+    Check the sync ran after the change. Until the connector syncs, the change doesn't exist in Bindbee - see [Sync status](/how-to/troubleshooting/monitor-sync-status).
 
     On a Development connector there's no schedule at all, so nothing is new until you trigger a sync.
   </Accordion>

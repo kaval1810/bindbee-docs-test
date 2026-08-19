@@ -1,5 +1,6 @@
 ---
 title: "Create an Employee"
+sidebarTitle: "Employee"
 description: "Add a new employee to the customer's HRIS, including the nested and integration-specific fields the platform requires."
 ---
 
@@ -8,7 +9,7 @@ Creating an employee writes a person record into the customer's system of record
 <Info>
   **Before you start**
 
-  - You've confirmed the integration supports this write - see [Check Which Writes an Integration Supports](/how-to/writing-data-back/check-write-support).
+  - You've confirmed the integration supports this write - see [Check write support](/how-to/writing-data-back/check-write-support).
   - You can generate a stable idempotency key per logical employee.
 </Info>
 
@@ -81,7 +82,7 @@ Creating an employee writes a person record into the customer's system of record
   <Step title="Store the returned identity">
     Persist the returned Bindbee `id` against your own record.
 
-    Don't key on the employee number or `remote_id` - some systems assign these asynchronously, so they can be absent immediately after creation, and some reissue them later. See [Read Employee Data](/how-to/reading-data/read-employee-data).
+    Don't key on the employee number or `remote_id` - some systems assign these asynchronously, so they can be absent immediately after creation, and some reissue them later. See [Reading employees](/how-to/reading-data/read-employee-data).
 
     **Result:** A stable reference for subsequent operations.
   </Step>
@@ -113,7 +114,7 @@ Rehires and transfers are not new employees. Creating one for someone who alread
   </Accordion>
 
   <Accordion title="The write returns 403">
-    Creating employees usually needs broader permission than reading them. The credentials may authenticate and read fine while lacking write access - see [Resolve a Source-System Permission Error](/how-to/troubleshooting/resolve-a-permission-error).
+    Creating employees usually needs broader permission than reading them. The credentials may authenticate and read fine while lacking write access - see [Permission errors](/how-to/troubleshooting/resolve-a-permission-error).
   </Accordion>
 </AccordionGroup>
 

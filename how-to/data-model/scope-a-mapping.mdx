@@ -1,6 +1,6 @@
 ---
 title: "Scope a Mapping to One Connector or All"
-sidebarTitle: "Scope a Mapping"
+sidebarTitle: "Scope a mapping"
 description: "Choose between an organization-wide mapping and a per-connector override, and confirm which one is winning."
 ---
 
@@ -11,7 +11,7 @@ Getting this wrong is rarely visible at save time. It surfaces as a field that r
 <Info>
   **Before you start**
 
-  - You have a custom field created - see [Map Custom Fields with the API](/how-to/data-model/map-custom-fields-with-the-api).
+  - You have a custom field created - see [Map with the API](/how-to/data-model/map-custom-fields-with-the-api).
 </Info>
 
 ## Steps
@@ -34,7 +34,7 @@ Getting this wrong is rarely visible at save time. It surfaces as a field that r
   <Step title="Verify against more than one connector">
     Payload shape varies with the customer's plan tier, enabled modules, and configuration - two connectors on the same platform genuinely differ.
 
-    Preview the expression against several connectors before assuming an org mapping holds - see [Test a JMESPath Before Saving It](/how-to/data-model/test-a-jmespath).
+    Preview the expression against several connectors before assuming an org mapping holds - see [Test an expression](/how-to/data-model/test-a-jmespath).
 
     **Result:** Evidence the mapping generalises, rather than an assumption.
   </Step>

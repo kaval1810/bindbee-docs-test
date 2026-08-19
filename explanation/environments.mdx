@@ -74,15 +74,15 @@ Incomplete connectors - where the end user opened the link but never finished au
 
 ## What this means for you
 
-- **Decide the environment before creating the connection**, since it is settled at creation - see [Choose an Environment](/how-to/setup/choose-an-environment).
-- **Trigger a sync before trusting Development data** - see [Sync a Development Connector](/how-to/sync-control/sync-a-development-connector).
+- **Decide the environment before creating the connection**, since it is settled at creation - see [Environments](/how-to/setup/choose-an-environment).
+- **Trigger a sync before trusting Development data** - see [Development connectors](/how-to/sync-control/sync-a-development-connector).
 - **Settle scope before testing.** It reaches live Production connectors as you change it.
 - **Filter to active connectors before counting**, or incomplete ones inflate the number.
-- **Treat a wrong environment as recoverable** - see [Move a Connector Between Environments](/how-to/setup/move-a-connector-between-environments).
+- **Treat a wrong environment as recoverable** - see [Move between environments](/how-to/setup/move-a-connector-between-environments).
 - **Plan a key rotation as a deploy.** Every service on the old key breaks the moment you regenerate.
 
 ## Related
 
-- [Choose an Environment](/how-to/setup/choose-an-environment) - picking one for a given connection
+- [Environments](/how-to/setup/choose-an-environment) - picking one for a given connection
 - [Authentication](/api-reference/basics/authentication) - how keys are supplied
 - [Core concepts](/explanation/core-concepts) - where environments sit in the hierarchy

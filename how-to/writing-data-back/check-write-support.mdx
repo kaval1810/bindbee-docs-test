@@ -1,6 +1,6 @@
 ---
 title: "Check Which Writes an Integration Supports"
-sidebarTitle: "Check Write Support"
+sidebarTitle: "Check write support"
 description: "Determine whether a write operation is available for a given integration before you build against it."
 ---
 
@@ -44,7 +44,7 @@ Write support expands model by model and integration by integration. An operatio
   <Step title="Read the schema as a capability statement">
     The schema tells you more than yes-or-no. `required` and `isRequired` show what the integration insists on, and a required `integration_params` block means the write needs platform-specific values you must source before you can call it at all.
 
-    See [Fetch a Write Schema from the Meta API](/how-to/writing-data-back/fetch-a-write-schema).
+    See [Fetch a schema](/how-to/writing-data-back/fetch-a-write-schema).
 
     **Result:** You know whether the operation is available *and* whether you can satisfy its inputs.
   </Step>
@@ -78,7 +78,7 @@ If you're assessing coverage across a portfolio rather than one connector, itera
   <Accordion title="The schema returns but the write fails validation">
     The schema is the contract Bindbee expects; the source system can impose rules beyond it - a code that must exist in their configuration, a date within an open period, an approval state. Those surface at write time.
 
-    See [Fetch a Write Schema from the Meta API](/how-to/writing-data-back/fetch-a-write-schema).
+    See [Fetch a schema](/how-to/writing-data-back/fetch-a-write-schema).
   </Accordion>
 
   <Accordion title="You need writes for a model with no Meta endpoint">
@@ -92,6 +92,6 @@ If you're assessing coverage across a portfolio rather than one connector, itera
 
 ## Related
 
-- [Create an Employee](/how-to/writing-data-back/create-an-employee), [Create a Time Off Request](/how-to/writing-data-back/create-a-time-off-request), [Create an Employee Payroll Run](/how-to/writing-data-back/create-an-employee-payroll-run) and [Create a Timesheet Entry](/how-to/writing-data-back/create-a-timesheet-entry) - the writes themselves, once you know which are supported
-- [Meta APIs for Write Operations](/meta-apis-for-write-operations)
+- [Employee](/how-to/writing-data-back/create-an-employee), [Time off request](/how-to/writing-data-back/create-a-time-off-request), [Employee payroll run](/how-to/writing-data-back/create-an-employee-payroll-run) and [Timesheet entry](/how-to/writing-data-back/create-a-timesheet-entry) - the writes themselves, once you know which are supported
+- [Meta APIs](/explanation/how-meta-apis-work)
 - [Get Integrations](/api-reference/integrations/get-integrations)

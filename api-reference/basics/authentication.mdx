@@ -26,7 +26,7 @@ Keys are scoped to an environment. A development key does not work against produ
 
 ## Connector Tokens
 
-The `connector_token` names which customer's connection a request acts on. It is issued once the end user has authorised the connection, however that connection was created - a hosted [Magic Link](/how-to/connections/generate-a-magic-link), the [embedded component](/how-to/connections/embed-the-connection-flow), or a link generated [programmatically](/how-to/connections/create-a-connector-programmatically).
+The `connector_token` names which customer's connection a request acts on. It is issued once the end user has authorised the connection, however that connection was created - a hosted [Magic Link](/explanation/magic-link), the [embedded component](/how-to/connections/embed-the-connection-flow), or a link generated [programmatically](/how-to/connections/create-a-connector-programmatically).
 
 <Tip>
   You can find a `connector_token` in the connector's **Connector Details**
@@ -44,7 +44,7 @@ The `connector_token` names which customer's connection a request acts on. It is
 <Warning>
   A connector token is scoped to one API category. An HRIS connector's token
   used against `/api/ats/v1/*` returns `403` even though both credentials are
-  valid - see [Handle API Errors](/how-to/setup/handle-api-errors).
+  valid - see [Errors & issues](/explanation/errors-issues-and-limits).
 </Warning>
 
 ## Sending both headers
@@ -115,7 +115,7 @@ The API key is always required. The connector token is required only where the r
 | [Connector list](/api-reference/connectors/get-connectors) and [delete](/api-reference/connectors/delete-connector) | Required | Not used |
 | [Integrations](/api-reference/integrations/get-integrations) | Required | Not used |
 | [Custom fields](/custom-fields/api/list-custom-fields), mappings and [lookup](/custom-fields/lookup/list-integrations) | Required | Not used |
-| [Webhook Events & Payloads](/webhooks/overview) and delivery logs | Required | Not used |
+| [Events & payloads](/webhooks/overview) and delivery logs | Required | Not used |
 | [Link token](/sdk/create-link-token) and [token exchange](/sdk/get-connector-token) | Required | Not used |
 
 `category` is `hris`, `ats` or `lms`. Connector-scoped endpoints act on one end user; the rest act across your whole account, so they take the API key alone.
@@ -128,7 +128,7 @@ Write endpoints take `X-Idempotency-Key`. It is not part of authentication - it 
 
 `X-Idempotency-Key: YOUR_STABLE_KEY`
 
-Derive it from your own record for the thing being created, not from a random value or a timestamp, and reuse the same key on every retry. See [Create an Employee](/how-to/writing-data-back/create-an-employee).
+Derive it from your own record for the thing being created, not from a random value or a timestamp, and reuse the same key on every retry. See [Employee](/how-to/writing-data-back/create-an-employee).
 
 {/* VERIFY: spec.json declares x-idempotency-key on exactly four operations, all HRIS -
     POST /employees, /employee-payroll-runs, /time-off, /timesheet-entry. None of the
@@ -152,17 +152,17 @@ Passthrough does not accept an idempotency key - a retried passthrough write rea
   <Accordion title="403 Forbidden">
     The credentials are valid but don't permit this resource. The two common causes are a connector token used against a different API category - an HRIS-only connector called on `/api/ats/v1/*` - and a model whose writes are disabled for that integration.
 
-    For the second case, see [Check Which Writes an Integration Supports](/how-to/writing-data-back/check-write-support).
+    For the second case, see [Check write support](/how-to/writing-data-back/check-write-support).
   </Accordion>
 
   <Accordion title="The request succeeds but returns no records">
-    Authentication is fine; the connector has no synced data yet. Development connectors do not sync automatically - see [Sync a Development Connector](/how-to/sync-control/sync-a-development-connector).
+    Authentication is fine; the connector has no synced data yet. Development connectors do not sync automatically - see [Development connectors](/how-to/sync-control/sync-a-development-connector).
 
-    If it's a Production connector, check [Monitor Sync Status](/how-to/troubleshooting/monitor-sync-status).
+    If it's a Production connector, check [Sync status](/how-to/troubleshooting/monitor-sync-status).
   </Accordion>
 
   <Accordion title="The connector token stopped working after the end user reconnected">
-    Relinking preserves the `connector_token`, so a working token does not stop working because a customer re-authorised. What usually happened is that the connector was deleted and a fresh link issued instead of relinked - that mints a new connector, a new token, and new record IDs. See [Update Credentials After an Auth Failure](/how-to/connections/update-credentials).
+    Relinking preserves the `connector_token`, so a working token does not stop working because a customer re-authorised. What usually happened is that the connector was deleted and a fresh link issued instead of relinked - that mints a new connector, a new token, and new record IDs. See [Update credentials](/how-to/connections/update-credentials).
 
     Read the current token from the connector's **Connector Details** panel or via [Get Connectors](/api-reference/connectors/get-connectors), and key your stored tokens by connector ID so a replacement never sits alongside the old value.
   </Accordion>

@@ -1,5 +1,6 @@
 ---
 title: "Make a Passthrough Request"
+sidebarTitle: "Make a request"
 description: "Call an endpoint on the source system directly when the unified API doesn't cover what you need."
 ---
 
@@ -10,7 +11,7 @@ Use it for gaps, not as a default. Passthrough responses aren't unified, so ever
 <Info>
   **Before you start**
 
-  - You've confirmed the unified API doesn't cover this - see [Check Which Writes an Integration Supports](/how-to/writing-data-back/check-write-support).
+  - You've confirmed the unified API doesn't cover this - see [Check write support](/how-to/writing-data-back/check-write-support).
   - You have the source system's own API documentation for the endpoint.
 </Info>
 
@@ -78,7 +79,7 @@ Where you're writing, build your own protection: check whether the record exists
   </Accordion>
 
   <Accordion title="401 or 403 from the provider">
-    The connector's credentials authenticate but lack access to that endpoint. Passthrough grants no more access than the connection has - see [Resolve a Source-System Permission Error](/how-to/troubleshooting/resolve-a-permission-error).
+    The connector's credentials authenticate but lack access to that endpoint. Passthrough grants no more access than the connection has - see [Permission errors](/how-to/troubleshooting/resolve-a-permission-error).
   </Accordion>
 
   <Accordion title="The same request works on one connector and not another">

@@ -1,5 +1,6 @@
 ---
 title: "Go-Live Checklist"
+sidebarTitle: "Go-live checklist"
 description: "Everything to verify before pointing production traffic at Bindbee. Grouped by failure mode, with the reason each item is on the list."
 ---
 
@@ -97,19 +98,19 @@ Work through this before your first real customer connects. Most items exist bec
   <Step title="501 Not Implemented is handled as its own branch">
     It means the schema is unpublished for that integration and model, not that
     the write is unsupported. See
-    [Meta APIs](/meta-apis-for-write-operations#meta-api-not-implemented-for-an-integration).
+    [Meta APIs](/explanation/how-meta-apis-work#where-there-is-no-schema).
   </Step>
   <Step title="Every write carries X-Idempotency-Key">
     Derived from your own record for the thing being created - not random, not a
     timestamp. A retry must reuse the same key, or a retried timeout duplicates
     a record in your customer's HRIS. See
-    [Create an Employee](/how-to/writing-data-back/create-an-employee).
+    [Employee](/how-to/writing-data-back/create-an-employee).
   </Step>
   <Step title="Passthrough writes are never retried blind">
     Passthrough accepts no idempotency key, so a retry reaches the provider as a
     second write. Check whether the record exists first, or use the provider's
     own mechanism - see
-    [Make a Passthrough Request](/how-to/data-model/make-a-passthrough-request).
+    [Make a request](/how-to/data-model/make-a-passthrough-request).
   </Step>
   <Step title="The UI doesn't block on readback">
     A 2xx means the source system accepted it - not that Bindbee can return it
@@ -168,7 +169,7 @@ Work through this before your first real customer connects. Most items exist bec
   </Step>
   <Step title="Connection health is polled and surfaced">
     `status` and `sync_status` for every connector. See
-    [Monitor sync status](/how-to/troubleshooting/monitor-sync-status).
+    [Sync status](/how-to/troubleshooting/monitor-sync-status).
   </Step>
   <Step title="Alerting fires on consecutive failures, not single ones">
     Transient vendor errors are routine.

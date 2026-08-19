@@ -1,11 +1,12 @@
 ---
 title: "Read Payroll Data"
+sidebarTitle: "Reading payroll"
 description: "Fetch pay runs, per-employee earnings and deductions, and the calendar of upcoming runs - and pick the right date filter for each."
 ---
 
 Payroll spans a run-level model and a per-employee model, plus a calendar of scheduled runs. Which one you read depends on whether you need the cycle or the amounts.
 
-For hours worked rather than money paid, see [Read Time and Attendance Data](/how-to/reading-data/read-time-and-attendance-data) - the two do not reconcile arithmetically, and [Payroll & time models](/explanation/payroll-and-time-models) explains why.
+For hours worked rather than money paid, see [Reading time & attendance](/how-to/reading-data/read-time-and-attendance-data) - the two do not reconcile arithmetically, and [Payroll & time models](/explanation/payroll-and-time-models) explains why.
 
 <Info>
   **Before you start**
@@ -23,7 +24,7 @@ For hours worked rather than money paid, see [Read Time and Attendance Data](/ho
 | Payroll code | The earning and deduction codes defined in the payroll system | [Get Payroll Codes](/hris/payroll-codes/get-payroll-codes) |
 | Pay group | How employees are grouped onto a pay schedule | [Get Pay Groups](/hris/pay-groups/get-pay-groups) |
 
-The calendar matters more than it looks. Deduction changes have to land before the customer's processing cut-off, and the calendar is how you know when the next run is - see [Create an Employee Payroll Run](/how-to/writing-data-back/create-an-employee-payroll-run).
+The calendar matters more than it looks. Deduction changes have to land before the customer's processing cut-off, and the calendar is how you know when the next run is - see [Employee payroll run](/how-to/writing-data-back/create-an-employee-payroll-run).
 
 ## Steps
 
@@ -62,7 +63,7 @@ The calendar matters more than it looks. Deduction changes have to land before t
   <Step title="Read deductions from the per-employee model">
     Deduction lines carry the codes defined in the customer's payroll configuration.
 
-    Those codes are customer-specific and do not map automatically to benefit plans - the relationship is configuration you establish with the customer and store yourself. See [Read Benefits Data](/how-to/reading-data/read-benefits-data) for the plan side.
+    Those codes are customer-specific and do not map automatically to benefit plans - the relationship is configuration you establish with the customer and store yourself. See [Reading benefits](/how-to/reading-data/read-benefits-data) for the plan side.
 
     **Result:** Deduction lines you can attribute, given a mapping you own.
   </Step>
@@ -72,7 +73,7 @@ The calendar matters more than it looks. Deduction changes have to land before t
 
 <AccordionGroup>
   <Accordion title="Payroll returns nothing though the customer runs payroll">
-    Payroll is usually a separately licensed module with its own permission grant, and an empty result is the common failure mode rather than an error. See [Resolve a Source-System Permission Error](/how-to/troubleshooting/resolve-a-permission-error).
+    Payroll is usually a separately licensed module with its own permission grant, and an empty result is the common failure mode rather than an error. See [Permission errors](/how-to/troubleshooting/resolve-a-permission-error).
   </Accordion>
 
   <Accordion title="Amounts are off by a factor of 100">
@@ -88,7 +89,7 @@ The calendar matters more than it looks. Deduction changes have to land before t
   </Accordion>
 
   <Accordion title="Payroll doesn't reconcile with hours worked">
-    Expected. Overtime is calculated by rules the timesheet doesn't encode, salaried employees are paid without timesheets at all, and corrections land in a later run than the period they fix. See [Read Time and Attendance Data](/how-to/reading-data/read-time-and-attendance-data).
+    Expected. Overtime is calculated by rules the timesheet doesn't encode, salaried employees are paid without timesheets at all, and corrections land in a later run than the period they fix. See [Reading time & attendance](/how-to/reading-data/read-time-and-attendance-data).
   </Accordion>
 </AccordionGroup>
 

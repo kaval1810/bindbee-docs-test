@@ -1,6 +1,6 @@
 ---
 title: "Resolve a Source-System Permission Error"
-sidebarTitle: "Resolve a Permission Error"
+sidebarTitle: "Permission errors"
 description: "Map a sync failure or missing field back to the specific permission the end user's HRIS credentials are missing."
 ---
 
@@ -26,7 +26,7 @@ Most sync failures that aren't credential expiry are permission failures in the 
     | A model returns zero records but the source system shows data | Usually |
     | A field is null for every record but populated in the HRIS UI | Often - field-level permission |
     | Failures that come and go across runs | Sometimes - intermittent permission or token scope |
-    | Every model fails at once | No - credential expiry, see [Detect a Connection That Needs Relinking](/how-to/reliability/detect-a-connection-that-needs-relinking) |
+    | Every model fails at once | No - credential expiry, see [Connections needing relink](/how-to/reliability/detect-a-connection-that-needs-relinking) |
 
     **Result:** You've separated permission failures from authentication failures. They look similar and need different fixes.
   </Step>
@@ -85,7 +85,7 @@ Most sync failures that aren't credential expiry are permission failures in the 
   </Accordion>
 
   <Accordion title="Records return but a specific field is still null">
-    Confirm the field is genuinely absent upstream rather than unmapped on the Bindbee side. Fetch the raw payload - see [Inspect the Raw Upstream Payload](/how-to/data-model/inspect-the-raw-upstream-payload).
+    Confirm the field is genuinely absent upstream rather than unmapped on the Bindbee side. Fetch the raw payload - see [Inspect raw data](/how-to/data-model/inspect-the-raw-upstream-payload).
 
     If the value is present in `raw_data` but not in the unified response, it's a mapping question, not a permission one, and you can surface it as a [custom field](/explanation/how-custom-fields-work).
   </Accordion>

@@ -1,6 +1,6 @@
 ---
 title: "Map a Custom Field from the Dashboard"
-sidebarTitle: "Map a Field in the Dashboard"
+sidebarTitle: "Map from the dashboard"
 description: "Surface a value that isn't in the unified model by creating a custom field and pointing it at the raw upstream payload."
 ---
 
@@ -9,7 +9,7 @@ Custom fields extend a unified model with extra attributes, populated by a [JMES
 <Info>
   **Before you start**
 
-  - You know the value exists upstream - see [Inspect the Raw Upstream Payload](/how-to/data-model/inspect-the-raw-upstream-payload).
+  - You know the value exists upstream - see [Inspect raw data](/how-to/data-model/inspect-the-raw-upstream-payload).
   - You know the model it belongs to, and whether it should apply to one connector or every connector on an integration.
 </Info>
 
@@ -87,13 +87,13 @@ Custom fields extend a unified model with extra attributes, populated by a [JMES
   <Accordion title="The field returns INVALID_JSON_PATH">
     The expression didn't resolve. An invalid path does not raise an error - it returns `"INVALID_JSON_PATH"` as the value, so this only surfaces at read time.
 
-    Usually an array needing an index or filter, or a quoting error inside a filter. Preview the expression before saving to catch it - see [Test a JMESPath Before Saving It](/how-to/data-model/test-a-jmespath).
+    Usually an array needing an index or filter, or a quoting error inside a filter. Preview the expression before saving to catch it - see [Test an expression](/how-to/data-model/test-a-jmespath).
   </Accordion>
 
   <Accordion title="The field is empty for some employees and populated for others">
     Often correct - not every employee has every value. Confirm with employee search: look at a record where you expect the value and one where you don't.
 
-    If it's empty for employees who should have it, the value may sit at a different path for those records, or be gated by permission. See [Resolve a Source-System Permission Error](/how-to/troubleshooting/resolve-a-permission-error).
+    If it's empty for employees who should have it, the value may sit at a different path for those records, or be gated by permission. See [Permission errors](/how-to/troubleshooting/resolve-a-permission-error).
   </Accordion>
 
   <Accordion title="The mapping works on one connector but not another on the same integration">
@@ -105,7 +105,7 @@ Custom fields extend a unified model with extra attributes, populated by a [JMES
   </Accordion>
 
   <Accordion title="You need the same fields in both environments">
-    Configuration doesn't cross environments. Recreating it by hand is error-prone at any scale - define it through the API instead so the same definitions can be applied to both. See [Map Custom Fields with the API](/how-to/data-model/map-custom-fields-with-the-api).
+    Configuration doesn't cross environments. Recreating it by hand is error-prone at any scale - define it through the API instead so the same definitions can be applied to both. See [Map with the API](/how-to/data-model/map-custom-fields-with-the-api).
   </Accordion>
 </AccordionGroup>
 

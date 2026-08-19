@@ -1,6 +1,6 @@
 ---
 title: "Read Employee Documents"
-sidebarTitle: "Read Documents"
+sidebarTitle: "Documents"
 description: "List an employee's documents, download the file behind one, and read parsed W-4 values where they are available."
 tag: "BETA"
 ---
@@ -14,7 +14,7 @@ Documents carries files held against an employee - tax forms, signed agreements,
 <Info>
   **Before you start**
 
-  - The model is in scope for your organisation - see [Restrict Which Models and Fields Sync](/how-to/data-model/restrict-models-and-fields). Documents holds personal tax data, so it is worth an explicit decision rather than a default.
+  - The model is in scope for your organisation - see [Restrict what syncs](/how-to/data-model/restrict-models-and-fields). Documents holds personal tax data, so it is worth an explicit decision rather than a default.
 </Info>
 
 ## Steps
@@ -154,7 +154,7 @@ Documents carries files held against an employee - tax forms, signed agreements,
   </Accordion>
 
   <Accordion title="Documents returns nothing for a connector that has them">
-    Check the model is in scope, then check permissions - document access is frequently a separate grant from general employee read, and several platforms return an empty set rather than an error. See [Resolve a Source-System Permission Error](/how-to/troubleshooting/resolve-a-permission-error).
+    Check the model is in scope, then check permissions - document access is frequently a separate grant from general employee read, and several platforms return an empty set rather than an error. See [Permission errors](/how-to/troubleshooting/resolve-a-permission-error).
   </Accordion>
 
   <Accordion title="type is a value not in the enum">
@@ -166,4 +166,4 @@ Documents carries files held against an employee - tax forms, signed agreements,
 
 - [Get Documents](/hris/documents/get-documents) · [Get Document By Id](/hris/documents/get-document-by-id) · [Get Document Download URL](/hris/documents/get-document-download-url)
 - [Employee & org models](/explanation/employee-and-org-models) - the employee cluster Documents belongs to
-- [Restrict Which Models and Fields Sync](/how-to/data-model/restrict-models-and-fields) - deciding whether to sync it at all
+- [Restrict what syncs](/how-to/data-model/restrict-models-and-fields) - deciding whether to sync it at all

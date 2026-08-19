@@ -1,6 +1,6 @@
 ---
 title: "Test a JMESPath Before Saving It"
-sidebarTitle: "Test a JMESPath"
+sidebarTitle: "Test an expression"
 description: "Dry-run a mapping expression against real connector data so a bad path never reaches production responses."
 ---
 
@@ -11,7 +11,7 @@ The preview endpoint evaluates an expression without persisting anything.
 <Info>
   **Before you start**
 
-  - You have a candidate expression - see [Inspect the Raw Upstream Payload](/how-to/data-model/inspect-the-raw-upstream-payload).
+  - You have a candidate expression - see [Inspect raw data](/how-to/data-model/inspect-the-raw-upstream-payload).
 </Info>
 
 ## Steps
@@ -70,13 +70,13 @@ The preview endpoint evaluates an expression without persisting anything.
   <Step title="Test against a record that has the value">
     A field present for some employees and absent for others resolves to `null` on the wrong sample record.
 
-    Preview against a connector where you know the value exists. In the dashboard, employee search lets you pick a specific person's record for the same purpose - see [Map a Custom Field from the Dashboard](/how-to/data-model/map-a-custom-field-from-the-dashboard).
+    Preview against a connector where you know the value exists. In the dashboard, employee search lets you pick a specific person's record for the same purpose - see [Map from the dashboard](/how-to/data-model/map-a-custom-field-from-the-dashboard).
 
     **Result:** Confirmation the expression works where the data exists.
   </Step>
 
   <Step title="Save it">
-    Attach the validated expression as a mapping - see [Map Custom Fields with the API](/how-to/data-model/map-custom-fields-with-the-api).
+    Attach the validated expression as a mapping - see [Map with the API](/how-to/data-model/map-custom-fields-with-the-api).
 
     **Result:** A mapping you've confirmed resolves.
   </Step>
@@ -103,7 +103,7 @@ The preview endpoint evaluates an expression without persisting anything.
   </Accordion>
 
   <Accordion title="raw_data_source keeps returning integration_sample">
-    The connector hasn't synced. Trigger one - see [Force a Resync](/how-to/sync-control/force-a-resync) - then preview again. On a Development connector nothing syncs until you trigger it.
+    The connector hasn't synced. Trigger one - see [Force a resync](/how-to/sync-control/force-a-resync) - then preview again. On a Development connector nothing syncs until you trigger it.
   </Accordion>
 
   <Accordion title="It previews correctly but the live field returns INVALID_JSON_PATH">

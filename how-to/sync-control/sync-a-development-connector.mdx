@@ -1,6 +1,6 @@
 ---
 title: "Sync a Development Connector"
-sidebarTitle: "Sync in Development"
+sidebarTitle: "Development connectors"
 description: "Refresh a Development connector's data, which never happens automatically."
 ---
 
@@ -49,7 +49,7 @@ This is the single most common source of "the data looks stale" during developme
 
 **Sync after changing anything upstream.** Edit a record in the sandbox HRIS, then resync before checking. Without that step you're reading the previous state and will conclude the change didn't propagate.
 
-**Sync after scope or mapping changes.** Neither applies retroactively. A new custom field returns nothing until a sync populates it - see [Map a Custom Field from the Dashboard](/how-to/data-model/map-a-custom-field-from-the-dashboard).
+**Sync after scope or mapping changes.** Neither applies retroactively. A new custom field returns nothing until a sync populates it - see [Map from the dashboard](/how-to/data-model/map-a-custom-field-from-the-dashboard).
 
 **Script it.** A resync call at the start of an integration test suite removes a whole category of confusing failures.
 
@@ -63,7 +63,7 @@ This is the single most common source of "the data looks stale" during developme
   </Accordion>
 
   <Accordion title="The sync completes but data is unchanged">
-    Confirm the change was saved in the source system, and that the field is in scope for this connector - see [Restrict Which Models and Fields Sync](/how-to/data-model/restrict-models-and-fields).
+    Confirm the change was saved in the source system, and that the field is in scope for this connector - see [Restrict what syncs](/how-to/data-model/restrict-models-and-fields).
 
     Some sandbox environments also lag their own UI, so a change can be visible in their interface before their API returns it.
   </Accordion>
@@ -73,7 +73,7 @@ This is the single most common source of "the data looks stale" during developme
   </Accordion>
 
   <Accordion title="You want a Development connector to sync automatically">
-    Not available. Automatic syncing is a Production behaviour. If a connection needs unattended syncing it belongs in Production - see [Move a Connector Between Environments](/how-to/setup/move-a-connector-between-environments).
+    Not available. Automatic syncing is a Production behaviour. If a connection needs unattended syncing it belongs in Production - see [Move between environments](/how-to/setup/move-a-connector-between-environments).
   </Accordion>
 
   <Accordion title="Your test data is drifting from what production customers have">

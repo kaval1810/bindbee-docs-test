@@ -1,6 +1,6 @@
 ---
 title: "Distinguish Created from Modified Records"
-sidebarTitle: "Identify Created vs Modified"
+sidebarTitle: "Created vs modified"
 description: "Tell a newly created record from an update to an existing one when a data-change event fires."
 ---
 
@@ -37,7 +37,7 @@ Data-change events tell you a record was created **or** updated, without saying 
   </Step>
 
   <Step title="Fetch the records and compare">
-    Change events carry IDs, not records. Fetch them with the `ids` filter - see [Filter and Narrow a Collection](/how-to/reading-data/filter-and-narrow-a-collection) - and diff against your stored copy.
+    Change events carry IDs, not records. Fetch them with the `ids` filter - see [Filtering](/how-to/reading-data/filter-and-narrow-a-collection) - and diff against your stored copy.
 
     This gives you *which fields* changed, not just that something did. For workflows that react to specific transitions - a termination date appearing, a status moving to inactive - the field-level diff is what you actually need, and no payload flag would provide it.
 
@@ -71,7 +71,7 @@ The same applies after a [forced resync](/how-to/sync-control/force-a-resync) - 
   </Accordion>
 
   <Accordion title="A record you'd seen classifies as created">
-    Check what you're keying on. If it's `remote_id` or employee number, an upstream identifier change breaks the match - some systems reissue these on rehire, transfer, or record merge. See [Trace an Unexpected or Duplicate Record](/how-to/troubleshooting/trace-an-unexpected-record).
+    Check what you're keying on. If it's `remote_id` or employee number, an upstream identifier change breaks the match - some systems reissue these on rehire, transfer, or record merge. See [Unexpected records](/how-to/troubleshooting/trace-an-unexpected-record).
   </Accordion>
 
   <Accordion title="Change events fire but the record looks identical">
@@ -79,11 +79,11 @@ The same applies after a [forced resync](/how-to/sync-control/force-a-resync) - 
   </Accordion>
 
   <Accordion title="You need to know about deletions">
-    Change events cover creates and updates. Records disappearing from the source system are a separate problem - see [Trace a Missing Record](/how-to/troubleshooting/trace-a-missing-record).
+    Change events cover creates and updates. Records disappearing from the source system are a separate problem - see [Missing records](/how-to/troubleshooting/trace-a-missing-record).
   </Accordion>
 </AccordionGroup>
 
 ## Related
 
-- [Webhook Events & Payloads](/webhooks/overview)
+- [Events & payloads](/webhooks/overview)
 - [Choose Webhook Events](/webhooks/events)

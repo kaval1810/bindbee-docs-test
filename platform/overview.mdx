@@ -36,7 +36,7 @@ Find them under **Connectors**, with separate **Development** and **Production**
   className="block"
 />
 
-See [Connector lifecycle](/explanation/connector-lifecycle) for the states a connector moves through.
+See [Connections](/explanation/connector-lifecycle) for the states a connector moves through.
 
 ## Scoping
 
@@ -77,7 +77,7 @@ Issues tell you *that* something broke and usually *why*. Fixing it happens else
 | Expired or revoked source credentials | Re-authorize the connector - see [Update credentials](/how-to/connections/update-credentials) |
 | A model failing to sync | Logs has the request and the source system's own error |
 | A field never arriving | Check Scoping first, then permissions in the source system |
-| Errors your own code has to handle | [Handle API errors](/how-to/setup/handle-api-errors) |
+| Errors your own code has to handle | [Errors & issues](/explanation/errors-issues-and-limits) |
 
 ## Custom Fields
 
@@ -98,7 +98,7 @@ Creating one is two steps, separate on purpose - the field is what your code rea
   A mapping that does not match the payload does not raise an error. It resolves to `INVALID_JSON_PATH`, which arrives as the field's **value**. Preview an expression before saving it.
 </Warning>
 
-Custom field configuration is shared across environments, like scope. See [Map a custom field](/how-to/data-model/map-a-custom-field-from-the-dashboard) to do it, or [How custom fields work](/explanation/how-custom-fields-work) for the model behind it.
+Custom field configuration is shared across environments, like scope. See [Map from the dashboard](/how-to/data-model/map-a-custom-field-from-the-dashboard) to do it, or [How custom fields work](/explanation/how-custom-fields-work) for the model behind it.
 
 ## Webhooks
 
@@ -117,8 +117,8 @@ The **Security** section on the same page holds your organization's signature ke
   The Dashboard labels events in prose, but the payload carries the event string - `connector_synced`, not "Sync completed". Match on the string, and note that event strings use **underscores**, never hyphens. Matching the wrong form fails quietly: your handler simply never runs.
 </Warning>
 
-See [Webhooks](/webhooks/overview) to set one up, and [Webhook Events & Payloads](/webhooks/events) for every event and payload shape.
+See [Webhooks](/webhooks/overview) to set one up, and [Events & payloads](/webhooks/events) for every event and payload shape.
 
 ## How your customers connect
 
-In production your customers authorize their own systems. A [Magic Link](/how-to/connections/generate-a-magic-link) is a secure URL that runs the whole flow in their browser with no front-end code on your side; [embedding the flow](/how-to/connections/embed-the-connection-flow) puts it inside your own product instead.
+In production your customers authorize their own systems. A [Magic Link](/explanation/magic-link) is a secure URL that runs the whole flow in their browser with no front-end code on your side; [embedding the flow](/how-to/connections/embed-the-connection-flow) puts it inside your own product instead.

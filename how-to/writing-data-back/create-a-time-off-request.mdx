@@ -1,12 +1,13 @@
 ---
 title: "Create a Time Off Request"
+sidebarTitle: "Time off request"
 description: "Submit a time off request into the customer's HRIS, with the leave type and approval semantics that platform expects."
 ---
 
 <Info>
   **Before you start**
 
-  - You've confirmed the integration supports this write - see [Check Which Writes an Integration Supports](/how-to/writing-data-back/check-write-support).
+  - You've confirmed the integration supports this write - see [Check write support](/how-to/writing-data-back/check-write-support).
   - You have the Bindbee `id` of the employee the request is for.
 </Info>
 
@@ -21,13 +22,13 @@ description: "Submit a time off request into the customer's HRIS, with the leave
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    Pay attention to the leave-type enum and to any required `integration_params`. Both vary by platform - see [Fetch a Write Schema from the Meta API](/how-to/writing-data-back/fetch-a-write-schema).
+    Pay attention to the leave-type enum and to any required `integration_params`. Both vary by platform - see [Fetch a schema](/how-to/writing-data-back/fetch-a-write-schema).
 
     **Result:** The exact contract for this integration.
   </Step>
 
   <Step title="Resolve the employee">
-    Use the Bindbee employee `id`, not the employee number or the source system's identifier. If you're starting from an upstream identifier, resolve it first with `remote_id` - see [Filter and Narrow a Collection](/how-to/reading-data/filter-and-narrow-a-collection).
+    Use the Bindbee employee `id`, not the employee number or the source system's identifier. If you're starting from an upstream identifier, resolve it first with `remote_id` - see [Filtering](/how-to/reading-data/filter-and-narrow-a-collection).
 
     **Result:** A valid employee reference.
   </Step>

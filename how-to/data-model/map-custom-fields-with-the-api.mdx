@@ -1,6 +1,6 @@
 ---
 title: "Map Custom Fields with the API"
-sidebarTitle: "Map Fields with the API"
+sidebarTitle: "Map with the API"
 description: "Define custom fields and mappings programmatically so configuration can be scripted, version-controlled, and replicated."
 ---
 
@@ -35,13 +35,13 @@ The Custom Fields API does everything the dashboard does. Use it when configurat
     GET /api/v1/custom-fields/raw-data?category=HRIS&model=employee&connector_token=<CONNECTOR_TOKEN>
     ```
 
-    See [Inspect the Raw Upstream Payload](/how-to/data-model/inspect-the-raw-upstream-payload) for reading the response and building an expression.
+    See [Inspect raw data](/how-to/data-model/inspect-the-raw-upstream-payload) for reading the response and building an expression.
 
     **Result:** A candidate JMESPath.
   </Step>
 
   <Step title="Validate before persisting">
-    Dry-run the expression - see [Test a JMESPath Before Saving It](/how-to/data-model/test-a-jmespath). Skipping this is how `INVALID_JSON_PATH` reaches production responses.
+    Dry-run the expression - see [Test an expression](/how-to/data-model/test-a-jmespath). Skipping this is how `INVALID_JSON_PATH` reaches production responses.
 
     **Result:** A confirmed expression.
   </Step>

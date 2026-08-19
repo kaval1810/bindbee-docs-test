@@ -1,6 +1,6 @@
 ---
 title: "Move a Connector Between Environments"
-sidebarTitle: "Move a Connector"
+sidebarTitle: "Move between environments"
 description: "Switch an existing connector between Development and Production without recreating it or asking the end user to reconnect."
 ---
 
@@ -47,7 +47,7 @@ A connector created in the wrong environment - or a test connection that should 
   </Step>
 
   <Step title="Adjust for the new sync behaviour">
-    Moving **to Development**: automatic syncs stop. Trigger them manually or via API - see [Sync a Development Connector](/how-to/sync-control/sync-a-development-connector).
+    Moving **to Development**: automatic syncs stop. Trigger them manually or via API - see [Development connectors](/how-to/sync-control/sync-a-development-connector).
 
     Moving **to Production**: automatic syncs begin on the default 24-hour cadence.
 
@@ -73,7 +73,7 @@ You changed the connector's environment while preserving its authorisation and i
   </Accordion>
 
   <Accordion title="Data stopped refreshing after moving to Development">
-    Development connectors do not sync automatically. Trigger a sync when you need current data - see [Force a Resync](/how-to/sync-control/force-a-resync).
+    Development connectors do not sync automatically. Trigger a sync when you need current data - see [Force a resync](/how-to/sync-control/force-a-resync).
   </Accordion>
 
   <Accordion title="Some connectors appear not to have moved">
@@ -87,5 +87,5 @@ You changed the connector's environment while preserving its authorisation and i
 
 ## Related
 
-- [Choose an Environment](/how-to/setup/choose-an-environment)
+- [Environments](/how-to/setup/choose-an-environment)
 - [Environments](/explanation/environments) - what the two share and what they keep apart

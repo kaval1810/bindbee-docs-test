@@ -25,14 +25,14 @@ description: "Pull a clean employee census with the demographics carriers need, 
     Keep date of birth, home postcode, and location. Those are rating fields, and excluding them breaks the quote rather than the integration.
 
     <Warning>
-      Scope is organisation-level and shared across environments - see [Restrict Which Models and Fields Sync](/how-to/data-model/restrict-models-and-fields). It is not a per-customer setting.
+      Scope is organisation-level and shared across environments - see [Restrict what syncs](/how-to/data-model/restrict-models-and-fields). It is not a per-customer setting.
     </Warning>
 
     **Result:** A field set matched to the carrier's requirement.
   </Step>
 
   <Step title="Read only after a completed sync">
-    A census read mid-sync is quietly short. Gate the extract on `connector_synced` rather than a timer - see [Trigger a Job When a Sync Completes](/how-to/sync-control/trigger-a-job-on-sync-complete).
+    A census read mid-sync is quietly short. Gate the extract on `connector_synced` rather than a timer - see [Trigger a job on completion](/how-to/sync-control/trigger-a-job-on-sync-complete).
 
     Record the sync timestamp with the extract. A quote references a specific date, and "which day is this census" becomes unanswerable later otherwise.
 
@@ -51,13 +51,13 @@ description: "Pull a clean employee census with the demographics carriers need, 
 
     Fetch each status you've agreed on separately - filters are inclusive only, so there is no way to exclude contingent workers in one request. `ACTIVE_EXTERNAL` is usually out; `LEAVE` is usually in, because those employees retain eligibility.
 
-    Expanding `work_locations` gets the rating geography inline instead of N follow-up calls - see [Read Employee Data](/how-to/reading-data/read-employee-data). Location is currently **BETA**; since the census depends on it for rating geography, pin the fields you extract and re-check them when the contract settles.
+    Expanding `work_locations` gets the rating geography inline instead of N follow-up calls - see [Reading employees](/how-to/reading-data/read-employee-data). Location is currently **BETA**; since the census depends on it for rating geography, pin the fields you extract and re-check them when the contract settles.
 
     **Result:** The quoted population, per the agreed definition.
   </Step>
 
   <Step title="Page the full set">
-    Follow the cursor to exhaustion. A census that stops at page one is the failure that looks most like success - see [Paginate Through Results](/how-to/reading-data/paginate-through-results).
+    Follow the cursor to exhaustion. A census that stops at page one is the failure that looks most like success - see [Pagination](/how-to/reading-data/paginate-through-results).
 
     **Result:** Every employee in the population.
   </Step>
@@ -82,7 +82,7 @@ description: "Pull a clean employee census with the demographics carriers need, 
         raise CensusIncomplete(gaps)   # a permission gap, not an empty workforce
     ```
 
-    A field null for every record is a permission, not absence - see [Resolve a Source-System Permission Error](/how-to/troubleshooting/resolve-a-permission-error).
+    A field null for every record is a permission, not absence - see [Permission errors](/how-to/troubleshooting/resolve-a-permission-error).
 
     **Result:** A census you can hand to a carrier.
   </Step>
@@ -95,7 +95,7 @@ description: "Pull a clean employee census with the demographics carriers need, 
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    Group employees by `company_id` and confirm which legal entities belong in this quote. The credentials may cover more or fewer entities than the customer assumes - see [Reconcile Record Counts Against the Source](/how-to/troubleshooting/reconcile-record-counts).
+    Group employees by `company_id` and confirm which legal entities belong in this quote. The credentials may cover more or fewer entities than the customer assumes - see [Record counts](/how-to/troubleshooting/reconcile-record-counts).
 
     **Result:** A count the customer recognises, per entity.
   </Step>
@@ -105,7 +105,7 @@ description: "Pull a clean employee census with the demographics carriers need, 
 
 **The census population is a business definition, not a status filter.** Carriers price eligible employees, which usually excludes contingent workers (`ACTIVE_EXTERNAL`) and includes employees on leave who retain eligibility. There is no filter that expresses "eligible" - you assemble it from statuses and agree the definition with the customer. Getting it wrong changes the quote.
 
-**Rating fields are the ones most often gated.** Date of birth, home postcode, and compensation are exactly what carriers need and exactly what sits behind separate sensitive-data permissions. They come back null rather than erroring, so an incomplete census looks like a complete one. Verify these are populated before delivering - see [Resolve a Source-System Permission Error](/how-to/troubleshooting/resolve-a-permission-error).
+**Rating fields are the ones most often gated.** Date of birth, home postcode, and compensation are exactly what carriers need and exactly what sits behind separate sensitive-data permissions. They come back null rather than erroring, so an incomplete census looks like a complete one. Verify these are populated before delivering - see [Permission errors](/how-to/troubleshooting/resolve-a-permission-error).
 
 **Scope narrowly, but not too narrowly.** A census needs fewer models than most integrations, and excluding national ID and bank info is the cleanest answer to a customer's security review. Excluding date of birth or location, however, breaks rating. Decide the field list against the carrier's actual requirements before configuring scope, since changing it later means a resync.
 
@@ -117,7 +117,7 @@ description: "Pull a clean employee census with the demographics carriers need, 
 
 <AccordionGroup>
   <Accordion title="The headcount doesn't match the customer's">
-    Population definition, nearly always - contingent workers included, terminated employees retained, or one person holding several employments. See [Reconcile Record Counts Against the Source](/how-to/troubleshooting/reconcile-record-counts).
+    Population definition, nearly always - contingent workers included, terminated employees retained, or one person holding several employments. See [Record counts](/how-to/troubleshooting/reconcile-record-counts).
   </Accordion>
 
   <Accordion title="date_of_birth or postcode is null across the board">
@@ -135,6 +135,6 @@ description: "Pull a clean employee census with the demographics carriers need, 
 
 ## Related
 
-- [Filter and Narrow a Collection](/how-to/reading-data/filter-and-narrow-a-collection)
-- [Reconcile Record Counts Against the Source](/how-to/troubleshooting/reconcile-record-counts)
+- [Filtering](/how-to/reading-data/filter-and-narrow-a-collection)
+- [Record counts](/how-to/troubleshooting/reconcile-record-counts)
 - [Sync Dependents and Beneficiaries](/how-to/guides/sync-dependents-and-beneficiaries)

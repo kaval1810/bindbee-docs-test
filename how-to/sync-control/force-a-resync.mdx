@@ -1,5 +1,6 @@
 ---
 title: "Force a Resync"
+sidebarTitle: "Force a resync"
 description: "Trigger an immediate sync on a connector instead of waiting for the next scheduled run."
 ---
 
@@ -51,13 +52,13 @@ A forced resync starts a sync now. Use it after a relink, after a permission cha
   <Step title="Wait for it to finish before reading">
     A resync is asynchronous - the `200` means the run started, not that data is ready. Reads during a sync return a partially updated dataset.
 
-    Gate downstream work on the sync-completed event rather than a fixed delay. See [Trigger a Job When a Sync Completes](/how-to/sync-control/trigger-a-job-on-sync-complete).
+    Gate downstream work on the sync-completed event rather than a fixed delay. See [Trigger a job on completion](/how-to/sync-control/trigger-a-job-on-sync-complete).
 
     **Result:** Your pipeline reads a complete dataset.
   </Step>
 
   <Step title="Check the outcome">
-    Confirm the run completed rather than failing or partially completing - see [Monitor Sync Status](/how-to/troubleshooting/monitor-sync-status).
+    Confirm the run completed rather than failing or partially completing - see [Sync status](/how-to/troubleshooting/monitor-sync-status).
 
     **Result:** You know whether the resync fixed the problem.
   </Step>
@@ -70,9 +71,9 @@ A forced resync starts a sync now. Use it after a relink, after a permission cha
 | After the end user relinks | Yes - don't wait for the schedule |
 | After a permission is granted upstream | Yes - permission changes aren't retroactive |
 | A transient or size-related sync failure | Yes, once |
-| The same models fail every run | No - diagnose first, see [Diagnose a Partial Sync](/how-to/troubleshooting/diagnose-a-partial-sync) |
+| The same models fail every run | No - diagnose first, see [Partial syncs](/how-to/troubleshooting/diagnose-a-partial-sync) |
 | A Development connector needs fresh data | Yes - this is the normal mechanism |
-| You want data more often generally | No - change the cadence instead, see [Change Sync Frequency](/how-to/sync-control/change-sync-frequency) |
+| You want data more often generally | No - change the cadence instead, see [Sync schedules](/how-to/sync-control/change-sync-frequency) |
 
 ## If this didn't work
 
@@ -90,7 +91,7 @@ A forced resync starts a sync now. Use it after a relink, after a permission cha
   </Accordion>
 
   <Accordion title="You want to reset a connector rather than resync it">
-    Resync is the reset. Deleting and recreating a connector discards its sync history and record identities, changing the IDs your system has already stored - see [Rename or Delete a Connector](/how-to/connections/rename-or-delete-a-connector).
+    Resync is the reset. Deleting and recreating a connector discards its sync history and record identities, changing the IDs your system has already stored - see [Rename or delete](/how-to/connections/rename-or-delete-a-connector).
   </Accordion>
 </AccordionGroup>
 

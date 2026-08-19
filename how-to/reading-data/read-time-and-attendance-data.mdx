@@ -1,12 +1,12 @@
 ---
 title: "Read Time and Attendance Data"
-sidebarTitle: "Read Time & Attendance"
+sidebarTitle: "Reading time & attendance"
 description: "Fetch timesheet entries, time off requests, and remaining balances - and know why none of them reconcile with payroll."
 ---
 
 Time and attendance is three models: hours worked, leave requested, and leave remaining. They are read separately and answer different questions.
 
-For amounts paid rather than hours worked, see [Read Payroll Data](/how-to/reading-data/read-payroll-data).
+For amounts paid rather than hours worked, see [Reading payroll](/how-to/reading-data/read-payroll-data).
 
 <Info>
   **Before you start**
@@ -92,7 +92,7 @@ The same caution applies to payroll. Hours worked and hours paid diverge legitim
 
 <AccordionGroup>
   <Accordion title="Time off or timesheets return nothing">
-    Time and attendance is commonly a separately licensed module with its own permission grant, and an empty result is the usual failure mode rather than an error. See [Resolve a Source-System Permission Error](/how-to/troubleshooting/resolve-a-permission-error).
+    Time and attendance is commonly a separately licensed module with its own permission grant, and an empty result is the usual failure mode rather than an error. See [Permission errors](/how-to/troubleshooting/resolve-a-permission-error).
   </Accordion>
 
   <Accordion title="Balances don't match what the employee sees">
@@ -104,7 +104,7 @@ The same caution applies to payroll. Hours worked and hours paid diverge legitim
   </Accordion>
 
   <Accordion title="Hours don't reconcile with the pay run">
-    Timesheet entries and payroll are separate models with separate sync timing. Entries can exist for a period whose run hasn't been processed yet, and approval workflows mean not every entry reaches pay. See [Read Payroll Data](/how-to/reading-data/read-payroll-data).
+    Timesheet entries and payroll are separate models with separate sync timing. Entries can exist for a period whose run hasn't been processed yet, and approval workflows mean not every entry reaches pay. See [Reading payroll](/how-to/reading-data/read-payroll-data).
   </Accordion>
 
   <Accordion title="units differs between records">
@@ -116,4 +116,4 @@ The same caution applies to payroll. Hours worked and hours paid diverge legitim
 
 - [Payroll & time models](/explanation/payroll-and-time-models) - why hours worked and hours paid don't join
 - [Get Timesheet Entries](/hris/timesheet-entries/get-timesheet-entries-list) · [Get Time Off](/hris/time-off/get-time-off-list) · [Get Time Off Balances](/hris/time-off-balance/get-time-off-balances-list)
-- [Create a Time Off Request](/how-to/writing-data-back/create-a-time-off-request) - the write side
+- [Time off request](/how-to/writing-data-back/create-a-time-off-request) - the write side

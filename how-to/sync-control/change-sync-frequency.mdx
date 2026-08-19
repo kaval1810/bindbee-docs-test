@@ -1,20 +1,22 @@
 ---
-title: "Change Sync Frequency"
-description: "Adjust how often a Production connector pulls data from the source system."
+title: "Sync schedules"
+sidebarTitle: "Schedules"
+description: "Adjust how often a Production connector syncs and when in the day it runs, so data lands before your processing window."
 ---
 
-Production connectors sync every 24 hours by default. The cadence is adjustable - shorter for time-sensitive workflows, longer for data that changes rarely or where the source system is slow or rate-limited.
+Production connectors sync every 24 hours by default. Two things are adjustable: **cadence** - how often a connector pulls - and **start time** - when in the day it runs. If your own processing runs on a schedule, both need to line up, because data that lands after your job runs is a day late.
 
 <Warning>
-  Changing the cadence is currently a support request, not a dashboard control.
+  Both are currently support requests, not dashboard controls.
 
-  {/* VERIFY: confirm whether a self-serve cadence control has shipped. If so, this becomes a dashboard task and the request step is cut. */}
+  {/* VERIFY: confirm whether self-serve cadence and start-time controls have shipped. If so, these become dashboard tasks and the request steps are cut. */}
 </Warning>
 
 <Info>
   **Before you start**
 
-  - The connector is in Production. Development connectors have no schedule at all - see [Sync a Development Connector](/how-to/sync-control/sync-a-development-connector).
+  - The connector is in Production. Development connectors have no schedule at all - see [Development connectors](/how-to/sync-control/sync-a-development-connector).
+  - For a start-time change, you know your own processing window.
 </Info>
 
 ## Steps
@@ -32,26 +34,44 @@ Production connectors sync every 24 hours by default. The cadence is adjustable 
     **Result:** A target cadence.
   </Step>
 
+  <Step title="Work backwards from your processing window">
+    Pick a start time that leaves room for the sync to finish before your job runs.
+
+    Duration scales with population size and with how many upstream calls each record costs, so a large customer can take substantially longer than a small one on the same integration. Leave more margin than the current duration suggests - populations grow, and the margin is what absorbs it.
+
+    **Result:** A target start time with headroom.
+  </Step>
+
+  <Step title="Check the current pattern">
+    Open the connector's sync history and note the start times of several consecutive runs - see [Sync status](/how-to/troubleshooting/monitor-sync-status).
+
+    **Result:** The current rhythm, and evidence if it's inconsistent.
+  </Step>
+
   <Step title="Request the change">
-    Send support the connector IDs and the cadence.
+    Send support the connector IDs, the cadence, and - if you're setting one - the desired start time with its timezone.
+
+    Both are per connector, so different customers can run on different schedules. Include the specific connector IDs rather than asking for an account-wide change.
 
     **Result:** Support confirms once applied.
   </Step>
 
-  <Step title="Confirm the new rhythm">
-    After the next scheduled run, check the connector's sync history and compare start times across runs.
+  <Step title="Verify across several runs">
+    Check start times over a few days, not one. A single run landing on time doesn't confirm a stable schedule.
 
-    **Result:** Runs are landing at the expected interval.
+    **Result:** Runs are landing at the expected interval and hour.
   </Step>
 </Steps>
 
-## Cadence isn't the only lever
+## The schedule isn't the only lever
 
-If the goal is fresher data rather than a fixed schedule, two other approaches often fit better.
+Aligning a sync to a fixed clock is inherently fragile. Sync duration changes as populations grow, source systems slow down under their own load, and a run that finishes comfortably today can overrun in six months. Tightening the schedule doesn't remove the race - it narrows it.
 
-**React to changes instead of polling.** Subscribe to sync-completed and data-change events so your pipeline runs when data actually lands - see [Trigger a Job When a Sync Completes](/how-to/sync-control/trigger-a-job-on-sync-complete).
+**React to changes instead of polling.** Gating your job on the sync-completed event removes the race entirely, and works regardless of when the sync starts or how long it takes - see [Trigger a job on completion](/how-to/sync-control/trigger-a-job-on-sync-complete).
 
 **Resync on demand.** When you need current data for one customer at a specific moment, [force a resync](/how-to/sync-control/force-a-resync) rather than raising the cadence for everyone.
+
+Even if you keep a fixed schedule, recording the last completion timestamp per connector lets your job skip customers whose data hasn't refreshed - which is the failure that actually costs something.
 
 ## If this didn't work
 
@@ -59,7 +79,11 @@ If the goal is fresher data rather than a fixed schedule, two other approaches o
   <Accordion title="Syncs are landing later each day">
     Historically, run start times could drift because each run was scheduled relative to the previous one's completion. That was fixed in August 2026 - start times are now stable, and a forced resync is the way to change them deliberately.
 
-    If you're still seeing drift, report it with the connector ID and the start times of several consecutive runs.
+    If you're still seeing drift, report it with the connector ID and the start times of several consecutive runs - the pattern is what makes it diagnosable.
+  </Accordion>
+
+  <Accordion title="The sync starts on time but finishes after your job">
+    A duration problem, not a start-time problem. Moving the start earlier buys margin now but not permanently. Gate on the completion event instead.
   </Accordion>
 
   <Accordion title="Your processing runs on a cron and the sync time no longer aligns">
@@ -72,13 +96,13 @@ If the goal is fresher data rather than a fixed schedule, two other approaches o
     Some source systems can't sustain a full extract every six hours, and failures increase rather than freshness. Move back to 24 hours and use forced resyncs for the cases that genuinely need same-day data.
   </Accordion>
 
-  <Accordion title="You need different cadences for different customers">
-    Cadence is per connector, so different customers can run on different schedules. Include the specific connector IDs in the request rather than asking for an account-wide change.
+  <Accordion title="You need data at a specific moment, not on a schedule">
+    [Force a resync](/how-to/sync-control/force-a-resync) for one-off freshness rather than reshaping the schedule around an occasional need.
   </Accordion>
 </AccordionGroup>
 
 ## Related
 
 - [How syncing works](/explanation/how-syncing-works) - the default cadence and why it is measured in hours
-- [Set a Connector's Sync Start Time](/how-to/sync-control/set-a-sync-start-time) - when in the window it runs, as opposed to how often
-- [Choose an Environment](/how-to/setup/choose-an-environment) - scheduled syncs run in Production only
+- [Trigger a job on completion](/how-to/sync-control/trigger-a-job-on-sync-complete) - the durable alternative to clock alignment
+- [Environments](/how-to/setup/choose-an-environment) - scheduled syncs run in Production only

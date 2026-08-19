@@ -1,9 +1,10 @@
 ---
 title: "Read Employee Data"
+sidebarTitle: "Reading employees"
 description: "Fetch employee records with the related models you need, and avoid the mistakes specific to the employee model."
 ---
 
-The employee model is the entry point for most integrations. This page covers what's specific to it - for the general techniques, see [Paginate Through Results](/how-to/reading-data/paginate-through-results) and [Filter and Narrow a Collection](/how-to/reading-data/filter-and-narrow-a-collection).
+The employee model is the entry point for most integrations. This page covers what's specific to it - for the general techniques, see [Pagination](/how-to/reading-data/paginate-through-results) and [Filtering](/how-to/reading-data/filter-and-narrow-a-collection).
 
 <Info>
   **Before you start**
@@ -61,7 +62,7 @@ The employee model is the entry point for most integrations. This page covers wh
     | `include_raw_data=true` | The untransformed upstream payload per record |
     | `include_custom_fields=true` | Your mapped custom fields |
 
-    `include_raw_data` is a debugging tool. Leaving it on in production inflates every response substantially - see [Inspect the Raw Upstream Payload](/how-to/data-model/inspect-the-raw-upstream-payload) for the targeted alternative.
+    `include_raw_data` is a debugging tool. Leaving it on in production inflates every response substantially - see [Inspect raw data](/how-to/data-model/inspect-the-raw-upstream-payload) for the targeted alternative.
 
     **Result:** The extra fields, only where you need them.
   </Step>
@@ -88,11 +89,11 @@ The employee model is the entry point for most integrations. This page covers wh
   <Accordion title="A field is null for every employee">
     Almost always permission, not absence - several platforms return records with sensitive fields stripped rather than refusing the request. Check `raw_data` for one employee: present there but null in the unified response means mapping; absent from both means permission or upstream configuration.
 
-    See [Resolve a Source-System Permission Error](/how-to/troubleshooting/resolve-a-permission-error).
+    See [Permission errors](/how-to/troubleshooting/resolve-a-permission-error).
   </Accordion>
 
   <Accordion title="One person appears twice">
-    Usually two employment records rather than two employees, or a genuine duplicate from an upstream identifier change. See [Trace an Unexpected or Duplicate Record](/how-to/troubleshooting/trace-an-unexpected-record).
+    Usually two employment records rather than two employees, or a genuine duplicate from an upstream identifier change. See [Unexpected records](/how-to/troubleshooting/trace-an-unexpected-record).
   </Accordion>
 
   <Accordion title="Terminated employees are still returned">
@@ -100,7 +101,7 @@ The employee model is the entry point for most integrations. This page covers wh
   </Accordion>
 
   <Accordion title="The population is larger than the customer's headcount">
-    Contingent workers and contractors are usually the difference. They commonly carry `ACTIVE_EXTERNAL`. See [Reconcile Record Counts Against the Source](/how-to/troubleshooting/reconcile-record-counts).
+    Contingent workers and contractors are usually the difference. They commonly carry `ACTIVE_EXTERNAL`. See [Record counts](/how-to/troubleshooting/reconcile-record-counts).
   </Accordion>
 
   <Accordion title="You need a field the model doesn't expose">
@@ -111,5 +112,5 @@ The employee model is the entry point for most integrations. This page covers wh
 ## Related
 
 - [Get Employees](/hris/employee/get-employees) · [Get Employments](/hris/employments/get-employments) · [Get Locations](/hris/locations/get-locations)
-- [Filter and Narrow a Collection](/how-to/reading-data/filter-and-narrow-a-collection)
+- [Filtering](/how-to/reading-data/filter-and-narrow-a-collection)
 - [Include raw_data and Custom Fields in a Response](/how-to/reading-data/include-raw-data-and-custom-fields) - when the unified fields aren't enough

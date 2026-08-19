@@ -141,7 +141,7 @@ Current state is generally better than the lost events anyway - if a record chan
 
 **Repeat per affected connector and model.** Webhooks span every connector in the environment, so an outage affects all of them. `modified_after` is per model, so a change to an employment does not mark its employee as synced.
 
-**Check for stalled connectors.** A missed sync-error event means a connection may have broken during the outage and gone unnoticed. That produces *no* new data, so an incremental read will not surface it - check sync status per connector instead. See [Monitor Sync Status](/how-to/troubleshooting/monitor-sync-status).
+**Check for stalled connectors.** A missed sync-error event means a connection may have broken during the outage and gone unnoticed. That produces *no* new data, so an incremental read will not surface it - check sync status per connector instead. See [Sync status](/how-to/troubleshooting/monitor-sync-status).
 
 ## Building so this costs less next time
 
@@ -183,5 +183,5 @@ Current state is generally better than the lost events anyway - if a record chan
 ## Related
 
 - [Webhooks](/webhooks/overview) - what they are and how to create one
-- [Webhook Events & Payloads](/webhooks/events) - the five events and their payloads
+- [Events & payloads](/webhooks/events) - the five events and their payloads
 - [Filter with modified_after](/how-to/reading-data/filter-with-modified-after)

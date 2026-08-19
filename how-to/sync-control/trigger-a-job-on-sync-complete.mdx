@@ -1,6 +1,6 @@
 ---
 title: "Trigger a Job When a Sync Completes"
-sidebarTitle: "Trigger a Job After a Sync"
+sidebarTitle: "Trigger a job on completion"
 description: "Run your processing when fresh data actually lands, instead of guessing with a cron schedule."
 ---
 
@@ -83,7 +83,7 @@ That's a small change that stops the most common failure: processing a customer 
 
 <AccordionGroup>
   <Accordion title="Events arrive but data still looks incomplete">
-    Check whether the run was partial rather than clean - a partial sync loads some models and fails others, and reads against the succeeded ones look fine while relationships between them are incomplete. See [Diagnose a Partial Sync](/how-to/troubleshooting/diagnose-a-partial-sync).
+    Check whether the run was partial rather than clean - a partial sync loads some models and fails others, and reads against the succeeded ones look fine while relationships between them are incomplete. See [Partial syncs](/how-to/troubleshooting/diagnose-a-partial-sync).
   </Accordion>
 
   <Accordion title="Data-change events arrive before the sync completes">
@@ -91,7 +91,7 @@ That's a small change that stops the most common failure: processing a customer 
   </Accordion>
 
   <Accordion title="Your job never runs for some customers">
-    Their sync isn't completing. A connector that has stopped syncing produces no completion event and your job silently skips them forever - which is why Sync error and Sync start matter alongside this. See [Detect a Connection That Needs Relinking](/how-to/reliability/detect-a-connection-that-needs-relinking).
+    Their sync isn't completing. A connector that has stopped syncing produces no completion event and your job silently skips them forever - which is why Sync error and Sync start matter alongside this. See [Connections needing relink](/how-to/reliability/detect-a-connection-that-needs-relinking).
   </Accordion>
 
   <Accordion title="Jobs pile up when many syncs finish together">
@@ -101,5 +101,5 @@ That's a small change that stops the most common failure: processing a customer 
 
 ## Related
 
-- [Webhook Events & Payloads](/webhooks/overview)
+- [Events & payloads](/webhooks/overview)
 - [Choose Webhook Events](/webhooks/events)

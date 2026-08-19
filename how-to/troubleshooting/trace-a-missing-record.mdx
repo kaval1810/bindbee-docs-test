@@ -1,5 +1,6 @@
 ---
 title: "Trace a Missing Record"
+sidebarTitle: "Missing records"
 description: "Work out why a record that exists in the customer's HRIS isn't coming back from Bindbee."
 ---
 
@@ -17,13 +18,13 @@ description: "Work out why a record that exists in the customer's HRIS isn't com
   <Step title="Rule out your own filters">
     Fetch without filters and search the result before anything else.
 
-    The usual culprits: an `employment_status` filter excluding a status you didn't expect, a `modified_after` watermark from a run that already consumed the record, or a page walk that terminated early. See [Paginate Through Results](/how-to/reading-data/paginate-through-results).
+    The usual culprits: an `employment_status` filter excluding a status you didn't expect, a `modified_after` watermark from a run that already consumed the record, or a page walk that terminated early. See [Pagination](/how-to/reading-data/paginate-through-results).
 
     **Result:** You know whether the record is absent or just filtered out.
   </Step>
 
   <Step title="Check the sync ran after the record was created">
-    A record created upstream after the last sync doesn't exist in Bindbee yet - see [Monitor Sync Status](/how-to/troubleshooting/monitor-sync-status).
+    A record created upstream after the last sync doesn't exist in Bindbee yet - see [Sync status](/how-to/troubleshooting/monitor-sync-status).
 
     On a Development connector nothing syncs until you trigger it.
 
@@ -31,9 +32,9 @@ description: "Work out why a record that exists in the customer's HRIS isn't com
   </Step>
 
   <Step title="Check whether the model synced">
-    A run marked Partial loads some models and fails others. A model that failed returns nothing while everything else looks fine - see [Diagnose a Partial Sync](/how-to/troubleshooting/diagnose-a-partial-sync).
+    A run marked Partial loads some models and fails others. A model that failed returns nothing while everything else looks fine - see [Partial syncs](/how-to/troubleshooting/diagnose-a-partial-sync).
 
-    A model out of scope also returns nothing, with no error at all - see [Restrict Which Models and Fields Sync](/how-to/data-model/restrict-models-and-fields).
+    A model out of scope also returns nothing, with no error at all - see [Restrict what syncs](/how-to/data-model/restrict-models-and-fields).
 
     **Result:** You know whether the model was loaded.
   </Step>
@@ -41,7 +42,7 @@ description: "Work out why a record that exists in the customer's HRIS isn't com
   <Step title="Check permission">
     Many platforms return a filtered set rather than an error when credentials lack access, so an entire category of records can be silently absent.
 
-    The signature is a model returning consistently fewer records than expected, or a specific population missing - see [Resolve a Source-System Permission Error](/how-to/troubleshooting/resolve-a-permission-error).
+    The signature is a model returning consistently fewer records than expected, or a specific population missing - see [Permission errors](/how-to/troubleshooting/resolve-a-permission-error).
 
     **Result:** You know whether the source system is withholding the record.
   </Step>
@@ -63,7 +64,7 @@ Different problem, different causes.
 
 **Terminated employees** are usually still returned with a terminal status rather than removed. If they've vanished entirely, the source may exclude terminated records from its API - that's an upstream behaviour, not a sync failure.
 
-**Identifier changes.** If the source reissued the record's identifier, it may now be present under a different Bindbee `id` and look like a disappearance plus a new arrival - see [Trace an Unexpected or Duplicate Record](/how-to/troubleshooting/trace-an-unexpected-record).
+**Identifier changes.** If the source reissued the record's identifier, it may now be present under a different Bindbee `id` and look like a disappearance plus a new arrival - see [Unexpected records](/how-to/troubleshooting/trace-an-unexpected-record).
 
 **File-based connectors.** Where the integration reads files rather than an API, each delivery is a point-in-time snapshot. A record absent from the latest file may mean it was removed upstream, or that the file was generated differently - a report definition change, a filter, a partial export. Confirm which before treating absence as a deletion.
 
@@ -85,11 +86,11 @@ Different problem, different causes.
   </Accordion>
 
   <Accordion title="Counts are close but not exact">
-    That's reconciliation rather than a missing record, and usually a population-definition difference. See [Reconcile Record Counts Against the Source](/how-to/troubleshooting/reconcile-record-counts).
+    That's reconciliation rather than a missing record, and usually a population-definition difference. See [Record counts](/how-to/troubleshooting/reconcile-record-counts).
   </Accordion>
 </AccordionGroup>
 
 ## Related
 
 - [Logs](/platform/overview)
-- [Inspect the Raw Upstream Payload](/how-to/data-model/inspect-the-raw-upstream-payload)
+- [Inspect raw data](/how-to/data-model/inspect-the-raw-upstream-payload)

@@ -1,6 +1,6 @@
 ---
 title: "Add raw_data and Custom Fields to a Response"
-sidebarTitle: "Add raw_data & Custom Fields"
+sidebarTitle: "Raw data & custom fields"
 description: "Add the untransformed upstream payload or your mapped custom fields to a read, and know when not to."
 ---
 
@@ -9,7 +9,7 @@ Both are omitted by default. Each is a query parameter you opt into per request.
 <Info>
   **Before you start**
 
-  - For custom fields, at least one field is mapped and resolves on this connector - see [Map a Custom Field from the Dashboard](/how-to/data-model/map-a-custom-field-from-the-dashboard).
+  - For custom fields, at least one field is mapped and resolves on this connector - see [Map from the dashboard](/how-to/data-model/map-a-custom-field-from-the-dashboard).
 </Info>
 
 ## Steps
@@ -78,11 +78,11 @@ Both are omitted by default. Each is a query parameter you opt into per request.
 
 <AccordionGroup>
   <Accordion title="custom_fields is missing entirely">
-    Confirm `include_custom_fields=true` is on the request. If it is, no mapped field resolves on this connector - check with the configuration endpoint, see [Scope a Mapping to One Connector or All](/how-to/data-model/scope-a-mapping).
+    Confirm `include_custom_fields=true` is on the request. If it is, no mapped field resolves on this connector - check with the configuration endpoint, see [Scope a mapping](/how-to/data-model/scope-a-mapping).
   </Accordion>
 
   <Accordion title="A field's value is INVALID_JSON_PATH">
-    The mapping's expression doesn't resolve against this connector's payload. An invalid path returns this string rather than raising an error - see [Test a JMESPath Before Saving It](/how-to/data-model/test-a-jmespath).
+    The mapping's expression doesn't resolve against this connector's payload. An invalid path returns this string rather than raising an error - see [Test an expression](/how-to/data-model/test-a-jmespath).
   </Accordion>
 
   <Accordion title="A custom field is null for some records">

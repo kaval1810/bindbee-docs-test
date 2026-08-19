@@ -1,6 +1,6 @@
 ---
 title: "Inspect the Raw Upstream Payload"
-sidebarTitle: "Inspect Raw Payload"
+sidebarTitle: "Inspect raw data"
 description: "Find a field the source system returns but the unified model doesn't expose, so you can map it as a custom field."
 ---
 
@@ -51,7 +51,7 @@ When a value exists in the HRIS but not in the unified response, it is almost al
   </Step>
 
   <Step title="Confirm it resolves">
-    Dry-run the expression before saving it, using the dashboard's preview control or the preview endpoint. See [Test a JMESPath Before Saving It](/how-to/data-model/test-a-jmespath).
+    Dry-run the expression before saving it, using the dashboard's preview control or the preview endpoint. See [Test an expression](/how-to/data-model/test-a-jmespath).
 
     **Result:** The preview returns your value rather than `null`.
   </Step>
@@ -67,15 +67,15 @@ Finding the path doesn't surface the field - a mapping does. Create it from the 
   <Accordion title="The field isn't in the payload at all">
     Two likely causes.
 
-    The field may not be in scope for this connector. Some models and fields are excluded from sync by configuration - see [Restrict Which Models and Fields Sync](/how-to/data-model/restrict-models-and-fields).
+    The field may not be in scope for this connector. Some models and fields are excluded from sync by configuration - see [Restrict what syncs](/how-to/data-model/restrict-models-and-fields).
 
-    Or the source system may not expose it on this endpoint. Several HRIS platforms return different field sets to different API surfaces, and permission level changes what's returned - see [Resolve a Source-System Permission Error](/how-to/troubleshooting/resolve-a-permission-error). If the field is genuinely absent from the API, the source system's own configuration usually has to change first.
+    Or the source system may not expose it on this endpoint. Several HRIS platforms return different field sets to different API surfaces, and permission level changes what's returned - see [Permission errors](/how-to/troubleshooting/resolve-a-permission-error). If the field is genuinely absent from the API, the source system's own configuration usually has to change first.
   </Accordion>
 
   <Accordion title="The payload looks different from another connector on the same integration">
     Expected. Payload shape varies with the source system's configuration, plan tier, and enabled modules, so two connectors on the same integration can differ.
 
-    Map at connector level for these, and reserve integration-level mappings for fields that are genuinely consistent. See [Scope a Mapping to One Connector or All](/how-to/data-model/scope-a-mapping).
+    Map at connector level for these, and reserve integration-level mappings for fields that are genuinely consistent. See [Scope a mapping](/how-to/data-model/scope-a-mapping).
   </Accordion>
 
   <Accordion title="The value appears in raw data but the mapped field returns INVALID_JSON_PATH">

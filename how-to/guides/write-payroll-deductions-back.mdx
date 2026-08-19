@@ -24,7 +24,7 @@ This is the round trip behind most benefits products: read the enrolment, calcul
   <Step title="Confirm the integration supports payroll writes">
     Write support varies by integration, and a plan that assumes it works everywhere fails late.
 
-    Check before building - see [Check Which Writes an Integration Supports](/how-to/writing-data-back/check-write-support). Where writes aren't supported, [Passthrough](/how-to/data-model/make-a-passthrough-request) is the fallback, at the cost of a provider-specific shape.
+    Check before building - see [Check write support](/how-to/writing-data-back/check-write-support). Where writes aren't supported, [Passthrough](/how-to/data-model/make-a-passthrough-request) is the fallback, at the cost of a provider-specific shape.
 
     **Result:** Confirmation this round trip is possible on this platform.
   </Step>
@@ -37,7 +37,7 @@ This is the round trip behind most benefits products: read the enrolment, calcul
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    Take the plan year from the benefit's effective dates, not from the payroll date - see [Read Benefits Data](/how-to/reading-data/read-benefits-data).
+    Take the plan year from the benefit's effective dates, not from the payroll date - see [Reading benefits](/how-to/reading-data/read-benefits-data).
 
     **Result:** The election and the period it belongs to.
   </Step>
@@ -86,7 +86,7 @@ This is the round trip behind most benefits products: read the enrolment, calcul
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    Build the body from this rather than hardcoding it - required fields and enum values differ per integration. Read the `required` array on every nested object, and use `enumInformation` rather than inferring from value names. See [Fetch a Write Schema from the Meta API](/how-to/writing-data-back/fetch-a-write-schema).
+    Build the body from this rather than hardcoding it - required fields and enum values differ per integration. Read the `required` array on every nested object, and use `enumInformation` rather than inferring from value names. See [Fetch a schema](/how-to/writing-data-back/fetch-a-write-schema).
 
     **Result:** The exact body this integration accepts.
   </Step>
@@ -102,7 +102,7 @@ This is the round trip behind most benefits products: read the enrolment, calcul
       --data '{ ... }'
     ```
 
-    Derive the key from your own record for this deduction - employee, plan, and period - not from a random value or a timestamp. A retry must reuse the same key, or you post the deduction twice against a real employee's pay. See [Create an Employee Payroll Run](/how-to/writing-data-back/create-an-employee-payroll-run).
+    Derive the key from your own record for this deduction - employee, plan, and period - not from a random value or a timestamp. A retry must reuse the same key, or you post the deduction twice against a real employee's pay. See [Employee payroll run](/how-to/writing-data-back/create-an-employee-payroll-run).
 
     **Result:** One deduction line, however many times the request is retried.
   </Step>
@@ -117,7 +117,7 @@ This is the round trip behind most benefits products: read the enrolment, calcul
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    Check the period, not just the presence - a write submitted after cut-off can be silently applied to the following run. See [Read Payroll Data](/how-to/reading-data/read-payroll-data).
+    Check the period, not just the presence - a write submitted after cut-off can be silently applied to the following run. See [Reading payroll](/how-to/reading-data/read-payroll-data).
 
     **Result:** Confirmation the deduction is in the run you intended.
   </Step>
@@ -137,11 +137,11 @@ This is the round trip behind most benefits products: read the enrolment, calcul
 
 <AccordionGroup>
   <Accordion title="The write returned 501">
-    The Meta schema isn't published for this integration and model. That is not the same as the write being unsupported - see [Meta APIs](/meta-apis-for-write-operations#meta-api-not-implemented-for-an-integration).
+    The Meta schema isn't published for this integration and model. That is not the same as the write being unsupported - see [Meta APIs](/explanation/how-meta-apis-work#where-there-is-no-schema).
   </Accordion>
 
   <Accordion title="The write returned 422 though the body matches the schema">
-    The schema is the structural contract; the payroll system enforces rules beyond it - codes that must exist in its configuration, closed periods, approval states. The `detail` array names the field it rejected - see [Handle API Errors](/how-to/setup/handle-api-errors).
+    The schema is the structural contract; the payroll system enforces rules beyond it - codes that must exist in its configuration, closed periods, approval states. The `detail` array names the field it rejected - see [Errors & issues](/explanation/errors-issues-and-limits).
   </Accordion>
 
   <Accordion title="The deduction landed in the wrong period">
@@ -159,6 +159,6 @@ This is the round trip behind most benefits products: read the enrolment, calcul
 
 ## Related
 
-- [Read Benefits Data](/how-to/reading-data/read-benefits-data)
-- [Create an Employee Payroll Run](/how-to/writing-data-back/create-an-employee-payroll-run)
-- [Read Payroll Data](/how-to/reading-data/read-payroll-data)
+- [Reading benefits](/how-to/reading-data/read-benefits-data)
+- [Employee payroll run](/how-to/writing-data-back/create-an-employee-payroll-run)
+- [Reading payroll](/how-to/reading-data/read-payroll-data)

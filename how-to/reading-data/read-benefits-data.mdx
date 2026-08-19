@@ -1,9 +1,10 @@
 ---
 title: "Read Benefits Data"
+sidebarTitle: "Reading benefits"
 description: "Fetch enrolments, plan definitions, dependent coverage, and sums assured across the five benefits models without conflating them."
 ---
 
-Benefits data is spread across five models, and most benefits integration problems come from reading the wrong one. This page covers what's specific to them - for the general techniques, see [Paginate Through Results](/how-to/reading-data/paginate-through-results).
+Benefits data is spread across five models, and most benefits integration problems come from reading the wrong one. This page covers what's specific to them - for the general techniques, see [Pagination](/how-to/reading-data/paginate-through-results).
 
 <Info>
   **Before you start**
@@ -106,7 +107,7 @@ Similarly, a **dependent** existing does not mean they're covered. Coverage is a
 
 ## Assigning a plan year
 
-Neither benefits nor payroll records carry a plan year directly. To attribute a deduction to a plan year, cross-reference the payroll run's payment date against the benefit's coverage dates - see [Read Payroll Data](/how-to/reading-data/read-payroll-data).
+Neither benefits nor payroll records carry a plan year directly. To attribute a deduction to a plan year, cross-reference the payroll run's payment date against the benefit's coverage dates - see [Reading payroll](/how-to/reading-data/read-payroll-data).
 
 The edge case that breaks naive implementations: a deduction paid in January can belong to the previous plan year, because payroll timing and plan year boundaries don't align. Reconciling on payment date alone misattributes those. Use the effective dates on the benefit, not the payroll date, to decide the plan year.
 
@@ -114,13 +115,13 @@ The edge case that breaks naive implementations: a deduction paid in January can
 
 <AccordionGroup>
   <Accordion title="Benefits return nothing though the customer has enrolments">
-    Most often permission - benefits are frequently a separately licensed module with its own access grant, and several platforms return an empty set rather than an error. See [Resolve a Source-System Permission Error](/how-to/troubleshooting/resolve-a-permission-error).
+    Most often permission - benefits are frequently a separately licensed module with its own access grant, and several platforms return an empty set rather than an error. See [Permission errors](/how-to/troubleshooting/resolve-a-permission-error).
 
     Also check the model is in scope for this connector.
   </Accordion>
 
   <Accordion title="Dependents exist but no dependent benefits">
-    Either they genuinely aren't enrolled, or dependent coverage isn't exposed on this integration. Check `raw_data` on a dependent you know is covered - see [Inspect the Raw Upstream Payload](/how-to/data-model/inspect-the-raw-upstream-payload).
+    Either they genuinely aren't enrolled, or dependent coverage isn't exposed on this integration. Check `raw_data` on a dependent you know is covered - see [Inspect raw data](/how-to/data-model/inspect-the-raw-upstream-payload).
   </Accordion>
 
   <Accordion title="Terminated employees still show active benefits">

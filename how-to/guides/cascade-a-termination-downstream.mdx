@@ -49,7 +49,7 @@ description: "React to an employee leaving by revoking access, ending coverage, 
         handle_departure(emp)
     ```
 
-    `INACTIVE_EXTERNAL` covers contractors ending an engagement, and matching only on `INACTIVE` silently misses them - see [Filter and Narrow a Collection](/how-to/reading-data/filter-and-narrow-a-collection) for the full enum.
+    `INACTIVE_EXTERNAL` covers contractors ending an engagement, and matching only on `INACTIVE` silently misses them - see [Filtering](/how-to/reading-data/filter-and-narrow-a-collection) for the full enum.
 
     **Result:** Every real departure, and no false ones.
   </Step>
@@ -80,7 +80,7 @@ description: "React to an employee leaving by revoking access, ending coverage, 
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    Use the benefit's own end date - frequently the end of the month rather than the termination date - and expect a window where someone is terminated with coverage still active. See [Read Benefits Data](/how-to/reading-data/read-benefits-data).
+    Use the benefit's own end date - frequently the end of the month rather than the termination date - and expect a window where someone is terminated with coverage still active. See [Reading benefits](/how-to/reading-data/read-benefits-data).
 
     **Result:** The real loss-of-coverage date, per plan.
   </Step>
@@ -107,13 +107,13 @@ description: "React to an employee leaving by revoking access, ending coverage, 
 
 **Future-dated terminations arrive early.** Many HRIS platforms record a termination when it's entered, with an effective date weeks out. Acting on the status change rather than the date revokes access before the person's last day. Gate every action on the termination date, and schedule rather than execute on arrival.
 
-**Terminations are frequently reversed.** Entered in error, rescinded resignations, and rehires within the same period all occur. Where possible make offboarding reversible for a window rather than destructive on arrival - and note that a rehire may return as a new employment on the same employee, or a new employee entirely, depending on the platform. See [Trace an Unexpected or Duplicate Record](/how-to/troubleshooting/trace-an-unexpected-record).
+**Terminations are frequently reversed.** Entered in error, rescinded resignations, and rehires within the same period all occur. Where possible make offboarding reversible for a window rather than destructive on arrival - and note that a rehire may return as a new employment on the same employee, or a new employee entirely, depending on the platform. See [Unexpected records](/how-to/troubleshooting/trace-an-unexpected-record).
 
 **Coverage ends on its own schedule.** Benefit end dates are set separately from the termination date, often to the end of the month. Don't infer coverage loss from employment status - read the benefit's end date.
 
 **A missed event is silent.** Terminations are low-volume, so a lost webhook delivery produces no visible gap. Since exhausted deliveries are never redelivered - see [Recover a Missed Webhook Delivery](/webhooks/delivery) - run a periodic reconciliation query for recently terminated employees rather than relying on events alone. This is the one workflow where the reconciliation pass is not optional.
 
-**Some platforms stop returning terminated records entirely.** Where that happens, disappearance is the only signal, and it's indistinguishable from a sync or permission problem. Confirm the platform's behaviour before treating absence as a departure - see [Trace a Missing Record](/how-to/troubleshooting/trace-a-missing-record).
+**Some platforms stop returning terminated records entirely.** Where that happens, disappearance is the only signal, and it's indistinguishable from a sync or permission problem. Confirm the platform's behaviour before treating absence as a departure - see [Missing records](/how-to/troubleshooting/trace-a-missing-record).
 
 ## If this didn't work
 
@@ -131,7 +131,7 @@ description: "React to an employee leaving by revoking access, ending coverage, 
   </Accordion>
 
   <Accordion title="An employee disappeared instead of going inactive">
-    Some platforms stop returning terminated records. That is indistinguishable from a scope or permission change - see [Trace a Missing Record](/how-to/troubleshooting/trace-a-missing-record) before treating absence as a departure.
+    Some platforms stop returning terminated records. That is indistinguishable from a scope or permission change - see [Missing records](/how-to/troubleshooting/trace-a-missing-record) before treating absence as a departure.
   </Accordion>
 
   <Accordion title="Coverage was ended too early">
@@ -141,6 +141,6 @@ description: "React to an employee leaving by revoking access, ending coverage, 
 
 ## Related
 
-- [Read Employee Data](/how-to/reading-data/read-employee-data)
+- [Reading employees](/how-to/reading-data/read-employee-data)
 - [Detect COBRA Qualifying Events](/how-to/guides/detect-cobra-qualifying-events)
 - [Recover a Missed Webhook Delivery](/webhooks/delivery)

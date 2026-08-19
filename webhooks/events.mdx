@@ -56,7 +56,7 @@ Data model change returns IDs grouped by model:
 }
 ```
 
-Fetch the records with `ids` - see [Filter and Narrow a Collection](/how-to/reading-data/filter-and-narrow-a-collection). One batched request per model beats one request per ID, which is what exhausts the connector's rate limit on a large change set.
+Fetch the records with `ids` - see [Filtering](/how-to/reading-data/filter-and-narrow-a-collection). One batched request per model beats one request per ID, which is what exhausts the connector's rate limit on a large change set.
 
 Payloads carry IDs by design. It keeps them small and avoids delivering a snapshot that is stale by the time your handler runs.
 

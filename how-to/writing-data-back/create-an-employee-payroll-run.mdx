@@ -1,6 +1,6 @@
 ---
 title: "Create an Employee Payroll Run"
-sidebarTitle: "Create a Payroll Run"
+sidebarTitle: "Employee payroll run"
 description: "Write earnings, deductions, and taxes for an employee into the customer's payroll system."
 ---
 
@@ -11,7 +11,7 @@ It is also the write with the least tolerance for error. Payroll runs affect wha
 <Info>
   **Before you start**
 
-  - You've confirmed the integration supports this write - see [Check Which Writes an Integration Supports](/how-to/writing-data-back/check-write-support).
+  - You've confirmed the integration supports this write - see [Check write support](/how-to/writing-data-back/check-write-support).
   - You have the deduction or earning codes defined in the customer's payroll system.
 </Info>
 
@@ -117,7 +117,7 @@ Where a change misses the cut-off, the correction is usually a catch-up adjustme
   </Accordion>
 
   <Accordion title="You need to map plan years to payroll periods">
-    Payroll runs carry payment dates, not plan years. Assigning a deduction to the right plan year means cross-referencing the payment date against the benefit's coverage period from the benefits models - see [Read Benefits Data](/how-to/reading-data/read-benefits-data).
+    Payroll runs carry payment dates, not plan years. Assigning a deduction to the right plan year means cross-referencing the payment date against the benefit's coverage period from the benefits models - see [Reading benefits](/how-to/reading-data/read-benefits-data).
   </Accordion>
 </AccordionGroup>
 

@@ -1,6 +1,6 @@
 ---
 title: "Filter and Narrow a Collection"
-sidebarTitle: "Filter a Collection"
+sidebarTitle: "Filtering"
 description: "Use query parameters to fetch a targeted subset instead of paging the full dataset and discarding records."
 ---
 
@@ -85,7 +85,7 @@ Filtering server-side cuts pages, latency, and rate-limit pressure. Filters comb
   <Accordion title="A filter returns nothing though records clearly exist">
     Filters are exact matches, not partial. `first_name=Jo` won't match `John`.
 
-    For `remote_id` and `employee_number`, confirm the value against `raw_data` - the value shown in the HRIS UI is often not the identifier its API returns. See [Inspect the Raw Upstream Payload](/how-to/data-model/inspect-the-raw-upstream-payload).
+    For `remote_id` and `employee_number`, confirm the value against `raw_data` - the value shown in the HRIS UI is often not the identifier its API returns. See [Inspect raw data](/how-to/data-model/inspect-the-raw-upstream-payload).
   </Accordion>
 
   <Accordion title="employment_status returns fewer records than expected">
@@ -95,7 +95,7 @@ Filtering server-side cuts pages, latency, and rate-limit pressure. Filters comb
   <Accordion title="The count doesn't match the customer's headcount">
     Usually a population-definition mismatch rather than missing data: contingent workers included, terminated employees retained, or one person holding several employment records.
 
-    See [Reconcile Record Counts Against the Source](/how-to/troubleshooting/reconcile-record-counts).
+    See [Record counts](/how-to/troubleshooting/reconcile-record-counts).
   </Accordion>
 
   <Accordion title="You need to filter on a field with no parameter">
@@ -112,4 +112,4 @@ Filtering server-side cuts pages, latency, and rate-limit pressure. Filters comb
 ## Related
 
 - [Get Employees](/hris/employee/get-employees)
-- [Paginate Through Results](/how-to/reading-data/paginate-through-results)
+- [Pagination](/how-to/reading-data/paginate-through-results)

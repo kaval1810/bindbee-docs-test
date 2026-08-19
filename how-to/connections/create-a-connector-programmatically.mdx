@@ -1,6 +1,6 @@
 ---
 title: "Create a Connector Programmatically"
-sidebarTitle: "Create Programmatically"
+sidebarTitle: "Create programmatically"
 description: "Generate connection links from your own application instead of creating them by hand in the dashboard."
 ---
 
@@ -9,7 +9,7 @@ Creating links in the dashboard works while you're onboarding customers one at a
 <Info>
   **Before you start**
 
-  - You know the integration slug and category - see [Look Up an Integration Slug](/how-to/setup/look-up-an-integration-slug).
+  - You know the integration slug and category - see [Integration slugs & variants](/how-to/setup/look-up-an-integration-slug).
   - You're using the API key for the environment the connector should live in - the environment is fixed at creation.
 </Info>
 
@@ -123,7 +123,7 @@ Creating links in the dashboard works while you're onboarding customers one at a
       There is no `temporary_token` in this flow. That exchange belongs to the
       embedded SDK, where `onSuccess` hands your frontend a short-lived token to
       swap for a `connector_token` - see
-      [Embed the Connection Flow](/how-to/connections/embed-the-connection-flow).
+      [Embedded Link](/how-to/connections/embed-the-connection-flow).
       With a hosted link you read the token from the connector instead.
     </Note>
 
@@ -135,17 +135,17 @@ Creating links in the dashboard works while you're onboarding customers one at a
 
 `integration` is required, so the platform is decided before the link exists - there is no flow where the end user picks it. The same applies to the embedded component, where `category` and `integration` are fixed when the token is created.
 
-If your customers use different systems, collect that choice in your own UI first and generate the matching link. Render the options from the lookup endpoint, which is already filtered to what your organization can actually connect - see [Look Up an Integration Slug](/how-to/setup/look-up-an-integration-slug).
+If your customers use different systems, collect that choice in your own UI first and generate the matching link. Render the options from the lookup endpoint, which is already filtered to what your organization can actually connect - see [Integration slugs & variants](/how-to/setup/look-up-an-integration-slug).
 
 ## If this didn't work
 
 <AccordionGroup>
   <Accordion title="The integration slug is rejected">
-    Check hyphens versus underscores, and that the slug matches the category. Use the lookup endpoint rather than a hard-coded list - see [Look Up an Integration Slug](/how-to/setup/look-up-an-integration-slug).
+    Check hyphens versus underscores, and that the slug matches the category. Use the lookup endpoint rather than a hard-coded list - see [Integration slugs & variants](/how-to/setup/look-up-an-integration-slug).
   </Accordion>
 
   <Accordion title="The connector was created in the wrong environment">
-    The environment comes from the API key used to create the link. It can be switched without the customer reconnecting - see [Move a Connector Between Environments](/how-to/setup/move-a-connector-between-environments).
+    The environment comes from the API key used to create the link. It can be switched without the customer reconnecting - see [Move between environments](/how-to/setup/move-a-connector-between-environments).
   </Accordion>
 
   <Accordion title="Connectors are created but never complete">
@@ -153,7 +153,7 @@ If your customers use different systems, collect that choice in your own UI firs
   </Accordion>
 
   <Accordion title="You generated two links for the same customer">
-    Two completed links produce two connectors, both billed in Production. To fix a broken connection, relink the existing connector rather than issuing a new link - see [Update Credentials After an Auth Failure](/how-to/connections/update-credentials).
+    Two completed links produce two connectors, both billed in Production. To fix a broken connection, relink the existing connector rather than issuing a new link - see [Update credentials](/how-to/connections/update-credentials).
 
     Check for an existing connector by `origin_id` before generating.
   </Accordion>
@@ -165,5 +165,5 @@ If your customers use different systems, collect that choice in your own UI firs
 
 ## Related
 
-- [Magic Link](/how-to/connections/generate-a-magic-link)
+- [Magic Link](/explanation/magic-link)
 - [Integrations](/integrations) - slugs and payload examples
