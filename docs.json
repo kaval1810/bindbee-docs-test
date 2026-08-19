@@ -25,26 +25,32 @@
             "group": "Introduction",
             "pages": [
               "get-started/what-is-bindbee",
-              "platform/overview"
+              "get-started/quickstart",
+              {
+                "group": "Core concepts",
+                "pages": [
+                  "explanation/core-concepts",
+                  "explanation/unified-model",
+                  "explanation/environments"
+                ]
+              }
             ]
           },
           {
-            "group": "Quickstart",
+            "group": "Use Cases",
             "pages": [
-              "get-started/quickstart"
-            ]
-          },
-          {
-            "group": "Core Concepts",
-            "pages": [
-              "explanation/core-concepts",
-              "explanation/unified-model",
-              "explanation/environments"
+              "how-to/guides/auto-enrol-a-new-hire",
+              "how-to/guides/cascade-a-termination-downstream",
+              "how-to/guides/sync-census-data-for-quoting",
+              "how-to/guides/sync-dependents-and-beneficiaries",
+              "how-to/guides/detect-cobra-qualifying-events",
+              "how-to/guides/write-payroll-deductions-back"
             ]
           },
           {
             "group": "Platform Tour",
             "pages": [
+              "platform/overview",
               "platform/dashboard",
               {
                 "group": "Connectors",
@@ -83,22 +89,6 @@
                   "explanation/webhooks-vs-polling"
                 ]
               }
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "Use Cases",
-        "groups": [
-          {
-            "group": "End-to-End Guides",
-            "pages": [
-              "how-to/guides/auto-enrol-a-new-hire",
-              "how-to/guides/cascade-a-termination-downstream",
-              "how-to/guides/sync-census-data-for-quoting",
-              "how-to/guides/sync-dependents-and-beneficiaries",
-              "how-to/guides/detect-cobra-qualifying-events",
-              "how-to/guides/write-payroll-deductions-back"
             ]
           }
         ]
@@ -306,12 +296,7 @@
                   "custom-fields/api/get-configuration"
                 ]
               },
-              {
-                "group": "Passthrough",
-                "pages": [
-                  "api-reference/passthrough/make-passthrough-request"
-                ]
-              },
+              "api-reference/passthrough/make-passthrough-request",
               "webhooks/overview",
               "meta-apis-for-write-operations"
             ]
@@ -623,16 +608,11 @@
                 ]
               },
               {
-                "group": "Outcomes",
+                "group": "Offer",
                 "pages": [
-                  {
-                    "group": "Offer",
-                    "pages": [
-                      "ats/offer/get-offers",
-                      "ats/offer/get-offer-by-id",
-                      "ats/offer/create-offer"
-                    ]
-                  }
+                  "ats/offer/get-offers",
+                  "ats/offer/get-offer-by-id",
+                  "ats/offer/create-offer"
                 ]
               },
               {
@@ -672,15 +652,10 @@
             "pages": [
               "lms/overview",
               {
-                "group": "People",
+                "group": "Users",
                 "pages": [
-                  {
-                    "group": "Users",
-                    "pages": [
-                      "lms/users/get-users",
-                      "lms/users/get-user-by-id"
-                    ]
-                  }
+                  "lms/users/get-users",
+                  "lms/users/get-user-by-id"
                 ]
               },
               {
