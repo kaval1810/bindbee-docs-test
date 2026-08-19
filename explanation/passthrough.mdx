@@ -3,15 +3,21 @@ title: "Passthrough"
 description: "When to bypass the unified model, and what you give up by going direct."
 ---
 
-Passthrough sends a request to the source system's own API using the credentials already held on a connector. Bindbee handles authentication and routing; everything else is that system's.
+Passthrough sends a request to the source system's own API using the credentials already held on a connector. **Bindbee handles authentication and routing; everything else is that system's.**
 
 It is the answer to "the unified model does not cover this", and it is worth being precise about what it costs, because it is easy to reach for and hard to back out of.
 
 ## What it gives you
 
-Authentication is the genuinely hard part of talking to an HR system directly, and passthrough removes it entirely. No credential handling, no OAuth refresh, no per-system auth scheme, no storing anything sensitive on your side. Your customer authorised once, and passthrough reuses that.
+Authentication is the genuinely hard part of talking to an HR system directly, and passthrough removes it entirely - no credential handling, no OAuth refresh, no per-system auth scheme, nothing sensitive stored on your side.
+
+Your customer authorised once, and passthrough reuses that.
 
 You get the source system's full API surface - every endpoint, every field, every operation that system supports, including ones the unified model has no equivalent for.
+
+**It is not limited to JSON.** Requests go as `XML` or `MULTIPART`, responses come back as `XML`, `MULTIPART` or `BINARY`.
+
+That matters because the systems most likely to need passthrough are the older enterprise platforms that speak SOAP and return files - precisely where unified coverage is thinnest.
 
 ## What you give up
 
@@ -21,12 +27,14 @@ You get the source system's full API surface - every endpoint, every field, ever
 
 **Scope and custom fields.** Neither applies. Passthrough returns whatever the endpoint returns, unfiltered by your scope configuration and without custom field mappings.
 
-**Sync and storage.** The response is not stored, not synced, and not available on subsequent reads. Passthrough is a live call, subject to the source system's latency, rate limits, and availability. If it is down, your call fails.
+**Sync and storage.** The response is not stored, not synced, not available on later reads. Passthrough is a live call, subject to the source system's latency, rate limits and availability - if it is down, your call fails.
 
 **Stability.** The source system's API can change without notice. A unified model change would be versioned and communicated; a passthrough integration breaks when the vendor decides it does.
 
+**Idempotency.** Unified writes accept `X-Idempotency-Key`. Passthrough does not - the only header it takes is the connector token. A retried call reaches the vendor as a second write, so retries are yours to make safe.
+
 <Warning>
-Passthrough calls count against the source system's rate limits, which are typically much tighter than Bindbee's. A passthrough call in a request path that runs per user, or in a loop, will exhaust the customer's quota and can disrupt syncing for that connector.
+Passthrough calls count against the **source system's** rate limits, which are typically far tighter than Bindbee's. A passthrough call in a per-user request path, or in a loop, will exhaust the customer's quota and can disrupt syncing for that connector.
 </Warning>
 
 ## When it is the right choice
@@ -49,11 +57,15 @@ If you find yourself writing passthrough calls for several integrations to accom
 
 An escape hatch is a concession, and building one is an admission that the abstraction will not cover everything.
 
-The alternative is a closed system: if the unified model does not support it, it cannot be done. That forces customers with a legitimate one-off need into either abandoning the requirement or building a second, parallel integration with their own credential handling - which is worse in every respect, including security, since it puts them back in the business of holding HR credentials.
+The alternative is a closed system: if the unified model does not support it, it cannot be done.
+
+That forces a legitimate one-off need into either abandoning the requirement or building a second, parallel integration with its own credential handling - **worse in every respect, including security**, since it puts you back in the business of holding HR credentials.
 
 Passthrough keeps those cases inside the platform. Credentials stay where they are, the customer's authorisation still governs access, and the gap is filled without a separate integration.
 
-Deliberately leaving it unnormalised is what stops it becoming the default path. A passthrough call visibly returns one system's shape, so the cost is obvious at the point of writing. If it were partially normalised it would feel like a slightly rougher unified API rather than an escape hatch, and it would accumulate usage until the portability guarantee quietly stopped being true.
+**Leaving it unnormalised is what stops it becoming the default path.** A passthrough call visibly returns one system's shape, so the cost is obvious as you write it.
+
+Partially normalised, it would feel like a slightly rougher unified API rather than an escape hatch - and would accumulate usage until the portability guarantee quietly stopped being true.
 
 ## What this means for you
 
@@ -61,6 +73,7 @@ Deliberately leaving it unnormalised is what stops it becoming the default path.
 - **Prefer a custom field** when the need is a value on every record.
 - **Isolate passthrough code** behind an interface, so replacing it with unified support later is contained.
 - **Treat the second integration-specific implementation as a signal** to raise a coverage gap.
+- **Never retry a passthrough write blindly.** There is no idempotency key; check state first.
 - **Expect it to break without warning.** The source API is not under contract with you.
 
 ## Related

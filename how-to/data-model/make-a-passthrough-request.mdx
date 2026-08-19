@@ -32,11 +32,12 @@ Use it for gaps, not as a default. Passthrough responses aren't unified, so ever
       --header 'Content-Type: application/json' \
       --data '{
         "method": "GET",
-        "path": "/v1/companies/current/paygroups"
+        "path": "/v1/companies/current/paygroups",
+        "headers": {}
       }'
     ```
 
-    The base URL, authentication, and any token refresh are handled from the connector. See [Make Passthrough Request](/api-reference/passthrough/make-passthrough-request) for the exact request shape.
+    The base URL, authentication, and any token refresh are handled from the connector. `headers` is required even when empty - omitting it returns `422`. See [Make Passthrough Request](/api-reference/passthrough/make-passthrough-request) for the exact request shape.
 
     **Result:** The provider's raw response.
   </Step>
