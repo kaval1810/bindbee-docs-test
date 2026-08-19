@@ -51,7 +51,6 @@
           {
             "group": "Setup",
             "pages": [
-              "how-to/setup/authenticate-a-request",
               "how-to/setup/choose-an-environment",
               "how-to/setup/move-a-connector-between-environments",
               "how-to/setup/handle-api-errors",
@@ -700,7 +699,7 @@
   "redirects": [
     {
       "source": "/how-to/authenticate",
-      "destination": "/how-to/setup/authenticate-a-request"
+      "destination": "/api-reference/basics/authentication"
     },
     {
       "source": "/how-to/monitor-sync-status",
@@ -1133,6 +1132,10 @@
     {
       "source": "/explanation/webhooks-vs-polling",
       "destination": "/webhooks/overview"
+    },
+    {
+      "source": "/how-to/setup/authenticate-a-request",
+      "destination": "/api-reference/basics/authentication"
     }
   ],
   "api": {
