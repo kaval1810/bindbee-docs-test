@@ -46,12 +46,9 @@ What is not normalised is the customer's own `code` and `name`, which come from 
 **But you do not have to interpret the code to find the plan.** `payroll_code` on a line is a UUID, and the employer benefit carries `payroll_codes` referencing the same records:
 
 ```mermaid
-erDiagram
-    PAY_GROUP ||--o{ PAYROLL_RUN : "pay_group"
-    PAYROLL_RUN ||--o{ EMPLOYEE_PAYROLL_RUN : "payroll_run"
-    EMPLOYEE_PAYROLL_RUN ||--o{ DEDUCTION : "deductions[]"
-    DEDUCTION }o--|| PAYROLL_CODE : "payroll_code"
-    EMPLOYER_BENEFIT ||--o{ PAYROLL_CODE : "payroll_codes"
+flowchart LR
+    D["Deduction line"] -- "payroll_code" --> C["Payroll code"]
+    B["Employer benefit"] -- "payroll_codes" --> C
 ```
 
 So a deduction line resolves to a benefit plan by matching identifiers, with no per-customer mapping in between - see [Benefits models](/explanation/benefits-models).
@@ -62,21 +59,19 @@ Every field in that chain is nullable. Where `payroll_code` on a line or `payrol
 
 ## What was worked
 
-**Timesheet entry** is recorded work: `date`, `hours_worked`, `start_time`, `end_time`, `break_duration`.
-
-**Time off** is a request with a lifecycle, not a period of absence. Its `status` is `REQUESTED`, `APPROVED`, `DECLINED`, `CANCELLED` or `DELETED`, `request_type` is the kind of leave, and `units` is `HOURS` or `DAYS` - so `amount` means nothing without reading it.
+| Model | Holds | Note |
+| --- | --- | --- |
+| **Timesheet entry** | `date`, `hours_worked`, `start_time`, `end_time`, `break_duration` | Where normalisation works hardest |
+| **Time off** | `status`, `request_type`, `units`, `amount`, dates | A request with a lifecycle, not an absence |
+| **Time off balance** | `balance`, `used`, `policy_type` | The source system's calculation, not a portable figure |
 
 <Warning>
-Reading time off without filtering on `status` counts leave that was never taken. `REQUESTED` is not approved, and `DECLINED`, `CANCELLED` and `DELETED` are all still in the data.
+Reading time off without filtering on `status` counts leave that was never taken - `REQUESTED`, `DECLINED`, `CANCELLED` and `DELETED` are all in the data. And `units` is `HOURS` or `DAYS`, so **`amount` means nothing without reading it.**
 </Warning>
 
-**Time off balance** is entitlement remaining, by `policy_type`. It is a figure the source system calculates.
+Balances differ more than they look. How a system treats accrual, carryover and pending requests is its own logic, so two customers on the same policy can report figures meaning subtly different things.
 
-How it treats accrual, carryover and pending requests differs by system, so two customers on the same policy can report balances meaning subtly different things.
-
-Timesheets are where normalisation works hardest. Source systems record time as punches, durations, intervals with nested breaks, or daily totals with no detail.
-
-Reconstructing one shape from these is lossy, and the original survives in `raw_data`.
+Timesheets are the harder normalisation. Source systems record time as punches, durations, intervals with nested breaks, or daily totals with no detail - reconstructing one shape from those is lossy, and the original survives in `raw_data`.
 
 ## The two halves do not join cleanly
 
@@ -91,17 +86,11 @@ Hours worked and hours paid diverge routinely and legitimately:
 
 ## Why it works this way
 
-The run and employee-run split mirrors how payroll executes: an employer-level event producing per-employee results.
+**The run and employee-run split mirrors how payroll executes** - an employer-level event producing per-employee results. Collapsing them would repeat the period and state on every line, with no way to represent a run that exists before its results do.
 
-Collapsing them would repeat the period, check date and state on every line, and offer no way to represent a run that exists before its results do.
+**Codes are classified only as far as classification is safe.** Sorting one into earning, deduction or tax is something the source metadata supports; inferring which plan a `RETIREMENT` deduction funds from its name would be guessing. So the association is stated as an identifier on the plan instead, which is why the join is reliable wherever it is populated.
 
-**Payroll codes are classified only as far as classification is safe.** Sorting a code into earning, deduction or tax is something the source system's own metadata supports.
-
-Inferring which retirement plan a `RETIREMENT` deduction funds from the code string would be guessing, and being wrong there is silent - a misattributed contribution surfaces as a reporting discrepancy weeks later, not as an error.
-
-So the association is stated as an identifier on the plan rather than inferred from a name, which is why the join is reliable where it is populated at all.
-
-Time off as a request rather than an absence follows the source systems, which model approval workflow rather than outcome. Flattening it to "days absent" would lose the pending state, which is exactly what most applications need to act on.
+**Time off is a request because the source systems model approval, not outcome.** Flattening it to "days absent" would lose the pending state, which is exactly what most applications need to act on.
 
 ## What this means for you
 
