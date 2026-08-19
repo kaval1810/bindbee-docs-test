@@ -1,47 +1,12 @@
 ---
 title: "Webhook Events & Payloads"
 sidebarTitle: "Events & Payloads"
-description: "With Webhooks, you can receive real-time updates on connector sync statuses, as well as notifications whenever HRIS data is created or modified. This ensures you stay up-to-date with the latest changes and maintain accurate, synchronized information across your systems, enhancing your workflow efficiency and data reliability."
+description: "The five webhook events, the payload each one delivers, the retry policy, and how to verify a signature."
 ---
 
-## Create Webhooks
+The five events Bindbee can send, what each payload contains, and how deliveries are retried and signed.
 
-To create webhooks, follow the instructions below.
-
-**Step 1:** Navigate to the “Webhooks” section from the sidebar under the “Configure” menu.
-
-<Frame>
-  ![Image](/images/image.png)
-</Frame>
-
-**Step 2:** In the “New webhook” section, enter the destination URL where you want to receive the webhook notifications in the “Destination URL” field.
-
-<Frame>
-  ![Download](/images/download.png)
-</Frame>
-
-**Step 3:** Optionally, click the “Test URL” button to ensure that your destination URL is correctly set up and can receive test data.
-
-**Step 4:** Provide a meaningful name for your webhook in the “Webhook Name” field. For example, “Employee data.”
-
-**Step 5:** Under “Webhook Type,” select the environment for which you want to receive webhook alerts.
-
-| Webhook Type | Receives alerts for | Recommended use |
-| --- | --- | --- |
-| **Production** | Production connectors | Live customer integrations |
-| **Development** | Development connectors | Testing and development connectors |
-
-> Note: Production and Development webhooks are environment-specific. This means a Production webhook will only receive alerts for connectors created in the [Production environment](https://docs.bindbee.dev/how-to/setup/environments/production), while a Development webhook will only receive alerts for connectors created in the [Development environment](https://docs.bindbee.dev/how-to/setup/environments/development).
-
-**Step 6:** Choose the events for which you want to receive notifications by selecting the appropriate checkboxes:
-
-- **Sync start**: Receive an alert when a connector’s sync starts.
-- **Sync error**: Get notified when a connector sync fails.
-- **Sync completed**: Get notified when a connector sync job is successful.
-- **Employee model change**: Receive an alert when any employee data is modified.
-- **Data model change**: Receive an alert when any data model is modified.
-
-**Step 7:** Once you have filled in all the required fields and selected the notification triggers, click the “Create webhook” button to save your webhook configuration.
+To create a webhook see [Create a Webhook](/how-to/reliability/create-a-webhook); for what each field on the Dashboard screen does see [Webhooks](/platform/webhooks).
 
 ## Payload Properties
 

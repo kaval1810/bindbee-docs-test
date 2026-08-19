@@ -15,7 +15,7 @@ Every collection endpoint is paginated the same way - 53 endpoints across HRIS, 
 Send `page_size` on the first request. Send `cursor` on every request after it, taken verbatim from the previous response, with **every other parameter unchanged** - filters are not carried by the cursor.
 
 <Note>
-Two platform endpoints have their own bounds: [List Webhooks](/webhooks/overview) defaults to `20` with a maximum of `100`, and its delivery logs default to `25` with a maximum of `50`. Everything else is `50` and `200`.
+Two platform endpoints have their own bounds: `GET /api/v1/webhooks` defaults to `20` with a maximum of `100`, and `GET /api/v1/webhooks/logs` defaults to `25` with a maximum of `50`. Everything else is `50` and `200`.
 </Note>
 
 ## Response envelope
