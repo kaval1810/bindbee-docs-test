@@ -1,14 +1,63 @@
 ---
 title: "Pagination"
-description: "Learn about the process of implementing pagination for handling bulk data requests to the Unified API."
-openapi: get /api/hris/v1/employees
-hideApiMarker: true
+description: "The cursor and page_size parameters, the response envelope every collection returns, and how you know you have reached the end."
 ---
 
-## Overview
+Every collection endpoint is paginated the same way - 53 endpoints across HRIS, ATS, LMS and the platform APIs. There is no unpaginated variant and no total count.
 
-Any data you interact with via the Bindbee API can be paginated, and this pagination is determined by the `cursor` and `page_size` query parameters.
+## Query parameters
 
-## Sample HTTP Request
+| Parameter | Type | Default | Range | Behaviour |
+| --- | --- | --- | --- | --- |
+| `page_size` | integer | `50` | `1`-`200` | Number of results per page |
+| `cursor` | string | none | - | Opaque pointer to the next page |
 
-Above is an example of an interactive HTTP request using the Bindbee API to demonstrate how pagination works:
+Send `page_size` on the first request. Send `cursor` on every request after it, taken verbatim from the previous response, with **every other parameter unchanged** - filters are not carried by the cursor.
+
+<Note>
+Two platform endpoints have their own bounds: [List Webhooks](/webhooks/overview) defaults to `20` with a maximum of `100`, and its delivery logs default to `25` with a maximum of `50`. Everything else is `50` and `200`.
+</Note>
+
+## Response envelope
+
+All three fields are always present.
+
+```json
+{
+  "cursor": "MDE4YjE4ZWYtYzk5Yy03YTg2LTk5NDYtN2I3YzlkNTQzM2U1",
+  "page_size": 50,
+  "items": [ ... ]
+}
+```
+
+| Field | Type | Holds |
+| --- | --- | --- |
+| `cursor` | string or `null` | Pointer to the next page. **`null` means this is the last page** |
+| `page_size` | integer | The count of items in *this* response, not the size you asked for |
+| `items` | array | The records |
+
+<Warning>
+Stop on `cursor: null`, not on a short page. `page_size` reports what came back, and a page can be shorter than requested while more records remain - so treating a short page as the end silently truncates the collection.
+</Warning>
+
+The cursor is opaque. Its value is not an offset, a record ID or a timestamp, and nothing in it is stable enough to store, decode or construct.
+
+## What pagination does not give you
+
+There is **no total count and no page number**, so a progress bar cannot be driven from the response. If you need a count, page the whole collection and count what arrives - see [Reconcile Record Counts](/how-to/troubleshooting/reconcile-record-counts).
+
+Filters are also not carried by the cursor, so changing one mid-walk invalidates your position and produces gaps or repeats. Keep every parameter identical for the whole traversal.
+
+{/* VERIFY: is a stable sort order guaranteed across pages, and is a cursor valid
+    indefinitely or does it expire? Neither is stated in spec.json or anywhere in the
+    docs. Both matter: without a stable order, a record inserted mid-traversal can be
+    skipped or returned twice on a long run over a large tenant, and callers who
+    checkpoint a cursor between scheduled jobs need to know whether resuming from it
+    is safe. */}
+
+## Related
+
+- [Paginate Through Results](/how-to/reading-data/paginate-through-results) - writing the loop, and what to do when it breaks
+- [Get Employees](/hris/employee/get-employees) - a paginated endpoint you can send a live request to
+- [Filter with modified_after](/how-to/reading-data/filter-with-modified-after) - fetching only what changed
+- [Rate Limits](/api-reference/basics/rate-limits) - 200 requests per minute bounds how fast you can page
