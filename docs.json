@@ -37,17 +37,6 @@
             ]
           },
           {
-            "group": "Use Cases",
-            "pages": [
-              "how-to/guides/auto-enrol-a-new-hire",
-              "how-to/guides/cascade-a-termination-downstream",
-              "how-to/guides/sync-census-data-for-quoting",
-              "how-to/guides/sync-dependents-and-beneficiaries",
-              "how-to/guides/detect-cobra-qualifying-events",
-              "how-to/guides/write-payroll-deductions-back"
-            ]
-          },
-          {
             "group": "Platform Tour",
             "pages": [
               "platform/overview",
@@ -89,6 +78,17 @@
                   "explanation/webhooks-vs-polling"
                 ]
               }
+            ]
+          },
+          {
+            "group": "Use Cases",
+            "pages": [
+              "how-to/guides/auto-enrol-a-new-hire",
+              "how-to/guides/cascade-a-termination-downstream",
+              "how-to/guides/sync-census-data-for-quoting",
+              "how-to/guides/sync-dependents-and-beneficiaries",
+              "how-to/guides/detect-cobra-qualifying-events",
+              "how-to/guides/write-payroll-deductions-back"
             ]
           }
         ]
