@@ -31,8 +31,6 @@ That matters because the systems most likely to need passthrough are the older e
 
 **Stability.** The source system's API can change without notice. A unified model change would be versioned and communicated; a passthrough integration breaks when the vendor decides it does.
 
-**Idempotency.** Unified writes accept `X-Idempotency-Key`. Passthrough does not - the only header it takes is the connector token. A retried call reaches the vendor as a second write, so retries are yours to make safe.
-
 <Warning>
 Passthrough calls count against the **source system's** rate limits, which are typically far tighter than Bindbee's. A passthrough call in a per-user request path, or in a loop, will exhaust the customer's quota and can disrupt syncing for that connector.
 </Warning>
@@ -73,7 +71,6 @@ Partially normalised, it would feel like a slightly rougher unified API rather t
 - **Prefer a custom field** when the need is a value on every record.
 - **Isolate passthrough code** behind an interface, so replacing it with unified support later is contained.
 - **Treat the second integration-specific implementation as a signal** to raise a coverage gap.
-- **Never retry a passthrough write blindly.** There is no idempotency key; check state first.
 - **Expect it to break without warning.** The source API is not under contract with you.
 
 ## Related
