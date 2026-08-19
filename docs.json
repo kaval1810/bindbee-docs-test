@@ -21,9 +21,15 @@
       {
         "tab": "Get Started",
         "pages": [
-          "get-started/what-is-bindbee",
-          "get-started/quickstart",
-          "platform/overview",
+          {
+            "group": "Introduction",
+            "expanded": true,
+            "pages": [
+              "get-started/what-is-bindbee",
+              "get-started/quickstart",
+              "platform/overview"
+            ]
+          },
           {
             "group": "Core concepts",
             "pages": [
