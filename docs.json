@@ -713,7 +713,7 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Guides",
+          "anchor": "Help Centre",
           "href": "https://help.bindbee.dev/",
           "icon": "book-open"
         },
