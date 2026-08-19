@@ -53,17 +53,13 @@ If you find yourself writing passthrough calls for several integrations to accom
 
 ## Why it works this way
 
-An escape hatch is a concession, and building one is an admission that the abstraction will not cover everything.
+**The escape hatch exists because the alternative is worse.** Without one, a team with a legitimate one-off need has two options: drop the requirement, or build a second integration alongside Bindbee - their own credential handling, their own OAuth refresh, their own storage of HR credentials.
 
-The alternative is a closed system: if the unified model does not support it, it cannot be done.
+Passthrough keeps the case inside the platform instead. Credentials stay where they are, the customer's authorisation still governs access, and no parallel integration appears.
 
-That forces a legitimate one-off need into either abandoning the requirement or building a second, parallel integration with its own credential handling - **worse in every respect, including security**, since it puts you back in the business of holding HR credentials.
+**It is unnormalised on purpose.** A passthrough call visibly returns one system's shape, so the cost is obvious as you write it.
 
-Passthrough keeps those cases inside the platform. Credentials stay where they are, the customer's authorisation still governs access, and the gap is filled without a separate integration.
-
-**Leaving it unnormalised is what stops it becoming the default path.** A passthrough call visibly returns one system's shape, so the cost is obvious as you write it.
-
-Partially normalised, it would feel like a slightly rougher unified API rather than an escape hatch - and would accumulate usage until the portability guarantee quietly stopped being true.
+Smooth that over and it stops reading as an escape hatch and starts reading as a slightly rougher unified API - which is how it would accumulate usage until portability quietly stopped being true.
 
 ## What this means for you
 
