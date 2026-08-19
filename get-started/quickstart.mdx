@@ -1,0 +1,194 @@
+---
+title: "Quickstart"
+description: "Connect a test HRIS account and read unified employee records from the API. Four steps, about 20 minutes."
+---
+
+By the end of this page you will have employee records from a linked HRIS arriving in your own code, in Bindbee's unified schema.
+
+Everything here happens in the **Development** environment against a test tenant. No real customer data is touched.
+
+<Info>
+  **Before you start**
+
+  - Access to the [Bindbee Dashboard](https://app.bindbee.dev) - provisioned during onboarding. If you cannot sign in, email [support@bindbee.dev](mailto:support@bindbee.dev).
+  - A test account with any [supported HRIS](/integrations). **Start this signup first** - a sandbox tenant can take longer to provision than the rest of this page combined.
+</Info>
+
+## Step 1 - Get a development API key
+
+Go to **Settings → [API Keys](https://app.bindbee.dev/settings/keys)** and generate a key from the **Development** block. Development and Production have separate keys and separate connectors; neither falls back to the other.
+
+```bash
+export BINDBEE_API_KEY="your_development_api_key"
+```
+
+<Warning>
+  The key is shown once. Regenerating invalidates the old one.
+</Warning>
+
+Confirm it works. This endpoint needs nothing but the API key, so a `200` proves the key is valid and rules out everything else:
+
+```bash
+curl -i https://api.bindbee.dev/api/v1/lookup/integrations \
+  --header "Authorization: Bearer $BINDBEE_API_KEY"
+```
+
+## Step 2 - Connect a test account
+
+In the Dashboard go to **Connectors**, switch to the **Development** tab, and choose **Create connector**. Name the test customer something recognisable such as `Tutorial Test Co`, select category **HRIS**, and pick the integration matching your test account.
+
+You get a connector with status `INCOMPLETE` and a Magic Link. Open the link - this is what your customer sees - and enter your test account's credentials. Complete every step; several systems have a final confirmation screen that is easy to close early.
+
+Once authorization succeeds the status moves to `ACTIVE`. Open the connector and copy `connector_token` from the **Overview** tab:
+
+```bash
+export CONNECTOR_TOKEN="your_connector_token"
+```
+
+You now hold both credentials. The API key says *who is asking*; the connector token says *whose data*.
+
+| Token | Header | Identifies |
+| --- | --- | --- |
+| API key | `Authorization: Bearer …` | Your organisation |
+| Connector token | `X-Connector-Token` | One customer's linked system |
+
+## Step 3 - Run a sync
+
+<Warning>
+  **Development connectors do not sync automatically.** Skip this and step 4 returns an empty list that looks like a bug.
+</Warning>
+
+Open the connector and choose **Force Sync**, or call:
+
+```bash
+curl -X POST https://api.bindbee.dev/api/embedded/v1/connectors/resync \
+  --header "Authorization: Bearer $BINDBEE_API_KEY" \
+  --header "X-Connector-Token: $CONNECTOR_TOKEN"
+```
+
+Watch it in the Dashboard, or poll the connector list and read `sync_status`:
+
+```bash
+curl -G https://api.bindbee.dev/api/hris/v1/connectors \
+  --header "Authorization: Bearer $BINDBEE_API_KEY"
+```
+
+Two status fields answer different questions. `status` is the **link** status - `COMPLETE`, `INCOMPLETE`, `RELINK_NEEDED`. `sync_status` is the **data** status - `Syncing`, `Done`, `Failed`. A connector can be `COMPLETE` and still hold no data.
+
+Wait for `sync_status` to reach `Done`. A test tenant is usually under a few minutes.
+
+## Step 4 - Read employee data
+
+<CodeGroup>
+
+```bash cURL
+curl -G https://api.bindbee.dev/api/hris/v1/employees \
+  --header "Authorization: Bearer $BINDBEE_API_KEY" \
+  --header "X-Connector-Token: $CONNECTOR_TOKEN" \
+  --data-urlencode "page_size=10"
+```
+
+```python Python
+import os, requests
+
+resp = requests.get(
+    "https://api.bindbee.dev/api/hris/v1/employees",
+    headers={
+        "Authorization": f"Bearer {os.environ['BINDBEE_API_KEY']}",
+        "X-Connector-Token": os.environ["CONNECTOR_TOKEN"],
+    },
+    params={"page_size": 10},
+)
+resp.raise_for_status()
+for employee in resp.json()["items"]:
+    print(employee["first_name"], employee["last_name"], employee["work_email"])
+```
+
+```javascript Node
+const url = new URL("https://api.bindbee.dev/api/hris/v1/employees");
+url.searchParams.set("page_size", "10");
+
+const res = await fetch(url, {
+  headers: {
+    Authorization: `Bearer ${process.env.BINDBEE_API_KEY}`,
+    "X-Connector-Token": process.env.CONNECTOR_TOKEN,
+  },
+});
+
+if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+
+const { items } = await res.json();
+for (const employee of items) {
+  console.log(employee.first_name, employee.last_name, employee.work_email);
+}
+```
+
+</CodeGroup>
+
+```json
+{
+  "cursor": "MDE4YjE4ZWYtYzk5Yy03YTg2LTk5NDYtN2I3YzlkNTQzM2U1",
+  "page_size": 10,
+  "items": [
+    {
+      "id": "018b18ef-c487-703c-afd9-0ca478ccd9d6",
+      "remote_id": "123321",
+      "modified_at": "2026-07-16T00:00:00Z",
+      "first_name": "Kunal",
+      "last_name": "Tyagi",
+      "work_email": "kunal@example.com",
+      "department": "Engineering",
+      "employment_status": "ACTIVE"
+    }
+  ]
+}
+```
+
+Two identifiers appear on every record, and confusing them causes real bugs. **`id`** is Bindbee's - stable, same shape across every system, and the one to store. **`remote_id`** is the source system's own, useful for reconciliation but varying in format by system.
+
+To read the rest of the collection, keep passing `cursor` back until it comes back `null`. See [Pagination](/api-reference/basics/pagination).
+
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="Empty items array">
+    Almost always no completed sync. Development connectors do not sync automatically - go back to step 3.
+  </Accordion>
+
+  <Accordion title="401 Unauthorized">
+    The API key is wrong, expired, or missing the `Bearer ` prefix. The space after `Bearer` is required.
+  </Accordion>
+
+  <Accordion title="403 Forbidden">
+    `X-Connector-Token` is missing, or belongs to a different environment or a different API category.
+  </Accordion>
+
+  <Accordion title="404 Not Found">
+    Check the category segment. Connector and record endpoints are scoped per category - `/api/hris/v1/connectors`, not `/api/v1/connectors`.
+  </Accordion>
+
+  <Accordion title="A field you expected is missing">
+    Check in order: is the field in [scope](/platform/scoping); did the source system grant permission for it; does the unified model carry it at all. If the value appears in `raw_data`, it is the third case - see [Map a Custom Field](/how-to/data-model/map-a-custom-field-from-the-dashboard).
+  </Accordion>
+</AccordionGroup>
+
+## Next
+
+You have the read path working. These are the four things most integrations do next:
+
+<CardGroup cols={2}>
+  <Card title="Choose what to sync" icon="filter" href="/platform/scoping">
+    Narrow the models and fields Bindbee requests from every connected system.
+  </Card>
+  <Card title="Add a missing field" icon="plus" href="/how-to/data-model/map-a-custom-field-from-the-dashboard">
+    Map a value out of the raw payload onto the unified object.
+  </Card>
+  <Card title="Get notified on change" icon="bell" href="/how-to/reliability/create-a-webhook">
+    Subscribe to a webhook so your application stops polling.
+  </Card>
+  <Card title="Embed the connection flow" icon="code" href="/how-to/connections/embed-the-connection-flow">
+    Let customers link their own systems from inside your product.
+  </Card>
+</CardGroup>
+
+Going to production uses the same steps with a production API key, plus the [Go-Live Checklist](/how-to/setup/go-live-checklist).
