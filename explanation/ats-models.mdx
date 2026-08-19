@@ -31,12 +31,22 @@ Neither is enforced by the API. **Both are the customer's stated intent, and bot
 
 **Department** and **office** are the job's organisational and physical placements. These are ATS-side records and **do not automatically correspond to the HRIS group and location models**, even for the same company. The two systems are configured independently.
 
+## The offer
+
+**Offer** attaches to the **application**, not to the candidate - the same principle again. Someone can hold an offer for one role while still in process on another.
+
+Its `status` runs `DRAFT`, `APPROVAL-SENT`, `APPROVED`, `SENT`, `SENT-MANUALLY`, `OPENED`, `DENIED`, `SIGNED` and `DEPRECATED`, alongside `sent_at`, `closed_at` and `start_date`.
+
+<Warning>
+`SENT` is not acceptance and `SIGNED` is not a start. Only `start_date` says when the person actually begins, and it is set well before they do - so an offer pipeline keyed on status alone will report starts that have not happened.
+</Warning>
+
 ## The process side
 
 | Model | Holds |
 | --- | --- |
 | **Scheduled interview** | A specific interview event, with time and participants |
-| **Scorecard** | Feedback from an interview - the evaluation, not the event |
+| **Scorecard** | Feedback on an application, with `interviewer` and `overall_recommendation` |
 | **Activity** | The audit trail: notes, emails, status changes. Coverage varies widely |
 | **Reject reason** | The customer's own vocabulary for why an application ended |
 | **Remote user** | Staff inside the ATS - recruiter, hiring manager, interviewer |
@@ -50,7 +60,7 @@ Remote users are staff, not candidates, and are distinct from HRIS employees eve
 
 ## EEOC is separated deliberately
 
-**EEOC** holds demographic data collected for compliance reporting. It is a separate model because the data is sensitive, legally restricted in how it may be used, and in most jurisdictions must not influence hiring decisions.
+**EEOC** holds `race`, `gender`, `veteran_status` and `disability_status` against a candidate, collected for compliance reporting. It is a separate model because the data is sensitive, legally restricted in how it may be used, and in most jurisdictions must not influence hiring decisions.
 
 Keeping it separate makes excluding it from your scope a single decision. **Most applications should exclude it.**
 
