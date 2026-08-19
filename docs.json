@@ -89,7 +89,7 @@
             "icon": "list-tree",
             "pages": [
               "explanation/record-identity",
-              "explanation/hris-models",
+              "explanation/employee-and-org-models",
               "explanation/benefits-models",
               "explanation/payroll-and-time-models",
               "explanation/status-and-terminations",
@@ -890,7 +890,7 @@
     },
     {
       "source": "/explanation/hris-model-relationships",
-      "destination": "/explanation/hris-models"
+      "destination": "/explanation/employee-and-org-models"
     },
     {
       "source": "/explanation/meta-api-schema-discovery",
@@ -934,7 +934,7 @@
     },
     {
       "source": "/concepts/hris-model-relationships",
-      "destination": "/explanation/hris-models"
+      "destination": "/explanation/employee-and-org-models"
     },
     {
       "source": "/concepts/meta-api-schema-discovery",
@@ -1026,7 +1026,7 @@
     },
     {
       "source": "/concepts/hris-models",
-      "destination": "/explanation/hris-models"
+      "destination": "/explanation/employee-and-org-models"
     },
     {
       "source": "/concepts/integration-versions",
@@ -1095,6 +1095,10 @@
     {
       "source": "/explanation/integration-versions",
       "destination": "/explanation/integration-variants"
+    },
+    {
+      "source": "/explanation/hris-models",
+      "destination": "/explanation/employee-and-org-models"
     }
   ],
   "api": {

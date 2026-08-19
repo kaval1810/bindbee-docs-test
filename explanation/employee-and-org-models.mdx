@@ -1,6 +1,6 @@
 ---
-title: "HRIS models"
-description: "How employee, employment, company, group, location and compensation relate, and where the fields you expect actually live."
+title: "Employee & org models"
+description: "How employee, employment, company, group, location and compensation relate, and where the fields you expect actually live. Benefits and payroll have their own pages."
 ---
 
 The field you are looking for is probably not on the employee. Job title, department, salary, cost centre, office - all of these feel like employee attributes and **none of them are stored that way.**
@@ -27,7 +27,6 @@ erDiagram
     EMPLOYEE }o--|| COMPANY : "employed by"
     EMPLOYEE }o--o{ GROUP : "belongs to"
     EMPLOYEE }o--o| LOCATION : "works at"
-    GROUP ||--o{ GROUP : "parent, forming a hierarchy"
 ```
 
 **Employee** holds what is true of the human: name, contact details, date of birth, identifiers.
@@ -64,12 +63,14 @@ A model per concept would be right for one HRIS and wrong for the next.
 
 A customer running multiple entities may have them as several companies under one connector, or as separate connectors entirely, depending on how their HR system is configured. Both occur and neither is wrong.
 
-## Sensitive models sync separately
+## Two models worth scoping out
 
-**Bank info** carries the employee's full account and routing numbers - `account_number` is the actual value, not a masked one. **Documents** carries files and is currently Beta.
+**Bank info** carries the employee's full account and routing numbers - `account_number` is the actual value, not a masked one. **Documents** carries files, including tax forms.
+
+Nothing about these syncs differently. Scope decides whether they sync at all, and once in scope and permitted they arrive like any other model. What sets them apart is what they cost you to hold.
 
 <Warning>
-Treat bank info as the most sensitive model in the API. Syncing it materially expands what you store, what you must protect, and what you have to answer for in a security review. Scope it out unless you have a specific reason to hold it - see [Scope & permissions](/explanation/scope-and-permissions).
+Bank info is the most sensitive model in the API. Syncing it materially expands what you store, what you must protect, and what you answer for in a security review. **Scope it out unless you have a specific reason to hold it** - see [Scope & permissions](/explanation/scope-and-permissions).
 </Warning>
 
 ## Why it works this way
@@ -96,5 +97,7 @@ Modelling them as separate dated records costs a join and a decision about which
 
 - [Read employee data](/get-started/tutorials/read-employee-data-from-the-api) - the employee and employment shapes
 - [Get Employments](/hris/employments/get-employments) - employment fields and dates
+- [Benefits models](/explanation/benefits-models) - the other HRIS cluster, with its own page
+- [Payroll & time models](/explanation/payroll-and-time-models) - runs, codes, timesheets and leave
 - [Effective dating](/explanation/effective-dating) - choosing the record that applies today
 - [Status & terminations](/explanation/status-and-terminations) - which employment is current
