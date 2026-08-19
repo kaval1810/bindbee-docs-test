@@ -12,7 +12,7 @@ description: "React to an employee leaving by revoking access, ending coverage, 
 <Info>
   **Before you start**
 
-  - A webhook is registered for the environment - see [Create a Webhook](/how-to/reliability/create-a-webhook).
+  - A webhook is registered for the environment - see [Create a Webhook](/webhooks/overview).
   - You can schedule work for a future date. Every action here is gated on a date, not on arrival.
 </Info>
 
@@ -95,7 +95,7 @@ description: "React to an employee leaving by revoking access, ending coverage, 
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    Compare terminal-status employees against those you've offboarded. A missed delivery is never redelivered - see [Recover a Missed Webhook Delivery](/how-to/reliability/recover-a-missed-delivery) - and terminations are low-volume enough that a gap shows no symptom at all.
+    Compare terminal-status employees against those you've offboarded. A missed delivery is never redelivered - see [Recover a Missed Webhook Delivery](/webhooks/delivery) - and terminations are low-volume enough that a gap shows no symptom at all.
 
     **Result:** A backstop that closes what events dropped.
   </Step>
@@ -111,7 +111,7 @@ description: "React to an employee leaving by revoking access, ending coverage, 
 
 **Coverage ends on its own schedule.** Benefit end dates are set separately from the termination date, often to the end of the month. Don't infer coverage loss from employment status - read the benefit's end date.
 
-**A missed event is silent.** Terminations are low-volume, so a lost webhook delivery produces no visible gap. Since exhausted deliveries are never redelivered - see [Recover a Missed Webhook Delivery](/how-to/reliability/recover-a-missed-delivery) - run a periodic reconciliation query for recently terminated employees rather than relying on events alone. This is the one workflow where the reconciliation pass is not optional.
+**A missed event is silent.** Terminations are low-volume, so a lost webhook delivery produces no visible gap. Since exhausted deliveries are never redelivered - see [Recover a Missed Webhook Delivery](/webhooks/delivery) - run a periodic reconciliation query for recently terminated employees rather than relying on events alone. This is the one workflow where the reconciliation pass is not optional.
 
 **Some platforms stop returning terminated records entirely.** Where that happens, disappearance is the only signal, and it's indistinguishable from a sync or permission problem. Confirm the platform's behaviour before treating absence as a departure - see [Trace a Missing Record](/how-to/troubleshooting/trace-a-missing-record).
 
@@ -143,4 +143,4 @@ description: "React to an employee leaving by revoking access, ending coverage, 
 
 - [Read Employee Data](/how-to/reading-data/read-employee-data)
 - [Detect COBRA Qualifying Events](/how-to/guides/detect-cobra-qualifying-events)
-- [Recover a Missed Webhook Delivery](/how-to/reliability/recover-a-missed-delivery)
+- [Recover a Missed Webhook Delivery](/webhooks/delivery)

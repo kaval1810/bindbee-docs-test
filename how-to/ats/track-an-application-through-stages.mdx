@@ -70,7 +70,7 @@ An application's `current_stage` points at a job interview stage. Stages belong 
   </Step>
 
   <Step title="Detect movement rather than polling it">
-    Subscribe to `connector_data_modified` and re-read the changed applications - see [Choose Webhook Events](/how-to/reliability/choose-webhook-events).
+    Subscribe to `connector_data_modified` and re-read the changed applications - see [Choose Webhook Events](/webhooks/events).
 
     Change events carry IDs, not records, and they tell you something changed without saying what. To know an application *moved*, compare `current_stage` against your stored copy - see [Distinguish Created from Modified Records](/how-to/reliability/distinguish-created-from-modified).
 

@@ -17,7 +17,7 @@ Source-system credentials expire, get rotated, or lose permissions. When that ha
 
 <Steps>
   <Step title="Subscribe to the sync error event">
-    Create a webhook for the environment you're operating in and select **Sync error**. See [Create a Webhook](/how-to/reliability/create-a-webhook).
+    Create a webhook for the environment you're operating in and select **Sync error**. See [Create a Webhook](/webhooks/overview).
 
     **Result:** Your endpoint receives a `connector_sync_error` payload whenever a sync fails.
   </Step>
@@ -96,7 +96,7 @@ Three gaps are now covered: a failed sync, an expired credential, and a sync tha
   <Accordion title="Events arrive intermittently">
     Bindbee retries up to 4 times within 60 seconds, with a 10-second timeout per attempt. Every non-`2xx` response and every network-layer failure counts as a failed attempt.
 
-    If your handler does work before responding, it will exceed the timeout under load. Acknowledge with `200` immediately and process asynchronously. Deliveries that exhaust all retries are not redelivered later - see [Recover a Missed Webhook Delivery](/how-to/reliability/recover-a-missed-delivery).
+    If your handler does work before responding, it will exceed the timeout under load. Acknowledge with `200` immediately and process asynchronously. Deliveries that exhaust all retries are not redelivered later - see [Recover a Missed Webhook Delivery](/webhooks/delivery).
   </Accordion>
 
   <Accordion title="You're on a cron schedule and don't want to move to webhooks">

@@ -1,415 +1,127 @@
 ---
-title: "Webhook Events & Payloads"
-sidebarTitle: "Events & Payloads"
-description: "The five webhook events, the payload each one delivers, the retry policy, and how to verify a signature."
+title: "Webhooks"
+sidebarTitle: "Overview"
+description: "What a webhook tells you, when polling is the better instrument, and how to register an endpoint."
 ---
 
-The five events Bindbee can send, what each payload contains, and how deliveries are retried and signed.
+Bindbee can notify you when a sync finishes and when records change, instead of your application polling to find out. Treating that as a real-time data feed produces a system that mostly works and occasionally loses data.
 
-To create a webhook see [Create a Webhook](/how-to/reliability/create-a-webhook); for what each field on the Dashboard screen does see [Webhooks](/platform/overview).
+## Freshness and notification are separate
 
-## Payload Properties
-
-- `webhook`: Information about the webhook that was triggered.
-- `connector`: Information about the connector associated with the event.
-- `data`: The affected connector sync status data.
-- `sync`: Information about the sync job that triggered the event. This object is included in all webhook payloads.
-- `error`: Information about the sync failure. This object is included only in the `connector_sync_error` webhook.
-
-### Sync information
-
-All webhook payloads include a top-level `sync` object in the following format:
-
-```json
-{
-  "sync_id": "019f146e-8396-7c6d-aff3-c5760bf5eefe",
-  "sync_type": "AUTOMATED",
-  "sync_name": "#13"
-}
-```
-
-| Field | Description |
+| Question | Determined by |
 | --- | --- |
-| `sync_id` | The unique identifier of the sync job. |
-| `sync_type` | How the sync was triggered. Possible values:`MANUAL` and `AUTOMATED`. |
-| `sync_name` | The name assigned to the sync job. |
+| How fresh is the data? | The sync cadence - every 24 hours by default |
+| How do I learn it changed? | Webhooks or polling |
 
-### Sync error information
+**No delivery mechanism makes data fresher than the sync allows.** If a customer needs hourly data, the sync frequency has to change - see [How syncing works](/explanation/how-syncing-works).
 
-The `connector_sync_error` webhook includes a top-level `error` object in the following format:
+## A webhook is a signal, not a delivery
 
-```json
-{
-  "failed_at": "2026-07-07T11:21:35.837448+00:00",
-  "message": "A runtime error occurred during the sync process. Bindbee team has been notified.",
-  "detail": {}
-}
-```
+Two kinds arrive: sync-status events saying a connector's sync completed or failed, and data-change events saying records were created or modified.
 
-| Field | Description |
-| --- | --- |
-| `failed_at` | The timestamp at which the sync job failed. |
-| `message` | A summary of the sync job error. |
-| `detail` | Additional details about the error. This is returned as an empty object (`{}`) when no additional details are available. |
+**Neither carries the data.** A change event tells you something happened and gives you enough to go and read it. Your handler's job is to fetch, not to consume a payload.
 
-## Webhook event types
+That is deliberate. A record carried in a webhook is a snapshot from the moment the event fired and may be stale by the time your handler runs. Fetching on receipt means you always act on current state, and keeps the API the single source of truth.
 
-- Connector Sync Started
-- Connector Synced
-- Connector Sync Error
-- Employee Data Changed
-- Connector Data Modified
+<Info>
+Sync-status events are the more useful of the two and the more overlooked. They are the only reliable way to know an initial sync has finished, and the only push signal that a connector has stopped working.
+</Info>
 
-### Sample payload for webhook events
+## Create a webhook
 
-<Tabs>
-  <Tab title="Connector Sync Started">
-    Receive an alert when the connector sync starts.
+<Info>
+  **Before you start** - a publicly reachable HTTPS endpoint that accepts `POST` and responds within 10 seconds.
+</Info>
 
-    ```json
-    {
-        "webhook": {
-            "webhook_id": "10c9a6b1-4ea8-476e-bdb0-193001a94a8d",
-            "url": "https://webhook-test.com/8e771727c78e3a4017f374fb745313b6",
-            "event": "connector_sync_started"
-        },
-        "connector": {
-            "id": "018f99e2-ed3a-7f4c-ae97-83d619bdf95c",
-            "display_name": "BreatheHR",
-            "integration_slug": "breathehr",
-            "categories": [
-            "HRIS"
-            ],
-            "org_name": "Test Org",
-            "origin_id": "user_123",
-            "connector_status": "COMPLETE",
-            "end_user_name": "John Doe",
-            "end_user_email": "abc@xyz.com"
-        },
-        "data": {
-            "id": "018f99e7-886b-7c9f-a63a-f6fbc9da1f83",
-            "integration_name": "breathehr",
-            "category": "HRIS",
-            "display_status": "Syncing",
-            "last_sync_start_time": "2024-07-22T09:49:30.478384+00:00"
-        },
-        "sync": {
-          "sync_id": "019f146e-8396-7c6d-aff3-c5760bf5eef8",
-          "sync_type": "AUTOMATED",
-          "sync_name": "#13"
-        }
-    }
-    ```
-  </Tab>
-  <Tab title="Connector Synced">
-    Receive an alert when the connector sync finishes successfully.
+<Steps>
+  <Step title="Prepare an endpoint that acknowledges immediately">
+    Return `200` as soon as you've stored the payload, then process asynchronously.
 
-    ```json
-    {
-      "webhook": {
-          "webhook_id": "10c9a6b1-4ea8-476e-bdb0-193001a94a8d",
-          "url": "https://webhook-test.com/8e771727c78e3a4017f374fb745313b6",
-          "event": "connector_synced"
-      },
-      "connector": {
-          "id": "018f99e2-ed3a-7f4c-ae97-83d619bdf95c",
-          "display_name": "BreatheHR",
-          "integration_slug": "breathehr",
-          "categories": [
-          "HRIS"
-          ],
-          "org_name": "Test Org",
-          "origin_id": "user_123",
-          "connector_status": "COMPLETE",
-          "end_user_name": "John Doe",
-          "end_user_email": "abc@xyz.com"
-      },
-      "data": {
-          "id": "018f99e7-886b-7c9f-a63a-f6fbc9da1f83",
-          "integration_name": "breathehr",
-          "category": "HRIS",
-          "display_status": "Done",
-          "last_sync_start_time": "2024-07-22T09:49:22.922083+00:00"
-      },
-      "sync": {
-          "sync_id": "019f146e-8396-7c6d-aff3-c5760bf5eef8",
-          "sync_type": "AUTOMATED",
-          "sync_name": "#13"
-      }
-    }
-    ```
-  </Tab>
-  <Tab title="Connector Sync Error">
-    Receive an alert when the connector sync encounters an error.
+    Each delivery attempt times out at 10 seconds, and every non-`2xx` counts as a failure. An endpoint that does its work before responding will start failing under exactly the load where you need it most.
+  </Step>
 
-    ```json
-    {
-      "webhook": {
-        "webhook_id": "704ec26b-585d-4551-a833-e447e3313c78",
-        "url": "https://play.svix.com/in/kxY1EpRT84F0JIxx43lgfnr2Icr/",
-        "event": "connector_sync_error"
-      },
-      "connector": {
-        "id": "019ebc1c-953a-7ba9-b599-0e6599e30304",
-        "display_name": "Workday",
-        "integration_slug": "workday",
-        "categories": [
-          "LMS",
-          "HRIS"
-        ],
-        "org_name": "Bindbeee",
-        "origin_id": "dfgvbbgtfbnytgnhgh",
-        "connector_status": "COMPLETE",
-        "end_user_name": "Coca Cola",
-        "end_user_email": null
-      },
-      "data": {
-        "id": "018f96ad-459c-7fd5-a24a-2c3a6c1a64e8",
-        "integration_name": "workday",
-        "category": "HRIS",
-        "display_status": "Failed"
-      },
-      "error": {
-        "failed_at": "2026-07-07T11:21:35.837448+00:00",
-        "message": "A runtime error occurred during the sync process. Bindbee team has been notified.",
-        "detail": {}
-      },
-      "sync": {
-        "sync_id": "019f3c4f-dbc2-7480-a6d5-f1f789ee05c1",
-        "sync_type": "AUTOMATED",
-        "sync_name": "#6"
-      }
-    }
-    ```
+  <Step title="Add the destination and test it">
+    Go to **Configure → Webhooks** and open **New webhook**. Enter your destination URL, then click **Test URL** to confirm Bindbee can reach it before any real event depends on it.
+  </Step>
 
-    The `detail` field is returned as an empty object (`{}`) when no additional error details are available.
-  </Tab>
-  <Tab title="Employee Data Changed">
-    Receive an alert when an employee is created or updated. The payload returns the `id` of each employee that was created or modified.
+  <Step title="Name it and set the type">
+    Give it a descriptive name - that is how you'll identify it later when several exist. Then set the type:
 
-    ```json
-    {
-      "webhook": {
-          "webhook_id": "10c9a6b1-4ea8-476e-bdb0-193001a94a8d",
-          "url": "https://webhook-test.com/8e771727c78e3a4017f374fb745313b6",
-          "event": "employee_data_changed"
-      },
-      "connector": {
-          "id": "018f99e2-ed3a-7f4c-ae97-83d619bdf95c",
-          "display_name": "BreatheHR",
-          "integration_slug": "breathehr",
-          "categories": [
-          "HRIS"
-          ],
-          "org_name": "Test Org",
-          "origin_id": "user_123",
-          "connector_status": "COMPLETE",
-          "end_user_name": "John Doe",
-          "end_user_email": "abc@xyz.com"
-      },
-      "data": [
-          "0190d9d8-ac9b-76cb-a5ee-df70994e6f3d"
-      ],
-      "sync": {
-          "sync_id": "019f146e-8396-7c6d-aff3-c5760bf5eef8",
-          "sync_type": "AUTOMATED",
-          "sync_name": "#13"
-      }
-    }
-    ```
-  </Tab>
-  <Tab title="Connector Data Modified">
-    Receive an alert when a record in any supported data model is created or updated. The payload returns the `id` of each record that was created or modified.
+    | Type | Receives events for |
+    | --- | --- |
+    | Production | Production connectors |
+    | Development | Development connectors |
 
-    ```json
-    {
-      "webhook": {
-          "webhook_id": "10c9a6b1-4ea8-476e-bdb0-193001a94a8d",
-          "url": "https://webhook-test.com/8e771727c78e3a4017f374fb745313b6",
-          "event": "connector_data_modified"
-      },
-      "connector": {
-          "id": "018f99e2-ed3a-7f4c-ae97-83d619bdf95c",
-          "display_name": "BreatheHR",
-          "integration_slug": "breathehr",
-          "categories": [
-          "HRIS"
-          ],
-          "org_name": "Test Org",
-          "origin_id": "user_123",
-          "connector_status": "COMPLETE",
-          "end_user_name": "John Doe",
-          "end_user_email": "abc@xyz.com"
-      },
-      "data": {
-          "hris_bank_info": [
-          "0190d9d8-cf5b-7ce4-b60f-1fd95c04adee"
-          ],
-          "hris_employment": [
-          "0190d9d9-023d-7259-97e1-b38682dec062"
-          ]
-      },
-      "sync": {
-          "sync_id": "019f146e-8396-7c6d-aff3-c5760bf5eef8",
-          "sync_type": "AUTOMATED",
-          "sync_name": "#13"
-      }
-    }
-    ```
-  </Tab>
-</Tabs>
+    <Warning>
+      This is the most common webhook mistake. A Production webhook is silent for every Development connector, and the reverse. Testing against a Development connector requires a Development webhook.
+    </Warning>
+  </Step>
 
-## Retry Mechanism
+  <Step title="Select events">
+    Choose which events to receive - see [Webhook Events & Payloads](/webhooks/events) for what each one does and when it fires.
+  </Step>
 
-When a webhook event is triggered, Bindbee sends a `POST` request to your configured destination URL. If the request fails due to a request or network-layer issue, Bindbee automatically retries the delivery up to 4 times within 60 seconds.
+  <Step title="Create and verify">
+    Click **Create webhook**, then trigger a sync on a connector in that environment and confirm the payload arrives - see [Force a Resync](/how-to/sync-control/force-a-resync).
+  </Step>
+</Steps>
 
-Each delivery attempt has a timeout of 10 seconds. Your server should respond within this window to avoid the request being treated as timed out.
+The **Security** section on the same screen holds your signature key. Verify every delivery before acting on it - see [Signatures & delivery](/webhooks/delivery).
 
-### Retry behavior
+## When polling is the better instrument
 
-| Property | Value |
-| --- | --- |
-| Maximum retries | Up to 4 retries |
-| Retry window | Within 60 seconds |
-| Request timeout | 10 seconds per attempt |
-| Request method | `POST` |
-| Retry trigger | Request/network-layer failures and all non-`2xx`responses |
+You poll **Bindbee, not the source system**, so it costs nothing upstream and cannot exhaust a vendor's rate limit. Bindbee's own limit is 200 requests per minute per connector.
 
-### Failures that trigger retries
+Polling every five minutes against a 24-hour sync produces 288 identical responses a day. Time it off the schedule instead:
 
-Retries are triggered only for request or network-layer failures, including:
+- **Poll the connector list, not the data endpoints.** One request returns every connector's `status`, `sync_status`, `last_sync_start_time` and `next_sync_start_time`.
+- **Use `next_sync_start_time` to time the poll.** It tells you when new data will exist, so you read once after the sync lands rather than guessing an interval.
+- **Then read with `modified_after`** for the connectors whose `last_sync_start_time` moved.
 
-| Failure category | Examples |
-| --- | --- |
-| Timeout errors | Connection timeout, read timeout, write timeout, connection pool timeout |
-| Connection errors | Connection error, read error, write error, close error |
-| Protocol errors | Local protocol error, remote protocol error, unsupported protocol error |
-| Other request errors | Proxy error, response decoding error, too many redirects |
+## What webhooks cannot tell you
 
-## Security
+**That nothing happened.** Silence is ambiguous - no events could mean no changes, a delivery failure, or a connector that broke three weeks ago.
 
-To secure your API endpoint, ensure it verifies that POST requests are genuinely from Bindbee and not from a malicious source, and that payloads haven’t been tampered with during transit.
+**That you received everything.** Delivery is best-effort and the [retry window](/webhooks/delivery#retry-mechanism) is 60 seconds. A deploy that takes your endpoint down for two minutes loses those events permanently, with no error in your logs or Bindbee's.
 
-You can achieve this by checking if the `X-Bindbee-Webhook-Signature` field in the request header matches an encoded combination of your organization’s unique webhook signature and the payload of the incoming request.
+**Which field changed.** An event says a record changed, not which attribute or what it was before.
 
-In the Webhooks configuration page, you should find a Security section where you can access your signature key. This key is unique to your organization and can be regenerated if it becomes known to an unauthorized party.
+**That a record was deleted.** Disappearance is a non-event. Only a scheduled read finds it.
 
-![Webhook Security](https://images.unifyx.dev/documentation_images/signature_key.webp)
+{/* VERIFY: ordering - can events for one connector arrive out of sequence? Retry behaviour is documented; ordering is not, and it determines whether a handler can trust event order or must re-read state. */}
 
-<CodeGroup>
+## What this means for you
 
-```python Python
-import base64
-import hashlib
-import hmac
+The durable pattern is both: webhooks to react quickly to what you hear about, and a scheduled read to catch what you did not. Both paths do the same thing - read with `modified_after`, upsert on `id` - so running both is one code path, not two, and harmless.
 
-# Replace 'YOUR_WEBHOOK_SIGNATURE_KEY' with the actual key from:
-# https://app.bindbee.dev/webhooks
+- **Fetch on receipt.** Do not build handlers around event payloads.
+- **Run a scheduled reconciliation** however good your event handling is.
+- **Poll the connector list**, timed off `next_sync_start_time`.
+- **Gate first-run logic on sync-status events**, not on data appearing.
+- **Make handlers idempotent** and respond within 10 seconds.
+- **Register both environments.** Production webhooks never fire for Development connectors.
 
-signature_key = "YOUR_WEBHOOK_SIGNATURE_KEY"
-request_body = request.body
+## If this didn't work
 
-# Ensure the presence of a signature header in the request
-if "X-Bindbee-Webhook-Signature" not in request.headers:
-    raise ValueError("Signature header missing; request may not be from Bindbee.")
+<AccordionGroup>
+  <Accordion title="Nothing arrives">
+    Check the environment first - it explains most silent webhooks. Then confirm the endpoint is reachable from the public internet, accepts `POST`, and isn't behind auth that rejects unauthenticated requests. Use **Test URL** to isolate reachability from event configuration.
+  </Accordion>
 
-# Retrieve the signature header from the request
-received_signature = request.headers["X-Bindbee-Webhook-Signature"]
+  <Accordion title="Some events arrive and others don't">
+    Confirm the missing event is selected on this webhook. Events fire on sync activity - a data-change event only fires when a sync actually changes data, so a run finding nothing new produces a sync-completed event with no data-change event.
+  </Accordion>
 
-# Convert the key and request body to bytes
-key_bytes = signature_key.encode("utf-8")
-body_bytes = request_body.encode("utf-8")
+  <Accordion title="Deliveries arrive intermittently">
+    Bindbee retries up to 4 times within 60 seconds, with a 10-second timeout per attempt. Intermittent loss under load almost always means slow acknowledgement - see [Signatures & delivery](/webhooks/delivery).
+  </Accordion>
 
-# Create an HMAC digest using SHA-256
-hmac_digest = hmac.new(key_bytes, body_bytes, hashlib.sha256).digest()
+  <Accordion title="You need different endpoints for different events">
+    Create several webhooks in the same environment, each with its own URL and event selection. Splitting sync-lifecycle events from data-change events is a common arrangement where different services consume them.
+  </Accordion>
+</AccordionGroup>
 
-# Encode the digest to base64
-encoded_digest = base64.urlsafe_b64encode(hmac_digest).decode()
+## Related
 
-# Use `hmac.compare_digest` to compare the computed digest with the received signature
-signature_valid = hmac.compare_digest(encoded_digest, received_signature)
-```
-
-```ruby Ruby
-require 'base64'
-require 'openssl'
-require 'json'
-
-# Replace 'YOUR_WEBHOOK_SIGNATURE_KEY' with the actual key from:
-# https://app.bindbee.dev/webhooks
-
-secret_key = 'YOUR_WEBHOOK_SIGNATURE_KEY'
-request_body = request.raw_post
-# Rack exposes headers as HTTP_-prefixed env keys; request.headers does the mapping
-received_signature = request.headers['X-Bindbee-Webhook-Signature']
-
-unless received_signature
-  raise "Signature header missing; request may not be from Bindbee."
-end
-
-# Ensure the payload is properly encoded in UTF-8
-request_body.force_encoding('UTF-8')
-
-# Compute HMAC digest using SHA-256
-hmac_digest = OpenSSL::HMAC.digest(OpenSSL::Digest.new('sha256'), secret_key, request_body)
-
-# Base64 encode the HMAC digest
-encoded_digest = Base64.urlsafe_encode64(hmac_digest)
-
-# Use secure comparison to validate the signature
-valid_signature = ActiveSupport::SecurityUtils.secure_compare(encoded_digest, received_signature)
-```
-
-```javascript Node
-const crypto = require("crypto");
-const express = require("express");
-const app = express();
-
-// Replace 'YOUR_WEBHOOK_SIGNATURE_KEY' with the actual key from:
-// https://app.bindbee.dev/webhooks
-
-// Middleware to capture raw body for HMAC verification
-app.use(
-  express.json({
-    verify: (req, res, buf) => {
-      req.rawBody = buf.toString();
-    },
-  }),
-);
-
-const webhookSecret = "YOUR_WEBHOOK_SIGNATURE_KEY";
-const rawRequestBody = request.rawBody;
-
-// Node lower-cases incoming header names - the mixed-case key is always undefined
-const receivedSignature = request.headers["x-bindbee-webhook-signature"];
-
-if (!receivedSignature) {
-  // Fail closed: never fall through to comparison without a signature
-  throw new Error("Missing webhook signature; request may not be from Bindbee.");
-}
-
-// Create an HMAC digest using SHA-256 over the raw body
-const hmacDigest = crypto
-  .createHmac("sha256", webhookSecret)
-  .update(rawRequestBody)
-  .digest("base64")
-  .replace(/\+/g, "-")
-  .replace(/\//g, "_");
-
-// Use crypto.timingSafeEqual to compare the signatures securely
-const expectedSignature = Buffer.from(receivedSignature, "utf-8");
-const calculatedSignature = Buffer.from(hmacDigest, "utf-8");
-
-const isSignatureValid =
-  Buffer.byteLength(expectedSignature) ===
-    Buffer.byteLength(calculatedSignature) &&
-  crypto.timingSafeEqual(expectedSignature, calculatedSignature);
-
-console.log(isSignatureValid);
-```
-
-</CodeGroup>
-
-## Webhook Visibility
-
-The webhook logs are easily visible on the webhooks tab at [Bindbee](https://app.bindbee.dev/logs/webhooks) dashboard. The specific webhook logs will be visible on the individual webhook page.
+- [Webhook Events & Payloads](/webhooks/events) - the five events and what each payload carries
+- [Signatures & delivery](/webhooks/delivery) - verifying a payload, and recovering a lost one

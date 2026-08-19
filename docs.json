@@ -132,14 +132,10 @@
           {
             "group": "Webhooks",
             "pages": [
-              "explanation/webhooks-vs-polling",
-              "how-to/reliability/create-a-webhook",
-              "how-to/reliability/choose-webhook-events",
               "webhooks/overview",
-              "how-to/reliability/validate-webhook-signatures",
-              "how-to/reliability/recover-a-missed-delivery",
-              "how-to/reliability/distinguish-created-from-modified",
-              "how-to/reliability/detect-a-connection-that-needs-relinking"
+              "webhooks/events",
+              "webhooks/delivery",
+              "how-to/reliability/distinguish-created-from-modified"
             ]
           },
           {
@@ -191,6 +187,7 @@
             "pages": [
               "explanation/errors-issues-and-limits",
               "how-to/troubleshooting/monitor-sync-status",
+              "how-to/reliability/detect-a-connection-that-needs-relinking",
               "how-to/troubleshooting/diagnose-a-partial-sync",
               "how-to/troubleshooting/resolve-a-permission-error",
               "how-to/troubleshooting/trace-a-missing-record",
@@ -795,7 +792,7 @@
     },
     {
       "source": "/get-started/receive-a-webhook",
-      "destination": "/how-to/reliability/create-a-webhook"
+      "destination": "/webhooks/overview"
     },
     {
       "source": "/custom-fields/overview",
@@ -1015,7 +1012,7 @@
     },
     {
       "source": "/concepts/webhooks-vs-polling",
-      "destination": "/explanation/webhooks-vs-polling"
+      "destination": "/webhooks/overview"
     },
     {
       "source": "/concepts/write-support",
@@ -1087,7 +1084,7 @@
     },
     {
       "source": "/get-started/tutorials/receive-a-webhook",
-      "destination": "/how-to/reliability/create-a-webhook"
+      "destination": "/webhooks/overview"
     },
     {
       "source": "/platform/dashboard",
@@ -1116,6 +1113,26 @@
     {
       "source": "/platform/webhooks",
       "destination": "/platform/overview"
+    },
+    {
+      "source": "/how-to/reliability/create-a-webhook",
+      "destination": "/webhooks/overview"
+    },
+    {
+      "source": "/how-to/reliability/choose-webhook-events",
+      "destination": "/webhooks/events"
+    },
+    {
+      "source": "/how-to/reliability/validate-webhook-signatures",
+      "destination": "/webhooks/delivery"
+    },
+    {
+      "source": "/how-to/reliability/recover-a-missed-delivery",
+      "destination": "/webhooks/delivery"
+    },
+    {
+      "source": "/explanation/webhooks-vs-polling",
+      "destination": "/webhooks/overview"
     }
   ],
   "api": {

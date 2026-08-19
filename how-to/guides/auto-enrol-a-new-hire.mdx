@@ -11,7 +11,7 @@ description: "Detect a new employee and start their benefits enrolment without a
 <Info>
   **Before you start**
 
-  - A webhook is registered for the environment - see [Create a Webhook](/how-to/reliability/create-a-webhook).
+  - A webhook is registered for the environment - see [Create a Webhook](/webhooks/overview).
   - You can persist a set of employee IDs per connector. Without that, you cannot tell a new hire from an update.
 </Info>
 
@@ -19,7 +19,7 @@ description: "Detect a new employee and start their benefits enrolment without a
 
 <Steps>
   <Step title="Subscribe to employee changes">
-    Subscribe to `employee_data_changed`, and to `connector_synced` if you need to know the run finished before acting - see [Choose Webhook Events](/how-to/reliability/choose-webhook-events).
+    Subscribe to `employee_data_changed`, and to `connector_synced` if you need to know the run finished before acting - see [Choose Webhook Events](/webhooks/events).
 
     The change event carries IDs, not records:
 

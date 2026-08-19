@@ -9,14 +9,14 @@ A scheduled job that reads on a clock either runs before the sync finishes - pro
 <Info>
   **Before you start**
 
-  - You have a webhook receiving deliveries - see [Create a Webhook](/how-to/reliability/create-a-webhook).
+  - You have a webhook receiving deliveries - see [Create a Webhook](/webhooks/overview).
 </Info>
 
 ## Steps
 
 <Steps>
   <Step title="Subscribe to Sync completed">
-    Select **Sync completed** on your webhook. Add **Sync error** too - you want to know when a run fails as well as when it succeeds. See [Choose Webhook Events](/how-to/reliability/choose-webhook-events).
+    Select **Sync completed** on your webhook. Add **Sync error** too - you want to know when a run fails as well as when it succeeds. See [Choose Webhook Events](/webhooks/events).
 
     **Result:** `connector_synced` arrives when a run finishes.
   </Step>
@@ -102,4 +102,4 @@ That's a small change that stops the most common failure: processing a customer 
 ## Related
 
 - [Webhook Events & Payloads](/webhooks/overview)
-- [Choose Webhook Events](/how-to/reliability/choose-webhook-events)
+- [Choose Webhook Events](/webhooks/events)

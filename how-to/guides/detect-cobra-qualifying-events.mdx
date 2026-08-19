@@ -22,7 +22,7 @@ The HRIS doesn't announce a qualifying event. It records a status change, a date
 
 <Steps>
   <Step title="Subscribe to both change events">
-    `employee_data_changed` covers status and employment; `connector_data_modified` covers the other models, including dependents - see [Choose Webhook Events](/how-to/reliability/choose-webhook-events).
+    `employee_data_changed` covers status and employment; `connector_data_modified` covers the other models, including dependents - see [Choose Webhook Events](/webhooks/events).
 
     Subscribing to the employee event alone misses dependent changes entirely, which is where two of the four qualifying events show up.
 
@@ -134,5 +134,5 @@ The HRIS doesn't announce a qualifying event. It records a status change, a date
 ## Related
 
 - [Read Benefits Data](/how-to/reading-data/read-benefits-data)
-- [Choose Webhook Events](/how-to/reliability/choose-webhook-events)
+- [Choose Webhook Events](/webhooks/events)
 - [Cascade a Termination Downstream](/how-to/guides/cascade-a-termination-downstream)
