@@ -20,24 +20,19 @@
     "tabs": [
       {
         "tab": "Get Started",
-        "groups": [
+        "pages": [
+          "get-started/what-is-bindbee",
+          "get-started/quickstart",
           {
-            "group": "Introduction",
+            "group": "Core concepts",
             "pages": [
-              "get-started/what-is-bindbee",
-              "get-started/quickstart",
-              {
-                "group": "Core concepts",
-                "pages": [
-                  "explanation/core-concepts",
-                  "explanation/unified-model",
-                  "explanation/environments"
-                ]
-              }
+              "explanation/core-concepts",
+              "explanation/unified-model",
+              "explanation/environments"
             ]
           },
           {
-            "group": "Platform Tour",
+            "group": "Platform tour",
             "pages": [
               "platform/overview",
               "platform/dashboard",
@@ -81,7 +76,7 @@
             ]
           },
           {
-            "group": "Use Cases",
+            "group": "Use cases",
             "pages": [
               "how-to/guides/auto-enrol-a-new-hire",
               "how-to/guides/cascade-a-termination-downstream",
