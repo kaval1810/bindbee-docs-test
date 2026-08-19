@@ -244,7 +244,6 @@
             "pages": [
               "api-reference/basics/authentication",
               "api-reference/basics/pagination",
-              "api-reference/basics/sync-frequency",
               "api-reference/basics/rate-limits"
             ]
           },
@@ -1110,6 +1109,10 @@
     {
       "source": "/features/environments/production",
       "destination": "/explanation/environments#production"
+    },
+    {
+      "source": "/api-reference/basics/sync-frequency",
+      "destination": "/explanation/how-syncing-works"
     }
   ],
   "api": {
