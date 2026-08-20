@@ -40,6 +40,13 @@
             ]
           },
           {
+            "group": "Integrations",
+            "pages": [
+              "integrations",
+              "integrations-coverage/model-availability"
+            ]
+          },
+          {
             "group": "Use cases",
             "pages": [
               "how-to/guides/auto-enrol-a-new-hire",
@@ -252,19 +259,14 @@
             "group": "Platform",
             "icon": "boxes",
             "pages": [
+              "api-reference/integrations/get-integrations",
+              "api-reference/passthrough/make-passthrough-request",
               {
                 "group": "Connectors",
                 "pages": [
                   "api-reference/connectors/get-connectors",
                   "api-reference/connectors/resync-connector",
                   "api-reference/connectors/delete-connector"
-                ]
-              },
-              {
-                "group": "Integrations",
-                "pages": [
-                  "integrations",
-                  "api-reference/integrations/get-integrations"
                 ]
               },
               {
@@ -291,8 +293,7 @@
                   "custom-fields/api/preview",
                   "custom-fields/api/get-configuration"
                 ]
-              },
-              "api-reference/passthrough/make-passthrough-request"
+              }
             ]
           },
           {
