@@ -14,13 +14,13 @@ Every request to the Bindbee API carries an API key. Requests that reach one cus
 
 The API key authenticates you as an authorised user, and every endpoint requires it.
 
-Create and regenerate keys in the [API Keys](https://app.bindbee.dev/settings/keys) tab under Settings. The key is shown once on creation - store it securely, and regenerate if you lose access to it.
+Find both keys in the [API Key](https://app.bindbee.dev/settings/keys) tab under Settings. Each environment has its own, and **Regenerate Key** replaces one immediately - invalidating anything still using the old value.
 
-<img
-  src="https://images.unifyx.dev/documentation_images/api_keys.png"
-  alt="Regenerate Token"
-  className="block"
-/>
+<Frame caption="Settings → API Key. One key per environment, regenerated independently.">
+  <img src="/images/quickstart/api-keys.png" alt="The API Key settings page, showing a Production Key block and a Development Key block, each with a masked value and a Regenerate Key button" />
+</Frame>
+
+{/* VERIFY: is a key's value re-viewable after creation, or only copyable once? This page and the quickstart both previously said "shown once on creation", but the Dashboard presents both keys as persistent masked fields with a copy affordance, which suggests otherwise. The distinction matters - it decides whether losing a key means retrieving it or rotating it. */}
 
 Keys are scoped to an environment. A development key does not work against production data - see [Environments](/explanation/environments).
 
@@ -51,7 +51,7 @@ The `connector_token` names which customer's connection a request acts on. It is
 
 <Steps>
   <Step title="Generate your API key">
-    Open **Settings → API Keys** in the dashboard, find the block for the environment you are calling, and generate a key. Copy it immediately - the value is shown once and is never displayed again.
+    Open **Settings → API Key** in the dashboard and copy the key from the block for the environment you are calling. Each environment has its own, and they are not interchangeable.
 
     **Result:** You have a key string. Store it as a secret. If you lose it, generate a replacement from the same screen; regenerating invalidates the previous key for every connector in that environment.
   </Step>

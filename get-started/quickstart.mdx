@@ -17,26 +17,32 @@ Everything here runs in the **Development** environment. No real customer data i
 <Warning>
   **Start the HRIS signup before anything else.** Provisioning a sandbox tenant can take longer than this entire page — sometimes a day, depending on the vendor. Steps 1 and 2 need nothing but the Dashboard, so begin them while you wait.
 
-  {/* VERIFY: which supported integrations offer a self-serve free trial or developer sandbox, and roughly how long each takes to provision? A short table here would remove the only real blocker in this page. Merge and Finch both solve this with a first-party test account, which Bindbee appears to have a primitive for - ConnectorResponse carries is_test_connector, and WebhookListItemExternal carries for_test_connector, described as "scoped to a demo/test connector". Neither is documented, and no endpoint creates one. If a test connector can be created from the Dashboard, it belongs here as step 2 and cuts this page's real elapsed time from days to minutes. */}
+  {/* VERIFY: does a Test Connector require real credentials for a third-party tenant, or can it return fixture data with no external account at all?
+
+      The Dashboard's Development tab creates connectors via a "+ Test Connector" button, and spec.json carries is_test_connector on ConnectorResponse plus for_test_connector on WebhookListItemExternal ("scoped to a demo/test connector") - so the concept is first-class in both the product and the API. What is not established is whether it removes the third-party dependency.
+
+      This decides the whole shape of the page. If a Test Connector can produce data without an external signup, this prerequisite and its warning are deleted, the page opens straight at step 1, and real elapsed time drops from days to minutes - which is exactly how Finch (Connect in sandbox mode, good_user/good_pass) and Merge (test Linked Accounts) start theirs. If it still needs a real tenant, this warning stays and should gain a table of which integrations offer a self-serve trial and how long each takes to provision. */}
 </Warning>
 
 ## Step 1 — Get a development API key
 
-Go to **Settings → [API Keys](https://app.bindbee.dev/settings/keys)** and generate a key from the **Development** block.
+Go to **Settings → [API Key](https://app.bindbee.dev/settings/keys)**. Both keys already exist — copy the **Development Key**.
 
-<Warning>
-  **Screenshot needed** — Settings → API Keys with the Development and Production blocks both visible, so the separation is obvious at a glance. Save to `images/quickstart/api-keys.png` and replace this callout with a `<Frame>`.
-</Warning>
+<Frame caption="Settings → API Key. Production and Development are separate keys, and neither works against the other's connectors.">
+  <img src="/images/quickstart/api-keys.png" alt="The API Key settings page, showing a Production Key block and a Development Key block, each with a masked value and a Regenerate Key button" />
+</Frame>
 
 Development and Production have separate keys and separate connectors. Neither falls back to the other, and a key from one returns `401` against the other.
+
+<Note>
+  **Regenerate Key** replaces the existing key immediately and invalidates the old one. Use it if a key leaks, not to obtain your first one.
+</Note>
+
+In your terminal, set it as an environment variable so the commands on this page can use it:
 
 ```bash
 export BINDBEE_API_KEY="your_development_api_key"
 ```
-
-<Note>
-  The key is shown once. Regenerating invalidates the old one.
-</Note>
 
 Confirm it works. This endpoint needs nothing but the API key, so a `200` proves the key is valid and rules out everything else before you add a second credential:
 
@@ -47,10 +53,16 @@ curl -i https://api.bindbee.dev/api/v1/lookup/integrations \
 
 ## Step 2 — Connect a test account
 
-In the Dashboard go to **Connectors**, switch to the **Development** tab, and choose **Create connector**. Name the test customer something recognisable such as `Quickstart Test Co`, select category **HRIS**, and pick the integration matching your test account.
+In the Dashboard go to **Connectors** and switch to the **Development** tab, then choose **+ Test Connector**.
+
+<Frame caption="Connectors → Development. The Dashboard states the constraint that step 3 exists to handle.">
+  <img src="/images/quickstart/connectors-development.png" alt="The Connectors page on the Development tab, noting that development connectors do not sync automatically, with a Test Connector button" />
+</Frame>
+
+Name the test customer something recognisable such as `Quickstart Test Co`, select category **HRIS**, and pick the integration matching your test account.
 
 <Warning>
-  **Screenshot needed** — the Create connector dialog with category and integration selected. Save to `images/quickstart/create-connector.png` and replace this callout with a `<Frame>`.
+  **Screenshot needed** — the **+ Test Connector** dialog itself, with category and integration selected. Save to `images/quickstart/test-connector-dialog.png` and replace this callout with a `<Frame>`.
 </Warning>
 
 You get a connector with status `INCOMPLETE` and a Magic Link.
