@@ -259,14 +259,10 @@
             "group": "Platform",
             "icon": "boxes",
             "pages": [
-              "api-reference/integrations/get-integrations",
-              "api-reference/passthrough/make-passthrough-request",
               {
-                "group": "Connectors",
+                "group": "Integrations",
                 "pages": [
-                  "api-reference/connectors/get-connectors",
-                  "api-reference/connectors/resync-connector",
-                  "api-reference/connectors/delete-connector"
+                  "api-reference/integrations/get-integrations"
                 ]
               },
               {
@@ -274,6 +270,14 @@
                 "pages": [
                   "sdk/create-link-token",
                   "sdk/get-connector-token"
+                ]
+              },
+              {
+                "group": "Connectors",
+                "pages": [
+                  "api-reference/connectors/get-connectors",
+                  "api-reference/connectors/resync-connector",
+                  "api-reference/connectors/delete-connector"
                 ]
               },
               {
@@ -292,6 +296,12 @@
                   "custom-fields/api/get-raw-data",
                   "custom-fields/api/preview",
                   "custom-fields/api/get-configuration"
+                ]
+              },
+              {
+                "group": "Passthrough",
+                "pages": [
+                  "api-reference/passthrough/make-passthrough-request"
                 ]
               }
             ]
