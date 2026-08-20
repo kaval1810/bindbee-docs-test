@@ -94,9 +94,9 @@ Three gaps are now covered: a failed sync, an expired credential, and a sync tha
   </Accordion>
 
   <Accordion title="Events arrive intermittently">
-    Bindbee retries up to 4 times within 60 seconds, with a 10-second timeout per attempt. Every non-`2xx` response and every network-layer failure counts as a failed attempt.
+    Almost always slow acknowledgement. Every non-`2xx` and every network-layer failure counts against a short retry budget - see [Signatures & delivery](/webhooks/delivery#retry-mechanism) for the exact window and timeout.
 
-    If your handler does work before responding, it will exceed the timeout under load. Acknowledge with `200` immediately and process asynchronously. Deliveries that exhaust all retries are not redelivered later - see [Recover a Missed Webhook Delivery](/webhooks/delivery).
+    If your handler does work before responding, it will exceed the timeout under load. Acknowledge with `200` immediately and process asynchronously. Deliveries that exhaust all retries are not redelivered later.
   </Accordion>
 
   <Accordion title="You're on a cron schedule and don't want to move to webhooks">

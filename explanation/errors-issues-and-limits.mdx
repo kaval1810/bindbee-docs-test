@@ -73,18 +73,9 @@ On `422` it is an array, one entry per rejected field - here, a `page_size` abov
 
 ## Handle 429 using the headers
 
-Every response carries rate limit headers, not just the failures:
-
-| Header | Meaning |
-| --- | --- |
-| `X-RateLimit-Limit` | Requests allowed per minute - currently 200 |
-| `X-RateLimit-Remaining` | Left in the current window |
-| `X-RateLimit-Reset` | Unix timestamp when the window resets |
-| `Retry-After` | Seconds to wait - on `429` responses |
-
 Wait `Retry-After` seconds, then resume. Don't retry immediately, and don't use a fixed delay - the header is authoritative.
 
-Better still, watch `X-RateLimit-Remaining` on successful responses and slow down before you hit zero. Throttling proactively is cheaper than recovering.
+Better still, watch `X-RateLimit-Remaining` on successful responses and slow down before you hit zero. Throttling proactively is cheaper than recovering. Every response carries it, not just the failures - see [Rate Limits](/api-reference/basics/rate-limits) for all four headers and what each one holds.
 
 ## The two causes of 403
 
@@ -177,7 +168,7 @@ Issues are a Dashboard surface. **There is no issues endpoint in the API**, so a
 
 They protect different things, and only one of them is about you.
 
-**Bindbee's limit** is 200 requests per minute per connector token, not per API key, and it is what a `429` from Bindbee refers to. Each end user has an independent budget, so parallelising across customers is fine - hammering one customer's connector is what trips it.
+**Bindbee's limit** is [200 requests per minute per connector](/api-reference/basics/rate-limits) - counted against the connector token, not the API key - and it is what a `429` from Bindbee refers to. Each end user has an independent budget, so parallelising across customers is fine; hammering one customer's connector is what trips it.
 
 **The source system's limits** are usually far tighter, and they constrain how fast Bindbee can *sync* rather than how fast you can read. Most HR systems permit a small number of requests per minute per tenant.
 
