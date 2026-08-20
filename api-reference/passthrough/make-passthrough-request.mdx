@@ -73,8 +73,8 @@ Content-Type: application/json
 
 ```bash GET with query params
 curl -X POST "https://api.bindbee.dev/api/v1/passthrough" \
-  -H "Authorization: Bearer $BINDBEE_API_KEY" \
-  -H "X-Connector-Token: $CONNECTOR_TOKEN" \
+  -H "Authorization: Bearer <BINDBEE_API_KEY>" \
+  -H "X-Connector-Token: <CONNECTOR_TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{
     "method": "GET",
@@ -86,8 +86,8 @@ curl -X POST "https://api.bindbee.dev/api/v1/passthrough" \
 
 ```bash POST with a body
 curl -X POST "https://api.bindbee.dev/api/v1/passthrough" \
-  -H "Authorization: Bearer $BINDBEE_API_KEY" \
-  -H "X-Connector-Token: $CONNECTOR_TOKEN" \
+  -H "Authorization: Bearer <BINDBEE_API_KEY>" \
+  -H "X-Connector-Token: <CONNECTOR_TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{
     "method": "POST",

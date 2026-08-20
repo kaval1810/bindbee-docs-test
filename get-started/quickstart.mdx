@@ -38,15 +38,11 @@ Development and Production have separate keys and separate connectors. Neither f
   **Regenerate Key** replaces the existing key immediately and invalidates the old one. Use it if a key leaks, not to obtain your first one.
 </Note>
 
-```bash
-export BINDBEE_API_KEY="your_development_api_key"
-```
-
 Confirm it works. This endpoint needs nothing but the API key, so a `200` proves the key is valid and rules out everything else before you add a second credential:
 
 ```bash
 curl -i https://api.bindbee.dev/api/v1/lookup/integrations \
-  --header "Authorization: Bearer $BINDBEE_API_KEY"
+  --header "Authorization: Bearer <BINDBEE_API_KEY>"
 ```
 
 ## Step 2 — Connect a test account
@@ -71,11 +67,7 @@ You get a connector with status `INCOMPLETE` and a Magic Link.
   **Screenshot needed** — the Magic Link authorisation page as the end user sees it, ideally mid-flow rather than the landing screen. This is the single most useful image on the page: it is the one thing a developer cannot picture from prose, and it is what they will screenshot for their own customer-facing docs. Save to `images/quickstart/magic-link-flow.png`. Blur or use fixture data for any tenant name.
 </Warning>
 
-Once authorisation succeeds the status moves to `COMPLETE`. Open the connector and copy `connector_token` from the **Overview** tab:
-
-```bash
-export CONNECTOR_TOKEN="your_connector_token"
-```
+Once authorisation succeeds the status moves to `COMPLETE`. Open the connector and copy `connector_token` from the **Overview** tab.
 
 You now hold both credentials, and they answer different questions.
 
@@ -94,15 +86,15 @@ Open the connector and choose **Force Sync**, or call:
 
 ```bash
 curl -X POST https://api.bindbee.dev/api/embedded/v1/connectors/resync \
-  --header "Authorization: Bearer $BINDBEE_API_KEY" \
-  --header "X-Connector-Token: $CONNECTOR_TOKEN"
+  --header "Authorization: Bearer <BINDBEE_API_KEY>" \
+  --header "X-Connector-Token: <CONNECTOR_TOKEN>"
 ```
 
 Watch it in the Dashboard, or poll the connector list:
 
 ```bash
 curl -G https://api.bindbee.dev/api/hris/v1/connectors \
-  --header "Authorization: Bearer $BINDBEE_API_KEY"
+  --header "Authorization: Bearer <BINDBEE_API_KEY>"
 ```
 
 Two status fields answer different questions, and both matter for the rest of your integration:
@@ -120,8 +112,8 @@ Two status fields answer different questions, and both matter for the rest of yo
 
 ```bash cURL
 curl -G https://api.bindbee.dev/api/hris/v1/employees \
-  --header "Authorization: Bearer $BINDBEE_API_KEY" \
-  --header "X-Connector-Token: $CONNECTOR_TOKEN" \
+  --header "Authorization: Bearer <BINDBEE_API_KEY>" \
+  --header "X-Connector-Token: <CONNECTOR_TOKEN>" \
   --data-urlencode "page_size=10"
 ```
 

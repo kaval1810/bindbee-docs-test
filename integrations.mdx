@@ -223,7 +223,7 @@ The tables above are the catalogue. For what a specific connector returns, ask t
 
 ```bash
 curl "https://api.bindbee.dev/api/hris/v1/integrations" \
-  -H "Authorization: Bearer $BINDBEE_API_KEY"
+  -H "Authorization: Bearer <BINDBEE_API_KEY>"
 ```
 
 ```json
@@ -255,8 +255,8 @@ for model in employees employments compensations benefits employer-benefits \
              payroll-runs employee-payroll-runs pay-groups groups companies; do
   code=$(curl -s -o /dev/null -w "%{http_code}" -G \
     "https://api.bindbee.dev/api/hris/v1/$model" \
-    -H "Authorization: Bearer $BINDBEE_API_KEY" \
-    -H "X-Connector-Token: $CONNECTOR_TOKEN" \
+    -H "Authorization: Bearer <BINDBEE_API_KEY>" \
+    -H "X-Connector-Token: <CONNECTOR_TOKEN>" \
     --data-urlencode "page_size=1")
   echo "$model → $code"
 done
@@ -266,8 +266,8 @@ done
 
 ```bash
 curl -G "https://api.bindbee.dev/api/hris/v1/employees" \
-  -H "Authorization: Bearer $BINDBEE_API_KEY" \
-  -H "X-Connector-Token: $CONNECTOR_TOKEN" \
+  -H "Authorization: Bearer <BINDBEE_API_KEY>" \
+  -H "X-Connector-Token: <CONNECTOR_TOKEN>" \
   --data-urlencode "page_size=5" \
 | jq '[.items[] | to_entries[] | select(.value != null) | .key] | unique'
 ```
