@@ -168,7 +168,7 @@ Not every failure surfaces on a response. A sync that fails partway through happ
 **Issues** are the layer above. Where a log entry is one request and its response, an issue is a failure Bindbee raised against a connector with a likely cause attached - carrying the evidence, so you and support read the same thing. See [Platform](/platform/overview).
 
 <Warning>
-Issues are a Dashboard surface. **There is no issues endpoint in the API**, so anything your own monitoring must act on has to come from sync-status webhooks or the connector's `status` - see [Connections](/explanation/connector-lifecycle).
+Issues are a Dashboard surface. **There is no issues endpoint in the API**, so anything your own monitoring must act on has to come from sync-status webhooks or the connector's `status` - see [How connections work](/explanation/connector-lifecycle).
 </Warning>
 
 {/* VERIFY: do issues have an explicit lifecycle - are they closed by Bindbee when the underlying failure clears, or dismissed by hand? The Dashboard shows "currently open issues", which implies a state, but the transition is undocumented. */}

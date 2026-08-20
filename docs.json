@@ -35,6 +35,7 @@
             "pages": [
               "explanation/core-concepts",
               "explanation/unified-model",
+              "explanation/connector-lifecycle",
               "explanation/environments"
             ]
           },
@@ -57,7 +58,6 @@
           {
             "group": "Connections",
             "pages": [
-              "explanation/connector-lifecycle",
               "explanation/magic-link",
               "how-to/connections/embed-the-connection-flow",
               "how-to/connections/create-a-connector-programmatically",
