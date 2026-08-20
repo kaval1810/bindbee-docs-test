@@ -1,61 +1,83 @@
 ---
 title: "Quickstart"
-description: "Connect a test HRIS account and read unified employee records from the API. Four steps, about 20 minutes."
+description: "Connect an HRIS and read unified employee records from the API. Four steps, about 15 minutes of your own time."
 ---
 
-By the end of this page you will have employee records from a linked HRIS arriving in your own code, in Bindbee's unified schema.
+By the end of this page you will have employee records arriving in your own code, in Bindbee's unified schema — the same shape whether the source is BambooHR, Workday or ADP.
 
-Everything here happens in the **Development** environment against a test tenant. No real customer data is touched.
+Everything here runs in the **Development** environment. No real customer data is touched.
+
+## Prerequisites
 
 <Info>
-  **Before you start**
-
-  - Access to the [Bindbee Dashboard](https://app.bindbee.dev) - provisioned during onboarding. If you cannot sign in, email [support@bindbee.dev](mailto:support@bindbee.dev).
-  - A test account with any [supported HRIS](/integrations). **Start this signup first** - a sandbox tenant can take longer to provision than the rest of this page combined.
+  - **Access to the [Bindbee Dashboard](https://app.bindbee.dev)** — provisioned during onboarding. If you cannot sign in, email [support@bindbee.dev](mailto:support@bindbee.dev).
+  - **A test account with any [supported HRIS](/integrations)** — you authorise it the way your customer eventually will.
 </Info>
 
-## Step 1 - Get a development API key
+<Warning>
+  **Start the HRIS signup before anything else.** Provisioning a sandbox tenant can take longer than this entire page — sometimes a day, depending on the vendor. Steps 1 and 2 need nothing but the Dashboard, so begin them while you wait.
 
-Go to **Settings → [API Keys](https://app.bindbee.dev/settings/keys)** and generate a key from the **Development** block. Development and Production have separate keys and separate connectors; neither falls back to the other.
+  {/* VERIFY: which supported integrations offer a self-serve free trial or developer sandbox, and roughly how long each takes to provision? A short table here would remove the only real blocker in this page. Merge and Finch both solve this with a first-party test account, which Bindbee appears to have a primitive for - ConnectorResponse carries is_test_connector, and WebhookListItemExternal carries for_test_connector, described as "scoped to a demo/test connector". Neither is documented, and no endpoint creates one. If a test connector can be created from the Dashboard, it belongs here as step 2 and cuts this page's real elapsed time from days to minutes. */}
+</Warning>
+
+## Step 1 — Get a development API key
+
+Go to **Settings → [API Keys](https://app.bindbee.dev/settings/keys)** and generate a key from the **Development** block.
+
+<Warning>
+  **Screenshot needed** — Settings → API Keys with the Development and Production blocks both visible, so the separation is obvious at a glance. Save to `images/quickstart/api-keys.png` and replace this callout with a `<Frame>`.
+</Warning>
+
+Development and Production have separate keys and separate connectors. Neither falls back to the other, and a key from one returns `401` against the other.
 
 ```bash
 export BINDBEE_API_KEY="your_development_api_key"
 ```
 
-<Warning>
+<Note>
   The key is shown once. Regenerating invalidates the old one.
-</Warning>
+</Note>
 
-Confirm it works. This endpoint needs nothing but the API key, so a `200` proves the key is valid and rules out everything else:
+Confirm it works. This endpoint needs nothing but the API key, so a `200` proves the key is valid and rules out everything else before you add a second credential:
 
 ```bash
 curl -i https://api.bindbee.dev/api/v1/lookup/integrations \
   --header "Authorization: Bearer $BINDBEE_API_KEY"
 ```
 
-## Step 2 - Connect a test account
+## Step 2 — Connect a test account
 
-In the Dashboard go to **Connectors**, switch to the **Development** tab, and choose **Create connector**. Name the test customer something recognisable such as `Tutorial Test Co`, select category **HRIS**, and pick the integration matching your test account.
+In the Dashboard go to **Connectors**, switch to the **Development** tab, and choose **Create connector**. Name the test customer something recognisable such as `Quickstart Test Co`, select category **HRIS**, and pick the integration matching your test account.
 
-You get a connector with status `INCOMPLETE` and a Magic Link. Open the link - this is what your customer sees - and enter your test account's credentials. Complete every step; several systems have a final confirmation screen that is easy to close early.
+<Warning>
+  **Screenshot needed** — the Create connector dialog with category and integration selected. Save to `images/quickstart/create-connector.png` and replace this callout with a `<Frame>`.
+</Warning>
 
-Once authorization succeeds the status moves to `ACTIVE`. Open the connector and copy `connector_token` from the **Overview** tab:
+You get a connector with status `INCOMPLETE` and a Magic Link.
+
+**Open the link. This is exactly what your customer sees** — the same hosted page, in your branding, that an HR administrator will use in production. Enter your test account's credentials and complete every step; several systems have a final confirmation screen that is easy to close early.
+
+<Warning>
+  **Screenshot needed** — the Magic Link authorisation page as the end user sees it, ideally mid-flow rather than the landing screen. This is the single most useful image on the page: it is the one thing a developer cannot picture from prose, and it is what they will screenshot for their own customer-facing docs. Save to `images/quickstart/magic-link-flow.png`. Blur or use fixture data for any tenant name.
+</Warning>
+
+Once authorisation succeeds the status moves to `COMPLETE`. Open the connector and copy `connector_token` from the **Overview** tab:
 
 ```bash
 export CONNECTOR_TOKEN="your_connector_token"
 ```
 
-You now hold both credentials. The API key says *who is asking*; the connector token says *whose data*.
+You now hold both credentials, and they answer different questions.
 
 | Token | Header | Identifies |
 | --- | --- | --- |
-| API key | `Authorization: Bearer …` | Your organisation |
-| Connector token | `X-Connector-Token` | One customer's linked system |
+| API key | `Authorization: Bearer …` | Your organisation — *who is asking* |
+| Connector token | `X-Connector-Token` | One customer's linked system — *whose data* |
 
-## Step 3 - Run a sync
+## Step 3 — Run the first sync
 
 <Warning>
-  **Development connectors do not sync automatically.** Skip this and step 4 returns an empty list that looks like a bug.
+  **Development connectors do not sync automatically.** Skip this step and step 4 returns an empty list that looks exactly like a bug. This is the most common thing to get stuck on.
 </Warning>
 
 Open the connector and choose **Force Sync**, or call:
@@ -66,18 +88,23 @@ curl -X POST https://api.bindbee.dev/api/embedded/v1/connectors/resync \
   --header "X-Connector-Token: $CONNECTOR_TOKEN"
 ```
 
-Watch it in the Dashboard, or poll the connector list and read `sync_status`:
+Watch it in the Dashboard, or poll the connector list:
 
 ```bash
 curl -G https://api.bindbee.dev/api/hris/v1/connectors \
   --header "Authorization: Bearer $BINDBEE_API_KEY"
 ```
 
-Two status fields answer different questions. `status` is the **link** status - `COMPLETE`, `INCOMPLETE`, `RELINK_NEEDED`. `sync_status` is the **data** status - `Syncing`, `Done`, `Failed`. A connector can be `COMPLETE` and still hold no data.
+Two status fields answer different questions, and both matter for the rest of your integration:
 
-Wait for `sync_status` to reach `Done`. A test tenant is usually under a few minutes.
+| Field | Values | Answers |
+| --- | --- | --- |
+| `status` | `INCOMPLETE`, `COMPLETE`, `RELINK_NEEDED` | Are the credentials good? |
+| `sync_status` | `Syncing`, `Done`, `Failed` | Did the last run succeed? |
 
-## Step 4 - Read employee data
+**A connector can be `COMPLETE` and still hold no data.** Wait for `sync_status` to reach `Done` — on a test tenant, usually under a few minutes.
+
+## Step 4 — Read employee data
 
 <CodeGroup>
 
@@ -144,19 +171,33 @@ for (const employee of items) {
 }
 ```
 
-Two identifiers appear on every record, and confusing them causes real bugs. **`id`** is Bindbee's - stable, same shape across every system, and the one to store. **`remote_id`** is the source system's own, useful for reconciliation but varying in format by system.
+**Each object in `items` is a unified model.** `first_name`, `work_email` and `employment_status` mean the same thing and arrive in the same shape whichever HRIS produced them — that normalisation is the whole product. Point this same code at a connector on a different system and it keeps working. See [Unified model](/explanation/unified-model).
 
-To read the rest of the collection, keep passing `cursor` back until it comes back `null`. See [Pagination](/api-reference/basics/pagination).
+Two identifiers appear on every record, and confusing them causes real bugs. **`id`** is Bindbee's — stable, same shape everywhere, the one to store. **`remote_id`** is the source system's own, useful for reconciliation but varying in format by system.
+
+<Note>
+  An empty `items` array almost always means the sync hasn't finished. Go back to step 3 and check `sync_status`.
+</Note>
+
+To read the rest of the collection, keep passing `cursor` back until it returns `null` — see [Pagination](/api-reference/basics/pagination).
+
+## What you just did
+
+You ran the entire loop that every Bindbee integration is built from:
+
+**Authorised a customer's system** without ever handling their credentials → **synced their data** into Bindbee's copy → **read it back normalised**, through code that doesn't know which HRIS it came from.
+
+Production is the same four steps with a Production API key. The differences are that connectors sync on a schedule instead of on demand, and your customers open the Magic Link themselves.
 
 ## If this didn't work
 
 <AccordionGroup>
   <Accordion title="Empty items array">
-    Almost always no completed sync. Development connectors do not sync automatically - go back to step 3.
+    Almost always no completed sync. Development connectors do not sync automatically — go back to step 3.
   </Accordion>
 
   <Accordion title="401 Unauthorized">
-    The API key is wrong, expired, or missing the `Bearer ` prefix. The space after `Bearer` is required.
+    The API key is wrong, expired, or missing the `Bearer ` prefix. The space after `Bearer` is required. A Development key against a Production connector also returns `401`.
   </Accordion>
 
   <Accordion title="403 Forbidden">
@@ -164,20 +205,22 @@ To read the rest of the collection, keep passing `cursor` back until it comes ba
   </Accordion>
 
   <Accordion title="404 Not Found">
-    Check the category segment. Connector and record endpoints are scoped per category - `/api/hris/v1/connectors`, not `/api/v1/connectors`.
+    Check the category segment. Connector and record endpoints are scoped per category — `/api/hris/v1/connectors`, not `/api/v1/connectors`.
+  </Accordion>
+
+  <Accordion title="The connector never leaves INCOMPLETE">
+    Authorisation wasn't finished. Several systems have a final confirmation screen that closes without completing. Reopen the Magic Link and walk it through to the end.
   </Accordion>
 
   <Accordion title="A field you expected is missing">
-    Check in order: is the field in [scope](/platform/overview); did the source system grant permission for it; does the unified model carry it at all. If the value appears in `raw_data`, it is the third case - see [Map from the dashboard](/how-to/data-model/map-a-custom-field-from-the-dashboard).
+    Check in order: is the field in [scope](/platform/overview); did the source system grant permission for it; does the unified model carry it at all. If the value appears in `raw_data`, it is the third case — see [Map from the dashboard](/how-to/data-model/map-a-custom-field-from-the-dashboard).
   </Accordion>
 </AccordionGroup>
 
 ## Next
 
-You have the read path working. These are the four things most integrations do next:
-
 <CardGroup cols={2}>
-  <Card title="Choose what to sync" icon="filter" href="/platform/scoping">
+  <Card title="Choose what to sync" icon="filter" href="/platform/overview">
     Narrow the models and fields Bindbee requests from every connected system.
   </Card>
   <Card title="Add a missing field" icon="plus" href="/how-to/data-model/map-a-custom-field-from-the-dashboard">
@@ -191,4 +234,4 @@ You have the read path working. These are the four things most integrations do n
   </Card>
 </CardGroup>
 
-Going to production uses the same steps with a production API key, plus the [Go-live checklist](/how-to/setup/go-live-checklist).
+Before you go live, work through the [Go-live checklist](/how-to/setup/go-live-checklist).
