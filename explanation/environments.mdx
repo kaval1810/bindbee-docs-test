@@ -1,7 +1,9 @@
 ---
 title: "Environments"
-description: "What Development and Production keep separate, what they share despite being separate, and why a connector's environment is settled when it is created."
+description: "What Development and Production keep separate, what they share despite being separate, and how to pick one for a given connection."
 ---
+
+{/* CONTENT PASS: merged from explanation/environments + how-to/setup/choose-an-environment. The two behaviour tables overlap - collapse to one in the content pass. */}
 
 Every organisation has two environments: Development and Production. Most people arrive expecting two isolated copies of the same account. **Half of that is right, and the wrong half is where the surprises come from.**
 
@@ -14,6 +16,7 @@ Every organisation has two environments: Development and Production. Most people
 | Webhook deliveries | Separate | Separate |
 | Automatic sync | None - you trigger every one | Every 24 hours by default |
 | Connectors | Unlimited, unbilled | Counted and billed |
+| Key sharing | Safe to share within the team | Treat as a production secret |
 | Scope configuration | **Shared** | **Shared** |
 | Custom field definitions | **Shared** | **Shared** |
 
@@ -28,6 +31,23 @@ Configuration is not separate. Scope and custom field definitions belong to the 
 </Warning>
 
 The upside of that same rule: the scope and mappings you build while testing are the ones in force when you go live. You configure once, not twice.
+
+## Choosing one
+
+| Use Development when | Use Production when |
+| --- | --- |
+| Testing an integration before go-live | A paying customer's live connection |
+| A sandbox or demo tenant of an HRIS | Data feeds anything customer-facing |
+| Internal test accounts, however realistic | You need syncs to run unattended |
+| Validating field mappings | |
+
+The deciding question is whether anything downstream depends on the data being current without someone triggering it.
+
+Then use the matching key. Copy it from **Settings → API Key**, where Production and Development have separate blocks - see [Authentication](/api-reference/basics/authentication).
+
+<Warning>
+Production connectors are counted and billed automatically. Test connections left in Production get billed as live ones - the most common cause of an unexpected connector count is testing done against a Production key.
+</Warning>
 
 ## How an environment gets decided
 
@@ -46,7 +66,7 @@ A connector can be moved afterwards - the authorisation survives and the end use
 
 **Nothing syncs on its own.** Every refresh is one you trigger.
 
-This is the environment's most common surprise, because it looks exactly like a bug: the read succeeds, the data is simply old, and nothing in the response says so.
+This is the environment's most common surprise, because it looks exactly like a bug: the read succeeds, the data is simply old, and nothing in the response says so. See [Syncing](/explanation/how-syncing-works).
 
 Connectors are unlimited and unbilled. And because a Development key can only ever reach sandbox tenants, it is safe for a team to share.
 
@@ -59,7 +79,7 @@ That schedule sets the ceiling on freshness. A record edited an hour ago stays i
 Connectors are counted and billed, and a test connection created against a Production key is indistinguishable from a live one.
 
 <Warning>
-Incomplete connectors - where the end user opened the link but never finished authorising - sit in the same list as active ones. Counting without filtering is the usual reason a connector count looks wrong.
+Incomplete connectors - where the end user opened the link but never finished authorising - sit in the same list as active ones. Counting without filtering is the usual reason a connector count looks wrong. Filter to **Active Connectors** before counting.
 </Warning>
 
 **Regenerating the key invalidates the old one immediately**, across every connector at once.
@@ -74,15 +94,19 @@ Incomplete connectors - where the end user opened the link but never finished au
 
 ## What this means for you
 
-- **Decide the environment before creating the connection**, since it is settled at creation - see [Environments](/how-to/setup/choose-an-environment).
-- **Trigger a sync before trusting Development data** - see [Development connectors](/how-to/sync-control/sync-a-development-connector).
+- **Decide the environment before creating the connection**, since it is settled at creation.
+- **Trigger a sync before trusting Development data.**
 - **Settle scope before testing.** It reaches live Production connectors as you change it.
 - **Filter to active connectors before counting**, or incomplete ones inflate the number.
-- **Treat a wrong environment as recoverable** - see [Move between environments](/how-to/setup/move-a-connector-between-environments).
+- **Treat a wrong environment as recoverable** - a connector can be moved without the end user reconnecting.
 - **Plan a key rotation as a deploy.** Every service on the old key breaks the moment you regenerate.
+
+<Note>
+  There are only two environments. Since Development connectors are unlimited and unbilled, teams typically run staging against Development with a separate set of connectors and a shared Development key.
+</Note>
 
 ## Related
 
-- [Environments](/how-to/setup/choose-an-environment) - picking one for a given connection
-- [Authentication](/api-reference/basics/authentication) - how keys are supplied
 - [Core concepts](/explanation/core-concepts) - where environments sit in the hierarchy
+- [Authentication](/api-reference/basics/authentication) - how keys are supplied
+- [Syncing](/explanation/how-syncing-works) - why Development needs a manual trigger
