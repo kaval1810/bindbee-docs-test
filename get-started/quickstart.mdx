@@ -76,6 +76,8 @@ You now hold both credentials, and they answer different questions.
 | API key | `Authorization: Bearer …` | Your organisation — *who is asking* |
 | Connector token | `X-Connector-Token` | One customer's linked system — *whose data* |
 
+Every request from here carries both — see [Authentication](/api-reference/basics/authentication) for which endpoints need only the key.
+
 ## Step 3 — Run the first sync
 
 <Warning>
@@ -105,6 +107,10 @@ Two status fields answer different questions, and both matter for the rest of yo
 | `sync_status` | `Syncing`, `Done`, `Failed` | Did the last run succeed? |
 
 **A connector can be `COMPLETE` and still hold no data.** Wait for `sync_status` to reach `Done` — on a test tenant, usually under a few minutes.
+
+<Note>
+  This manual trigger is a Development behaviour. Production connectors sync on a schedule instead — see [Sync Frequency](/api-reference/basics/sync-frequency).
+</Note>
 
 ## Step 4 — Read employee data
 
@@ -181,7 +187,18 @@ Two identifiers appear on every record, and confusing them causes real bugs. **`
   An empty `items` array almost always means the sync hasn't finished. Go back to step 3 and check `sync_status`.
 </Note>
 
-To read the rest of the collection, keep passing `cursor` back until it returns `null` — see [Pagination](/api-reference/basics/pagination).
+To read the rest of the collection, keep passing `cursor` back until it returns `null` — see [Pagination](/api-reference/basics/pagination). Paging a large population is the first thing that meets the [rate limit](/api-reference/basics/rate-limits), so raise `page_size` rather than looping faster.
+
+## API basics
+
+Four things apply to every endpoint you call from here, whatever you build next.
+
+| | |
+| --- | --- |
+| [Authentication](/api-reference/basics/authentication) | The two headers, which endpoints need which, and the idempotency key on writes |
+| [Pagination](/api-reference/basics/pagination) | `cursor` and `page_size`, and why a short page does not mean the end |
+| [Rate Limits](/api-reference/basics/rate-limits) | 200 requests per minute per connector, and the headers that tell you where you are |
+| [Sync Frequency](/api-reference/basics/sync-frequency) | The cadences a Production connector can run on, and what sets the floor |
 
 ## What you just did
 
@@ -225,14 +242,14 @@ Production is the same four steps with a Production API key. The differences are
   <Card title="Choose what to sync" icon="filter" href="/platform/overview">
     Narrow the models and fields Bindbee requests from every connected system.
   </Card>
-  <Card title="Add a missing field" icon="plus" href="/how-to/data-model/map-a-custom-field-from-the-dashboard">
+  <Card title="Add a missing field" icon="plus" href="/explanation/how-custom-fields-work">
     Map a value out of the raw payload onto the unified object.
   </Card>
   <Card title="Get notified on change" icon="bell" href="/webhooks/overview">
     Subscribe to a webhook so your application stops polling.
   </Card>
-  <Card title="Embed the connection flow" icon="code" href="/how-to/connections/embed-the-connection-flow">
-    Let customers link their own systems from inside your product.
+  <Card title="Embed the connection flow" icon="code" href="/explanation/magic-link">
+    Embed the flow, or send a hosted link, from inside your product.
   </Card>
 </CardGroup>
 
