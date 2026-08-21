@@ -1,13 +1,12 @@
 ---
 title: "Model availability"
-sidebarTitle: "Model Availability Matrix"
 description: "Which unified models each integration returns, by category. Model level, not field level."
 ---
 
 Coverage is a property of the **integration**, not the vendor - two variants of the same brand can return different models. This page answers one question only: *does this integration return this model at all?*
 
 <Warning>
-  **Data needed** — every cell below is `·`, meaning not yet published. The rows and columns are correct and complete: 69 integrations pulled from [Integrations & Coverage](/integrations), and all 44 models across the three categories, pulled from `spec.json`. Send the support data and the tables fill in place.
+  **Data needed** — every cell below is `·`, meaning not yet published. The rows and columns are correct and complete: 69 integrations pulled from [Supported systems](/integrations), and all 44 models across the three categories, pulled from `spec.json`. Send the support data and the tables fill in place.
 
   {/* VERIFY: no endpoint returns model support per integration. /api/v1/lookup/models is per category, and /api/v1/lookup/integrations returns an integration's categories, not its models. So this page is hand-maintained and will drift silently the moment a connector gains a model. Worth asking whether coverage can be exposed on the lookup endpoint - Finch backs its Field Support tool with data for exactly this reason. Until then, this page needs an owner and a review cadence. */}
 </Warning>
@@ -246,7 +245,7 @@ Model availability for SFTP connectors is set by the **customer's export templat
 | Plansource (SFTP) | `plansource_sftp` |
 | Rippling (SFTP) | `rippling_sftp` |
 
-See [SFTP & file connectors](/explanation/sftp-and-file-connectors).
+See [File & SFTP connectors](/explanation/sftp-and-file-connectors).
 
 ## Recruiting (ATS)
 
@@ -313,7 +312,7 @@ See [SFTP & file connectors](/explanation/sftp-and-file-connectors).
 | Workday | `workday` | · | · | · | · | · | · | · |
 ## Related
 
-- [Integrations & Coverage](/integrations) - every system, its slug and connection type
+- [Supported systems](/integrations) - every system, its slug and connection type
 - [Unified model](/explanation/core-concepts) - what a model is, and why fields go missing
 - [Scope & permissions](/explanation/scope-and-permissions) - the three reasons data is absent
 - [What you can write](/explanation/how-meta-apis-work) - the write-side equivalent

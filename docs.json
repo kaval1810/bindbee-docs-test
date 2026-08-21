@@ -40,7 +40,7 @@
             ]
           },
           {
-            "group": "Integration",
+            "group": "Integrations",
             "pages": [
               "integrations",
               "integrations-coverage/model-availability"
@@ -68,7 +68,7 @@
               "guides/reading-and-writing-overview",
               "how-to/reading-data/filter-and-narrow-a-collection",
               {
-                "group": "Data basics",
+                "group": "Data Basics",
                 "pages": [
                   "explanation/record-identity",
                   "explanation/enum-values"
