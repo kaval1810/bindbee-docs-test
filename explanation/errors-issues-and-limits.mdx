@@ -10,8 +10,8 @@ Something did not work. Before you can fix it you need to know whose failure it 
 | Origin | How it reaches you | Where the detail is |
 | --- | --- | --- |
 | **Your request was wrong** | A `4xx` on the response | `detail` in the response body |
-| **The source system refused** | Not on your response at all - it happens during a sync | Connector logs, sync-status webhook |
-| **Nothing failed** | `200`, well-formed, data absent | Nowhere - it is scope or permissions |
+| **The source system refused** | Not on your response at all - it happens during a sync | [Connector logs](/how-to/troubleshooting/logs), or a [sync-status webhook](/webhooks/overview) |
+| **Nothing failed** | `200`, well-formed, data absent | Nowhere - it is [scope or permissions](/explanation/scope-and-permissions) |
 
 The middle row is the one that catches people. **A source-system failure does not surface on the request you just made.**
 
