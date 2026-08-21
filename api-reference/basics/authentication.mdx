@@ -26,7 +26,7 @@ Keys are scoped to an environment. A development key does not work against produ
 
 ## Connector Tokens
 
-The `connector_token` names which customer's connection a request acts on. It is issued once the end user has authorised the connection, however that connection was created - a hosted [Magic Link](/explanation/magic-link), the [embedded component](/how-to/connections/embed-the-connection-flow), or a link generated [programmatically](/how-to/connections/create-a-connector-programmatically).
+The `connector_token` names which customer's connection a request acts on. It is issued once the end user has authorised the connection, however that connection was created - a hosted Magic Link, the embedded component, or a link generated programmatically - see [How to connect](/explanation/magic-link).
 
 <Tip>
   You can find a `connector_token` in the connector's **Connector Details**
@@ -152,17 +152,17 @@ Passthrough does not accept an idempotency key - a retried passthrough write rea
   <Accordion title="403 Forbidden">
     The credentials are valid but don't permit this resource. The two common causes are a connector token used against a different API category - an HRIS-only connector called on `/api/ats/v1/*` - and a model whose writes are disabled for that integration.
 
-    For the second case, see [Check write support](/how-to/writing-data-back/check-write-support).
+    For the second case, see [Check write support](/explanation/how-meta-apis-work).
   </Accordion>
 
   <Accordion title="The request succeeds but returns no records">
-    Authentication is fine; the connector has no synced data yet. Development connectors do not sync automatically - see [Development connectors](/how-to/sync-control/sync-a-development-connector).
+    Authentication is fine; the connector has no synced data yet. Development connectors do not sync automatically - see [Development connectors](/explanation/how-syncing-works).
 
     If it's a Production connector, check [Sync status](/how-to/troubleshooting/monitor-sync-status).
   </Accordion>
 
   <Accordion title="The connector token stopped working after the end user reconnected">
-    Relinking preserves the `connector_token`, so a working token does not stop working because a customer re-authorised. What usually happened is that the connector was deleted and a fresh link issued instead of relinked - that mints a new connector, a new token, and new record IDs. See [Update credentials](/how-to/connections/update-credentials).
+    Relinking preserves the `connector_token`, so a working token does not stop working because a customer re-authorised. What usually happened is that the connector was deleted and a fresh link issued instead of relinked - that mints a new connector, a new token, and new record IDs. See [Update credentials](/how-to/reliability/detect-a-connection-that-needs-relinking).
 
     Read the current token from the connector's **Connector Details** panel or via [Get Connectors](/api-reference/connectors/get-connectors), and key your stored tokens by connector ID so a replacement never sits alongside the old value.
   </Accordion>

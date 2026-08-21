@@ -1,6 +1,6 @@
 ---
 title: "Write Payroll Deductions Back to Payroll"
-sidebarTitle: "Write Payroll Deductions"
+sidebarTitle: "Write ICHRA Deductions"
 description: "Take a benefit election in your product and land it as a deduction line in the customer's payroll system."
 ---
 
@@ -24,7 +24,7 @@ This is the round trip behind most benefits products: read the enrolment, calcul
   <Step title="Confirm the integration supports payroll writes">
     Write support varies by integration, and a plan that assumes it works everywhere fails late.
 
-    Check before building - see [Check write support](/how-to/writing-data-back/check-write-support). Where writes aren't supported, [Passthrough](/how-to/data-model/make-a-passthrough-request) is the fallback, at the cost of a provider-specific shape.
+    Check before building - see [Check write support](/explanation/how-meta-apis-work). Where writes aren't supported, [Passthrough](/explanation/passthrough) is the fallback, at the cost of a provider-specific shape.
 
     **Result:** Confirmation this round trip is possible on this platform.
   </Step>
@@ -37,7 +37,7 @@ This is the round trip behind most benefits products: read the enrolment, calcul
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    Take the plan year from the benefit's effective dates, not from the payroll date - see [Reading benefits](/how-to/reading-data/read-benefits-data).
+    Take the plan year from the benefit's effective dates, not from the payroll date - see [Reading benefits](/explanation/benefits-models).
 
     **Result:** The election and the period it belongs to.
   </Step>
@@ -86,7 +86,7 @@ This is the round trip behind most benefits products: read the enrolment, calcul
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    Build the body from this rather than hardcoding it - required fields and enum values differ per integration. Read the `required` array on every nested object, and use `enumInformation` rather than inferring from value names. See [Fetch a schema](/how-to/writing-data-back/fetch-a-write-schema).
+    Build the body from this rather than hardcoding it - required fields and enum values differ per integration. Read the `required` array on every nested object, and use `enumInformation` rather than inferring from value names. See [Fetch a schema](/explanation/how-meta-apis-work).
 
     **Result:** The exact body this integration accepts.
   </Step>
@@ -117,7 +117,7 @@ This is the round trip behind most benefits products: read the enrolment, calcul
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    Check the period, not just the presence - a write submitted after cut-off can be silently applied to the following run. See [Reading payroll](/how-to/reading-data/read-payroll-data).
+    Check the period, not just the presence - a write submitted after cut-off can be silently applied to the following run. See [Reading payroll](/explanation/payroll-and-time-models).
 
     **Result:** Confirmation the deduction is in the run you intended.
   </Step>
@@ -131,7 +131,7 @@ This is the round trip behind most benefits products: read the enrolment, calcul
 
 **The cut-off is invisible through the API.** Payroll closes for processing before the pay date, and that deadline is the customer's operational schedule, not a field you can read. A write submitted after close is either rejected or silently applied to the next period. Agree the deadline per customer and treat missed changes as catch-up adjustments in the following period rather than assuming a retroactive edit is possible.
 
-**Sync latency sits between election and write.** An election made in the HRIS isn't visible to you until the connector syncs, so the usable window between election and payroll cut-off is shorter than it appears. Where timing is tight, [force a resync](/how-to/sync-control/force-a-resync) rather than waiting for the schedule.
+**Sync latency sits between election and write.** An election made in the HRIS isn't visible to you until the connector syncs, so the usable window between election and payroll cut-off is shorter than it appears. Where timing is tight, [force a resync](/explanation/how-syncing-works) rather than waiting for the schedule.
 
 ## If this didn't work
 
@@ -159,6 +159,6 @@ This is the round trip behind most benefits products: read the enrolment, calcul
 
 ## Related
 
-- [Reading benefits](/how-to/reading-data/read-benefits-data)
+- [Reading benefits](/explanation/benefits-models)
 - [Employee payroll run](/how-to/writing-data-back/create-an-employee-payroll-run)
-- [Reading payroll](/how-to/reading-data/read-payroll-data)
+- [Reading payroll](/explanation/payroll-and-time-models)

@@ -1,0 +1,33 @@
+---
+title: "MCP"
+description: "Connect Bindbee's documentation and API to an AI assistant over the Model Context Protocol."
+---
+
+{/* CONTENT PASS: new page, scaffold only. Needs three facts before it can be published - see the Data needed callout. Do not publish with placeholders in place. */}
+
+The Model Context Protocol is an open standard that lets an AI assistant call tools and read documentation from an external source. Bindbee exposes an MCP server so an assistant can answer questions about the API against current documentation rather than whatever it was trained on.
+
+<Warning>
+  **Data needed** — this page is a scaffold. Three things are required before it is publishable:
+
+  1. **The server URL.** Nothing in `docs.json` configures MCP today, so the endpoint is unknown.
+  2. **What it exposes.** Documentation search only, or the API endpoints as callable tools? These are materially different products and the page reads differently for each.
+  3. **Authentication.** Whether a Bindbee API key is required, and if so how it is supplied.
+
+  {/* VERIFY: Mintlify generates an MCP server from docs and, optionally, from the OpenAPI spec. If the API is exposed as tools, the auth model matters a great deal - an assistant holding an API key reaches every customer's data, which is the exact boundary Core concepts draws between the API key and the connector token. Confirm before writing this up. */}
+</Warning>
+
+## What you can use it for
+
+Once connected, an assistant can answer questions grounded in these docs - which endpoint returns terminated employees, what `RELINK_NEEDED` means, why a field is missing - without you pasting documentation into the conversation.
+
+## Connecting a client
+
+<Warning>
+  **Data needed** — the connection snippet depends on the server URL above. Most clients take either a URL or a local command; both forms belong here once the endpoint is known.
+</Warning>
+
+## Related
+
+- [Authentication](/api-reference/basics/authentication) - what an API key reaches, and why that matters here
+- [Frontend SDK](/sdk/frontend-sdk) - the only other client library Bindbee ships

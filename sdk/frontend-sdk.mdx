@@ -1,0 +1,89 @@
+---
+title: "Frontend SDK"
+description: "The React hook and the CDN global that render the Bindbee connection flow inside your own product."
+---
+
+{/* CONTENT PASS: extracted from how-to/connections/embed-the-connection-flow, which keeps the task walkthrough. This page is the reference half only. */}
+
+Two surfaces render the same connection flow. Both take a `link_token` from [Create Link Token](/sdk/create-link-token) and hand back a `temporary_token`, which you exchange from your backend via [Get Connector Token](/sdk/get-connector-token).
+
+For the walkthrough that puts these in order, see [How to connect](/explanation/magic-link).
+
+## React
+
+`@bindbee/react-link` is the only SDK Bindbee publishes. Everything else is a plain HTTP call.
+
+```bash
+npm install --save @bindbee/react-link
+# or
+yarn add @bindbee/react-link
+```
+
+```jsx
+import { useBindbeeMagiclink } from "@bindbee/react-link";
+
+const { open } = useBindbeeMagiclink({
+  linkToken,
+  onSuccess: (temporaryToken) => sendToBackend(temporaryToken),
+  onClose: () => {},
+});
+```
+
+| Option | Type | Required | Purpose |
+| --- | --- | --- | --- |
+| `linkToken` | `string` | Yes | The `link_token` for this end customer. One token initialises one session |
+| `onSuccess` | `(temporaryToken: string) => void` | Yes | Fires in the browser when authorisation completes. Send the value to your backend |
+| `onClose` | `() => void` | No | Fires when the customer dismisses the flow without finishing |
+| `serverUrl` | `string` | No | Region override. Defaults to `https://api.bindbee.dev`; set `https://api-eu.bindbee.dev` for EU |
+
+The hook returns `open` - call it to launch the flow, typically from a button handler.
+
+## CDN
+
+For any framework other than React, load the script and use the `BindbeeEmbed` global.
+
+```html
+<script
+  src="https://cdn.bindbee.dev/initialize.min.js"
+  integrity="sha512-1L1XqHiVgenLFd95eE8fqJ7o6kje+5+3IN7K0cuwNP6feTrYAeNTdpeqR1e2HgThSb5Bj+USqJeNiyEE9KBtfA=="
+  crossorigin="anonymous"
+></script>
+
+<script>
+  window.BindbeeEmbed.initialize({
+    linkToken: "LINK_TOKEN",
+    onSuccess: (temporaryToken) => sendToBackend(temporaryToken),
+    onClose: () => {},
+  });
+</script>
+```
+
+An unminified build is served at `initialize.js` with its own `integrity` hash.
+
+| Method | Purpose |
+| --- | --- |
+| `BindbeeEmbed.initialize(options)` | Configure the flow. Takes `linkToken`, `onSuccess` and `onClose`, as above |
+| `BindbeeEmbed.open()` | Launch the flow |
+| `BindbeeEmbed.destroy()` | Tear it down and release its listeners |
+
+<Warning>
+  The `integrity` hash must match the build you reference, or the browser
+  refuses to execute the script and the flow never renders. If your CSP blocks
+  the load, allow `cdn.bindbee.dev`.
+</Warning>
+
+## Branding
+
+Logo, favicon and brand colour come from **Settings → Organization** in the Dashboard, not from these options. Logo and favicon are limited to 1 MB each.
+
+## Notes
+
+- The API key never reaches the browser. Only the `link_token` does, and it initialises one session for one end customer.
+- `category` and `integration` are fixed when the `link_token` is created. The end user does not choose a system.
+- A `temporary_token` is not a `connector_token` and cannot read data.
+
+## Related
+
+- [How to connect](/explanation/magic-link) - the three routes, and when to use each
+- [Create Link Token](/sdk/create-link-token) - issuing a session
+- [Get Connector Token](/sdk/get-connector-token) - exchanging the temporary token

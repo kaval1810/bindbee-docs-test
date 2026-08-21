@@ -7,7 +7,7 @@ description: "Submit a time off request into the customer's HRIS, with the leave
 <Info>
   **Before you start**
 
-  - You've confirmed the integration supports this write - see [Check write support](/how-to/writing-data-back/check-write-support).
+  - You've confirmed the integration supports this write - see [Check write support](/explanation/how-meta-apis-work).
   - You have the Bindbee `id` of the employee the request is for.
 </Info>
 
@@ -22,7 +22,7 @@ description: "Submit a time off request into the customer's HRIS, with the leave
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    Pay attention to the leave-type enum and to any required `integration_params`. Both vary by platform - see [Fetch a schema](/how-to/writing-data-back/fetch-a-write-schema).
+    Pay attention to the leave-type enum and to any required `integration_params`. Both vary by platform - see [Fetch a schema](/explanation/how-meta-apis-work).
 
     **Result:** The exact contract for this integration.
   </Step>
@@ -65,7 +65,7 @@ description: "Submit a time off request into the customer's HRIS, with the leave
   <Step title="Confirm it landed">
     Read it back rather than trusting the response alone - see [Get Time Off](/hris/time-off/get-time-off-list).
 
-    The record won't appear in Bindbee's synced data until the next sync. To confirm sooner, [force a resync](/how-to/sync-control/force-a-resync).
+    The record won't appear in Bindbee's synced data until the next sync. To confirm sooner, [force a resync](/explanation/how-syncing-works).
 
     **Result:** Verified in the customer's system.
   </Step>

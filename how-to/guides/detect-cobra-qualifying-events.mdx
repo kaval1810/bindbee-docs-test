@@ -22,7 +22,7 @@ The HRIS doesn't announce a qualifying event. It records a status change, a date
 
 <Steps>
   <Step title="Subscribe to both change events">
-    `employee_data_changed` covers status and employment; `connector_data_modified` covers the other models, including dependents - see [Choose Webhook Events](/webhooks/events).
+    `employee_data_changed` covers status and employment; `connector_data_modified` covers the other models, including dependents - see [Choose Webhook Events](/webhooks/overview).
 
     Subscribing to the employee event alone misses dependent changes entirely, which is where two of the four qualifying events show up.
 
@@ -69,7 +69,7 @@ The HRIS doesn't announce a qualifying event. It records a status change, a date
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    A dependent record means the employee recorded that person; a dependent benefit means they were actually enrolled - see [Reading benefits](/how-to/reading-data/read-benefits-data).
+    A dependent record means the employee recorded that person; a dependent benefit means they were actually enrolled - see [Reading benefits](/explanation/benefits-models).
 
     **Result:** Every qualified beneficiary, not everyone on file.
   </Step>
@@ -103,7 +103,7 @@ The HRIS doesn't announce a qualifying event. It records a status change, a date
 
 **Only some qualifying events are visible in an HRIS.** Termination and reduction of hours are detectable from employment status and hours. A dependent aging out is derivable from date of birth. Death is sometimes carried as a status. Divorce and legal separation usually are not - they surface, if at all, as a dependent silently disappearing or a coverage tier changing, with no field stating the reason. Build detection for what's observable and accept that some events must reach you another way.
 
-**Detection latency is the sync cadence, and the clock is statutory.** Continuation notice deadlines run from the event date, not from when you learned about it. A 24-hour cadence plus your own processing interval can consume several days of a fixed window before you begin. For customers where this matters, shorten the cadence - see [Sync schedules](/how-to/sync-control/change-sync-frequency) - and treat a stalled connector as a compliance risk rather than a data-freshness issue.
+**Detection latency is the sync cadence, and the clock is statutory.** Continuation notice deadlines run from the event date, not from when you learned about it. A 24-hour cadence plus your own processing interval can consume several days of a fixed window before you begin. For customers where this matters, shorten the cadence - see [Sync schedules](/explanation/how-syncing-works) - and treat a stalled connector as a compliance risk rather than a data-freshness issue.
 
 **A dependent record is not coverage.** Whether a dependent loses coverage depends on their dependent benefit records, not on their existence as a dependent. Reading dependents alone overstates who is affected.
 
@@ -133,6 +133,6 @@ The HRIS doesn't announce a qualifying event. It records a status change, a date
 
 ## Related
 
-- [Reading benefits](/how-to/reading-data/read-benefits-data)
-- [Choose Webhook Events](/webhooks/events)
+- [Reading benefits](/explanation/benefits-models)
+- [Choose Webhook Events](/webhooks/overview)
 - [Cascade a Termination Downstream](/how-to/guides/cascade-a-termination-downstream)

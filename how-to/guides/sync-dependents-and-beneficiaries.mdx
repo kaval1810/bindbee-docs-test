@@ -52,7 +52,7 @@ description: "Build an accurate picture of who is covered under each employee, n
   <Step title="Page both collections fully">
     Both are paginated. A partial walk understates coverage, which is the direction that causes problems.
 
-    Follow the cursor until it stops coming back, and don't stop on a short page - see [Pagination](/how-to/reading-data/paginate-through-results).
+    Follow the cursor until it stops coming back, and don't stop on a short page - see [Pagination](/api-reference/basics/pagination).
 
     **Result:** Complete sets, not first pages.
   </Step>
@@ -75,7 +75,7 @@ description: "Build an accurate picture of who is covered under each employee, n
   <Step title="Map attributes the model doesn't carry">
     Beneficiary designations, allocation percentages, and relationship detail are frequently in the raw payload but not unified.
 
-    Find the path with the raw-data endpoint, then map it - see [Inspect raw data](/how-to/data-model/inspect-the-raw-upstream-payload). Read the results with `include_custom_fields=true`.
+    Find the path with the raw-data endpoint, then map it - see [Inspect raw data](/how-to/reading-data/include-raw-data-and-custom-fields). Read the results with `include_custom_fields=true`.
 
     **Result:** The attributes your file format needs.
   </Step>
@@ -83,7 +83,7 @@ description: "Build an accurate picture of who is covered under each employee, n
   <Step title="Subscribe to changes on both models">
     Subscribe to `connector_data_modified`, not just `employee_data_changed` - dependent changes may surface under either.
 
-    Re-read dependents and dependent benefits whenever the employee changes. `modified_after` is per model, so an employee changing does not mark their dependents as changed - see [Filter with modified_after](/how-to/reading-data/filter-with-modified-after).
+    Re-read dependents and dependent benefits whenever the employee changes. `modified_after` is per model, so an employee changing does not mark their dependents as changed - see [Filter with modified_after](/how-to/reading-data/filter-and-narrow-a-collection).
 
     **Result:** Coverage that stays current as families change.
   </Step>
@@ -99,7 +99,7 @@ description: "Build an accurate picture of who is covered under each employee, n
 
 **Relationship vocabularies are customer-specific.** Spouse, domestic partner, child, stepchild, and legal ward vary in naming and availability across platforms and customer configurations. Map them per connector rather than assuming a standard set.
 
-**Dependent changes fire under the parent employee.** A dependent added or removed may surface as a change on the employee rather than on the dependent model. Subscribe to data model change rather than employee model change alone, and re-read dependents whenever the employee changes - see [Filter with modified_after](/how-to/reading-data/filter-with-modified-after) for why the filter alone won't catch related-model changes.
+**Dependent changes fire under the parent employee.** A dependent added or removed may surface as a change on the employee rather than on the dependent model. Subscribe to data model change rather than employee model change alone, and re-read dependents whenever the employee changes - see [Filter with modified_after](/how-to/reading-data/filter-and-narrow-a-collection) for why the filter alone won't catch related-model changes.
 
 ## If this didn't work
 
@@ -109,7 +109,7 @@ description: "Build an accurate picture of who is covered under each employee, n
   </Accordion>
 
   <Accordion title="Dependents exist but no dependent benefits">
-    Either they genuinely aren't enrolled, or the integration doesn't expose dependent coverage. Check `raw_data` on someone you know is covered - see [Inspect raw data](/how-to/data-model/inspect-the-raw-upstream-payload).
+    Either they genuinely aren't enrolled, or the integration doesn't expose dependent coverage. Check `raw_data` on someone you know is covered - see [Inspect raw data](/how-to/reading-data/include-raw-data-and-custom-fields).
   </Accordion>
 
   <Accordion title="date_of_birth is null for every dependent">
@@ -123,6 +123,6 @@ description: "Build an accurate picture of who is covered under each employee, n
 
 ## Related
 
-- [Reading benefits](/how-to/reading-data/read-benefits-data)
+- [Reading benefits](/explanation/benefits-models)
 - [Get Dependents](/hris/dependents/get-dependents) · [Get Dependent Benefits](/hris/dependent-benefits/get-dependent-benefits)
 - [Sync Census Data for Quoting](/how-to/guides/sync-census-data-for-quoting)

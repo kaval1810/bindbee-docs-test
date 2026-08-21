@@ -173,7 +173,7 @@ for (const employee of items) {
 }
 ```
 
-**Each object in `items` is a unified model.** `first_name`, `work_email` and `employment_status` mean the same thing and arrive in the same shape whichever HRIS produced them — that normalisation is the whole product. Point this same code at a connector on a different system and it keeps working. See [Unified model](/explanation/unified-model).
+**Each object in `items` is a unified model.** `first_name`, `work_email` and `employment_status` mean the same thing and arrive in the same shape whichever HRIS produced them — that normalisation is the whole product. Point this same code at a connector on a different system and it keeps working. See [Unified model](/explanation/core-concepts).
 
 Two identifiers appear on every record, and confusing them causes real bugs. **`id`** is Bindbee's — stable, same shape everywhere, the one to store. **`remote_id`** is the source system's own, useful for reconciliation but varying in format by system.
 
@@ -215,7 +215,7 @@ Production is the same four steps with a Production API key. The differences are
   </Accordion>
 
   <Accordion title="A field you expected is missing">
-    Check in order: is the field in [scope](/platform/overview); did the source system grant permission for it; does the unified model carry it at all. If the value appears in `raw_data`, it is the third case — see [Map from the dashboard](/how-to/data-model/map-a-custom-field-from-the-dashboard).
+    Check in order: is the field in [scope](/platform/overview); did the source system grant permission for it; does the unified model carry it at all. If the value appears in `raw_data`, it is the third case — see [Map from the dashboard](/explanation/how-custom-fields-work).
   </Accordion>
 </AccordionGroup>
 

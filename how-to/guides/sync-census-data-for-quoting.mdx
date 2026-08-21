@@ -1,6 +1,6 @@
 ---
 title: "Sync Census Data for Quoting"
-sidebarTitle: "Sync Census for Quoting"
+sidebarTitle: "Sync Census"
 description: "Pull a clean employee census with the demographics carriers need, without over-collecting."
 ---
 
@@ -25,14 +25,14 @@ description: "Pull a clean employee census with the demographics carriers need, 
     Keep date of birth, home postcode, and location. Those are rating fields, and excluding them breaks the quote rather than the integration.
 
     <Warning>
-      Scope is organisation-level and shared across environments - see [Restrict what syncs](/how-to/data-model/restrict-models-and-fields). It is not a per-customer setting.
+      Scope is organisation-level and shared across environments - see [Restrict what syncs](/explanation/scope-and-permissions). It is not a per-customer setting.
     </Warning>
 
     **Result:** A field set matched to the carrier's requirement.
   </Step>
 
   <Step title="Read only after a completed sync">
-    A census read mid-sync is quietly short. Gate the extract on `connector_synced` rather than a timer - see [Trigger a job on completion](/how-to/sync-control/trigger-a-job-on-sync-complete).
+    A census read mid-sync is quietly short. Gate the extract on `connector_synced` rather than a timer - see [Trigger a job on completion](/explanation/how-syncing-works).
 
     Record the sync timestamp with the extract. A quote references a specific date, and "which day is this census" becomes unanswerable later otherwise.
 
@@ -51,13 +51,13 @@ description: "Pull a clean employee census with the demographics carriers need, 
 
     Fetch each status you've agreed on separately - filters are inclusive only, so there is no way to exclude contingent workers in one request. `ACTIVE_EXTERNAL` is usually out; `LEAVE` is usually in, because those employees retain eligibility.
 
-    Expanding `work_locations` gets the rating geography inline instead of N follow-up calls - see [Reading employees](/how-to/reading-data/read-employee-data). Location is currently **BETA**; since the census depends on it for rating geography, pin the fields you extract and re-check them when the contract settles.
+    Expanding `work_locations` gets the rating geography inline instead of N follow-up calls - see [Reading employees](/explanation/employee-and-org-models). Location is currently **BETA**; since the census depends on it for rating geography, pin the fields you extract and re-check them when the contract settles.
 
     **Result:** The quoted population, per the agreed definition.
   </Step>
 
   <Step title="Page the full set">
-    Follow the cursor to exhaustion. A census that stops at page one is the failure that looks most like success - see [Pagination](/how-to/reading-data/paginate-through-results).
+    Follow the cursor to exhaustion. A census that stops at page one is the failure that looks most like success - see [Pagination](/api-reference/basics/pagination).
 
     **Result:** Every employee in the population.
   </Step>

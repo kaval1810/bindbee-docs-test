@@ -1,5 +1,6 @@
 ---
 title: "Errors & issues"
+sidebarTitle: "Errors & Issues"
 description: "Tell whether a failure originated with you, Bindbee or the source system, read the response body correctly, and build retry behaviour that doesn't make things worse."
 ---
 
@@ -82,7 +83,7 @@ Better still, watch `X-RateLimit-Remaining` on successful responses and slow dow
 A `403` means the credentials are valid but don't permit this resource. Two very different situations produce it:
 
 - **A connector token used against the wrong API category** - an HRIS connector called on `/api/ats/v1/*`. That's a bug in your code.
-- **A model whose writes are disabled for that integration** - see [Check write support](/how-to/writing-data-back/check-write-support).
+- **A model whose writes are disabled for that integration** - see [Check write support](/explanation/how-meta-apis-work).
 
 Neither is retryable, and neither is a source-system permission problem - those surface as sync failures or empty results rather than `403`. See [Permission errors](/how-to/troubleshooting/resolve-a-permission-error).
 
@@ -159,7 +160,7 @@ Not every failure surfaces on a response. A sync that fails partway through happ
 **Issues** are the layer above. Where a log entry is one request and its response, an issue is a failure Bindbee raised against a connector with a likely cause attached - carrying the evidence, so you and support read the same thing. See [Platform](/platform/overview).
 
 <Warning>
-Issues are a Dashboard surface. **There is no issues endpoint in the API**, so anything your own monitoring must act on has to come from sync-status webhooks or the connector's `status` - see [How connections work](/explanation/connector-lifecycle).
+Issues are a Dashboard surface. **There is no issues endpoint in the API**, so anything your own monitoring must act on has to come from sync-status webhooks or the connector's `status` - see [How connections work](/explanation/magic-link).
 </Warning>
 
 {/* VERIFY: do issues have an explicit lifecycle - are they closed by Bindbee when the underlying failure clears, or dismissed by hand? The Dashboard shows "currently open issues", which implies a state, but the transition is undocumented. */}
@@ -212,7 +213,7 @@ The trade is that your error handling has to be layered. Handle the envelope gen
   </Accordion>
 
   <Accordion title="422 on a write that matches the schema">
-    The schema is the structural contract; the source system enforces rules beyond it - codes that must exist in their configuration, closed periods, approval states. See [Fetch a schema](/how-to/writing-data-back/fetch-a-write-schema).
+    The schema is the structural contract; the source system enforces rules beyond it - codes that must exist in their configuration, closed periods, approval states. See [Fetch a schema](/explanation/how-meta-apis-work).
   </Accordion>
 </AccordionGroup>
 

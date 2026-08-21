@@ -1,6 +1,6 @@
 ---
 title: "Create an Employee"
-sidebarTitle: "Employee"
+sidebarTitle: "Create Employee"
 description: "Add a new employee to the customer's HRIS, including the nested and integration-specific fields the platform requires."
 ---
 
@@ -9,7 +9,7 @@ Creating an employee writes a person record into the customer's system of record
 <Info>
   **Before you start**
 
-  - You've confirmed the integration supports this write - see [Check write support](/how-to/writing-data-back/check-write-support).
+  - You've confirmed the integration supports this write - see [Check write support](/explanation/how-meta-apis-work).
   - You can generate a stable idempotency key per logical employee.
 </Info>
 
@@ -54,7 +54,7 @@ Creating an employee writes a person record into the customer's system of record
   <Step title="Supply integration_params">
     Employee creation commonly requires platform-specific references - an employment type ID, a pay group, a legal entity, a location code. These come from the customer's own HRIS configuration, not from Bindbee.
 
-    Where you can't source them from a Bindbee read, query the source system's configuration endpoints via [Passthrough](/how-to/data-model/make-a-passthrough-request).
+    Where you can't source them from a Bindbee read, query the source system's configuration endpoints via [Passthrough](/explanation/passthrough).
 
     **Result:** The platform-specific values the write needs.
   </Step>
@@ -82,7 +82,7 @@ Creating an employee writes a person record into the customer's system of record
   <Step title="Store the returned identity">
     Persist the returned Bindbee `id` against your own record.
 
-    Don't key on the employee number or `remote_id` - some systems assign these asynchronously, so they can be absent immediately after creation, and some reissue them later. See [Reading employees](/how-to/reading-data/read-employee-data).
+    Don't key on the employee number or `remote_id` - some systems assign these asynchronously, so they can be absent immediately after creation, and some reissue them later. See [Reading employees](/explanation/employee-and-org-models).
 
     **Result:** A stable reference for subsequent operations.
   </Step>
@@ -110,7 +110,7 @@ Rehires and transfers are not new employees. Creating one for someone who alread
   </Accordion>
 
   <Accordion title="The employee doesn't appear in reads">
-    Reads serve synced data, so a newly created employee appears after the next sync. [Force a resync](/how-to/sync-control/force-a-resync) to confirm sooner.
+    Reads serve synced data, so a newly created employee appears after the next sync. [Force a resync](/explanation/how-syncing-works) to confirm sooner.
   </Accordion>
 
   <Accordion title="The write returns 403">

@@ -1,8 +1,10 @@
 ---
-title: "Filter and Narrow a Collection"
-sidebarTitle: "Filtering"
-description: "Use query parameters to fetch a targeted subset instead of paging the full dataset and discarding records."
+title: "Querying the data"
+description: "Narrow a collection with filters, and fetch only what changed with modified_after."
 ---
+
+{/* CONTENT PASS: merged from how-to/reading-data/filter-and-narrow-a-collection, how-to/reading-data/filter-with-modified-after. Both halves explain query parameters - unify the parameter tables. */}
+
 
 Filtering server-side cuts pages, latency, and rate-limit pressure. Filters combine with `AND` - every one you add narrows further.
 
@@ -31,7 +33,7 @@ Filtering server-side cuts pages, latency, and rate-limit pressure. Filters comb
     | `groups` | Group membership | Comma-separated group IDs |
     | `work_locations` | Location | Comma-separated location IDs |
     | `pay_group_id` | Pay group | |
-    | `modified_after` | Sync recency | See [Filter with modified_after](/how-to/reading-data/filter-with-modified-after) |
+    | `modified_after` | Sync recency | See [Filter with modified_after](/how-to/reading-data/filter-and-narrow-a-collection) |
 
     **Result:** A parameter that matches your intent.
   </Step>
@@ -85,7 +87,7 @@ Filtering server-side cuts pages, latency, and rate-limit pressure. Filters comb
   <Accordion title="A filter returns nothing though records clearly exist">
     Filters are exact matches, not partial. `first_name=Jo` won't match `John`.
 
-    For `remote_id` and `employee_number`, confirm the value against `raw_data` - the value shown in the HRIS UI is often not the identifier its API returns. See [Inspect raw data](/how-to/data-model/inspect-the-raw-upstream-payload).
+    For `remote_id` and `employee_number`, confirm the value against `raw_data` - the value shown in the HRIS UI is often not the identifier its API returns. See [Inspect raw data](/how-to/reading-data/include-raw-data-and-custom-fields).
   </Accordion>
 
   <Accordion title="employment_status returns fewer records than expected">
@@ -99,9 +101,9 @@ Filtering server-side cuts pages, latency, and rate-limit pressure. Filters comb
   </Accordion>
 
   <Accordion title="You need to filter on a field with no parameter">
-    Two options. If the value is in `raw_data`, map it as a [custom field](/how-to/data-model/map-a-custom-field-from-the-dashboard) - though custom fields are returned, not filtered on, so you'd still filter client-side.
+    Two options. If the value is in `raw_data`, map it as a [custom field](/explanation/how-custom-fields-work) - though custom fields are returned, not filtered on, so you'd still filter client-side.
 
-    Where the source system supports the filter natively, [Passthrough](/how-to/data-model/make-a-passthrough-request) reaches it directly at the cost of a provider-specific response shape.
+    Where the source system supports the filter natively, [Passthrough](/explanation/passthrough) reaches it directly at the cost of a provider-specific response shape.
   </Accordion>
 
   <Accordion title="You want to exclude records rather than include them">
@@ -109,7 +111,93 @@ Filtering server-side cuts pages, latency, and rate-limit pressure. Filters comb
   </Accordion>
 </AccordionGroup>
 
+## Fetching only what changed
+
+`modified_after` returns only records **synced by Bindbee** after a given timestamp. That distinction matters more than it first appears - read the next section before building on it.
+
+<Info>
+  **Before you start**
+
+  - You can persist a timestamp between runs, per connector.
+</Info>
+
+### What the timestamp actually means
+
+`modified_after` filters on when Bindbee synced the record, not when the source system changed it.
+
+Two consequences:
+
+**A full resync makes everything look new.** After a resync, records re-synced during that run match `modified_after` even if nothing changed upstream. Your incremental read returns the whole dataset. Make downstream processing idempotent - an unchanged record must be safe to reprocess.
+
+**Sync cadence is your true resolution.** A record edited in the HRIS is invisible until the next sync picks it up, so a 24-hour cadence means up to 24 hours of latency regardless of how often you poll. Polling more often than the connector syncs adds load without adding freshness.
+
+### Steps
+
+<Steps>
+  <Step title="Capture a timestamp before you read">
+    Record the current UTC time *before* issuing the request, and store it only after the run completes successfully.
+
+    Taking it afterwards opens a window where records synced mid-run are never returned.
+
+    **Result:** A watermark per connector.
+  </Step>
+
+  <Step title="Pass it as ISO 8601">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/employees?modified_after=2026-08-13T00:00:00Z&page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    With no timezone offset the value is interpreted as UTC. Send an explicit `Z` rather than relying on that.
+
+    **Result:** Only records synced after that instant.
+  </Step>
+
+  <Step title="Page with the filter held constant">
+    Compute the timestamp once, before the loop, and reuse the identical string on every page. Recomputing it per page corrupts the cursor's position - see [Pagination](/api-reference/basics/pagination).
+
+    **Result:** A complete, non-overlapping set.
+  </Step>
+
+  <Step title="Advance the watermark only on success">
+    Persist the new timestamp after the full page walk succeeds. On failure, keep the old one and let the next run re-read the overlap.
+
+    **Result:** Failures cost duplicate work, never lost records.
+  </Step>
+</Steps>
+
+### Pairing it with webhooks
+
+Polling on a fixed schedule means either reading too early, while a sync is still running, or waiting longer than necessary.
+
+The more reliable pattern is to run the incremental read when the sync-completed event fires, using `modified_after` with your stored watermark. The event tells you data has landed; the filter tells you what's new. See [Trigger a job on completion](/explanation/how-syncing-works).
+
+### If this didn't work
+
+<AccordionGroup>
+  <Accordion title="An incremental read returned the entire dataset">
+    Almost always a resync - everything was re-synced, so everything matches. Expected behaviour, not a bug. This is why idempotent processing matters.
+  </Accordion>
+
+  <Accordion title="A record you know changed didn't come back">
+    Check the sync ran after the change. Until the connector syncs, the change doesn't exist in Bindbee - see [Sync status](/how-to/troubleshooting/monitor-sync-status).
+
+    On a Development connector there's no schedule at all, so nothing is new until you trigger a sync.
+  </Accordion>
+
+  <Accordion title="You're reading a related model that didn't update">
+    `modified_after` is per model. An employee changing doesn't mark their employment or benefit records as synced, so filtering those separately can miss related changes. Where you need related records, either read them without the filter or subscribe to data-change events for the model.
+  </Accordion>
+
+  <Accordion title="You need to know what changed, not just which records">
+    The filter returns current state, not a diff. To act on specific changes, compare against your own stored copy, or subscribe to the data-change events, which return the IDs of affected records per model.
+  </Accordion>
+</AccordionGroup>
+
 ## Related
 
-- [Get Employees](/hris/employee/get-employees)
-- [Pagination](/how-to/reading-data/paginate-through-results)
+- [Pagination](/api-reference/basics/pagination) - walking a collection
+- [Syncing](/explanation/how-syncing-works) - what sets the ceiling on freshness
+- [Webhook](/webhooks/overview) - learning that data changed

@@ -1,6 +1,6 @@
 ---
 title: "Diagnose a Partial Sync"
-sidebarTitle: "Partial syncs"
+sidebarTitle: "Partial Sync"
 description: "Work out which model failed during a sync that completed only in part, and what to do about it."
 ---
 
@@ -44,7 +44,7 @@ A partial sync means some models loaded and others didn't. The connector is auth
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    See [Force a resync](/how-to/sync-control/force-a-resync).
+    See [Force a resync](/explanation/how-syncing-works).
 
     **Result:** A new run starts. If the same models fail again with the same error, it isn't transient - go back to step 2.
 
@@ -56,7 +56,7 @@ A partial sync means some models loaded and others didn't. The connector is auth
   <Step title="Check whether the succeeded models are internally consistent">
     A partial sync can leave related models out of step - employees loaded but employments didn't, or benefits loaded but dependents didn't. Reads against the succeeded models will look complete while the relationships between them are incomplete.
 
-    Treat the connector's data as provisional until a run completes cleanly, and gate downstream processing on the sync-completed event rather than a clock. See [Trigger a job on completion](/how-to/sync-control/trigger-a-job-on-sync-complete).
+    Treat the connector's data as provisional until a run completes cleanly, and gate downstream processing on the sync-completed event rather than a clock. See [Trigger a job on completion](/explanation/how-syncing-works).
 
     **Result:** Downstream systems don't act on a half-loaded dataset.
   </Step>
@@ -76,7 +76,7 @@ A partial sync means some models loaded and others didn't. The connector is auth
   </Accordion>
 
   <Accordion title="Records loaded but fields are empty">
-    That isn't a partial sync. The model loaded; the fields weren't populated or aren't exposed at the current permission level. See [Missing records](/how-to/troubleshooting/trace-a-missing-record) and [Inspect raw data](/how-to/data-model/inspect-the-raw-upstream-payload).
+    That isn't a partial sync. The model loaded; the fields weren't populated or aren't exposed at the current permission level. See [Missing records](/how-to/troubleshooting/trace-a-missing-record) and [Inspect raw data](/how-to/reading-data/include-raw-data-and-custom-fields).
   </Accordion>
 
   <Accordion title="The partial sync coincides with a spike in your own API calls">

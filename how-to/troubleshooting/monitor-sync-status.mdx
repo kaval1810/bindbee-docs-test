@@ -1,6 +1,6 @@
 ---
 title: "Monitor Sync Status"
-sidebarTitle: "Sync status"
+sidebarTitle: "Sync Status"
 description: "Check whether a connector's most recent sync succeeded, what it loaded, and when the next one runs."
 ---
 
@@ -49,7 +49,7 @@ Before investigating missing or unexpected data, establish what the last sync ac
     **Result:** You know whether the data you're reading is current or waiting on the next run.
 
     <Warning>
-      Development connectors do not sync on a schedule. If this is a Development connector, the last sync is the last one someone triggered - see [Development connectors](/how-to/sync-control/sync-a-development-connector).
+      Development connectors do not sync on a schedule. If this is a Development connector, the last sync is the last one someone triggered - see [Development connectors](/explanation/how-syncing-works).
     </Warning>
   </Step>
 
@@ -64,7 +64,7 @@ Before investigating missing or unexpected data, establish what the last sync ac
 
 For continuous monitoring rather than one-off checks, subscribe to sync events instead of polling. Sync start, sync completed, and sync error together cover the states above, and each payload carries a `sync` object with `sync_id`, `sync_name`, and `sync_type` - where `sync_type` distinguishes `AUTOMATED` from `MANUAL`, so you can tell a scheduled run from one you or support triggered.
 
-See [Choose Webhook Events](/webhooks/events).
+See [Choose Webhook Events](/webhooks/overview).
 
 ## If this didn't work
 

@@ -1,6 +1,6 @@
 ---
 title: "Reconcile Record Counts Against the Source"
-sidebarTitle: "Record counts"
+sidebarTitle: "Record Counts"
 description: "Explain a gap between the number of records Bindbee returns and the number the customer expects."
 ---
 
@@ -18,7 +18,7 @@ Establish what each number counts before investigating a fault.
 
 <Steps>
   <Step title="Get an unfiltered count from Bindbee">
-    Page the model with no filters and count - see [Pagination](/how-to/reading-data/paginate-through-results).
+    Page the model with no filters and count - see [Pagination](/api-reference/basics/pagination).
 
     Make sure the walk completed. A loop that stopped on a short page rather than an absent cursor undercounts, and that alone explains many gaps.
 
@@ -60,7 +60,7 @@ Establish what each number counts before investigating a fault.
   </Step>
 
   <Step title="Only then treat it as a data problem">
-    If the gap survives all of the above, investigate as missing or unexpected records - see [Missing records](/how-to/troubleshooting/trace-a-missing-record) and [Unexpected records](/how-to/troubleshooting/trace-an-unexpected-record).
+    If the gap survives all of the above, investigate as missing or unexpected records - see [Missing or Unexpected Records](/how-to/troubleshooting/trace-a-missing-record).
 
     A permission gap can hide a whole population - a legal entity or company the credentials don't cover disappears silently rather than raising an error.
 
@@ -76,13 +76,13 @@ An **employer benefit** is a plan; a **benefit** is one employee's enrolment. Co
 
 A **dependent** existing does not mean they're covered - coverage is a **dependent benefit**. Counting dependents as covered lives overstates the population, which is the usual reason an eligibility file has too many lives on it.
 
-See [Reading benefits](/how-to/reading-data/read-benefits-data).
+See [Reading benefits](/explanation/benefits-models).
 
 ## If this didn't work
 
 <AccordionGroup>
   <Accordion title="The gap changes between runs">
-    You're counting mid-sync. Page against a stable dataset by gating the count on the sync-completed event - see [Trigger a job on completion](/how-to/sync-control/trigger-a-job-on-sync-complete).
+    You're counting mid-sync. Page against a stable dataset by gating the count on the sync-completed event - see [Trigger a job on completion](/explanation/how-syncing-works).
   </Accordion>
 
   <Accordion title="Bindbee returns more than the source system's own API">
@@ -90,7 +90,7 @@ See [Reading benefits](/how-to/reading-data/read-benefits-data).
   </Accordion>
 
   <Accordion title="Bindbee returns fewer, consistently">
-    Suspect permission or scope first. A missing population is more often withheld than lost - see [Permission errors](/how-to/troubleshooting/resolve-a-permission-error) and [Restrict what syncs](/how-to/data-model/restrict-models-and-fields).
+    Suspect permission or scope first. A missing population is more often withheld than lost - see [Permission errors](/how-to/troubleshooting/resolve-a-permission-error) and [Restrict what syncs](/explanation/scope-and-permissions).
   </Accordion>
 
   <Accordion title="Counts match for employees but not employments">

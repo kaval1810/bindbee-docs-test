@@ -1,12 +1,61 @@
 ---
-title: "Read Time and Attendance Data"
-sidebarTitle: "Reading time & attendance"
-description: "Fetch timesheet entries, time off requests, and remaining balances - and know why none of them reconcile with payroll."
+title: "Time & Attendance"
+description: "What was worked: time off, balances and timesheet entries, and where they diverge from payroll."
 ---
+
+{/* CONTENT PASS: split out of explanation/payroll-and-time-models, merged with how-to/reading-data/read-time-and-attendance-data. Shares its lead and tail with Payroll - rewrite both so the two pages stand alone. */}
+
+Eight models cover payroll and time, and they divide into two groups that are constantly confused: **what was paid, and what was worked.** They are related, neither derives from the other, and in many organisations they come from different systems entirely.
+
+## What was worked
+
+| Model | Holds | Note |
+| --- | --- | --- |
+| **Timesheet entry** | `date`, `hours_worked`, `start_time`, `end_time`, `break_duration` | Where normalisation works hardest |
+| **Time off** | `status`, `request_type`, `units`, `amount`, dates | A request with a lifecycle, not an absence |
+| **Time off balance** | `balance`, `used`, `policy_type` | The source system's calculation, not a portable figure |
+
+<Warning>
+Reading time off without filtering on `status` counts leave that was never taken - `REQUESTED`, `DECLINED`, `CANCELLED` and `DELETED` are all in the data. And `units` is `HOURS` or `DAYS`, so **`amount` means nothing without reading it.**
+</Warning>
+
+Balances differ more than they look. How a system treats accrual, carryover and pending requests is its own logic, so two customers on the same policy can report figures meaning subtly different things.
+
+Timesheets are the harder normalisation. Source systems record time as punches, durations, intervals with nested breaks, or daily totals with no detail - reconstructing one shape from those is lossy, and the original survives in `raw_data`.
+
+## The two halves do not join cleanly
+
+Hours worked and hours paid diverge routinely and legitimately:
+
+- Overtime is calculated by rules the timesheet does not encode.
+- Salaried employees are paid with no timesheet at all.
+- Corrections apply to a later run than the period they fix.
+- Time off may or may not appear as a payroll line, depending on policy.
+
+**This is the real gap in payroll integrations** - not the code-to-plan link, which the data supplies, but the arithmetic between hours and pay. Any reconciliation is something your application performs with knowledge of the customer's rules.
+
+## Why it works this way
+
+**The run and employee-run split mirrors how payroll executes** - an employer-level event producing per-employee results. Collapsing them would repeat the period and state on every line, with no way to represent a run that exists before its results do.
+
+**Codes are classified only as far as classification is safe.** Sorting one into earning, deduction or tax is something the source metadata supports; inferring which plan a `RETIREMENT` deduction funds from its name would be guessing. So the association is stated as an identifier on the plan instead, which is why the join is reliable wherever it is populated.
+
+**Time off is a request because the source systems model approval, not outcome.** Flattening it to "days absent" would lose the pending state, which is exactly what most applications need to act on.
+
+## What this means for you
+
+- **Check `run_state` before treating a payroll run as money that moved.** Drafts are in the data.
+- **Read line items as objects.** A deduction already splits employee and company amounts.
+- **Resolve a deduction to a plan through `payroll_code`**, not by interpreting the code string.
+- **Filter time off by `status`**, and read `units` before interpreting `amount`.
+- **Do not expect a cadence on pay group.** Pay frequency is on compensation.
+- **Do not reconcile timesheets against payroll arithmetically** without encoding the customer's overtime and salary rules.
+
+## Reading time and attendance data
 
 Time and attendance is three models: hours worked, leave requested, and leave remaining. They are read separately and answer different questions.
 
-For amounts paid rather than hours worked, see [Reading payroll](/how-to/reading-data/read-payroll-data).
+For amounts paid rather than hours worked, see [Reading payroll](/explanation/payroll-and-time-models).
 
 <Info>
   **Before you start**
@@ -14,7 +63,7 @@ For amounts paid rather than hours worked, see [Reading payroll](/how-to/reading
   - The connector has synced, and the customer's time module is in scope. It is frequently licensed separately from payroll.
 </Info>
 
-## The models
+### The models
 
 | Model | Represents | Endpoint |
 | --- | --- | --- |
@@ -22,7 +71,7 @@ For amounts paid rather than hours worked, see [Reading payroll](/how-to/reading
 | Time off | A leave request and its approval state | [Get Time Off](/hris/time-off/get-time-off-list) |
 | Time off balance | How much leave remains, by policy | [Get Time Off Balances](/hris/time-off-balance/get-time-off-balances-list) |
 
-## Steps
+### Steps
 
 <Steps>
   <Step title="Read timesheet entries">
@@ -80,7 +129,7 @@ For amounts paid rather than hours worked, see [Reading payroll](/how-to/reading
   </Step>
 </Steps>
 
-## Where totals diverge from the customer's reports
+### Where totals diverge from the customer's reports
 
 Reported totals are computed by the source system after entries are recorded. Rounding rules, break deduction, and overtime calculation are applied there, so raw entries can be correct while derived totals differ.
 
@@ -88,7 +137,7 @@ Some platforms also model time as discrete punch events rather than intervals, s
 
 The same caution applies to payroll. Hours worked and hours paid diverge legitimately - overtime follows rules the timesheet doesn't encode, salaried employees are paid without timesheets, and approval workflows mean not every entry reaches pay. Any reconciliation between them is arithmetic your application performs with knowledge of the customer's rules.
 
-## If this didn't work
+### If this didn't work
 
 <AccordionGroup>
   <Accordion title="Time off or timesheets return nothing">
@@ -104,7 +153,7 @@ The same caution applies to payroll. Hours worked and hours paid diverge legitim
   </Accordion>
 
   <Accordion title="Hours don't reconcile with the pay run">
-    Timesheet entries and payroll are separate models with separate sync timing. Entries can exist for a period whose run hasn't been processed yet, and approval workflows mean not every entry reaches pay. See [Reading payroll](/how-to/reading-data/read-payroll-data).
+    Timesheet entries and payroll are separate models with separate sync timing. Entries can exist for a period whose run hasn't been processed yet, and approval workflows mean not every entry reaches pay. See [Reading payroll](/explanation/payroll-and-time-models).
   </Accordion>
 
   <Accordion title="units differs between records">
@@ -114,6 +163,6 @@ The same caution applies to payroll. Hours worked and hours paid diverge legitim
 
 ## Related
 
-- [Payroll & time models](/explanation/payroll-and-time-models) - why hours worked and hours paid don't join
-- [Get Timesheet Entries](/hris/timesheet-entries/get-timesheet-entries-list) · [Get Time Off](/hris/time-off/get-time-off-list) · [Get Time Off Balances](/hris/time-off-balance/get-time-off-balances-list)
-- [Time off request](/how-to/writing-data-back/create-a-time-off-request) - the write side
+- [Time & Attendance endpoints](/hris/time-off/get-time-off-list) - the API reference
+- [Payroll](/explanation/payroll-and-time-models) - what was paid, as opposed to what was worked
+- [Employee & Org Data](/explanation/employee-and-org-models) - who the hours belong to

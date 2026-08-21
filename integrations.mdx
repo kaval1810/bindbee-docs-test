@@ -1,8 +1,10 @@
 ---
-title: "Integrations & Coverage"
-description: "Every supported system, its slug, its connection type, and how to check exactly which models and fields a given connector returns."
-sidebarTitle: "Integrations & Coverage"
+title: "Integration & Coverage"
+description: "Every supported system, its slug and connection type, and how to check exactly what a given connector returns."
 ---
+
+{/* CONTENT PASS: merged from integrations, how-to/setup/look-up-an-integration-slug. Slug guidance now appears twice - the primary has a short "Using a slug" section the appended page covers in full. */}
+
 
 Use your browser's find (`Ctrl`/`⌘` + `F`) to search this page for a system name or slug.
 
@@ -305,16 +307,173 @@ Contact `support@bindbee.dev` with:
 - How many customers this affects
 
 <Tip>
-  If you find yourself using [passthrough](/how-to/data-model/make-a-passthrough-request) for the same
+  If you find yourself using [passthrough](/explanation/passthrough) for the same
   concept across several connectors, that is a strong signal the concept belongs
   in the unified model. Raising it removes the per-vendor code for you and for
   everyone else.
 </Tip>
 
+## Finding and using a slug
+
+Your customer says they use Workday. Or Rippling, or UKG, or Paychex. **That is not enough information to know which integration they need**, and choosing wrong produces a connection that either fails to authorise or syncs less data than expected.
+
+Integrations are identified by a slug - `bamboohr`, `adp`, `sap-success-factors` - and a vendor is not an integration. Slugs are not derivable from the display name either: `ADP Workforce Now` is `adp`; `Rippling` is `rippling_platform` while `rippling` is the legacy connector.
+
+### Why one vendor becomes several
+
+| Cause | What it looks like |
+| --- | --- |
+| **API version** | A newer API generation with different endpoints, while customers migrate at their own pace |
+| **Product line** | Distinct products sold under one brand - UKG Pro and UKG Ready are separate systems, not tiers |
+| **Region** | Different platforms behind one name, where local payroll and compliance rules diverge |
+| **Edition or add-on** | A tenant without the relevant module cannot expose that data, whatever its permissions |
+| **Transport** | API for some customers, file delivery for others - see [SFTP & file connectors](/explanation/sftp-and-file-connectors) |
+| **Access method** | A standard API and a reporting interface, with different coverage and latency |
+| **Legacy generation** | After an acquisition or rewrite, the old system persists while new customers go to the new one |
+
+{/* VERIFY: an authoritative list of which vendors have multiple integrations, what distinguishes each, and how coverage differs. Examples above are drawn from support history and are illustrative, not exhaustive. */}
+
+**The slug - not the vendor's brand name - identifies the system a connector talks to.** It appears in webhook payloads, in custom field configuration, and on the connector itself. When a customer reports a problem, the slug is the first thing to establish: behaviour attributed to "Rippling" may be true of one Rippling integration and not the other.
+
+<Info>
+This is also why a custom field mapping that works for one customer fails for another on what looks like the same system. An organisation-scoped mapping attaches to a slug, so two customers on different variants of the same vendor are on different integrations - and each needs its own mapping.
+</Info>
+
+### Steps
+
+<Steps>
+  <Step title="Fetch the list your organization can use">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/v1/lookup/integrations?category=HRIS' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>'
+    ```
+
+    ```json
+    {
+      "integrations": [
+        { "slug": "workday", "display_name": "Workday", "categories": ["HRIS"] }
+      ]
+    }
+    ```
+
+    This is filtered to what your organization actually has enabled, which makes it more useful than the published reference list - it won't return something you can't connect. The full schema is on [List Integrations](/custom-fields/lookup/list-integrations).
+
+    <Note>
+      [Get Integrations](/api-reference/integrations/get-integrations) is a
+      different endpoint with a different shape - it is paginated, scoped to one
+      category by its path, and names the slug field `integration_slug` inside
+      an `items` array rather than `slug` inside `integrations`. It carries no
+      `display_name` or `categories`. Don't treat the two as interchangeable.
+    </Note>
+
+    **Result:** Valid slugs for your account.
+  </Step>
+
+  <Step title="Check the category">
+    A slug and a category are not independent, and they vary in both directions.
+
+    Some platforms keep one slug across several categories - `workday` covers HRIS, ATS, and LMS; `bamboohr` and `sap-success-factors` span HRIS and ATS. Here the slug alone doesn't tell you which API you're addressing.
+
+    Others change slug per category. SAP SuccessFactors is `sap-success-factors` for HRIS and ATS but `sap_sf_lms` for LMS.
+
+    <Warning>
+      Don't derive one category's slug from another's. A vendor's HRIS slug sent
+      with `"category": "LMS"` is rejected as invalid whenever the LMS connector
+      has a slug of its own.
+    </Warning>
+
+    Read both values from the same row of the lookup response - the `categories` array on each item is what the org has enabled for that specific slug.
+
+    **Result:** An unambiguous integration reference.
+  </Step>
+
+  <Step title="Watch for API and SFTP variants">
+    Many platforms have both an API connector and a file-based one, with distinct slugs:
+
+    | Platform | API | SFTP |
+    | --- | --- | --- |
+    | ADP Workforce Now | `adp` | `adp_sftp` |
+    | Paylocity | `paylocity` | `paylocity_sftp` |
+    | Paycom | `paycom` | `paycom_sftp` |
+    | Rippling | `rippling_platform` | `rippling_sftp` |
+    | iSolved | - | `isolved_sftp` |
+
+    These behave differently. File-based connectors deliver point-in-time snapshots rather than API responses, which changes how absence and deletion are interpreted - see [Missing records](/how-to/troubleshooting/trace-a-missing-record).
+
+    A mapping scoped to `paylocity` does not apply to `paylocity_sftp` connectors.
+
+    **Result:** The variant that matches the connection.
+  </Step>
+
+  <Step title="Read the slug from a connector you already have">
+    Webhook payloads carry `connector.integration_slug`, and it's on the connector's page in the dashboard.
+
+    That's the most reliable source when debugging - it tells you what a connector actually is, rather than what you assumed.
+
+    **Result:** The authoritative slug for an existing connection.
+  </Step>
+</Steps>
+
+### Where slugs are used
+
+| Context | Field |
+| --- | --- |
+| Creating a connector | `integration` in the link token payload |
+| Organization-scoped custom field mapping | `integration_slug` |
+| Inspecting a raw payload sample | `integration_slug` |
+| Webhook payloads | `connector.integration_slug` |
+
+### Coverage is per integration, not per vendor
+
+Which models and fields you get is a property of the specific integration. A vendor's newer API may expose benefits its predecessor does not. A file-based route almost always carries less than an API route.
+
+That makes "we support Vendor X" imprecise in a way that matters during evaluation. The question a prospect actually needs answered is **which variant their tenant runs, and what that variant covers.**
+
+### Why it works this way
+
+Collapsing variants into one integration per vendor would be tidier in the catalogue and wrong in operation.
+
+**The variants are not cosmetic.** UKG Pro and UKG Ready have different data models and different authentication. A vendor's v2 and v3 APIs expose different objects. A file feed cannot answer questions an API can.
+
+Presenting these as one integration would mean a connector whose real capabilities were unknown until it ran, and coverage claims that were true for some customers and false for others with no way to tell which.
+
+Keeping them separate makes capability a property of something specific and checkable. The cost is a catalogue with entries that look confusingly similar, plus an onboarding step to establish which variant a customer runs. **That step is unavoidable - it exists because the underlying difference is real.**
+
+### What this means for you
+
+- **Establish the variant during onboarding**, not after the connector fails.
+- **Use the slug as the identifier** in your own records and support tooling, never the brand name.
+- **Check coverage per integration**, not per vendor, when confirming a customer's requirement is met.
+- **Expect organisation-scoped configuration to need duplicating** across variants of the same vendor.
+- **Ask which variant** when a customer reports behaviour that contradicts what you know about a system.
+
+### If this didn't work
+
+<AccordionGroup>
+  <Accordion title="A slug is rejected as invalid">
+    Check hyphens versus underscores - both are used and the pattern isn't consistent. `sap-success-factors` and `google-workspace` use hyphens; `adp_sftp` and `oracle_hcm` use underscores.
+
+    Then check the slug is the one for the category you're sending, which is a separate failure - see step 2.
+
+    Use the lookup endpoint rather than typing from a reference list.
+  </Accordion>
+
+  <Accordion title="An org-scoped custom field mapping isn't applying">
+    The mapping's `integration_slug` doesn't match the connector's. The SFTP-variant case is the usual cause. Confirm with the configuration endpoint - see [Scope a mapping](/explanation/how-custom-fields-work).
+  </Accordion>
+
+  <Accordion title="The integration you need isn't listed">
+    It may not be enabled for your organization, or not yet supported. Ask support - the lookup endpoint reflects your entitlements, not the full catalogue.
+  </Accordion>
+
+  <Accordion title="The published list and the lookup endpoint disagree">
+    Trust the lookup endpoint. The reference list is maintained separately and can lag.
+  </Accordion>
+</AccordionGroup>
+
 ## Related
 
-<CardGroup cols={2}>
-  <Card title="SFTP vs API" icon="file-up" href="/explanation/sftp-and-file-connectors">
-    Why file-based connectors behave differently.
-  </Card>
-</CardGroup>
+- [Model availability](/integrations-coverage/model-availability) - which models each integration returns
+- [SFTP vs API](/explanation/sftp-and-file-connectors) - how transport changes behaviour
+- [List Integrations](/custom-fields/lookup/list-integrations) - the lookup endpoint

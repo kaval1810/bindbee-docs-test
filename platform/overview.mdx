@@ -1,22 +1,22 @@
 ---
 title: "Platform"
 sidebarTitle: "Platform"
-description: "A tour of the Bindbee Dashboard - what each area does, where to find it, and where the detail lives."
+description: "A tour of the Bindbee Dashboard - what each area does, and where the detail lives."
 ---
 
-Four things carry every integration, and they happen in that order. You set **scope** once - the models and fields Bindbee may request. Your customer authorizes their system, which creates a **connector**. That connector **syncs**, pulling the scoped data and normalizing it. When something looks wrong, **logs** show the exact request and response behind it.
+{/* CONTENT PASS: absorbed how-to/setup/move-a-connector-between-environments and how-to/connections/rename-or-delete-a-connector as labels under Connectors, per the finalised structure. Scoping and Issues sections removed - they are owned by Scoping and Errors & Issues. Screenshots still needed for Custom Fields and Webhooks. */}
 
-The Dashboard is where you watch all four. This page is the tour; each section links to the guide that goes deeper.
+Four things carry every integration, and they happen in that order. You set **scope** once - the models and fields Bindbee may request. Your customer authorises their system, which creates a **connector**. That connector **syncs**, pulling the scoped data and normalizing it. When something looks wrong, **logs** show the exact request and response behind it.
+
+The Dashboard is where you watch all four.
 
 <Info>
-  Ready to build instead? The [Quickstart](/get-started/quickstart) takes you from an empty environment to employee data in your own code - you do not need this page first.
+  Ready to build instead? The [Quickstart](/get-started/quickstart) takes you from an empty environment to employee data in your own code.
 </Info>
 
 ## Dashboard
 
 What you land on after signing in, and where you manage every integration from one place: how many API requests have been made, which of your customers is on which connector, and whether any connector currently has a problem.
-
-From here you can reach Logs, the list of open Issues, and every connector you have created.
 
 <img
   src="https://images.unifyx.dev/documentation_images/dashboard_final.png"
@@ -24,11 +24,15 @@ From here you can reach Logs, the list of open Issues, and every connector you h
   className="block"
 />
 
+## Magic Link
+
+Where you create a hosted authorisation link for a named customer and watch it complete. Select the integration, set `origin_id` to your own customer identifier, and send the link to whoever administers their HRIS.
+
+See [How to connect](/explanation/magic-link) for this and the two other routes.
+
 ## Connectors
 
-A connector is one customer's authorized link to one third-party system. Each is specific to a single integration and carries the credentials and state needed to move data between the two - **one connector per customer, per system.**
-
-Find them under **Connectors**, with separate **Development** and **Production** tabs. From a connector you can open its issues and its logs, both the fastest route to why a sync misbehaved.
+A connector is one customer's authorised link to one third-party system - **one connector per customer, per system.** Find them under **Connectors**, with separate **Development** and **Production** tabs.
 
 <img
   src="https://images.unifyx.dev/documentation_images/connector.png"
@@ -36,27 +40,43 @@ Find them under **Connectors**, with separate **Development** and **Production**
   className="block"
 />
 
-See [How connections work](/explanation/connector-lifecycle) for the states a connector moves through.
+From a connector you can open its issues and its logs, both the fastest route to why a sync misbehaved.
 
-## Scoping
+<Note>
+  Filter to **Active Connectors** before counting. Incomplete connectors - where the end user opened the link but never finished authorising - sit in the same list, and are the usual reason a count looks wrong.
+</Note>
 
-Scope is the list of models and fields Bindbee requests from a connected system. Set it once under **Configure → Scoping**, and it applies to every connector you create afterwards.
+### Moving a connector between environments
 
-A field outside scope is never requested, so it never syncs and is absent from responses - not `null`, simply not there. Narrowing scope also narrows what your customer's admin has to grant.
+A connector's environment is fixed at creation, but it can be moved afterwards without the end user reconnecting. Authorisation and record history survive, so **the IDs your system has stored stay valid** - which is why moving beats deleting and recreating.
 
-<Info>
-  Scope is **shared across environments**. What you configure in Development applies in Production too.
-</Info>
+It is not self-serve: send the connector list and the target environment to support. Two things change once it lands:
 
-Scope is only one of three reasons a field can go missing - see [What data you get](/explanation/scope-and-permissions) for the other two.
+- **The API key.** Environment isolation is enforced on the key, so calls for moved connectors must use the target environment's. A stale key returns `401`, which is the first symptom of a service you missed. Webhooks are environment-specific too.
+- **Sync behaviour.** Moving to Development stops automatic syncs; moving to Production starts them on the 24-hour cadence.
+
+### Renaming or deleting a connector
+
+**Renaming** changes the display name shown in the dashboard and returned as `connector.display_name`. Nothing in the API is keyed on it, and it is a support request rather than a dashboard control - so don't rely on the display name to tell connectors apart. `origin_id` is what actually resolves a connector to your customer record.
+
+**Deleting** discards the connector's synced data *and the record identities built from it*. Reconnecting the same customer afterwards produces a new connector with new IDs, so every employee, employment and benefit ID you stored becomes a dangling reference.
+
+| Situation | Delete? |
+| --- | --- |
+| An incomplete connector the end user abandoned | Yes |
+| A duplicate created by mistake, never used | Yes |
+| A customer that has genuinely churned | Yes |
+| A test connection in Production that's being billed | No - move it to Development |
+| Credentials expired | No - [relink it](/how-to/reliability/detect-a-connection-that-needs-relinking) |
+| Sync failing or data looks wrong | No - [resync](/explanation/how-syncing-works) |
+
+See [Delete Connector](/api-reference/connectors/delete-connector) for the endpoint.
 
 ## Logs
 
 Real-time visibility into request and response data, so you can see exactly what happened for a connector. Open **Logs**, or reach one connector's logs from its own page.
 
-Each entry shows the direction - `READ` or `WRITE` - along with the request and the response. When a response is an error, the error code is shown alongside it. Open any entry for full detail.
-
-When a sync misbehaves this is the first place to look: the source system's own error is usually more specific than the status Bindbee shows.
+Each entry shows the direction - `READ` or `WRITE` - along with the request and the response, and the error code where there is one. When a sync misbehaves this is the first place to look: the source system's own error is usually more specific than the status Bindbee shows.
 
 <img
   src="https://images.unifyx.dev/documentation_images/logs.png"
@@ -64,61 +84,22 @@ When a sync misbehaves this is the first place to look: the source system's own 
   className="block"
 />
 
-## Issues
-
-Bindbee's error tracking. When something fails on a connector - a sync, an authorization, a request to the source system - it is raised as an issue rather than left for you to find in the logs.
-
-Each issue records what failed and, where Bindbee can determine it, the likely resolution. Every issue carries the request and response behind it, so you and the Bindbee team look at the same evidence when you escalate.
-
-Issues tell you *that* something broke and usually *why*. Fixing it happens elsewhere:
-
-| The issue points at | Where it is fixed |
-| --- | --- |
-| Expired or revoked source credentials | Re-authorize the connector - see [Update credentials](/how-to/connections/update-credentials) |
-| A model failing to sync | Logs has the request and the source system's own error |
-| A field never arriving | Check Scoping first, then permissions in the source system |
-| Errors your own code has to handle | [Errors & issues](/explanation/errors-issues-and-limits) |
-
 ## Custom Fields
 
-Custom fields carry values the unified model does not, taken from the source system's own payload and returned alongside the normalized record. Find them under **Custom Fields**.
-
-Creating one is two steps, separate on purpose - the field is what your code reads, the mapping is where its value comes from.
-
-**Create the field** with **New Field**. Names must be unique and `snake_case`, because the name is the key your code reads off the `custom_fields` object.
-
-**Configure the mapping**, choosing the level:
-
-| Mapping level | Applies to | Use when |
-| --- | --- | --- |
-| **Integration** | Every connector for that integration | The source system names the field consistently |
-| **Connector** | One selected connector | A single customer configured it differently |
+Where you define values the unified model does not carry and map them out of the source system's own payload.
 
 <Warning>
-  A mapping that does not match the payload does not raise an error. It resolves to `INVALID_JSON_PATH`, which arrives as the field's **value**. Preview an expression before saving it.
+  **Screenshot needed** — the Custom Fields screen with a field and its mapping visible. Save to `images/platform/custom-fields.png` and replace this callout with a `<Frame>`.
 </Warning>
 
-Custom field configuration is shared across environments, like scope. See [Map from the dashboard](/how-to/data-model/map-a-custom-field-from-the-dashboard) to do it, or [How custom fields work](/explanation/how-custom-fields-work) for the model behind it.
+See [Custom Fields](/explanation/how-custom-fields-work).
 
 ## Webhooks
 
-How Bindbee tells your application that a sync finished or a record changed, instead of your application polling. Find them under **Configure → Webhooks**.
-
-| Field | What it does |
-| --- | --- |
-| **Destination URL** | Where deliveries are sent. **Test URL** confirms Bindbee can reach it before you save |
-| **Webhook Name** | Your own label, for finding it later |
-| **Webhook Type** | Which environment's connectors this covers - Development, Production, or both |
-| **Events** | Which events trigger a delivery, chosen by checkbox |
-
-The **Security** section on the same page holds your organization's signature key. Every delivery is signed with it, and your handler should verify that signature before acting on the payload.
+Where you register a destination URL, choose which events reach it, and find the signing key.
 
 <Warning>
-  The Dashboard labels events in prose, but the payload carries the event string - `connector_synced`, not "Sync completed". Match on the string, and note that event strings use **underscores**, never hyphens. Matching the wrong form fails quietly: your handler simply never runs.
+  **Screenshot needed** — **Configure → Webhooks**, showing the destination URL, event checkboxes and the Security section. Save to `images/platform/webhooks.png` and replace this callout with a `<Frame>`.
 </Warning>
 
-See [Webhooks](/webhooks/overview) to set one up, and [Events & payloads](/webhooks/events) for every event and payload shape.
-
-## How your customers connect
-
-In production your customers authorize their own systems. A [Magic Link](/explanation/magic-link) is a secure URL that runs the whole flow in their browser with no front-end code on your side; [embedding the flow](/how-to/connections/embed-the-connection-flow) puts it inside your own product instead.
+See [Webhook](/webhooks/overview).

@@ -1,6 +1,6 @@
 ---
 title: "Go-Live Checklist"
-sidebarTitle: "Go-live checklist"
+sidebarTitle: "Go-live Checklist"
 description: "Everything to verify before pointing production traffic at Bindbee. Grouped by failure mode, with the reason each item is on the list."
 ---
 
@@ -110,7 +110,7 @@ Work through this before your first real customer connects. Most items exist bec
     Passthrough accepts no idempotency key, so a retry reaches the provider as a
     second write. Check whether the record exists first, or use the provider's
     own mechanism - see
-    [Make a request](/how-to/data-model/make-a-passthrough-request).
+    [Make a request](/explanation/passthrough).
   </Step>
   <Step title="The UI doesn't block on readback">
     A 2xx means the source system accepted it - not that Bindbee can return it

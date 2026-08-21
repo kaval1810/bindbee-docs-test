@@ -23,7 +23,6 @@
         "pages": [
           {
             "group": "Introduction",
-            "expanded": true,
             "pages": [
               "get-started/what-is-bindbee",
               "get-started/quickstart",
@@ -31,190 +30,84 @@
             ]
           },
           {
-            "group": "Core concepts",
+            "group": "Core Concepts",
             "pages": [
               "explanation/core-concepts",
-              "explanation/unified-model",
-              "explanation/connector-lifecycle",
-              "explanation/environments"
+              "explanation/environments",
+              "explanation/magic-link",
+              "explanation/scope-and-permissions",
+              "explanation/sftp-and-file-connectors"
             ]
           },
           {
-            "group": "Integrations",
+            "group": "Integration",
             "pages": [
               "integrations",
               "integrations-coverage/model-availability"
             ]
           },
           {
-            "group": "Use cases",
+            "group": "Use Cases",
             "pages": [
-              "how-to/guides/auto-enrol-a-new-hire",
-              "how-to/guides/cascade-a-termination-downstream",
               "how-to/guides/sync-census-data-for-quoting",
-              "how-to/guides/sync-dependents-and-beneficiaries",
-              "how-to/guides/detect-cobra-qualifying-events",
-              "how-to/guides/write-payroll-deductions-back"
+              "how-to/guides/cascade-a-termination-downstream",
+              "how-to/guides/read-benefit-coverage",
+              "how-to/guides/write-payroll-deductions-back",
+              "how-to/writing-data-back/create-an-employee",
+              "how-to/writing-data-back/create-an-employee-payroll-run"
             ]
           }
         ]
       },
       {
-        "tab": "Guides",
+        "tab": "Guide",
         "pages": [
           {
-            "group": "Connections",
+            "group": "Reading & Writing Data",
             "pages": [
-              "explanation/magic-link",
-              "how-to/connections/embed-the-connection-flow",
-              "how-to/connections/create-a-connector-programmatically",
+              "guides/reading-and-writing-overview",
+              "how-to/reading-data/filter-and-narrow-a-collection",
               {
-                "group": "Managing connectors",
+                "group": "Data basics",
                 "pages": [
-                  "how-to/connections/update-credentials",
-                  "how-to/connections/rename-or-delete-a-connector",
-                  "how-to/setup/move-a-connector-between-environments",
-                  "explanation/multi-entity"
-                ]
-              }
-            ]
-          },
-          {
-            "group": "Reading data",
-            "pages": [
-              {
-                "group": "Querying",
-                "pages": [
-                  "how-to/reading-data/paginate-through-results",
-                  "how-to/reading-data/filter-and-narrow-a-collection",
-                  "how-to/reading-data/filter-with-modified-after",
-                  "how-to/reading-data/include-raw-data-and-custom-fields"
-                ]
-              },
-              {
-                "group": "What you get",
-                "pages": [
-                  "explanation/scope-and-permissions",
-                  "how-to/data-model/restrict-models-and-fields",
                   "explanation/record-identity",
-                  "explanation/enum-values",
-                  "explanation/effective-dating"
+                  "explanation/enum-values"
                 ]
               },
-              {
-                "group": "Syncing",
-                "pages": [
-                  "explanation/how-syncing-works",
-                  "how-to/sync-control/change-sync-frequency",
-                  "how-to/sync-control/force-a-resync",
-                  "how-to/sync-control/sync-a-development-connector",
-                  "explanation/sftp-and-file-connectors",
-                  "how-to/sync-control/trigger-a-job-on-sync-complete"
-                ]
-              },
-              {
-                "group": "Webhooks",
-                "pages": [
-                  "webhooks/overview",
-                  "webhooks/events",
-                  "webhooks/delivery",
-                  "how-to/reliability/distinguish-created-from-modified"
-                ]
-              }
+              "explanation/how-syncing-works",
+              "how-to/reading-data/include-raw-data-and-custom-fields",
+              "webhooks/overview",
+              "explanation/how-meta-apis-work"
             ]
           },
           {
-            "group": "Data models",
+            "group": "Extending the Model",
             "pages": [
-              {
-                "group": "Employee & org",
-                "pages": [
-                  "explanation/employee-and-org-models",
-                  "explanation/status-and-terminations",
-                  "how-to/reading-data/read-employee-data",
-                  "how-to/reading-data/read-employee-documents"
-                ]
-              },
-              {
-                "group": "Payroll & time",
-                "pages": [
-                  "explanation/payroll-and-time-models",
-                  "how-to/reading-data/read-payroll-data",
-                  "how-to/reading-data/read-time-and-attendance-data"
-                ]
-              },
-              {
-                "group": "Benefits",
-                "pages": [
-                  "explanation/benefits-models",
-                  "how-to/reading-data/read-benefits-data"
-                ]
-              },
-              {
-                "group": "Recruiting",
-                "pages": [
-                  "explanation/ats-models",
-                  "how-to/ats/read-candidates-and-applications",
-                  "how-to/ats/track-an-application-through-stages",
-                  "how-to/ats/sync-interview-feedback",
-                  "how-to/ats/exclude-eeoc-data"
-                ]
-              },
+              "explanation/how-custom-fields-work",
+              "explanation/passthrough"
+            ]
+          },
+          {
+            "group": "SDK & MCP",
+            "pages": [
+              "sdk/frontend-sdk",
+              "guides/mcp"
+            ]
+          },
+          {
+            "group": "Data Models",
+            "pages": [
+              "explanation/employee-and-org-models",
+              "explanation/payroll-and-time-models",
+              "explanation/benefits-models",
+              "explanation/time-and-attendance-models",
+              "explanation/ats-models",
               "explanation/lms-models"
             ]
           },
           {
-            "group": "Extending the model",
+            "group": "Go Live",
             "pages": [
-              {
-                "group": "Custom fields",
-                "pages": [
-                  "explanation/how-custom-fields-work",
-                  "how-to/data-model/inspect-the-raw-upstream-payload",
-                  "how-to/data-model/test-a-jmespath",
-                  "how-to/data-model/map-a-custom-field-from-the-dashboard",
-                  "how-to/data-model/map-custom-fields-with-the-api",
-                  "how-to/data-model/scope-a-mapping"
-                ]
-              },
-              {
-                "group": "Passthrough",
-                "pages": [
-                  "explanation/passthrough",
-                  "how-to/data-model/make-a-passthrough-request"
-                ]
-              }
-            ]
-          },
-          {
-            "group": "Writing data",
-            "pages": [
-              "explanation/write-support",
-              {
-                "group": "Meta APIs",
-                "pages": [
-                  "explanation/how-meta-apis-work",
-                  "how-to/writing-data-back/fetch-a-write-schema",
-                  "how-to/writing-data-back/check-write-support"
-                ]
-              },
-              {
-                "group": "Writes",
-                "pages": [
-                  "how-to/writing-data-back/create-an-employee",
-                  "how-to/writing-data-back/create-a-time-off-request",
-                  "how-to/writing-data-back/create-an-employee-payroll-run",
-                  "how-to/writing-data-back/create-a-timesheet-entry",
-                  "how-to/ats/create-a-candidate"
-                ]
-              }
-            ]
-          },
-          {
-            "group": "Going live",
-            "pages": [
-              "how-to/setup/choose-an-environment",
-              "how-to/setup/look-up-an-integration-slug",
               "how-to/setup/go-live-checklist"
             ]
           },
@@ -230,10 +123,9 @@
                 ]
               },
               {
-                "group": "Reconciling data",
+                "group": "Reconciling Data",
                 "pages": [
                   "how-to/troubleshooting/trace-a-missing-record",
-                  "how-to/troubleshooting/trace-an-unexpected-record",
                   "how-to/troubleshooting/diagnose-a-partial-sync",
                   "how-to/troubleshooting/reconcile-record-counts"
                 ]
@@ -252,6 +144,7 @@
             "pages": [
               "api-reference/basics/authentication",
               "api-reference/basics/pagination",
+              "api-reference/basics/sync-frequency",
               "api-reference/basics/rate-limits"
             ]
           },
@@ -556,6 +449,14 @@
                       "ats/screening-question/get-screening-question-by-id",
                       "ats/screening-question/create-screening-question"
                     ]
+                  },
+                  {
+                    "group": "Offer",
+                    "pages": [
+                      "ats/offer/get-offers",
+                      "ats/offer/get-offer-by-id",
+                      "ats/offer/create-offer"
+                    ]
                   }
                 ]
               },
@@ -610,14 +511,6 @@
                       "ats/tag/create-tag"
                     ]
                   }
-                ]
-              },
-              {
-                "group": "Offer",
-                "pages": [
-                  "ats/offer/get-offers",
-                  "ats/offer/get-offer-by-id",
-                  "ats/offer/create-offer"
                 ]
               },
               {
@@ -802,7 +695,7 @@
     },
     {
       "source": "/get-started/tutorials/add-a-custom-field",
-      "destination": "/how-to/data-model/map-a-custom-field-from-the-dashboard"
+      "destination": "/explanation/how-custom-fields-work"
     },
     {
       "source": "/sdk/integrations",
@@ -838,7 +731,7 @@
     },
     {
       "source": "/get-started/add-a-custom-field",
-      "destination": "/how-to/data-model/map-a-custom-field-from-the-dashboard"
+      "destination": "/explanation/how-custom-fields-work"
     },
     {
       "source": "/get-started/receive-a-webhook",
@@ -850,7 +743,7 @@
     },
     {
       "source": "/custom-fields/dashboard",
-      "destination": "/how-to/data-model/map-a-custom-field-from-the-dashboard"
+      "destination": "/explanation/how-custom-fields-work"
     },
     {
       "source": "/features/magic-link",
@@ -862,11 +755,11 @@
     },
     {
       "source": "/how-to/configure-custom-fields-dashboard",
-      "destination": "/how-to/data-model/map-a-custom-field-from-the-dashboard"
+      "destination": "/explanation/how-custom-fields-work"
     },
     {
       "source": "/how-to/force-a-resync",
-      "destination": "/how-to/sync-control/force-a-resync"
+      "destination": "/explanation/how-syncing-works"
     },
     {
       "source": "/explanation/custom-fields-mental-model",
@@ -894,7 +787,7 @@
     },
     {
       "source": "/explanation/unified-model-and-raw-data",
-      "destination": "/explanation/unified-model"
+      "destination": "/explanation/core-concepts"
     },
     {
       "source": "/explanation/what-data-you-get",
@@ -902,7 +795,7 @@
     },
     {
       "source": "/concepts/unified-model-and-raw-data",
-      "destination": "/explanation/unified-model"
+      "destination": "/explanation/core-concepts"
     },
     {
       "source": "/concepts/what-data-you-get",
@@ -950,15 +843,15 @@
     },
     {
       "source": "/how-to/connections/customise-the-connection-experience",
-      "destination": "/how-to/connections/embed-the-connection-flow"
+      "destination": "/explanation/magic-link"
     },
     {
       "source": "/how-to/reading-data/read-payroll-and-timesheet-data",
-      "destination": "/how-to/reading-data/read-payroll-data"
+      "destination": "/explanation/payroll-and-time-models"
     },
     {
       "source": "/how-to/writing-data-back/make-a-passthrough-request",
-      "destination": "/how-to/data-model/make-a-passthrough-request"
+      "destination": "/explanation/passthrough"
     },
     {
       "source": "/concepts/ats-models",
@@ -970,7 +863,7 @@
     },
     {
       "source": "/concepts/connector-lifecycle",
-      "destination": "/explanation/connector-lifecycle"
+      "destination": "/explanation/magic-link"
     },
     {
       "source": "/concepts/core-concepts",
@@ -1018,7 +911,7 @@
     },
     {
       "source": "/concepts/integration-versions",
-      "destination": "/how-to/setup/look-up-an-integration-slug"
+      "destination": "/integrations"
     },
     {
       "source": "/concepts/lms-models",
@@ -1054,11 +947,11 @@
     },
     {
       "source": "/concepts/status-and-terminations",
-      "destination": "/explanation/status-and-terminations"
+      "destination": "/explanation/employee-and-org-models"
     },
     {
       "source": "/concepts/unified-model",
-      "destination": "/explanation/unified-model"
+      "destination": "/explanation/core-concepts"
     },
     {
       "source": "/concepts/webhooks-vs-polling",
@@ -1066,7 +959,7 @@
     },
     {
       "source": "/concepts/write-support",
-      "destination": "/explanation/write-support"
+      "destination": "/explanation/how-meta-apis-work"
     },
     {
       "source": "/explanation/environments/overview",
@@ -1082,7 +975,7 @@
     },
     {
       "source": "/explanation/integration-versions",
-      "destination": "/how-to/setup/look-up-an-integration-slug"
+      "destination": "/integrations"
     },
     {
       "source": "/explanation/hris-models",
@@ -1090,7 +983,7 @@
     },
     {
       "source": "/custom-fields/api-workflow",
-      "destination": "/how-to/data-model/map-custom-fields-with-the-api"
+      "destination": "/explanation/how-custom-fields-work"
     },
     {
       "source": "/features/environments/development",
@@ -1130,7 +1023,7 @@
     },
     {
       "source": "/get-started/tutorials/add-a-field-the-unified-model-doesnt-have",
-      "destination": "/how-to/data-model/map-a-custom-field-from-the-dashboard"
+      "destination": "/explanation/how-custom-fields-work"
     },
     {
       "source": "/get-started/tutorials/receive-a-webhook",
@@ -1170,15 +1063,15 @@
     },
     {
       "source": "/how-to/reliability/choose-webhook-events",
-      "destination": "/webhooks/events"
+      "destination": "/webhooks/overview"
     },
     {
       "source": "/how-to/reliability/validate-webhook-signatures",
-      "destination": "/webhooks/delivery"
+      "destination": "/webhooks/overview"
     },
     {
       "source": "/how-to/reliability/recover-a-missed-delivery",
-      "destination": "/webhooks/delivery"
+      "destination": "/webhooks/overview"
     },
     {
       "source": "/explanation/webhooks-vs-polling",
@@ -1194,7 +1087,7 @@
     },
     {
       "source": "/sdk/embedded-component",
-      "destination": "/how-to/connections/embed-the-connection-flow"
+      "destination": "/explanation/magic-link"
     },
     {
       "source": "/meta-apis-for-write-operations",
@@ -1202,7 +1095,7 @@
     },
     {
       "source": "/explanation/integration-variants",
-      "destination": "/how-to/setup/look-up-an-integration-slug"
+      "destination": "/integrations"
     },
     {
       "source": "/how-to/setup/handle-api-errors",
@@ -1210,7 +1103,163 @@
     },
     {
       "source": "/how-to/sync-control/set-a-sync-start-time",
-      "destination": "/how-to/sync-control/change-sync-frequency"
+      "destination": "/explanation/how-syncing-works"
+    },
+    {
+      "source": "/explanation/unified-model",
+      "destination": "/explanation/core-concepts"
+    },
+    {
+      "source": "/how-to/setup/choose-an-environment",
+      "destination": "/explanation/environments"
+    },
+    {
+      "source": "/how-to/connections/embed-the-connection-flow",
+      "destination": "/explanation/magic-link"
+    },
+    {
+      "source": "/how-to/connections/create-a-connector-programmatically",
+      "destination": "/explanation/magic-link"
+    },
+    {
+      "source": "/explanation/connector-lifecycle",
+      "destination": "/explanation/magic-link"
+    },
+    {
+      "source": "/how-to/data-model/restrict-models-and-fields",
+      "destination": "/explanation/scope-and-permissions"
+    },
+    {
+      "source": "/how-to/setup/look-up-an-integration-slug",
+      "destination": "/integrations"
+    },
+    {
+      "source": "/how-to/reading-data/filter-with-modified-after",
+      "destination": "/how-to/reading-data/filter-and-narrow-a-collection"
+    },
+    {
+      "source": "/how-to/sync-control/change-sync-frequency",
+      "destination": "/explanation/how-syncing-works"
+    },
+    {
+      "source": "/how-to/sync-control/force-a-resync",
+      "destination": "/explanation/how-syncing-works"
+    },
+    {
+      "source": "/how-to/sync-control/sync-a-development-connector",
+      "destination": "/explanation/how-syncing-works"
+    },
+    {
+      "source": "/how-to/sync-control/trigger-a-job-on-sync-complete",
+      "destination": "/explanation/how-syncing-works"
+    },
+    {
+      "source": "/how-to/data-model/inspect-the-raw-upstream-payload",
+      "destination": "/how-to/reading-data/include-raw-data-and-custom-fields"
+    },
+    {
+      "source": "/webhooks/events",
+      "destination": "/webhooks/overview"
+    },
+    {
+      "source": "/webhooks/delivery",
+      "destination": "/webhooks/overview"
+    },
+    {
+      "source": "/how-to/reliability/distinguish-created-from-modified",
+      "destination": "/webhooks/overview"
+    },
+    {
+      "source": "/explanation/write-support",
+      "destination": "/explanation/how-meta-apis-work"
+    },
+    {
+      "source": "/how-to/writing-data-back/check-write-support",
+      "destination": "/explanation/how-meta-apis-work"
+    },
+    {
+      "source": "/how-to/writing-data-back/fetch-a-write-schema",
+      "destination": "/explanation/how-meta-apis-work"
+    },
+    {
+      "source": "/how-to/data-model/map-a-custom-field-from-the-dashboard",
+      "destination": "/explanation/how-custom-fields-work"
+    },
+    {
+      "source": "/how-to/data-model/map-custom-fields-with-the-api",
+      "destination": "/explanation/how-custom-fields-work"
+    },
+    {
+      "source": "/how-to/data-model/test-a-jmespath",
+      "destination": "/explanation/how-custom-fields-work"
+    },
+    {
+      "source": "/how-to/data-model/scope-a-mapping",
+      "destination": "/explanation/how-custom-fields-work"
+    },
+    {
+      "source": "/how-to/data-model/make-a-passthrough-request",
+      "destination": "/explanation/passthrough"
+    },
+    {
+      "source": "/explanation/status-and-terminations",
+      "destination": "/explanation/employee-and-org-models"
+    },
+    {
+      "source": "/how-to/reading-data/read-employee-data",
+      "destination": "/explanation/employee-and-org-models"
+    },
+    {
+      "source": "/how-to/reading-data/read-employee-documents",
+      "destination": "/explanation/employee-and-org-models"
+    },
+    {
+      "source": "/how-to/reading-data/read-payroll-data",
+      "destination": "/explanation/payroll-and-time-models"
+    },
+    {
+      "source": "/how-to/reading-data/read-time-and-attendance-data",
+      "destination": "/explanation/time-and-attendance-models"
+    },
+    {
+      "source": "/how-to/reading-data/read-benefits-data",
+      "destination": "/explanation/benefits-models"
+    },
+    {
+      "source": "/how-to/ats/read-candidates-and-applications",
+      "destination": "/explanation/ats-models"
+    },
+    {
+      "source": "/how-to/ats/track-an-application-through-stages",
+      "destination": "/explanation/ats-models"
+    },
+    {
+      "source": "/how-to/ats/sync-interview-feedback",
+      "destination": "/explanation/ats-models"
+    },
+    {
+      "source": "/how-to/ats/exclude-eeoc-data",
+      "destination": "/explanation/ats-models"
+    },
+    {
+      "source": "/how-to/connections/update-credentials",
+      "destination": "/how-to/reliability/detect-a-connection-that-needs-relinking"
+    },
+    {
+      "source": "/how-to/troubleshooting/trace-an-unexpected-record",
+      "destination": "/how-to/troubleshooting/trace-a-missing-record"
+    },
+    {
+      "source": "/how-to/reading-data/paginate-through-results",
+      "destination": "/api-reference/basics/pagination"
+    },
+    {
+      "source": "/how-to/setup/move-a-connector-between-environments",
+      "destination": "/platform/overview"
+    },
+    {
+      "source": "/how-to/connections/rename-or-delete-a-connector",
+      "destination": "/platform/overview"
     }
   ],
   "api": {

@@ -1,6 +1,6 @@
 ---
 title: "Resolve a Source-System Permission Error"
-sidebarTitle: "Permission errors"
+sidebarTitle: "Permission Errors"
 description: "Map a sync failure or missing field back to the specific permission the end user's HRIS credentials are missing."
 ---
 
@@ -77,7 +77,7 @@ Most sync failures that aren't credential expiry are permission failures in the 
   <Accordion title="The administrator says the permission is already granted">
     Check the permission is on the account the connector authenticated as, not on the administrator's own account. Integration users and service accounts are commonly provisioned with a narrower role than the person configuring them.
 
-    Some platforms also require the integration user to be reactivated, or a token reissued, before a permission change takes effect. If the credentials were issued before the change, [update them](/how-to/connections/update-credentials).
+    Some platforms also require the integration user to be reactivated, or a token reissued, before a permission change takes effect. If the credentials were issued before the change, [update them](/how-to/reliability/detect-a-connection-that-needs-relinking).
   </Accordion>
 
   <Accordion title="The failure appears on some runs but not others">
@@ -85,7 +85,7 @@ Most sync failures that aren't credential expiry are permission failures in the 
   </Accordion>
 
   <Accordion title="Records return but a specific field is still null">
-    Confirm the field is genuinely absent upstream rather than unmapped on the Bindbee side. Fetch the raw payload - see [Inspect raw data](/how-to/data-model/inspect-the-raw-upstream-payload).
+    Confirm the field is genuinely absent upstream rather than unmapped on the Bindbee side. Fetch the raw payload - see [Inspect raw data](/how-to/reading-data/include-raw-data-and-custom-fields).
 
     If the value is present in `raw_data` but not in the unified response, it's a mapping question, not a permission one, and you can surface it as a [custom field](/explanation/how-custom-fields-work).
   </Accordion>

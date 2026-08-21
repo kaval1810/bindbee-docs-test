@@ -19,7 +19,7 @@ description: "Detect a new employee and start their benefits enrolment without a
 
 <Steps>
   <Step title="Subscribe to employee changes">
-    Subscribe to `employee_data_changed`, and to `connector_synced` if you need to know the run finished before acting - see [Choose Webhook Events](/webhooks/events).
+    Subscribe to `employee_data_changed`, and to `connector_synced` if you need to know the run finished before acting - see [Choose Webhook Events](/webhooks/overview).
 
     The change event carries IDs, not records:
 
@@ -48,7 +48,7 @@ description: "Detect a new employee and start their benefits enrolment without a
   </Step>
 
   <Step title="Separate creations from updates">
-    Diff the event's IDs against the ones you've already seen for this connector. Nothing in the payload distinguishes the two - see [Created vs modified](/how-to/reliability/distinguish-created-from-modified).
+    Diff the event's IDs against the ones you've already seen for this connector. Nothing in the payload distinguishes the two - see [Created vs modified](/webhooks/overview).
 
     ```python
     new_ids = set(event["data"]) - seen_ids[connector_id]
@@ -100,7 +100,7 @@ description: "Detect a new employee and start their benefits enrolment without a
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    This is the plan definition, not anyone's enrolment - see [Reading benefits](/how-to/reading-data/read-benefits-data). Which of these plans a given employee is eligible for is not readable; see the constraint below.
+    This is the plan definition, not anyone's enrolment - see [Reading benefits](/explanation/benefits-models). Which of these plans a given employee is eligible for is not readable; see the constraint below.
 
     **Result:** The plans to present, per customer.
   </Step>
@@ -110,7 +110,7 @@ description: "Detect a new employee and start their benefits enrolment without a
 
 **The first sync will look like everyone was hired at once.** When a connector is first connected, every employee is new to you. Without a guard, this triggers enrolment workflows for the entire workforce - the failure mode is a welcome email to several thousand existing employees, and it is not recoverable.
 
-Handle the initial sync as a bulk import that establishes baseline state without triggering per-employee workflows, then switch to event-driven handling. `sync.sync_name` increments per run, which is one way to recognise the first. The same applies after a [forced resync](/how-to/sync-control/force-a-resync).
+Handle the initial sync as a bulk import that establishes baseline state without triggering per-employee workflows, then switch to event-driven handling. `sync.sync_name` increments per run, which is one way to recognise the first. The same applies after a [forced resync](/explanation/how-syncing-works).
 
 **New in Bindbee is not the same as newly hired.** A record can appear because the employee was just hired, because they came into scope after a permission or configuration change, or because a prior sync failed to load them. Check the start date rather than treating first-appearance as a hire.
 
@@ -124,15 +124,15 @@ Handle the initial sync as a bulk import that establishes baseline state without
 
 <AccordionGroup>
   <Accordion title="Every employee arrived as a new hire">
-    A first sync or a resync. Both re-sync the whole population, so every record looks changed - see [Filter with modified_after](/how-to/reading-data/filter-with-modified-after) for why. This is what the baseline guard in step 2 exists to prevent.
+    A first sync or a resync. Both re-sync the whole population, so every record looks changed - see [Filter with modified_after](/how-to/reading-data/filter-and-narrow-a-collection) for why. This is what the baseline guard in step 2 exists to prevent.
   </Accordion>
 
   <Accordion title="No event fired though a hire was entered">
-    Change events fire only when a sync actually changes records, and a sync only picks up the hire on its next run. On a Development connector there is no schedule at all - see [Development connectors](/how-to/sync-control/sync-a-development-connector).
+    Change events fire only when a sync actually changes records, and a sync only picks up the hire on its next run. On a Development connector there is no schedule at all - see [Development connectors](/explanation/how-syncing-works).
   </Accordion>
 
   <Accordion title="A start date is missing or in the past">
-    Backdated entries are routine for hires processed late, and `start_date` is null on some integrations. Where it is, the employment's `effective_date` is the fallback - see [Reading employees](/how-to/reading-data/read-employee-data).
+    Backdated entries are routine for hires processed late, and `start_date` is null on some integrations. Where it is, the employment's `effective_date` is the fallback - see [Reading employees](/explanation/employee-and-org-models).
   </Accordion>
 
   <Accordion title="An enrolment started for someone who never joined">
@@ -142,6 +142,6 @@ Handle the initial sync as a bulk import that establishes baseline state without
 
 ## Related
 
-- [Created vs modified](/how-to/reliability/distinguish-created-from-modified)
-- [Reading employees](/how-to/reading-data/read-employee-data)
-- [Reading benefits](/how-to/reading-data/read-benefits-data)
+- [Created vs modified](/webhooks/overview)
+- [Reading employees](/explanation/employee-and-org-models)
+- [Reading benefits](/explanation/benefits-models)
