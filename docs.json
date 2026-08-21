@@ -150,7 +150,7 @@
         "anchors": [
           {
             "anchor": "Platform",
-            "icon": "layers",
+            "icon": "boxes",
             "groups": [
               {
                 "group": "Integrations",
