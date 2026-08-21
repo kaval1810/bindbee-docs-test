@@ -63,6 +63,15 @@
         "tab": "Guide",
         "pages": [
           {
+            "group": "API Basics",
+            "pages": [
+              "api-reference/basics/authentication",
+              "api-reference/basics/pagination",
+              "api-reference/basics/sync-frequency",
+              "api-reference/basics/rate-limits"
+            ]
+          },
+          {
             "group": "Reading & Writing Data",
             "pages": [
               "guides/reading-and-writing-overview",
@@ -139,16 +148,6 @@
       {
         "tab": "API Reference",
         "anchors": [
-          {
-            "anchor": "API Basics",
-            "icon": "key",
-            "pages": [
-              "api-reference/basics/authentication",
-              "api-reference/basics/pagination",
-              "api-reference/basics/sync-frequency",
-              "api-reference/basics/rate-limits"
-            ]
-          },
           {
             "anchor": "Platform",
             "icon": "grid-2",
