@@ -1,0 +1,106 @@
+---
+title: "Read Benefit Coverage"
+sidebarTitle: "Read benefit coverage"
+description: "Read what an employee is currently covered for, and who it covers, to recommend a better-fitting product."
+---
+
+{/* CONTENT PASS: new use case, written against the HrisBenefitCoverage and HrisBenefit schemas in spec.json. Needs a real customer scenario and a worked recommendation example. */}
+
+Recommending a better product means knowing what someone already has. Enrolment alone does not tell you that - two employees on the same plan can carry very different coverage amounts and cover very different people.
+
+**Benefit coverage is the model that closes that gap.** It sits below enrolment and records the amount, the currency, whether the employee themselves is covered, and which dependents are.
+
+<Warning>
+  Benefit coverage is a **BETA** model. It works, but field names and shapes are not yet frozen. Check [Model availability](/get-started/model-availability) before promising it for a given integration - coverage for this model is thinner than for enrolment.
+</Warning>
+
+## The two models you need
+
+| Model | Answers | Key fields |
+| --- | --- | --- |
+| **Benefit** | What is this employee enrolled in? | `plan_name`, `provider_name`, `benefit_plan_type`, `benefit_plan_category`, `coverage_tier`, `employee_contribution`, `company_contribution` |
+| **Benefit coverage** | How much, and who does it cover? | `amount`, `currency`, `is_employee_covered`, `covered_dependents`, `benefit` |
+
+Coverage points back at an enrolment through `benefit`, so the join runs coverage → benefit → employee.
+
+## Steps
+
+<Steps>
+  <Step title="Read current enrolments">
+    ```bash
+    curl -G https://api.bindbee.dev/api/hris/v1/benefits \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>' \
+      --data-urlencode 'page_size=200'
+    ```
+
+    Filter to what is currently in force. `end_date` in the past means the enrolment has lapsed, and `effective_date` can be in the future - a plan selected during open enrolment is not yet active.
+
+    **Result:** The plans this population actually holds today.
+  </Step>
+
+  <Step title="Read the coverage behind each enrolment">
+    ```bash
+    curl -G https://api.bindbee.dev/api/hris/v1/benefit-coverages \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>' \
+      --data-urlencode 'page_size=200'
+    ```
+
+    Group by `benefit` to attach coverage to its enrolment.
+
+    <Note>
+      `amount` and `currency` travel together. A population spanning several countries returns several currencies, and comparing the numbers without the currency produces confident nonsense.
+    </Note>
+
+    **Result:** Coverage amounts joined to plans.
+  </Step>
+
+  <Step title="Establish who is actually covered">
+    Two fields, and they are independent. `is_employee_covered` says whether the employee themselves is included - it is not implied by the existence of the enrolment. `covered_dependents` lists who else is.
+
+    Compare that against the dependents on record. **The gap between dependents who exist and dependents who are covered is the recommendation** - a family of four on employee-only coverage is the clearest signal in this dataset.
+
+    **Result:** Covered versus coverable, per employee.
+  </Step>
+
+  <Step title="Compare against what you offer">
+    With amount, tier and covered dependents in hand, the comparison is yours to make: under-insured relative to salary, dependents uncovered, or a tier that no longer matches household size.
+
+    <Warning>
+      `coverage_tier` is an enum, and a source system can return a value outside the documented set. Handle unrecognised values rather than assuming the set is closed - see [Enum values](/guides/reading-writing/enum-values).
+    </Warning>
+
+    **Result:** A ranked list of employees whose current coverage does not fit.
+  </Step>
+</Steps>
+
+## Keeping it current
+
+Coverage changes at open enrolment, on qualifying life events, and whenever a dependent is added. Re-read on `modified_after` rather than refetching the population - see [Querying the data](/guides/reading-writing/querying-data).
+
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="benefit-coverages returns an empty collection">
+    Most likely the integration does not support the model. Coverage is thinner here than for enrolment - check [Model availability](/get-started/model-availability). Then confirm the model is in scope.
+  </Accordion>
+
+  <Accordion title="Coverage rows do not join to any enrolment">
+    Join on `benefit`, not on the employee. A coverage row references its enrolment; going via the employee produces cross-products where someone holds several plans.
+  </Accordion>
+
+  <Accordion title="Amounts look implausible">
+    Check `currency` before comparing. Also check the value is not a per-period contribution being read as a coverage amount - `employee_contribution` and `company_contribution` live on the enrolment, not on the coverage.
+  </Accordion>
+
+  <Accordion title="Dependents appear covered who should not be">
+    `covered_dependents` reflects the source system. Where a dependent has aged out but the record has not been updated, the source is what Bindbee returns - see [Missing or Unexpected Records](/guides/troubleshooting/missing-or-extra-records).
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Benefits](/guides/data-models/benefits) - the four benefit models and how they link
+- [Benefit Coverage endpoints](/hris/benefit-coverages/get-benefit-coverages) - the API reference
+- [Model availability](/get-started/model-availability) - which integrations return this model

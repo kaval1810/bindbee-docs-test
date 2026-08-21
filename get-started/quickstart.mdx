@@ -11,7 +11,7 @@ Everything here runs in the **Development** environment. No real customer data i
 
 <Info>
   - **Access to the [Bindbee Dashboard](https://app.bindbee.dev)** — provisioned during onboarding. If you cannot sign in, email [support@bindbee.dev](mailto:support@bindbee.dev).
-  - **A test account with any [supported HRIS](/integrations)** — you authorise it the way your customer eventually will.
+  - **A test account with any [supported HRIS](/get-started/integrations)** — you authorise it the way your customer eventually will.
 </Info>
 
 <Warning>
@@ -76,7 +76,7 @@ You now hold both credentials, and they answer different questions.
 | API key | `Authorization: Bearer …` | Your organisation — *who is asking* |
 | Connector token | `X-Connector-Token` | One customer's linked system — *whose data* |
 
-Every request from here carries both — see [Authentication](/api-reference/basics/authentication) for which endpoints need only the key.
+Every request from here carries both — see [Authentication](/guides/api-basics/authentication) for which endpoints need only the key.
 
 ## Step 3 — Run the first sync
 
@@ -109,7 +109,7 @@ Two status fields answer different questions, and both matter for the rest of yo
 **A connector can be `COMPLETE` and still hold no data.** Wait for `sync_status` to reach `Done` — on a test tenant, usually under a few minutes.
 
 <Note>
-  This manual trigger is a Development behaviour. Production connectors sync on a schedule instead — see [Sync Frequency](/api-reference/basics/sync-frequency).
+  This manual trigger is a Development behaviour. Production connectors sync on a schedule instead — see [Sync Frequency](/guides/api-basics/sync-frequency).
 </Note>
 
 ## Step 4 — Read employee data
@@ -179,7 +179,7 @@ for (const employee of items) {
 }
 ```
 
-**Each object in `items` is a unified model.** `first_name`, `work_email` and `employment_status` mean the same thing and arrive in the same shape whichever HRIS produced them — that normalisation is the whole product. Point this same code at a connector on a different system and it keeps working. See [Unified model](/explanation/core-concepts).
+**Each object in `items` is a unified model.** `first_name`, `work_email` and `employment_status` mean the same thing and arrive in the same shape whichever HRIS produced them — that normalisation is the whole product. Point this same code at a connector on a different system and it keeps working. See [Unified model](/get-started/core-concepts).
 
 Two identifiers appear on every record, and confusing them causes real bugs. **`id`** is Bindbee's — stable, same shape everywhere, the one to store. **`remote_id`** is the source system's own, useful for reconciliation but varying in format by system.
 
@@ -187,7 +187,7 @@ Two identifiers appear on every record, and confusing them causes real bugs. **`
   An empty `items` array almost always means the sync hasn't finished. Go back to step 3 and check `sync_status`.
 </Note>
 
-To read the rest of the collection, keep passing `cursor` back until it returns `null` — see [Pagination](/api-reference/basics/pagination). Paging a large population is the first thing that meets the [rate limit](/api-reference/basics/rate-limits), so raise `page_size` rather than looping faster.
+To read the rest of the collection, keep passing `cursor` back until it returns `null` — see [Pagination](/guides/api-basics/pagination). Paging a large population is the first thing that meets the [rate limit](/guides/api-basics/rate-limits), so raise `page_size` rather than looping faster.
 
 ## API basics
 
@@ -195,10 +195,10 @@ Four things apply to every endpoint you call from here, whatever you build next.
 
 | | |
 | --- | --- |
-| [Authentication](/api-reference/basics/authentication) | The two headers, which endpoints need which, and the idempotency key on writes |
-| [Pagination](/api-reference/basics/pagination) | `cursor` and `page_size`, and why a short page does not mean the end |
-| [Rate Limits](/api-reference/basics/rate-limits) | 200 requests per minute per connector, and the headers that tell you where you are |
-| [Sync Frequency](/api-reference/basics/sync-frequency) | The cadences a Production connector can run on, and what sets the floor |
+| [Authentication](/guides/api-basics/authentication) | The two headers, which endpoints need which, and the idempotency key on writes |
+| [Pagination](/guides/api-basics/pagination) | `cursor` and `page_size`, and why a short page does not mean the end |
+| [Rate Limits](/guides/api-basics/rate-limits) | 200 requests per minute per connector, and the headers that tell you where you are |
+| [Sync Frequency](/guides/api-basics/sync-frequency) | The cadences a Production connector can run on, and what sets the floor |
 
 ## What you just did
 
@@ -232,25 +232,25 @@ Production is the same four steps with a Production API key. The differences are
   </Accordion>
 
   <Accordion title="A field you expected is missing">
-    Check in order: is the field in [scope](/platform/overview); did the source system grant permission for it; does the unified model carry it at all. If the value appears in `raw_data`, it is the third case — see [Map from the dashboard](/explanation/how-custom-fields-work).
+    Check in order: is the field in [scope](/get-started/platform); did the source system grant permission for it; does the unified model carry it at all. If the value appears in `raw_data`, it is the third case — see [Map from the dashboard](/guides/extending/custom-fields).
   </Accordion>
 </AccordionGroup>
 
 ## Next
 
 <CardGroup cols={2}>
-  <Card title="Choose what to sync" icon="filter" href="/platform/overview">
+  <Card title="Choose what to sync" icon="filter" href="/get-started/platform">
     Narrow the models and fields Bindbee requests from every connected system.
   </Card>
-  <Card title="Add a missing field" icon="plus" href="/explanation/how-custom-fields-work">
+  <Card title="Add a missing field" icon="plus" href="/guides/extending/custom-fields">
     Map a value out of the raw payload onto the unified object.
   </Card>
-  <Card title="Get notified on change" icon="bell" href="/webhooks/overview">
+  <Card title="Get notified on change" icon="bell" href="/guides/reading-writing/webhooks">
     Subscribe to a webhook so your application stops polling.
   </Card>
-  <Card title="Embed the connection flow" icon="code" href="/explanation/magic-link">
+  <Card title="Embed the connection flow" icon="code" href="/get-started/how-to-connect">
     Embed the flow, or send a hosted link, from inside your product.
   </Card>
 </CardGroup>
 
-Before you go live, work through the [Go-live checklist](/how-to/setup/go-live-checklist).
+Before you go live, work through the [Go-live checklist](/guides/go-live/checklist).

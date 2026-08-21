@@ -1,0 +1,94 @@
+---
+title: "Monitor Sync Status"
+sidebarTitle: "Sync status"
+description: "Check whether a connector's most recent sync succeeded, what it loaded, and when the next one runs."
+---
+
+Before investigating missing or unexpected data, establish what the last sync actually did. Most data questions resolve here.
+
+<Info>
+  **Before you start**
+
+  - You can identify the connector, by name or by ID.
+</Info>
+
+## Steps
+
+<Steps>
+  <Step title="Open the connector's sync history">
+    In the dashboard, open the connector and go to **Syncs**.
+
+    **Result:** A list of sync runs, most recent first, each with a status.
+
+    | Dashboard status | Meaning |
+    | --- | --- |
+    | Done | Every in-scope model loaded |
+    | Syncing | Currently running - records may be incomplete until it finishes |
+    | Partial | Some models loaded, others failed |
+    | Failed | The sync did not complete |
+
+    <Warning>
+      These are the dashboard's labels. The `sync_status` field on the connector
+      endpoint carries a narrower set - `Syncing`, `Done` or `Failed` - so code
+      branching on a literal `"Partial"` will never match. Read the per-model
+      breakdown to detect a partial run programmatically.
+    </Warning>
+
+    {/* VERIFY: which sync_status value does a partial run report - Done or Failed? JobDisplayStatus in spec.json has only Syncing, Done, Failed, but the dashboard shows Partial as a fourth state. Determines how a partial run is detected from the API. */}
+  </Step>
+
+  <Step title="Open the most recent run">
+    Click into the run to see the per-model breakdown: which models were attempted, how many records each loaded, and any errors raised.
+
+    **Result:** You can tell whether a model returned zero records or was never attempted. These look identical from the API and mean different things.
+  </Step>
+
+  <Step title="Confirm the timing">
+    Note the sync's start time and compare it against the connector's configured cadence to work out when the next run is due.
+
+    **Result:** You know whether the data you're reading is current or waiting on the next run.
+
+    <Warning>
+      Development connectors do not sync on a schedule. If this is a Development connector, the last sync is the last one someone triggered - see [Development connectors](/guides/reading-writing/syncing).
+    </Warning>
+  </Step>
+
+  <Step title="Check the request logs if the sync looks fine">
+    If the sync is clean but a specific API call is failing, open **Logs**. Logs show each request and response against the connector, the direction of data, and the error code where the response failed.
+
+    **Result:** You've separated a sync-side problem from a request-side one.
+  </Step>
+</Steps>
+
+## Monitoring this programmatically
+
+For continuous monitoring rather than one-off checks, subscribe to sync events instead of polling. Sync start, sync completed, and sync error together cover the states above, and each payload carries a `sync` object with `sync_id`, `sync_name`, and `sync_type` - where `sync_type` distinguishes `AUTOMATED` from `MANUAL`, so you can tell a scheduled run from one you or support triggered.
+
+See [Choose Webhook Events](/guides/reading-writing/webhooks).
+
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="The last sync is older than the configured cadence">
+    Check whether the connector is Development, which doesn't auto-sync. On a Production connector, this indicates a stall - see [Connections needing relink](/guides/troubleshooting/connections-to-relink), then [force a resync](/api-reference/connectors/resync-connector) if you need the data now.
+  </Accordion>
+
+  <Accordion title="The status is Partial">
+    Some models failed while others succeeded. See [Partial syncs](/guides/troubleshooting/partial-syncs).
+  </Accordion>
+
+  <Accordion title="The sync says Done but a model has zero records">
+    The sync succeeded and the model genuinely returned nothing. Usually the model is out of scope for the connector, or the credentials lack permission for that endpoint - a permission failure often returns an empty set rather than an error. See [Permission errors](/guides/troubleshooting/permission-errors).
+  </Accordion>
+
+  <Accordion title="The sync has been running for a long time">
+    Duration scales with population size and with how many API calls the source system requires per record. Large extracts on some systems take substantially longer than others.
+
+    Don't delete and recreate the connector to force a restart - that discards sync history and the record identities built from it. Wait for the run to finish, then [force a resync](/api-reference/connectors/resync-connector) if needed.
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Logs](/guides/troubleshooting/logs) - what the request log shows
+- [How syncing works](/guides/reading-writing/syncing) - the schedule a status is measured against

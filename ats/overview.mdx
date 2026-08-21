@@ -18,26 +18,26 @@ A connector token is category-scoped: an HRIS token used on an ATS path returns 
 | **Organization** | Department, Office, Remote User | The recruiting side's own structure |
 
 <Info>
-  **Candidate and Application are not the same thing.** A candidate is a person and exists once; an application is one candidate's pursuit of one job. Someone applying to three roles is one candidate and three applications - see [ATS models](/explanation/ats-models).
+  **Candidate and Application are not the same thing.** A candidate is a person and exists once; an application is one candidate's pursuit of one job. Someone applying to three roles is one candidate and three applications - see [ATS models](/guides/data-models/recruiting).
 </Info>
 
 <Warning>
-  **EEOC** holds `race`, `gender`, `veteran_status` and `disability_status`, collected for compliance reporting and legally restricted in how it may be used. Most applications should exclude it from scope entirely - see [Exclude EEOC Data](/explanation/ats-models).
+  **EEOC** holds `race`, `gender`, `veteran_status` and `disability_status`, collected for compliance reporting and legally restricted in how it may be used. Most applications should exclude it from scope entirely - see [Exclude EEOC Data](/guides/data-models/recruiting).
 </Warning>
 
 ## This is the write-heavy category
 
 Fifteen of the sixteen models accept creates - candidates, applications, jobs, interviews, scorecards, offers and the rest. That is a far larger write surface than HRIS, where four models accept writes.
 
-Only Create Candidate has a Meta endpoint (`GET /api/ats/v1/candidates/create/meta`). For the others the request shape comes from the reference page, and the per-integration variation a schema would have told you has to be found by attempting the write - see [Check write support](/explanation/how-meta-apis-work).
+Only Create Candidate has a Meta endpoint (`GET /api/ats/v1/candidates/create/meta`). For the others the request shape comes from the reference page, and the per-integration variation a schema would have told you has to be found by attempting the write - see [Check write support](/guides/reading-writing/meta-apis).
 
 ## Where to start
 
 <CardGroup cols={2}>
-  <Card title="Writing to an ATS" icon="user-plus" href="/explanation/how-meta-apis-work">
+  <Card title="Writing to an ATS" icon="user-plus" href="/guides/reading-writing/meta-apis">
     Fetch the request schema before you write - it varies by connector.
   </Card>
-  <Card title="ATS models" icon="sitemap" href="/explanation/ats-models">
+  <Card title="ATS models" icon="sitemap" href="/guides/data-models/recruiting">
     What each model holds and why they are separate.
   </Card>
 </CardGroup>

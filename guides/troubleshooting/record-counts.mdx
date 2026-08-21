@@ -1,0 +1,108 @@
+---
+title: "Reconcile Record Counts Against the Source"
+sidebarTitle: "Record counts"
+description: "Explain a gap between the number of records Bindbee returns and the number the customer expects."
+---
+
+A customer says they have 4,200 employees; you're seeing 4,417. Almost always the two numbers are counting different things rather than one being wrong.
+
+Establish what each number counts before investigating a fault.
+
+<Info>
+  **Before you start**
+
+  - You have the customer's figure and know where it came from - an HR dashboard, a payroll report, and a headcount report rarely agree with each other either.
+</Info>
+
+## Steps
+
+<Steps>
+  <Step title="Get an unfiltered count from Bindbee">
+    Page the model with no filters and count - see [Pagination](/guides/api-basics/pagination).
+
+    Make sure the walk completed. A loop that stopped on a short page rather than an absent cursor undercounts, and that alone explains many gaps.
+
+    **Result:** A trustworthy baseline.
+  </Step>
+
+  <Step title="Break the count down by status">
+    ```bash
+    curl '...?employment_status=ACTIVE&page_size=200' ...
+    ```
+
+    Count each of `ACTIVE`, `PENDING`, `INACTIVE`, `ACTIVE_EXTERNAL`, `INACTIVE_EXTERNAL`, `LEAVE`, `DECEASED`, `RETIRED`, and `-`.
+
+    This one breakdown resolves most gaps. Customers usually quote active permanent employees; an unfiltered API count includes everyone.
+
+    **Result:** A per-status distribution to compare against.
+  </Step>
+
+  <Step title="Work through the usual differences">
+    | Difference | Check |
+    | --- | --- |
+    | Contingent workers and contractors | Count `ACTIVE_EXTERNAL` and `INACTIVE_EXTERNAL` |
+    | Terminated employees retained | Count `INACTIVE`, `RETIRED`, `DECEASED` |
+    | Employees on leave | Counted by some HR reports, not others - check `LEAVE` |
+    | Pending starters | `PENDING` - future-dated hires the customer may not count yet |
+    | Records with no upstream status | `-`, which any specific status filter excludes |
+    | Multiple companies or legal entities | Break down by `company_id` |
+    | One person, several employments | Count employees and employments separately |
+
+    **Result:** The gap accounted for, usually entirely.
+  </Step>
+
+  <Step title="Confirm the customer's definition">
+    Ask what their number counts, and which report produced it. Their HRIS dashboard, payroll register, and benefits eligibility report typically give three different figures for the same workforce.
+
+    Reconcile against the report closest to your use case rather than whichever number was quoted first.
+
+    **Result:** A like-for-like comparison.
+  </Step>
+
+  <Step title="Only then treat it as a data problem">
+    If the gap survives all of the above, investigate as missing or unexpected records - see [Missing or Unexpected Records](/guides/troubleshooting/missing-or-extra-records).
+
+    A permission gap can hide a whole population - a legal entity or company the credentials don't cover disappears silently rather than raising an error.
+
+    **Result:** A real investigation, on evidence.
+  </Step>
+</Steps>
+
+## Reconciling benefits counts
+
+Benefits gaps have their own causes, and the two big ones are structural.
+
+An **employer benefit** is a plan; a **benefit** is one employee's enrolment. Counting benefits to find how many plans exist gives an enrolment count instead.
+
+A **dependent** existing does not mean they're covered - coverage is a **dependent benefit**. Counting dependents as covered lives overstates the population, which is the usual reason an eligibility file has too many lives on it.
+
+See [Reading benefits](/guides/data-models/benefits).
+
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="The gap changes between runs">
+    You're counting mid-sync. Page against a stable dataset by gating the count on the sync-completed event - see [Trigger a job on completion](/guides/reading-writing/syncing).
+  </Accordion>
+
+  <Accordion title="Bindbee returns more than the source system's own API">
+    Check for terminated or historical records the customer's report filters out but the API returns. Also confirm you're comparing the same population - their report may be scoped to one company or location.
+  </Accordion>
+
+  <Accordion title="Bindbee returns fewer, consistently">
+    Suspect permission or scope first. A missing population is more often withheld than lost - see [Permission errors](/guides/troubleshooting/permission-errors) and [Restrict what syncs](/get-started/scoping).
+  </Accordion>
+
+  <Accordion title="Counts match for employees but not employments">
+    Expected. Employments exceed employees wherever anyone has been rehired, transferred, or holds concurrent roles. A 1:1 ratio would be the surprising result.
+  </Accordion>
+
+  <Accordion title="You need to show a customer the reconciliation">
+    Give them the per-status breakdown rather than a total. It turns "your integration is missing people" into a conversation about which populations to include, and it's usually self-explanatory once they see it.
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Filtering](/guides/reading-writing/querying-data)
+- [Logs](/guides/troubleshooting/logs)

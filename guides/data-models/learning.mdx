@@ -1,0 +1,79 @@
+---
+title: "LMS models"
+sidebarTitle: "Learning"
+description: "How users, courses, contents, enrollments and completions relate, and why LMS is read-only."
+---
+
+Learning data answers two questions: what training exists, and who has done it. Seven models cover both, and **the split between assignment and achievement is the one that matters.**
+
+## Assignment and achievement are separate
+
+**Enrollment** is an assignment - someone has been given a course, or started one. It says nothing about whether they finished.
+
+**Completion** is an achievement - someone finished, with `completed_at`, `time_duration`, and where the system records them, `score` and `grade` (`A` to `F`, `PASS`, `FAIL`, or `-`).
+
+A completion references a `course` **and** a `content`, so finishing one module inside a course is a completion in its own right. Counting completions per learner without checking which of the two is set will overstate how many courses they finished.
+
+Reading enrolments and treating them as training records is the most common error here, and in a compliance context a consequential one. **An enrolment means the training was assigned, which is exactly what someone out of compliance also has.**
+
+<Warning>
+Enrollment carries a `completion` reference, so **outstanding training is a null check**, not a matching exercise: an enrolment whose `completion` is empty is training assigned and not finished. If your product reports compliance, that gap is the report - not the enrolment count.
+</Warning>
+
+## The catalogue
+
+| Model | Holds |
+| --- | --- |
+| **Course** | The unit of learning people are assigned and complete |
+| **Content** | Material inside courses - modules, videos, documents |
+| **Category** | Groups courses, using the customer's own taxonomy |
+| **Skill** | A competency, associated with courses that develop or assess it |
+
+Content and course reference each other in both directions - a course has `contents`, a content item has `courses` - so the relationship is many-to-many. One video used across three courses is one record, not three.
+
+Coverage thins out towards the bottom of that list. Where a system does not distinguish content from courses, content may be sparse or absent, and **many LMS platforms have no skill concept at all** - the model will be empty for those integrations.
+
+<Warning>
+Course, content, category, skill and user all carry a `status` of `ACTIVE`, `PENDING` or `INACTIVE`. **An unfiltered catalogue read includes retired and unpublished courses**, and an unfiltered user read includes deactivated learners - so a compliance denominator built without filtering counts people and courses that are no longer live.
+</Warning>
+
+## LMS users are not HRIS employees
+
+**User** is a learner in the LMS, and this is a separate identity from the HRIS employee even when it is the same person.
+
+The systems are provisioned independently and the identifiers do not correspond. Joining learning data to employee data means matching on a stable attribute, and `email_address` on the user is usually the only reliable one.
+
+**Accept that some learners will not match.** Contractors, former employees and external participants often have LMS accounts and no HRIS record. That is worth designing for explicitly rather than treating unmatched users as errors.
+
+## Read-only
+
+No LMS model accepts writes. Enrolling someone in a course, recording a completion, or creating a course are not operations the unified API performs - the only write in the category is deleting a connector.
+
+Where a customer needs them, [passthrough](/guides/extending/passthrough) is the route, with the usual cost of integration-specific code.
+
+## Why it works this way
+
+Keeping enrolment and completion separate follows the domain rather than the convenience of a single model.
+
+Collapsing them into one record with a status field works until you need the interesting cases: a learner who enrolled twice, a completion for a course later removed from the catalogue, an assignment with a due date and no progress.
+
+**Recurring compliance training is the clearest example.** The same course is completed annually, and each completion is a distinct, separately-dated fact. A single record with a status can only hold the most recent one.
+
+Read-only reflects source system reality rather than a deliberate limitation. LMS platforms overwhelmingly treat enrolment as something their own administrators or automation rules perform, and expose narrow write APIs or none.
+
+Read coverage is the category's mature capability; **write coverage largely does not exist upstream to be unified.**
+
+## What this means for you
+
+- **Report on completions, not enrolments.** They answer different questions.
+- **Find outstanding training by checking `completion` on the enrolment.** No join required.
+- **Match learners to employees on email**, and design for the unmatched case.
+- **Filter on `status`.** Catalogue and user reads include `INACTIVE` and `PENDING` records by default.
+- **Expect skills and content to be thin or absent** on several integrations.
+- **Plan for read-only.** Any write need goes through passthrough.
+
+## Related
+
+- [Get Lms Completions](/lms/completions/get-completions) - completion records and dates
+- [Passthrough](/guides/extending/passthrough) - the only write route
+- [Write support](/guides/reading-writing/meta-apis) - why LMS accepts none

@@ -1,0 +1,81 @@
+---
+title: "Multi-entity setups"
+description: "What it means when one customer has several tenants, entities, or connectors under one account."
+---
+
+{/* HIDDEN Aug 2026: pulled from the nav pending a decision on whether to keep the page at all.
+    Relevance is in question - multi-entity may not warrant its own Explanation page.
+    Note the factual corrections already applied: origin_id IS a platform-level grouping
+    (carried on the connector, in webhook payloads, and a query filter on GET /connectors).
+    The earlier claims that no platform grouping existed, and that Bindbee "deliberately
+    does not" offer one, were both wrong and are fixed below. If the page is deleted,
+    the origin_id fan-out material is worth relocating rather than losing. */}
+
+Most documentation assumes one customer means one connector. For a meaningful share of mid-market and enterprise customers it does not, and **a data model built on the one-to-one assumption is expensive to unwind later.**
+
+## Why one customer needs several connectors
+
+| Cause | What it looks like |
+| --- | --- |
+| **Separate legal entities** | A group running one HR tenant per operating company, for legal, tax or historical reasons |
+| **Separate countries** | Payroll is jurisdictional - three countries often means three systems, sometimes three vendors |
+| **Unconsolidated acquisitions** | The acquired company keeps its own HR system, usually for longer than anyone planned |
+| **Split HRIS and payroll** | Core HR in one system, payroll in another - a common architecture, not an anomaly |
+| **Several products from one vendor** | Distinct regional or functional products, though the customer names one supplier |
+
+## `origin_id` is the thread between them
+
+You set `origin_id` when generating the Magic Link, and it should be **your own stable tenant identifier** - not a name, not an email. It is carried on the connector, appears in every webhook payload, and is a filter on the connector list:
+
+```
+GET /api/hris/v1/connectors?origin_id=tenant_9f2c1b40
+```
+
+That one request returns every connector belonging to that customer, which is what makes the fan-out tractable. Three entities under "Acme Corp." share one `origin_id` and come back together.
+
+So the grouping is not absent from the platform - **you supply the key, and Bindbee stores, returns and filters on it.** What the platform does not do is attach any meaning to it.
+
+## What stays your job
+
+Each connector authorises separately, syncs on its own schedule, holds its own credentials, and can break on its own. Sharing an `origin_id` changes none of that.
+
+**Health is per connector.** One broken connector means partial data, and your monitoring has to express that. A customer with three connectors, one broken for a month, looks fine at a glance and is missing a third of their people.
+
+**Coverage is the intersection.** If one entity runs a system that does not expose benefits, that capability is absent for those employees no matter what the other connectors support.
+
+**Reads fan out.** Employees for a customer means reading every connector under that `origin_id` and combining the results yourself.
+
+## People appear more than once
+
+The same human employed by two entities in a group, or present in both an HRIS and a payroll system, exists as separate records under separate connectors with different identifiers.
+
+Bindbee will not merge them - **identity is resolved within a connector and nowhere else.** Deduplicating across connectors is your application's job, and it needs a matching strategy that does not lean on the source identifier, since each system assigns its own.
+
+<Warning>
+Headcount and any billing derived from record counts must deduplicate across connectors. Counting records across a multi-entity customer overstates their size, sometimes substantially.
+</Warning>
+
+## Why it works this way
+
+**The platform gives you the key but not the semantics, because only you know what the grouping means.**
+
+Whether two tenants are one customer or two depends on your contract, your billing, and how you model the relationship - and different products in the same position answer it differently. A group with three subsidiaries might be one account or three. `origin_id` lets you assert the answer; inferring it would mean guessing.
+
+Keeping connectors independent underneath that also keeps failure isolated. One entity's credentials expiring does not affect the others, and the customer re-authorises just that one rather than everything.
+
+The cost is that you own the fan-out - aggregating health, intersecting coverage, deduplicating people. That work follows from the grouping being yours to define; what the platform can do is make each connector behave predictably in isolation, and give you one identifier to gather them by.
+
+## What this means for you
+
+- **Set `origin_id` to your internal tenant ID at Magic Link time.** It is the join key back to your own database, and it is hard to correct later.
+- **Model customer-to-connectors as one-to-many from the start.** Retrofitting is expensive.
+- **Fan out with `origin_id`** rather than maintaining your own connector-to-customer mapping table.
+- **Aggregate connector health per customer.** One broken connector is partial data, not total failure.
+- **Deduplicate people across connectors** using stable attributes rather than source identifiers.
+- **Do not derive headcount or billing from raw record counts** for multi-entity customers.
+
+## Related
+
+- [Get Connectors](/api-reference/connectors/get-connectors) - listing connectors, including by `origin_id`
+- [Record identity](/guides/reading-writing/record-identity) - why the same person is two records
+- [How connections work](/get-started/how-to-connect) - per-connector failure states

@@ -1,0 +1,72 @@
+---
+title: "Logs"
+description: "The per-request record behind every sync and every write, where to find it, and what it can and cannot tell you."
+---
+
+Every request Bindbee makes to a source system, and every request you make to Bindbee, is recorded. **When something is wrong and nothing in your own application errored, this is where the answer is** - because a sync failure happens in the background and never reaches your response.
+
+## What a log entry holds
+
+| Field | Holds |
+| --- | --- |
+| **Direction** | `READ` or `WRITE` |
+| **Connector** | Which customer's connection the request belongs to |
+| **Endpoint** | The path called, on Bindbee or on the source system |
+| **Status** | The response code, with the error code alongside where there is one |
+| **Request & response** | The full bodies - open an entry to expand them |
+
+<Warning>
+  **Read the upstream response body before anything else.** When Bindbee's request to the HRIS fails, the log preserves the source system's own answer rather than a Bindbee interpretation of it. That body usually names the exact permission or field at fault, which a normalised message would lose - see [Errors & issues](/guides/troubleshooting/errors-and-issues).
+</Warning>
+
+## Where to find them
+
+Open **Logs** in the Dashboard for everything across the account, or open a single connector and use its own logs when you already know which customer is affected. The second is almost always faster.
+
+<Warning>
+  **Screenshot needed** — the Logs view with a failed entry expanded, so the request and the upstream response body are both visible. That expanded state is the thing this page is about, and a list view does not show it. Save to `images/platform/logs-expanded.png` and replace this callout with a `<Frame>`.
+</Warning>
+
+## What each question looks like here
+
+| Question | What to look for |
+| --- | --- |
+| Why is this connector not returning benefits? | `READ` entries for the benefits endpoint - a `403` upstream means permissions, no entry at all means scope |
+| Why did my write fail? | The `WRITE` entry, then the source system's response body - writes fail for business reasons |
+| Did the sync run at all? | Absence of entries in the window, cross-checked against [Sync status](/guides/troubleshooting/sync-status) |
+| Which model broke a partial sync? | The first upstream error in the run - see [Partial syncs](/guides/troubleshooting/partial-syncs) |
+
+## Two different log surfaces
+
+They are easy to confuse, and only one is reachable from code.
+
+| | Connector logs | Webhook delivery logs |
+| --- | --- | --- |
+| Records | Requests to and from source systems | Bindbee's delivery attempts to your endpoint |
+| Answers | Why data is wrong or missing | Why your handler did not fire |
+| API | **None - Dashboard only** | Two endpoints exist, undocumented |
+
+<Warning>
+  **There is no connector logs endpoint.** Anything your own monitoring has to act on must come from sync-status webhooks or the connector's `status` and `sync_status` fields - the same constraint that applies to Issues.
+
+  Webhook delivery logs are the exception: `GET /api/v1/webhooks/logs` and `GET /api/v1/webhooks/logs/{log_id}` are both in `spec.json` and neither has a reference page.
+
+  {/* VERIFY: two things. The webhook log endpoints above are undocumented - they should either get generated pages under Platform or be removed from the spec. And: is a connector logs endpoint planned? Without one, a customer cannot build alerting on upstream failures, only on the coarser sync-status signal. Worth knowing whether to document a workaround or wait. */}
+</Warning>
+
+## What logs cannot tell you
+
+**Why a field is empty.** A `200` with the field absent leaves no error to find. That is scope, permissions, or the unified model not carrying it - see [Scoping](/get-started/scoping).
+
+**That a record was deleted upstream.** Disappearance produces no request and no entry.
+
+**How long an entry is kept.**
+
+{/* VERIFY: the log retention window. Not stated anywhere, and it decides whether logs are usable for anything beyond immediate debugging. */}
+
+## Related
+
+- [Errors & issues](/guides/troubleshooting/errors-and-issues) - which failures surface where, and how to read them
+- [Sync status](/guides/troubleshooting/sync-status) - whether the run happened at all
+- [Partial syncs](/guides/troubleshooting/partial-syncs) - working through a run that half-finished
+- [Permission errors](/guides/troubleshooting/permission-errors) - the most common upstream failure
