@@ -633,21 +633,7 @@
           }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Help Centre",
-          "href": "https://help.bindbee.dev/",
-          "icon": "book-open"
-        },
-        {
-          "anchor": "Status",
-          "href": "https://status.bindbee.dev",
-          "icon": "signal"
-        }
-      ]
-    }
+    ]
   },
   "logo": {
     "light": "/images/docs_light.svg",
@@ -1550,6 +1536,14 @@
   },
   "navbar": {
     "links": [
+      {
+        "label": "Help Centre",
+        "href": "https://help.bindbee.dev/"
+      },
+      {
+        "label": "Status",
+        "href": "https://status.bindbee.dev"
+      },
       {
         "label": "Website",
         "href": "https://bindbee.dev?utm_source=documentation&utm_medium=documentation-footer&utm_campaign=documentation"
