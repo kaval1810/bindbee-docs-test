@@ -23,7 +23,7 @@ Use your browser's find (`Ctrl`/`⌘` + `F`) to search this page for a system na
 | **API** | Bindbee calls the vendor's API | Bindbee's sync schedule | Often supported |
 | **SFTP** | The customer's system exports a file on a schedule | The customer's export schedule | Generally not |
 
-Slugs ending in `_sftp`, plus file-export variants like `workday_raas` and `paychex_flock`, are file-based. See [SFTP & file connectors](/explanation/sftp-and-file-connectors).
+Slugs ending in `_sftp`, plus file-export variants like `workday_raas` and `paychex_flock`, are file-based. See [Connection methods](/explanation/sftp-and-file-connectors).
 
 ---
 
@@ -327,7 +327,7 @@ Integrations are identified by a slug - `bamboohr`, `adp`, `sap-success-factors`
 | **Product line** | Distinct products sold under one brand - UKG Pro and UKG Ready are separate systems, not tiers |
 | **Region** | Different platforms behind one name, where local payroll and compliance rules diverge |
 | **Edition or add-on** | A tenant without the relevant module cannot expose that data, whatever its permissions |
-| **Transport** | API for some customers, file delivery for others - see [SFTP & file connectors](/explanation/sftp-and-file-connectors) |
+| **Transport** | API for some customers, file delivery for others - see [Connection methods](/explanation/sftp-and-file-connectors) |
 | **Access method** | A standard API and a reporting interface, with different coverage and latency |
 | **Legacy generation** | After an acquisition or rewrite, the old system persists while new customers go to the new one |
 
@@ -475,5 +475,5 @@ Keeping them separate makes capability a property of something specific and chec
 ## Related
 
 - [Model availability](/integrations-coverage/model-availability) - which models each integration returns
-- [SFTP & file connectors](/explanation/sftp-and-file-connectors) - how transport changes behaviour
+- [Connection methods](/explanation/sftp-and-file-connectors) - how transport changes behaviour
 - [List Integrations](/custom-fields/lookup/list-integrations) - the lookup endpoint
