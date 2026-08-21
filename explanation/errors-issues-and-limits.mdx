@@ -154,7 +154,7 @@ So write error handling cannot be fully generic. You can handle the transport un
 
 Not every failure surfaces on a response. A sync that fails partway through happens in the background, and you find out from the connector's logs or a sync-status webhook.
 
-**Logs** hold the per-request record: which endpoint, which status, what came back. This is where you answer "why is this connector not returning benefits" when nothing in your own application errored.
+**Logs** hold the per-request record: which endpoint, which status, what came back. This is where you answer "why is this connector not returning benefits" when nothing in your own application errored - see [Logs](/how-to/troubleshooting/logs).
 
 **Issues** are the layer above. Where a log entry is one request and its response, an issue is a failure Bindbee raised against a connector with a likely cause attached - carrying the evidence, so you and support read the same thing. See [Platform](/platform/overview).
 

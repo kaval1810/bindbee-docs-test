@@ -73,15 +73,15 @@ See [Delete Connector](/api-reference/connectors/delete-connector) for the endpo
 
 ## Logs
 
-Real-time visibility into request and response data, so you can see exactly what happened for a connector. Open **Logs**, or reach one connector's logs from its own page.
-
-Each entry shows the direction - `READ` or `WRITE` - along with the request and the response, and the error code where there is one. When a sync misbehaves this is the first place to look: the source system's own error is usually more specific than the status Bindbee shows.
+Every request and response, per connector, with the source system's own error preserved. Open **Logs**, or reach one connector's logs from its own page.
 
 <img
   src="https://images.unifyx.dev/documentation_images/logs.png"
   alt="The Logs view in the Bindbee Dashboard, listing requests by connector"
   className="block"
 />
+
+When a sync misbehaves this is the first place to look - see [Logs](/how-to/troubleshooting/logs).
 
 ## Custom Fields
 
@@ -102,3 +102,18 @@ Where you register a destination URL, choose which events reach it, and find the
 </Warning>
 
 See [Webhook](/webhooks/overview).
+
+## Changelog
+
+What has changed in the Bindbee platform - new integrations, new models and fields, and behaviour changes worth knowing about before they reach your connectors.
+
+<Warning>
+  **Screenshot needed** — the Changelog view in the Dashboard, with a couple of entries visible so the level of detail is clear. Save to `images/platform/changelog.png` and replace this callout with a `<Frame>`.
+</Warning>
+
+Check it before a release, and after a connector starts behaving differently without a change on your side.
+
+{/* VERIFY: three things before this section is finished.
+     1. Does the Changelog have a direct URL? If so it belongs in navigation.global.anchors beside Help Centre and Status, not only here.
+     2. What does it cover - API changes only, or new integrations and model coverage too?
+     3. Is there any notification, or is it pull-only? Kombo publishes a per-category "important changes" page precisely so customers are not expected to poll a dashboard. */}

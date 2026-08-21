@@ -115,6 +115,7 @@
             "group": "Troubleshooting",
             "pages": [
               "explanation/errors-issues-and-limits",
+              "how-to/troubleshooting/logs",
               {
                 "group": "Monitoring",
                 "pages": [
