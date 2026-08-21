@@ -138,10 +138,10 @@
       },
       {
         "tab": "API Reference",
-        "anchors": [
+        "groups": [
           {
-            "anchor": "API Basics",
-            "icon": "key",
+            "group": "API Basics",
+            "icon": "book-open",
             "pages": [
               "api-reference/basics/authentication",
               "api-reference/basics/pagination",
@@ -150,21 +150,23 @@
             ]
           },
           {
-            "anchor": "Platform",
-            "icon": "grid-2",
-            "groups": [
+            "group": "Platform",
+            "icon": "boxes",
+            "pages": [
               {
                 "group": "Integrations",
                 "pages": [
                   "api-reference/integrations/get-integrations"
-                ]
+                ],
+                "expanded": true
               },
               {
                 "group": "Embedded Link",
                 "pages": [
                   "sdk/create-link-token",
                   "sdk/get-connector-token"
-                ]
+                ],
+                "expanded": true
               },
               {
                 "group": "Connectors",
@@ -172,7 +174,8 @@
                   "api-reference/connectors/get-connectors",
                   "api-reference/connectors/resync-connector",
                   "api-reference/connectors/delete-connector"
-                ]
+                ],
+                "expanded": true
               },
               {
                 "group": "Custom Fields",
@@ -210,23 +213,23 @@
                       "custom-fields/api/get-configuration"
                     ]
                   }
-                ]
+                ],
+                "expanded": true
               },
               {
                 "group": "Passthrough",
                 "pages": [
                   "api-reference/passthrough/make-passthrough-request"
-                ]
+                ],
+                "expanded": true
               }
             ]
           },
           {
-            "anchor": "HR & Payroll (HRIS)",
+            "group": "HR & Payroll (HRIS)",
             "icon": "users",
             "pages": [
-              "hris/overview"
-            ],
-            "groups": [
+              "hris/overview",
               {
                 "group": "Employee Data",
                 "pages": [
@@ -277,7 +280,8 @@
                     ],
                     "tag": "BETA"
                   }
-                ]
+                ],
+                "expanded": true
               },
               {
                 "group": "Organization",
@@ -304,7 +308,8 @@
                     ],
                     "tag": "BETA"
                   }
-                ]
+                ],
+                "expanded": true
               },
               {
                 "group": "Payroll",
@@ -347,7 +352,8 @@
                     ],
                     "tag": "BETA"
                   }
-                ]
+                ],
+                "expanded": true
               },
               {
                 "group": "Benefits",
@@ -381,7 +387,8 @@
                     ],
                     "tag": "BETA"
                   }
-                ]
+                ],
+                "expanded": true
               },
               {
                 "group": "Time & Attendance",
@@ -411,17 +418,16 @@
                       "hris/timesheet-entries/create-timesheet-entries"
                     ]
                   }
-                ]
+                ],
+                "expanded": true
               }
             ]
           },
           {
-            "anchor": "Recruiting (ATS)",
+            "group": "Recruiting (ATS)",
             "icon": "user-plus",
             "pages": [
-              "ats/overview"
-            ],
-            "groups": [
+              "ats/overview",
               {
                 "group": "Talent Acquisition",
                 "pages": [
@@ -483,7 +489,8 @@
                       "ats/offer/create-offer"
                     ]
                   }
-                ]
+                ],
+                "expanded": true
               },
               {
                 "group": "Evaluation",
@@ -536,7 +543,8 @@
                       "ats/tag/create-tag"
                     ]
                   }
-                ]
+                ],
+                "expanded": true
               },
               {
                 "group": "Organization",
@@ -565,23 +573,23 @@
                       "ats/remote-user/create-remote-user"
                     ]
                   }
-                ]
+                ],
+                "expanded": true
               }
             ]
           },
           {
-            "anchor": "Learning (LMS)",
+            "group": "Learning (LMS)",
             "icon": "graduation-cap",
             "pages": [
-              "lms/overview"
-            ],
-            "groups": [
+              "lms/overview",
               {
                 "group": "Users",
                 "pages": [
                   "lms/users/get-users",
                   "lms/users/get-user-by-id"
-                ]
+                ],
+                "expanded": true
               },
               {
                 "group": "Content",
@@ -614,7 +622,8 @@
                       "lms/categories/get-category-by-id"
                     ]
                   }
-                ]
+                ],
+                "expanded": true
               },
               {
                 "group": "Progress",
@@ -633,7 +642,8 @@
                       "lms/enrollments/get-enrollment-by-id"
                     ]
                   }
-                ]
+                ],
+                "expanded": true
               }
             ]
           }
