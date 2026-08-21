@@ -1,0 +1,507 @@
+---
+title: "Meta APIs for write operations"
+sidebarTitle: "Meta APIs"
+description: "Why Bindbee asks the connector what a write should look like, how to read the schema, and which writes an integration supports."
+---
+
+{/* CONTENT PASS: merged from explanation/how-meta-apis-work, explanation/write-support, how-to/writing-data-back/check-write-support, how-to/writing-data-back/fetch-a-write-schema. 501-means-unknown is stated in three of the four sources. */}
+
+
+Reading is symmetrical: every integration returns the same employee shape. **Writing is not.**
+
+What a source system requires to create an employee differs by system - and within a system, by tenant, because customers configure their own mandatory fields.
+
+A fixed request schema cannot express that. So for writes, Bindbee tells you what the schema is at the moment you ask, for the connector you are asking about.
+
+## Ask before you write
+
+A meta endpoint returns the request schema for a create operation on a specific connector: which fields exist, which are required, and where the value set is constrained, what the permitted values are.
+
+That last part matters more than it sounds. Many required fields are not free text but **references into the customer's own configuration** - a location identifier, a pay group, an employment type defined in their tenant.
+
+You cannot know those values in advance, and they differ between two customers on the same system.
+
+The response is an envelope - `success`, `data` and `error` - with the schema itself inside `data`, so unwrap before you validate against it.
+
+<Info>
+The practical pattern is to fetch the schema, render a form or validate against it, then submit. Hardcoding a request body that worked for one customer is the most common way to build a write integration that breaks on the second.
+</Info>
+
+Five operations have one:
+
+| Operation | Endpoint |
+| --- | --- |
+| Create employee | `/hris/v1/employees/meta/post` |
+| Create employee payroll run | `/hris/v1/employee-payroll-runs/meta/post` |
+| Create time off | `/hris/v1/time-off/meta/post` |
+| Create timesheet entry | `/hris/v1/timesheet-entry/meta/post` |
+| Create candidate | `/ats/v1/candidates/create/meta` |
+
+<Note>
+  The employee model exposes two: `/employees/meta/post` and
+  `/employees/create/meta`. Use `meta/post` - it is the form the other three
+  HRIS writes follow, and the one every guide on this site calls. The
+  `create/meta` variant exists only for employees and ATS candidates.
+
+  {/* VERIFY: is create/meta superseded, or does it serve a purpose meta/post does not? Both return MetaApiResponseModel, but the live spec gives them different summaries - "Get Create Employee Meta" / "Returns request schema for POST Employee request" versus "Get Create Employee Request Body" / "Returns the data points required to add new employee in HRIS" - which reads as two names for one thing rather than two behaviours. Worth deprecating one if so.
+
+  Separately, a spec bug: /ats/v1/candidates/create/meta carries the same description, "Returns the data points required to add new employee in HRIS", on the candidates endpoint. Still wrong on live. */}
+</Note>
+
+## Reading the schema
+
+Each response follows a JSON Schema-compatible structure, so it works with standard JSON Schema tooling for validation or form generation. Alongside the standard keywords it carries two Bindbee additions, `isRequired` and `enumInformation`.
+
+| Keyword | Purpose |
+| --- | --- |
+| `type` | The expected data type |
+| `properties` | Fields within an object |
+| `items` | The structure of each element in an array |
+| `required` | The fields required within an object |
+| `isRequired` | Whether an individual field is required |
+| `description` | A human-readable explanation of a field |
+| `format` | An additional constraint on a string value |
+| `enum` | The accepted values for a field |
+| `enumInformation` | Descriptions for the values listed in `enum` |
+
+A top-level `type` of `object` means the request body must be a JSON object. `properties` holds the available fields; the `required` array lists the mandatory ones.
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "first_name": {
+      "type": "string",
+      "description": "The employee's first name.",
+      "isRequired": true
+    },
+    "last_name": {
+      "type": "string",
+      "description": "The employee's last name.",
+      "isRequired": true
+    }
+  },
+  "required": ["first_name", "last_name"]
+}
+```
+
+Use `isRequired` to check one field; use the `required` array to enumerate all of them.
+
+For a field with `type: "object"`, nested fields sit under `properties`. For `type: "array"`, the schema for each element sits under `items`:
+
+```json
+"earnings": {
+  "type": "array",
+  "description": "The earnings entries for the payroll run.",
+  "isRequired": false,
+  "items": {
+    "type": "object",
+    "properties": {
+      "earning_code": { "type": "string", "isRequired": true },
+      "amount":       { "type": "number", "isRequired": false }
+    },
+    "required": ["earning_code"]
+  }
+}
+```
+
+## Integration-specific fields
+
+Some writes need values that exist in one source system and nowhere else - a pay adjustment code, a system-specific flag governing how the record is processed. These travel outside the unified body, in one of two objects that behave differently.
+
+| Field | Structure | Validation | Purpose |
+| --- | --- | --- | --- |
+| `integration_params` | Defined object | Validated, and can be required | Parameters the underlying integration requires for the write |
+| `additional_attributes` | Free-form object | Not defined by the unified schema | Integration-specific values with no unified equivalent, forwarded as-is |
+
+`integration_params` has its properties spelled out in the schema:
+
+```json
+"integration_params": {
+  "type": "object",
+  "description": "Parameters required by the integration for the write operation.",
+  "isRequired": true,
+  "properties": {
+    "pay_statement_type_id": { "type": "string", "isRequired": true }
+  },
+  "required": ["pay_statement_type_id"]
+}
+```
+
+The separation is deliberate: unified fields stay portable, and the escape hatch is visibly an escape hatch. Code passing integration-specific parameters knows which integration it is talking to, and the request should show that.
+
+## Accepted values
+
+`enum` lists the values a field accepts. Where available, `enumInformation` explains what each one means - which matters when the values are opaque identifiers from the customer's own configuration.
+
+```json
+"pay_statement_type_id": {
+  "type": "string",
+  "isRequired": true,
+  "enum": ["51743768", "51743769", "51743758"],
+  "enumInformation": [
+    { "value": "51743768", "description": "Third-Party Sick" },
+    { "value": "51743769", "description": "Bonus" },
+    { "value": "51743758", "description": "Regular" }
+  ]
+}
+```
+
+`format` constrains a string further - `email`, `uuid` and similar. A body that satisfies every required field, type, format and enum is valid:
+
+```json
+{
+  "first_name": "Jane",
+  "last_name": "Doe",
+  "work_email": "jane@acme.com",
+  "additional_attributes": { "employee_number": "E-1042" }
+}
+```
+
+## Where there is no schema
+
+Most write operations do not have a meta endpoint. The ATS creates in particular are largely uncovered - of the seventeen ATS create endpoints, only create candidate has a schema.
+
+For those the request shape comes from the API reference, and the per-tenant variation a schema would have told you has to be discovered by attempting the write and reading the failure. Unsatisfying, and the current state.
+
+{/* VERIFY: is meta-endpoint coverage expanding to remaining write operations, and in what order? Affects whether teams should build against schemas or against fixed bodies for ATS writes. */}
+
+<Warning>
+**A meta endpoint existing does not mean a schema exists for your connector.** Where the schema has not been published for that integration and model, the request returns `501 Not Implemented` - which means *unknown*, not *unsupported*. The write itself may still work.
+
+```json
+{
+  "detail": "Meta API is not implemented for Time Off in bamboohr. You can request this feature by contacting support@bindbee.dev."
+}
+```
+
+Handle `501` as its own branch rather than folding it into a general error path.
+</Warning>
+
+{/* VERIFY: 501 is documented in three places - go-live-checklist, write-payroll-deductions-back and create-a-candidate - but it is not in the documented response list for any meta endpoint in the live spec, which lists only 200, 422, 401, 403 and 429. Confirm the status code and get it into the spec. */}
+
+## Why it works this way
+
+Publishing one fixed schema per model would be simpler to document and simpler to code against, and it would be wrong for a substantial share of customers.
+
+The alternative is the intersection - require only what every integration requires, and hope the rest are optional. They are not.
+
+A tenant that has made cost centre mandatory rejects a create that omits it, and no schema design on Bindbee's side changes that. You would learn the requirement from a `400`, which is what runtime discovery exists to avoid.
+
+The other option is the union - accept every field any system might want. That produces a schema too large to be useful, and no signal about what the customer in front of you actually requires.
+
+**Asking the connector puts the answer where the truth is.** The cost is an extra call and a more dynamic integration than a static schema would need.
+
+In return, a write built against the schema works for tenants configured in ways you never anticipated - which is most of them.
+
+## What this means for you
+
+- **Fetch the schema per connector**, not once per integration. Requirements vary by tenant.
+- **Render forms from the schema** rather than hardcoding fields.
+- **Do not reuse a working request body across customers** without checking it against their schema.
+- **Keep integration-specific parameters out of the unified body.** They belong in `integration_params` or `additional_attributes`.
+- **Treat `501` as unknown, not unsupported.** The write may still succeed.
+- **Where no meta endpoint exists**, expect to discover requirements from failures, and log them.
+
+## What you can write
+
+Reading is close to uniform: if a model exists for a category, most integrations return something.
+
+**Writing is not.** Write support is sparse, uneven, and distributed in a way that runs against most people's expectations.
+
+### The shape of it today
+
+| Category | Creates | What accepts them |
+| --- | --- | --- |
+| **ATS** | 17 endpoints, 16 models | Candidates, applications, jobs, offers, interviews, scorecards, departments, offices, tags and more |
+| **HRIS** | 4 | Employee, employee payroll run, time off, timesheet entry |
+| **LMS** | 0 | Read-only |
+
+Attachments account for the seventeenth endpoint: they can be created standalone or against a candidate.
+
+The asymmetry surprises people who assume HRIS, being the largest category, is the most capable. **The constraint is not Bindbee's** - it reflects what source systems permit.
+
+HR systems are systems of record for compensation, employment and personal data, and most expose narrow, heavily-validated write surfaces or none at all. Recruiting systems are built around external tools pushing data in, so their write APIs are correspondingly open.
+
+### Two layers of support
+
+An endpoint existing does not mean the write works for your customer.
+
+**The endpoint layer** is what Bindbee's API exposes. This is uniform: if create candidate exists, it exists for every ATS connector.
+
+**The integration layer** is whether the underlying system accepts it. This varies, and an integration that supports reading candidates may not support creating them.
+
+<Warning>
+Do not infer write capability from read capability, or from the endpoint being documented. Confirm per integration before committing to a workflow that depends on it.
+</Warning>
+
+{/* VERIFY - BLOCKING for the Reference matrix, not for this page. The per-integration write capability matrix is not published. Until it is, the only route to an answer is asking. This is the substance of open ticket 1177. */}
+
+### Creates, not updates
+
+The write surface is creates. There is no general facility for updating or deleting a record through the unified models.
+
+This is a larger constraint than it first appears. Correcting a mistyped hire, updating a title, cancelling a submitted time-off request - none are operations the unified write API performs.
+
+Where they are possible at all, they go through passthrough, against that integration's own API.
+
+The API surface confirms it. **Exactly one `PATCH` exists in the whole API**, and it is on a custom field mapping - Bindbee configuration, not customer data. There is no `PUT` anywhere, and no `PATCH` on any unified HRIS, ATS or LMS model.
+
+### What a failed write leaves behind
+
+A rejected write leaves nothing in Bindbee. **It may not leave nothing in the source system.**
+
+Some creates are multi-step upstream: a person record, then an employment, then a compensation entry. A failure partway through can leave **a partial record in the customer's HR system** - visible in their UI, which Bindbee did not create and will not clean up.
+
+So a failed write is not automatically safe to retry - retrying may produce a duplicate rather than completing the original.
+
+Where a create fails ambiguously, check the source system's state before retrying.
+
+### Reads and writes are not the same path
+
+A successful write does not immediately appear in your reads. The record was created in the source system; Bindbee learns about it on the next sync.
+
+Reading back straight away finds nothing, and **that absence means nothing**. Trust the write response, or force a resync if the record must appear promptly.
+
+### Why it works this way
+
+The narrowness is inherited rather than chosen, and expanding it is bounded by what source systems allow.
+
+**Reading is forgiving.** A request that returns the wrong thing produces a bad response, and nothing changes.
+
+Writing is not. A malformed create in a payroll system produces a real employee who will be paid, or a time-off request that consumes real entitlement. Source systems reflect that asymmetry: read APIs are broad, write APIs are narrow, heavily validated and often restricted to named integration partners.
+
+Model-by-model expansion follows. Each write requires understanding one system's validation rules, required-field configuration and failure modes well enough not to corrupt a system of record - and **that work does not generalise across models**, so support arrives incrementally.
+
+Passthrough exists as the pressure valve. When the unified write surface does not cover an operation, the escape hatch is available - with the trade-off of integration-specific code.
+
+### What this means for you
+
+- **Confirm write support per integration** before designing a workflow around it.
+- **Plan for creates only.** Updates and deletions go through passthrough, if at all.
+- **Do not retry a failed write blindly.** Check the source system's state first.
+- **Do not read back immediately to confirm.** Trust the write response.
+- **Expect the surface to grow**, model by model rather than in bulk.
+
+## Checking write support
+
+Write support expands model by model and integration by integration. An operation available on one platform may be unavailable on another, so check before building rather than discovering it from a failed request in production.
+
+<Warning>
+  There is currently no published capability matrix, and [Get Integrations](/api-reference/integrations/get-integrations) does not return per-operation write flags. The Meta API probe below is the reliable programmatic check available today.
+
+  {/* VERIFY: a read/write capability matrix was requested in Aug 2026. If published, link it here and make it the primary method. */}
+</Warning>
+
+<Info>
+  **Before you start**
+
+  - You have a connector on the integration you're checking, or its `integration_slug`.
+</Info>
+
+### Steps
+
+<Steps>
+  <Step title="Probe the Meta endpoint">
+    Each write operation has a Meta endpoint returning the request schema for that connector's integration. A schema coming back means the operation is implemented for that integration.
+
+    | Operation | Meta endpoint |
+    | --- | --- |
+    | Create Employee | `GET /api/hris/v1/employees/meta/post` |
+    | Create Employee Payroll Run | `GET /api/hris/v1/employee-payroll-runs/meta/post` |
+    | Create Time Off | `GET /api/hris/v1/time-off/meta/post` |
+    | Create Timesheet | `GET /api/hris/v1/timesheet-entry/meta/post` |
+
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/time-off/meta/post' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    **Result:** A JSON Schema for the request body, or an error indicating it isn't available.
+  </Step>
+
+  <Step title="Read the schema as a capability statement">
+    The schema tells you more than yes-or-no. `required` and `isRequired` show what the integration insists on, and a required `integration_params` block means the write needs platform-specific values you must source before you can call it at all.
+
+    See [Fetch a schema](/guides/reading-writing/meta-apis).
+
+    **Result:** You know whether the operation is available *and* whether you can satisfy its inputs.
+  </Step>
+
+  <Step title="Treat a missing schema as inconclusive, not as a no">
+    A write operation can be available for an integration even when its Meta schema hasn't been implemented yet. A missing schema means you can't self-serve the contract - not necessarily that the write will fail.
+
+    Confirm with support before concluding the operation is unsupported.
+
+    **Result:** You avoid ruling out a capability that exists.
+  </Step>
+
+  <Step title="Check the fallback before redesigning">
+    Where a unified write isn't available but the source system's own API supports the operation, [Passthrough](/guides/extending/passthrough) reaches it directly - at the cost of a provider-specific request and response shape you maintain yourself.
+
+    **Result:** You know whether the requirement is blocked or just unpretty.
+  </Step>
+</Steps>
+
+### Doing this across many integrations
+
+If you're assessing coverage across a portfolio rather than one connector, iterate [Get Integrations](/api-reference/integrations/get-integrations) for the list, then probe the relevant Meta endpoint per connector. Cache the result per integration - capability changes at release cadence, not per request.
+
+### If this didn't work
+
+<AccordionGroup>
+  <Accordion title="The Meta endpoint returns 403">
+    The credentials are valid but the operation isn't permitted for this connector - either the write is disabled for that model, or the connector belongs to a different API category. See [Authentication](/api-reference/basics/authentication).
+  </Accordion>
+
+  <Accordion title="The schema returns but the write fails validation">
+    The schema is the contract Bindbee expects; the source system can impose rules beyond it - a code that must exist in their configuration, a date within an open period, an approval state. Those surface at write time.
+
+    See [Fetch a schema](/guides/reading-writing/meta-apis).
+  </Accordion>
+
+  <Accordion title="You need writes for a model with no Meta endpoint">
+    Meta endpoints cover the four HRIS operations above, plus Create Candidate on ATS. Other writes, where available, have no schema probe. Passthrough is the general fallback.
+  </Accordion>
+
+  <Accordion title="A customer is asking what's writable before they sign">
+    Probe against a sandbox connector on that integration if you have one. Where you don't, ask support rather than inferring from another platform - write support is not consistent across integrations, and reads being available says nothing about writes.
+  </Accordion>
+</AccordionGroup>
+
+## Fetching a schema
+
+Write requirements differ by integration - required fields, accepted enum values, and platform-specific parameters all vary. The Meta API returns a JSON Schema describing exactly what the current connector's integration expects. Fetch it before every new write integration; don't hard-code a body learned from one platform.
+
+<Info>
+  **Before you start**
+
+  - You have a `connector_token` for the connector you'll write to. The schema is integration-specific, so it must come from the same connector.
+</Info>
+
+### Steps
+
+<Steps>
+  <Step title="Fetch the schema">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/employees/meta/post' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    **Result:** A JSON Schema for the request body.
+  </Step>
+
+  <Step title="Read the requirement markers">
+    Two markers express requirement, at different levels.
+
+    | Keyword | Scope |
+    | --- | --- |
+    | `isRequired` | On the individual field |
+    | `required` | Array on the parent object, listing all mandatory children |
+
+    Check the `required` array on each object, including nested ones - a field can be optional at the top level while being required inside an object you've chosen to send.
+
+    **Result:** The complete set of mandatory fields.
+  </Step>
+
+  <Step title="Use enum values verbatim">
+    Where a field carries `enum`, only those values are accepted, and `enumInformation` describes what each one means.
+
+    Read `enumInformation` rather than inferring from the value name. Platform vocabularies diverge - a leave type or pay statement code that looks self-explanatory often isn't, and the description is what tells you which one maps to your concept.
+
+    **Result:** Values the integration will accept.
+  </Step>
+
+  <Step title="Handle nested objects and arrays">
+    A field with `type: "object"` defines its children under `properties`. A field with `type: "array"` defines each element's shape under `items`, which has its own `required` array.
+
+    ```json
+    "earnings": {
+      "type": "array",
+      "isRequired": false,
+      "items": {
+        "type": "object",
+        "properties": {
+          "earning_code": { "type": "string", "isRequired": true },
+          "amount": { "type": "number", "isRequired": false }
+        },
+        "required": ["earning_code"]
+      }
+    }
+    ```
+
+    The array is optional here, but `earning_code` is mandatory on every element you include.
+
+    **Result:** Correctly shaped nested data.
+  </Step>
+
+  <Step title="Supply integration_params where required">
+    `integration_params` carries values the underlying platform demands that have no unified equivalent - a pay statement type ID, a leave category, a location reference.
+
+    Its properties are explicitly defined and can be required. Where they are, the write cannot succeed without them, and the values usually come from the source system's own configuration rather than from anything Bindbee returns.
+
+    ```json
+    "integration_params": {
+      "type": "object",
+      "isRequired": true,
+      "properties": {
+        "pay_statement_type_id": { "type": "string", "isRequired": true }
+      },
+      "required": ["pay_statement_type_id"]
+    }
+    ```
+
+    Distinguish this from `additional_attributes`, which is free-form, unvalidated, and for integration-specific values outside the unified fields.
+
+    | | `integration_params` | `additional_attributes` |
+    | --- | --- | --- |
+    | Structure | Defined | Free-form |
+    | Validated | Yes | No |
+    | Can be required | Yes | No |
+
+    **Result:** A body that satisfies the platform's own requirements.
+  </Step>
+
+  <Step title="Validate before sending">
+    The response is JSON Schema-compatible, so standard tooling validates against it directly. That catches shape errors locally rather than as a failed write against the customer's live HRIS.
+
+    The same schema also drives form generation if you're collecting these values from an end user.
+
+    **Result:** A body validated before it leaves your system.
+  </Step>
+</Steps>
+
+### Fetch it, don't cache it forever
+
+Schemas differ by integration and change as write support expands. Fetching per integration at build time and refreshing periodically is reasonable; hard-coding a body from one platform is the reliable way to fail on the second.
+
+### If this didn't work
+
+<AccordionGroup>
+  <Accordion title="The schema is missing fields you know the platform needs">
+    Check `integration_params` and `additional_attributes` before concluding it's incomplete - platform-specific requirements live there rather than as top-level fields.
+  </Accordion>
+
+  <Accordion title="A write conforming to the schema still fails">
+    The schema describes the structural contract. The source system can enforce rules beyond it: a code that must already exist in their configuration, a date inside an open payroll period, an approval state, or a permission the connector lacks.
+
+    Read the error from the write response, and check whether the values you're sending exist in the customer's configuration.
+  </Accordion>
+
+  <Accordion title="No schema is returned for an operation you were told is supported">
+    A write can be available while its Meta schema is unimplemented. See [Check write support](/guides/reading-writing/meta-apis).
+  </Accordion>
+
+  <Accordion title="You don't know where to source an integration_params value">
+    These usually reference the customer's own HRIS configuration. Where the value isn't discoverable through a Bindbee read, [Passthrough](/guides/extending/passthrough) can query the source system's configuration endpoint directly.
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Create Employee](/get-started/use-cases/create-an-employee) - the fetch-then-write flow end to end
+- [Errors & Issues](/guides/troubleshooting/errors-and-issues) - why writes fail for business reasons

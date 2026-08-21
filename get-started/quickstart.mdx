@@ -11,7 +11,7 @@ Everything here runs in the **Development** environment. No real customer data i
 
 <Info>
   - **Access to the [Bindbee Dashboard](https://app.bindbee.dev)** — provisioned during onboarding. If you cannot sign in, email [support@bindbee.dev](mailto:support@bindbee.dev).
-  - **A test account with any [supported HRIS](/integrations)** — you authorise it the way your customer eventually will.
+  - **A test account with any [supported HRIS](/get-started/integrations)** — you authorise it the way your customer eventually will.
 </Info>
 
 <Warning>
@@ -179,7 +179,7 @@ for (const employee of items) {
 }
 ```
 
-**Each object in `items` is a unified model.** `first_name`, `work_email` and `employment_status` mean the same thing and arrive in the same shape whichever HRIS produced them — that normalisation is the whole product. Point this same code at a connector on a different system and it keeps working. See [Unified model](/explanation/core-concepts).
+**Each object in `items` is a unified model.** `first_name`, `work_email` and `employment_status` mean the same thing and arrive in the same shape whichever HRIS produced them — that normalisation is the whole product. Point this same code at a connector on a different system and it keeps working. See [Unified model](/get-started/core-concepts).
 
 Two identifiers appear on every record, and confusing them causes real bugs. **`id`** is Bindbee's — stable, same shape everywhere, the one to store. **`remote_id`** is the source system's own, useful for reconciliation but varying in format by system.
 
@@ -232,25 +232,25 @@ Production is the same four steps with a Production API key. The differences are
   </Accordion>
 
   <Accordion title="A field you expected is missing">
-    Check in order: is the field in [scope](/platform/overview); did the source system grant permission for it; does the unified model carry it at all. If the value appears in `raw_data`, it is the third case — see [Map from the dashboard](/explanation/how-custom-fields-work).
+    Check in order: is the field in [scope](/get-started/platform); did the source system grant permission for it; does the unified model carry it at all. If the value appears in `raw_data`, it is the third case — see [Map from the dashboard](/guides/extending/custom-fields).
   </Accordion>
 </AccordionGroup>
 
 ## Next
 
 <CardGroup cols={2}>
-  <Card title="Choose what to sync" icon="filter" href="/platform/overview">
+  <Card title="Choose what to sync" icon="filter" href="/get-started/platform">
     Narrow the models and fields Bindbee requests from every connected system.
   </Card>
-  <Card title="Add a missing field" icon="plus" href="/explanation/how-custom-fields-work">
+  <Card title="Add a missing field" icon="plus" href="/guides/extending/custom-fields">
     Map a value out of the raw payload onto the unified object.
   </Card>
-  <Card title="Get notified on change" icon="bell" href="/webhooks/overview">
+  <Card title="Get notified on change" icon="bell" href="/guides/reading-writing/webhooks">
     Subscribe to a webhook so your application stops polling.
   </Card>
-  <Card title="Embed the connection flow" icon="code" href="/explanation/magic-link">
+  <Card title="Embed the connection flow" icon="code" href="/get-started/how-to-connect">
     Embed the flow, or send a hosted link, from inside your product.
   </Card>
 </CardGroup>
 
-Before you go live, work through the [Go-live checklist](/how-to/setup/go-live-checklist).
+Before you go live, work through the [Go-live checklist](/guides/go-live/checklist).

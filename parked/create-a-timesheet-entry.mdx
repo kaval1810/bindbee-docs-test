@@ -1,0 +1,100 @@
+---
+title: "Create a Timesheet Entry"
+sidebarTitle: "Timesheet entry"
+description: "Write hours worked into the customer's time and attendance system."
+---
+
+<Info>
+  **Before you start**
+
+  - You've confirmed the integration supports this write - see [Check write support](/guides/reading-writing/meta-apis).
+  - You have the Bindbee employee `id`.
+</Info>
+
+## Steps
+
+<Steps>
+  <Step title="Fetch the schema">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/timesheet-entry/meta/post' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    Check how the platform expects hours to be expressed - start and end timestamps, or a duration - since this varies and determines how you model entries on your side.
+
+    **Result:** The contract for this integration.
+  </Step>
+
+  <Step title="Build the entry">
+    ```json
+    {
+      "employee": "019f618e-c850-716d-a510-74639514abf6",
+      "start_time": "2026-09-01T09:00:00Z",
+      "end_time": "2026-09-01T17:30:00Z"
+    }
+    ```
+
+    Send ISO 8601 with explicit timezones. Time and attendance is where timezone handling bites hardest - an entry sent in the wrong offset lands on the wrong day and, near a period boundary, in the wrong pay period.
+
+    **Result:** A body matching the schema.
+  </Step>
+
+  <Step title="Send with an idempotency key">
+    ```bash
+    curl --request POST \
+      --url 'https://api.bindbee.dev/api/hris/v1/timesheet-entry' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>' \
+      --header 'X-Idempotency-Key: <UNIQUE_KEY>' \
+      --header 'Content-Type: application/json' \
+      --data @entry.json
+    ```
+
+    Derive the key from the employee and the shift - `timesheet-{employee_id}-{start_time}` - so a retry of the same shift can't create a second entry. Duplicated hours flow into pay.
+
+    **Result:** The entry is created upstream.
+  </Step>
+
+  <Step title="Verify">
+    Read it back - see [Get Timesheet Entries](/hris/timesheet-entries/get-timesheet-entries-list) - and confirm it appears against the intended date.
+
+    **Result:** Confirmed in the customer's system.
+  </Step>
+</Steps>
+
+## Entries versus punches
+
+Some platforms model time as discrete punch events - clock in, clock out - rather than as an interval with a start and end. Where that's the case, one logical shift may not correspond to one entry, and a break can split a shift into several.
+
+Read the schema rather than assuming an interval model, and check how the customer's own reporting counts a shift before writing bulk entries.
+
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="Entries land on the wrong day">
+    Timezone. Send an explicit offset and confirm which timezone the platform interprets entries in - the employee's, the location's, or the account's. They aren't always the same.
+  </Accordion>
+
+  <Accordion title="The entry is rejected as overlapping">
+    Most systems reject overlapping entries for one employee. Check for an existing entry covering that window before writing, particularly when backfilling.
+  </Accordion>
+
+  <Accordion title="The period is locked">
+    Time periods close for approval and payroll processing. A write against a closed period is rejected, and the correction is usually an adjustment in the current period rather than an edit to the closed one.
+  </Accordion>
+
+  <Accordion title="Hours don't match what the customer's report shows">
+    Rounding rules, break deduction, and overtime calculation are applied by the source system after the write. The entry can be correct while the derived total differs - compare raw entries, not computed totals.
+  </Accordion>
+
+  <Accordion title="You need to backfill a large volume">
+    Write sequentially with per-entry idempotency keys rather than in parallel, and watch the [rate limit](/api-reference/basics/rate-limits) of 200 requests per minute per connector token. Partial failure mid-backfill is easier to resume with deterministic keys.
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Create Timesheet](/hris/timesheet-entries/create-timesheet-entries)
+- [Get Create Timesheet Meta](/hris/timesheet-entries/get-create-timesheet-meta)

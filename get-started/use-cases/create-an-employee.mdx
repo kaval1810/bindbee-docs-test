@@ -1,0 +1,123 @@
+---
+title: "Create an Employee"
+sidebarTitle: "Create an employee"
+description: "Add a new employee to the customer's HRIS, including the nested and integration-specific fields the platform requires."
+---
+
+Creating an employee writes a person record into the customer's system of record. It's the highest-consequence write Bindbee offers - a duplicate or malformed employee is visible to HR and awkward to unwind.
+
+<Info>
+  **Before you start**
+
+  - You've confirmed the integration supports this write - see [Check write support](/guides/reading-writing/meta-apis).
+  - You can generate a stable idempotency key per logical employee.
+</Info>
+
+## Steps
+
+<Steps>
+  <Step title="Fetch the schema">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/employees/meta/post' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    Employee creation has the widest variation of any write. Required fields differ substantially between platforms, and nested objects like `home_location` carry their own requirements.
+
+    **Result:** The contract for this integration.
+  </Step>
+
+  <Step title="Assemble the body from the schema">
+    Work through the `required` array on the root object, then on each nested object you include.
+
+    ```json
+    {
+      "first_name": "Ada",
+      "last_name": "Lovelace",
+      "work_email": "ada@example.com",
+      "start_date": "2026-09-01",
+      "home_location": {
+        "street_1": "12 Analytical Way",
+        "city": "London",
+        "country": "GB"
+      }
+    }
+    ```
+
+    A nested object that's optional at the top level still enforces its own required fields once you send it - a partially filled address is often rejected where omitting it entirely would have been accepted.
+
+    **Result:** A body conforming to the schema.
+  </Step>
+
+  <Step title="Supply integration_params">
+    Employee creation commonly requires platform-specific references - an employment type ID, a pay group, a legal entity, a location code. These come from the customer's own HRIS configuration, not from Bindbee.
+
+    Where you can't source them from a Bindbee read, query the source system's configuration endpoints via [Passthrough](/guides/extending/passthrough).
+
+    **Result:** The platform-specific values the write needs.
+  </Step>
+
+  <Step title="Send with an idempotency key">
+    ```bash
+    curl --request POST \
+      --url 'https://api.bindbee.dev/api/hris/v1/employees' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>' \
+      --header 'X-Idempotency-Key: <UNIQUE_KEY>' \
+      --header 'Content-Type: application/json' \
+      --data @employee.json
+    ```
+
+    <Warning>
+      Derive the idempotency key from your own record for this person - not a random value, and not a timestamp. A retry must reuse the same key, or you create a second employee in the customer's HRIS.
+
+      Most source systems will happily accept two people with identical names and emails.
+    </Warning>
+
+    **Result:** The employee is created upstream.
+  </Step>
+
+  <Step title="Store the returned identity">
+    Persist the returned Bindbee `id` against your own record.
+
+    Don't key on the employee number or `remote_id` - some systems assign these asynchronously, so they can be absent immediately after creation, and some reissue them later. See [Reading employees](/guides/data-models/employee-and-org).
+
+    **Result:** A stable reference for subsequent operations.
+  </Step>
+</Steps>
+
+## Creating a person versus creating a job
+
+An employee is a person; an employment is a job. Creating an employee establishes the person and typically an initial employment.
+
+Rehires and transfers are not new employees. Creating one for someone who already exists produces a duplicate person record rather than a new employment against the existing one - check for an existing record by a stable upstream identifier before creating.
+
+## If this didn't work
+
+<AccordionGroup>
+  <Accordion title="Validation fails on a field the schema marks optional">
+    Check the nested objects. A field optional on the root can be required inside an object you've included, and the error often names the leaf field without its path.
+  </Accordion>
+
+  <Accordion title="An integration_params value is rejected">
+    These reference configuration that must already exist in the customer's HRIS. A plausible-looking pay group or location code that isn't defined in their instance will be rejected. Confirm the value against their configuration rather than constructing it.
+  </Accordion>
+
+  <Accordion title="The employee was created twice">
+    A retry without a consistent idempotency key. Merge or remove the duplicate in the source system - Bindbee doesn't own the record once created - then fix the key derivation before retrying anything else.
+  </Accordion>
+
+  <Accordion title="The employee doesn't appear in reads">
+    Reads serve synced data, so a newly created employee appears after the next sync. [Force a resync](/guides/reading-writing/syncing) to confirm sooner.
+  </Accordion>
+
+  <Accordion title="The write returns 403">
+    Creating employees usually needs broader permission than reading them. The credentials may authenticate and read fine while lacking write access - see [Permission errors](/guides/troubleshooting/permission-errors).
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Create Employee](/hris/employee/create-employee) · [Get Create Employee Meta](/hris/employee/get-create-employee-meta)

@@ -41,14 +41,14 @@ Retry-After: 60
   `429` uses the same body shape as every other error status - a single
   `detail` string. The exception is `422`, where `detail` is an array of
   per-field objects rather than a string, so code that reads `detail` as text
-  breaks on the first validation error. See [Errors & issues](/explanation/errors-issues-and-limits).
+  breaks on the first validation error. See [Errors & issues](/guides/troubleshooting/errors-and-issues).
 </Note>
 
 ## The other limit, which is not yours
 
 Bindbee's 200 per minute governs how fast **you** can read. The source systems have their own limits, usually far tighter, and those govern how fast Bindbee can **sync**.
 
-You never see a `429` from that second limit - it surfaces as sync duration instead, and it is the main reason cadence is measured in hours rather than minutes. Neither you nor Bindbee can configure it away. See [Errors & issues](/explanation/errors-issues-and-limits).
+You never see a `429` from that second limit - it surfaces as sync duration instead, and it is the main reason cadence is measured in hours rather than minutes. Neither you nor Bindbee can configure it away. See [Errors & issues](/guides/troubleshooting/errors-and-issues).
 
 ## Higher limits
 
@@ -56,7 +56,7 @@ Custom limits are available for enterprise use cases. Contact [support@bindbee.d
 
 ## Related
 
-- [Errors & issues](/explanation/errors-issues-and-limits) - retry logic that honours `Retry-After`, with backoff and jitter
+- [Errors & issues](/guides/troubleshooting/errors-and-issues) - retry logic that honours `Retry-After`, with backoff and jitter
 - [Pagination](/api-reference/basics/pagination) - resuming a walk interrupted by a `429`
-- [Errors & issues](/explanation/errors-issues-and-limits) - the two limits, and why upstream errors pass through
+- [Errors & issues](/guides/troubleshooting/errors-and-issues) - the two limits, and why upstream errors pass through
 - [Authentication](/api-reference/basics/authentication) - the connector token the limit is keyed to

@@ -1,0 +1,87 @@
+---
+title: "Connection methods"
+sidebarTitle: "Connection methods"
+description: "The two ways data reaches Bindbee - the vendor's API, or a file the customer exports - and why the second behaves differently."
+---
+
+{/* VERIFY - BLOCKING. The disappearance-detection behaviour described below is confirmed for Paylocity SFTP. Confirm with engineering whether it is the general rule for all file-based connectors or specific to that integration before this page publishes. The page's central claim depends on the answer. */}
+
+Not every HR system offers a usable API. Some omit the models customers need, some charge for API access, some have none at all. For these, the customer's system delivers a file on a schedule and Bindbee reads it.
+
+**The mechanics differ enough that several behaviours look like faults until you know why.**
+
+## How a file connector differs
+
+| | API connector | File connector |
+| --- | --- | --- |
+| Change detection | Asks "what changed since X" | Whole-file snapshot, reconciled on arrival |
+| Cadence | Bindbee's schedule | The customer's export schedule |
+| Forcing a resync | Fetches new data | Re-reads the same file |
+| A record that stops appearing | Simply not mentioned | Inferred as no longer active |
+| Coverage | What the vendor's API exposes | What the export was configured to produce |
+
+Anything ending in `_sftp` is file-based. But **the suffix is not a reliable test on its own** - variants like `workday_raas` and `paychex_flock` carry no marker at all. [Integrations](/get-started/integrations) lists the connection type per integration.
+
+## A file is a snapshot, not a change feed
+
+An API connector can ask a question. A file cannot be asked anything - it arrives, it contains whatever it contains, and that is the entire available information.
+
+So each delivery is treated as a complete statement of truth at the moment it was produced. Bindbee reads it, compares against what it holds, and reconciles.
+
+**There are no change events and no deltas** - and no way to tell a field that was edited from one that was always that way.
+
+## Absence is a signal
+
+This is the behaviour that surprises people. In an API connector, a record you do not ask about is simply not mentioned. In a file connector, **a record that is not in the file is a statement that it should not be there.**
+
+When an employee present in previous deliveries stops appearing, Bindbee infers they are no longer active and marks the record accordingly. It does not delete the record.
+
+<Warning>
+A truncated, filtered or partially-generated file will therefore mark large numbers of employees inactive at once. If a customer changes their export configuration, restricts it to one division, or delivers a file that failed partway through generation, **the effect on your data is indistinguishable from a mass termination.**
+</Warning>
+
+Because the source file rarely carries a termination date for someone who has simply stopped being listed, the end date on these records is inferred rather than reported.
+
+{/* VERIFY: exact end_date behaviour on disappearance - is it set to the sync date, the file date, or left null? */}
+
+## Cadence belongs to the customer
+
+Data is only as fresh as the last delivery, and **Bindbee cannot request a new one.** If the customer's export runs weekly, forcing a resync re-reads the same file and changes nothing.
+
+A delivery that silently stops looks like data that has frozen - no error, no failed sync, just a connector whose records stop moving.
+
+So the monitoring signal is delivery recency, not sync success. A connector can report healthy in every respect while consuming a file that is three weeks old.
+
+## Coverage is narrower and fixed
+
+A file contains the columns the customer's export was configured to produce. Models and fields outside that configuration are not merely unpopulated - **they are unobtainable**, and no permission change or scope adjustment will surface them.
+
+Widening coverage means the customer changing their export configuration. That is a request to their HR or IT team, not a setting either of you can adjust.
+
+## Why it works this way
+
+Treating absence as meaningful is a choice with a real failure mode, and the alternative has a worse one.
+
+If absence were ignored - records persisting until something explicitly said otherwise - **terminations would never propagate at all** for these integrations. Most HR exports list current employees and drop leavers; there is no termination row to read.
+
+An integration that could not detect departures would leave former employees looking active indefinitely - in a benefits or provisioning context, keeping access and coverage they should have lost.
+
+Inferring departure from absence catches the common case, at the cost of misreading a broken file as a mass exit. **That trade favours the loud, recoverable failure over the silent, compliance-relevant one.**
+
+A sudden wave of inactive employees is noticed within hours. A leaver who never became inactive may never be noticed at all.
+
+The snapshot model itself is not a design preference. A file has no mechanism for expressing change, so completeness is the only contract available.
+
+## What this means for you
+
+- **Monitor delivery recency, not sync success.** A file connector can be entirely healthy and weeks stale.
+- **Treat a large simultaneous status change as suspect.** Real terminations are rarely synchronised; broken exports always are.
+- **Forcing a resync does not fetch new data.** It re-reads the existing file.
+- **Coverage gaps are export-configuration problems**, resolved by the customer's HR or IT team.
+- **Inferred end dates are approximations.** Do not use them where a legally accurate termination date is required.
+
+## Related
+
+- [Integrations](/get-started/integrations) - connection type per integration, and which slugs are file-based
+- [Set up an SFTP connector](https://help.bindbee.dev/set-up-an-sftp) - customer-facing delivery setup
+- [Status & terminations](/guides/data-models/employee-and-org) - how inferred inactivity appears on records

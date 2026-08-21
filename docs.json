@@ -26,35 +26,35 @@
             "pages": [
               "get-started/what-is-bindbee",
               "get-started/quickstart",
-              "platform/overview"
+              "get-started/platform"
             ]
           },
           {
             "group": "Core Concepts",
             "pages": [
-              "explanation/core-concepts",
-              "explanation/environments",
-              "explanation/magic-link",
-              "explanation/scope-and-permissions",
-              "explanation/sftp-and-file-connectors"
+              "get-started/core-concepts",
+              "get-started/environments",
+              "get-started/how-to-connect",
+              "get-started/scoping",
+              "get-started/connection-methods"
             ]
           },
           {
             "group": "Integrations",
             "pages": [
-              "integrations",
-              "integrations-coverage/model-availability"
+              "get-started/integrations",
+              "get-started/model-availability"
             ]
           },
           {
             "group": "Use Cases",
             "pages": [
-              "how-to/guides/sync-census-data-for-quoting",
-              "how-to/guides/cascade-a-termination-downstream",
-              "how-to/guides/read-benefit-coverage",
-              "how-to/guides/write-payroll-deductions-back",
-              "how-to/writing-data-back/create-an-employee",
-              "how-to/writing-data-back/create-an-employee-payroll-run"
+              "get-started/use-cases/sync-census-data",
+              "get-started/use-cases/identify-a-termination",
+              "get-started/use-cases/read-benefit-coverage",
+              "get-started/use-cases/write-ichra-deductions",
+              "get-started/use-cases/create-an-employee",
+              "get-started/use-cases/write-payroll-deductions"
             ]
           }
         ]
@@ -65,73 +65,73 @@
           {
             "group": "Reading & Writing Data",
             "pages": [
-              "guides/reading-and-writing-overview",
-              "how-to/reading-data/filter-and-narrow-a-collection",
+              "guides/reading-writing/overview",
+              "guides/reading-writing/querying-data",
               {
                 "group": "Data Basics",
                 "pages": [
-                  "explanation/record-identity",
-                  "explanation/enum-values"
+                  "guides/reading-writing/record-identity",
+                  "guides/reading-writing/enum-values"
                 ]
               },
-              "explanation/how-syncing-works",
-              "how-to/reading-data/include-raw-data-and-custom-fields",
-              "webhooks/overview",
-              "explanation/how-meta-apis-work"
+              "guides/reading-writing/syncing",
+              "guides/reading-writing/raw-data",
+              "guides/reading-writing/webhooks",
+              "guides/reading-writing/meta-apis"
             ]
           },
           {
             "group": "Extending the Model",
             "pages": [
-              "explanation/how-custom-fields-work",
-              "explanation/passthrough"
+              "guides/extending/custom-fields",
+              "guides/extending/passthrough"
             ]
           },
           {
             "group": "SDK & MCP",
             "pages": [
-              "sdk/frontend-sdk",
-              "guides/mcp"
+              "guides/sdk/frontend-sdk",
+              "guides/sdk/mcp"
             ]
           },
           {
             "group": "Data Models",
             "pages": [
-              "explanation/employee-and-org-models",
-              "explanation/payroll-and-time-models",
-              "explanation/benefits-models",
-              "explanation/time-and-attendance-models",
-              "explanation/ats-models",
-              "explanation/lms-models"
+              "guides/data-models/employee-and-org",
+              "guides/data-models/payroll",
+              "guides/data-models/benefits",
+              "guides/data-models/time-and-attendance",
+              "guides/data-models/recruiting",
+              "guides/data-models/learning"
             ]
           },
           {
             "group": "Go Live",
             "pages": [
-              "how-to/setup/go-live-checklist"
+              "guides/go-live/checklist"
             ]
           },
           {
             "group": "Troubleshooting",
             "pages": [
-              "explanation/errors-issues-and-limits",
-              "how-to/troubleshooting/logs",
+              "guides/troubleshooting/errors-and-issues",
+              "guides/troubleshooting/logs",
               {
                 "group": "Monitoring",
                 "pages": [
-                  "how-to/troubleshooting/monitor-sync-status",
-                  "how-to/reliability/detect-a-connection-that-needs-relinking"
+                  "guides/troubleshooting/sync-status",
+                  "guides/troubleshooting/connections-to-relink"
                 ]
               },
               {
                 "group": "Reconciling Data",
                 "pages": [
-                  "how-to/troubleshooting/trace-a-missing-record",
-                  "how-to/troubleshooting/diagnose-a-partial-sync",
-                  "how-to/troubleshooting/reconcile-record-counts"
+                  "guides/troubleshooting/missing-or-extra-records",
+                  "guides/troubleshooting/partial-syncs",
+                  "guides/troubleshooting/record-counts"
                 ]
               },
-              "how-to/troubleshooting/resolve-a-permission-error"
+              "guides/troubleshooting/permission-errors"
             ]
           }
         ]
@@ -180,34 +180,34 @@
                   {
                     "group": "Lookup",
                     "pages": [
-                      "custom-fields/lookup/list-models",
-                      "custom-fields/lookup/list-integrations"
+                      "api-reference/custom-fields/list-models",
+                      "api-reference/custom-fields/list-integrations"
                     ]
                   },
                   {
                     "group": "Definitions",
                     "pages": [
-                      "custom-fields/api/create-custom-field",
-                      "custom-fields/api/list-custom-fields",
-                      "custom-fields/api/get-custom-field",
-                      "custom-fields/api/delete-custom-field"
+                      "api-reference/custom-fields/create-custom-field",
+                      "api-reference/custom-fields/list-custom-fields",
+                      "api-reference/custom-fields/get-custom-field",
+                      "api-reference/custom-fields/delete-custom-field"
                     ]
                   },
                   {
                     "group": "Mappings",
                     "pages": [
-                      "custom-fields/api/create-mapping",
-                      "custom-fields/api/list-mappings",
-                      "custom-fields/api/update-mapping",
-                      "custom-fields/api/delete-mapping"
+                      "api-reference/custom-fields/create-mapping",
+                      "api-reference/custom-fields/list-mappings",
+                      "api-reference/custom-fields/update-mapping",
+                      "api-reference/custom-fields/delete-mapping"
                     ]
                   },
                   {
                     "group": "Discovery & Validation",
                     "pages": [
-                      "custom-fields/api/get-raw-data",
-                      "custom-fields/api/preview",
-                      "custom-fields/api/get-configuration"
+                      "api-reference/custom-fields/get-raw-data",
+                      "api-reference/custom-fields/preview",
+                      "api-reference/custom-fields/get-configuration"
                     ]
                   }
                 ]
@@ -668,39 +668,39 @@
     },
     {
       "source": "/how-to/monitor-sync-status",
-      "destination": "/how-to/troubleshooting/monitor-sync-status"
+      "destination": "/guides/troubleshooting/sync-status"
     },
     {
       "source": "/features/dashboard",
-      "destination": "/platform/overview"
+      "destination": "/get-started/platform"
     },
     {
       "source": "/features/connectors",
-      "destination": "/platform/overview"
+      "destination": "/get-started/platform"
     },
     {
       "source": "/features/logs",
-      "destination": "/platform/overview"
+      "destination": "/get-started/platform"
     },
     {
       "source": "/features/issues",
-      "destination": "/platform/overview"
+      "destination": "/get-started/platform"
     },
     {
       "source": "/features/scoping",
-      "destination": "/platform/overview"
+      "destination": "/get-started/platform"
     },
     {
       "source": "/features/custom-fields",
-      "destination": "/platform/overview"
+      "destination": "/get-started/platform"
     },
     {
       "source": "/features/webhooks",
-      "destination": "/platform/overview"
+      "destination": "/get-started/platform"
     },
     {
       "source": "/features/overview",
-      "destination": "/platform/overview"
+      "destination": "/get-started/platform"
     },
     {
       "source": "/get-started/tutorials/set-up-your-environment",
@@ -708,7 +708,7 @@
     },
     {
       "source": "/get-started/tutorials/scope-your-data",
-      "destination": "/platform/overview"
+      "destination": "/get-started/platform"
     },
     {
       "source": "/get-started/tutorials/read-employee-data",
@@ -716,19 +716,15 @@
     },
     {
       "source": "/get-started/tutorials/add-a-custom-field",
-      "destination": "/explanation/how-custom-fields-work"
+      "destination": "/guides/extending/custom-fields"
     },
     {
       "source": "/sdk/integrations",
-      "destination": "/integrations"
+      "destination": "/get-started/integrations"
     },
     {
       "source": "/get-started/before-you-begin",
       "destination": "/get-started/quickstart"
-    },
-    {
-      "source": "/get-started/core-concepts",
-      "destination": "/explanation/core-concepts"
     },
     {
       "source": "/get-started/set-up-your-environment",
@@ -736,7 +732,7 @@
     },
     {
       "source": "/get-started/scope-your-data",
-      "destination": "/platform/overview"
+      "destination": "/get-started/platform"
     },
     {
       "source": "/get-started/connect-a-test-account",
@@ -752,271 +748,271 @@
     },
     {
       "source": "/get-started/add-a-custom-field",
-      "destination": "/explanation/how-custom-fields-work"
+      "destination": "/guides/extending/custom-fields"
     },
     {
       "source": "/get-started/receive-a-webhook",
-      "destination": "/webhooks/overview"
+      "destination": "/guides/reading-writing/webhooks"
     },
     {
       "source": "/custom-fields/overview",
-      "destination": "/explanation/how-custom-fields-work"
+      "destination": "/guides/extending/custom-fields"
     },
     {
       "source": "/custom-fields/dashboard",
-      "destination": "/explanation/how-custom-fields-work"
+      "destination": "/guides/extending/custom-fields"
     },
     {
       "source": "/features/magic-link",
-      "destination": "/explanation/magic-link"
+      "destination": "/get-started/how-to-connect"
     },
     {
       "source": "/how-to/magic-link",
-      "destination": "/explanation/magic-link"
+      "destination": "/get-started/how-to-connect"
     },
     {
       "source": "/how-to/configure-custom-fields-dashboard",
-      "destination": "/explanation/how-custom-fields-work"
+      "destination": "/guides/extending/custom-fields"
     },
     {
       "source": "/how-to/force-a-resync",
-      "destination": "/explanation/how-syncing-works"
+      "destination": "/guides/reading-writing/syncing"
     },
     {
       "source": "/explanation/custom-fields-mental-model",
-      "destination": "/explanation/how-custom-fields-work"
+      "destination": "/guides/extending/custom-fields"
     },
     {
       "source": "/explanation/field-semantics",
-      "destination": "/explanation/enum-values"
+      "destination": "/guides/reading-writing/enum-values"
     },
     {
       "source": "/explanation/hris-model-relationships",
-      "destination": "/explanation/employee-and-org-models"
+      "destination": "/guides/data-models/employee-and-org"
     },
     {
       "source": "/explanation/meta-api-schema-discovery",
-      "destination": "/explanation/how-meta-apis-work"
+      "destination": "/guides/reading-writing/meta-apis"
     },
     {
       "source": "/explanation/passthrough-when-and-why",
-      "destination": "/explanation/passthrough"
+      "destination": "/guides/extending/passthrough"
     },
     {
       "source": "/explanation/sftp-vs-api",
-      "destination": "/explanation/sftp-and-file-connectors"
+      "destination": "/get-started/connection-methods"
     },
     {
       "source": "/explanation/unified-model-and-raw-data",
-      "destination": "/explanation/core-concepts"
+      "destination": "/get-started/core-concepts"
     },
     {
       "source": "/explanation/what-data-you-get",
-      "destination": "/explanation/scope-and-permissions"
+      "destination": "/get-started/scoping"
     },
     {
       "source": "/concepts/unified-model-and-raw-data",
-      "destination": "/explanation/core-concepts"
+      "destination": "/get-started/core-concepts"
     },
     {
       "source": "/concepts/what-data-you-get",
-      "destination": "/explanation/scope-and-permissions"
+      "destination": "/get-started/scoping"
     },
     {
       "source": "/concepts/custom-fields-mental-model",
-      "destination": "/explanation/how-custom-fields-work"
+      "destination": "/guides/extending/custom-fields"
     },
     {
       "source": "/concepts/sftp-vs-api",
-      "destination": "/explanation/sftp-and-file-connectors"
+      "destination": "/get-started/connection-methods"
     },
     {
       "source": "/concepts/field-semantics",
-      "destination": "/explanation/enum-values"
+      "destination": "/guides/reading-writing/enum-values"
     },
     {
       "source": "/concepts/hris-model-relationships",
-      "destination": "/explanation/employee-and-org-models"
+      "destination": "/guides/data-models/employee-and-org"
     },
     {
       "source": "/concepts/meta-api-schema-discovery",
-      "destination": "/explanation/how-meta-apis-work"
+      "destination": "/guides/reading-writing/meta-apis"
     },
     {
       "source": "/concepts/passthrough-when-and-why",
-      "destination": "/explanation/passthrough"
+      "destination": "/guides/extending/passthrough"
     },
     {
       "source": "/concepts/environments",
-      "destination": "/explanation/environments"
+      "destination": "/get-started/environments"
     },
     {
       "source": "/how-to/setup/environments/overview",
-      "destination": "/explanation/environments"
+      "destination": "/get-started/environments"
     },
     {
       "source": "/how-to/setup/environments/development",
-      "destination": "/explanation/environments#development"
+      "destination": "/get-started/environments#development"
     },
     {
       "source": "/how-to/setup/environments/production",
-      "destination": "/explanation/environments#production"
+      "destination": "/get-started/environments#production"
     },
     {
       "source": "/how-to/connections/customise-the-connection-experience",
-      "destination": "/explanation/magic-link"
+      "destination": "/get-started/how-to-connect"
     },
     {
       "source": "/how-to/reading-data/read-payroll-and-timesheet-data",
-      "destination": "/explanation/payroll-and-time-models"
+      "destination": "/guides/data-models/payroll"
     },
     {
       "source": "/how-to/writing-data-back/make-a-passthrough-request",
-      "destination": "/explanation/passthrough"
+      "destination": "/guides/extending/passthrough"
     },
     {
       "source": "/concepts/ats-models",
-      "destination": "/explanation/ats-models"
+      "destination": "/guides/data-models/recruiting"
     },
     {
       "source": "/concepts/benefits-models",
-      "destination": "/explanation/benefits-models"
+      "destination": "/guides/data-models/benefits"
     },
     {
       "source": "/concepts/connector-lifecycle",
-      "destination": "/explanation/magic-link"
+      "destination": "/get-started/how-to-connect"
     },
     {
       "source": "/concepts/core-concepts",
-      "destination": "/explanation/core-concepts"
+      "destination": "/get-started/core-concepts"
     },
     {
       "source": "/concepts/effective-dating",
-      "destination": "/explanation/effective-dating"
+      "destination": "/parked/effective-dating"
     },
     {
       "source": "/concepts/enum-values",
-      "destination": "/explanation/enum-values"
+      "destination": "/guides/reading-writing/enum-values"
     },
     {
       "source": "/concepts/environments/development",
-      "destination": "/explanation/environments#development"
+      "destination": "/get-started/environments#development"
     },
     {
       "source": "/concepts/environments/overview",
-      "destination": "/explanation/environments"
+      "destination": "/get-started/environments"
     },
     {
       "source": "/concepts/environments/production",
-      "destination": "/explanation/environments#production"
+      "destination": "/get-started/environments#production"
     },
     {
       "source": "/concepts/errors-issues-and-limits",
-      "destination": "/explanation/errors-issues-and-limits"
+      "destination": "/guides/troubleshooting/errors-and-issues"
     },
     {
       "source": "/concepts/how-custom-fields-work",
-      "destination": "/explanation/how-custom-fields-work"
+      "destination": "/guides/extending/custom-fields"
     },
     {
       "source": "/concepts/how-meta-apis-work",
-      "destination": "/explanation/how-meta-apis-work"
+      "destination": "/guides/reading-writing/meta-apis"
     },
     {
       "source": "/concepts/how-syncing-works",
-      "destination": "/explanation/how-syncing-works"
+      "destination": "/guides/reading-writing/syncing"
     },
     {
       "source": "/concepts/hris-models",
-      "destination": "/explanation/employee-and-org-models"
+      "destination": "/guides/data-models/employee-and-org"
     },
     {
       "source": "/concepts/integration-versions",
-      "destination": "/integrations"
+      "destination": "/get-started/integrations"
     },
     {
       "source": "/concepts/lms-models",
-      "destination": "/explanation/lms-models"
+      "destination": "/guides/data-models/learning"
     },
     {
       "source": "/concepts/magic-link",
-      "destination": "/explanation/magic-link"
+      "destination": "/get-started/how-to-connect"
     },
     {
       "source": "/concepts/multi-entity",
-      "destination": "/explanation/multi-entity"
+      "destination": "/parked/multi-entity"
     },
     {
       "source": "/concepts/passthrough",
-      "destination": "/explanation/passthrough"
+      "destination": "/guides/extending/passthrough"
     },
     {
       "source": "/concepts/payroll-and-time-models",
-      "destination": "/explanation/payroll-and-time-models"
+      "destination": "/guides/data-models/payroll"
     },
     {
       "source": "/concepts/record-identity",
-      "destination": "/explanation/record-identity"
+      "destination": "/guides/reading-writing/record-identity"
     },
     {
       "source": "/concepts/scope-and-permissions",
-      "destination": "/explanation/scope-and-permissions"
+      "destination": "/get-started/scoping"
     },
     {
       "source": "/concepts/sftp-and-file-connectors",
-      "destination": "/explanation/sftp-and-file-connectors"
+      "destination": "/get-started/connection-methods"
     },
     {
       "source": "/concepts/status-and-terminations",
-      "destination": "/explanation/employee-and-org-models"
+      "destination": "/guides/data-models/employee-and-org"
     },
     {
       "source": "/concepts/unified-model",
-      "destination": "/explanation/core-concepts"
+      "destination": "/get-started/core-concepts"
     },
     {
       "source": "/concepts/webhooks-vs-polling",
-      "destination": "/webhooks/overview"
+      "destination": "/guides/reading-writing/webhooks"
     },
     {
       "source": "/concepts/write-support",
-      "destination": "/explanation/how-meta-apis-work"
+      "destination": "/guides/reading-writing/meta-apis"
     },
     {
       "source": "/explanation/environments/overview",
-      "destination": "/explanation/environments"
+      "destination": "/get-started/environments"
     },
     {
       "source": "/explanation/environments/development",
-      "destination": "/explanation/environments#development"
+      "destination": "/get-started/environments#development"
     },
     {
       "source": "/explanation/environments/production",
-      "destination": "/explanation/environments#production"
+      "destination": "/get-started/environments#production"
     },
     {
       "source": "/explanation/integration-versions",
-      "destination": "/integrations"
+      "destination": "/get-started/integrations"
     },
     {
       "source": "/explanation/hris-models",
-      "destination": "/explanation/employee-and-org-models"
+      "destination": "/guides/data-models/employee-and-org"
     },
     {
       "source": "/custom-fields/api-workflow",
-      "destination": "/explanation/how-custom-fields-work"
+      "destination": "/guides/extending/custom-fields"
     },
     {
       "source": "/features/environments/development",
-      "destination": "/explanation/environments#development"
+      "destination": "/get-started/environments#development"
     },
     {
       "source": "/features/environments/production",
-      "destination": "/explanation/environments#production"
+      "destination": "/get-started/environments#production"
     },
     {
       "source": "/api-reference/basics/sync-frequency",
-      "destination": "/explanation/how-syncing-works"
+      "destination": "/guides/reading-writing/syncing"
     },
     {
       "source": "/get-started/tutorial-overview",
@@ -1040,63 +1036,63 @@
     },
     {
       "source": "/get-started/tutorials/scope-the-data-you-need",
-      "destination": "/platform/overview"
+      "destination": "/get-started/platform"
     },
     {
       "source": "/get-started/tutorials/add-a-field-the-unified-model-doesnt-have",
-      "destination": "/explanation/how-custom-fields-work"
+      "destination": "/guides/extending/custom-fields"
     },
     {
       "source": "/get-started/tutorials/receive-a-webhook",
-      "destination": "/webhooks/overview"
+      "destination": "/guides/reading-writing/webhooks"
     },
     {
       "source": "/platform/dashboard",
-      "destination": "/platform/overview"
+      "destination": "/get-started/platform"
     },
     {
       "source": "/platform/connectors",
-      "destination": "/platform/overview"
+      "destination": "/get-started/platform"
     },
     {
       "source": "/platform/logs",
-      "destination": "/platform/overview"
+      "destination": "/get-started/platform"
     },
     {
       "source": "/platform/issues",
-      "destination": "/platform/overview"
+      "destination": "/get-started/platform"
     },
     {
       "source": "/platform/scoping",
-      "destination": "/platform/overview"
+      "destination": "/get-started/platform"
     },
     {
       "source": "/platform/custom-fields",
-      "destination": "/platform/overview"
+      "destination": "/get-started/platform"
     },
     {
       "source": "/platform/webhooks",
-      "destination": "/platform/overview"
+      "destination": "/get-started/platform"
     },
     {
       "source": "/how-to/reliability/create-a-webhook",
-      "destination": "/webhooks/overview"
+      "destination": "/guides/reading-writing/webhooks"
     },
     {
       "source": "/how-to/reliability/choose-webhook-events",
-      "destination": "/webhooks/overview"
+      "destination": "/guides/reading-writing/webhooks"
     },
     {
       "source": "/how-to/reliability/validate-webhook-signatures",
-      "destination": "/webhooks/overview"
+      "destination": "/guides/reading-writing/webhooks"
     },
     {
       "source": "/how-to/reliability/recover-a-missed-delivery",
-      "destination": "/webhooks/overview"
+      "destination": "/guides/reading-writing/webhooks"
     },
     {
       "source": "/explanation/webhooks-vs-polling",
-      "destination": "/webhooks/overview"
+      "destination": "/guides/reading-writing/webhooks"
     },
     {
       "source": "/how-to/setup/authenticate-a-request",
@@ -1104,171 +1100,171 @@
     },
     {
       "source": "/how-to/connections/generate-a-magic-link",
-      "destination": "/explanation/magic-link"
+      "destination": "/get-started/how-to-connect"
     },
     {
       "source": "/sdk/embedded-component",
-      "destination": "/explanation/magic-link"
+      "destination": "/get-started/how-to-connect"
     },
     {
       "source": "/meta-apis-for-write-operations",
-      "destination": "/explanation/how-meta-apis-work"
+      "destination": "/guides/reading-writing/meta-apis"
     },
     {
       "source": "/explanation/integration-variants",
-      "destination": "/integrations"
+      "destination": "/get-started/integrations"
     },
     {
       "source": "/how-to/setup/handle-api-errors",
-      "destination": "/explanation/errors-issues-and-limits"
+      "destination": "/guides/troubleshooting/errors-and-issues"
     },
     {
       "source": "/how-to/sync-control/set-a-sync-start-time",
-      "destination": "/explanation/how-syncing-works"
+      "destination": "/guides/reading-writing/syncing"
     },
     {
       "source": "/explanation/unified-model",
-      "destination": "/explanation/core-concepts"
+      "destination": "/get-started/core-concepts"
     },
     {
       "source": "/how-to/setup/choose-an-environment",
-      "destination": "/explanation/environments"
+      "destination": "/get-started/environments"
     },
     {
       "source": "/how-to/connections/embed-the-connection-flow",
-      "destination": "/explanation/magic-link"
+      "destination": "/get-started/how-to-connect"
     },
     {
       "source": "/how-to/connections/create-a-connector-programmatically",
-      "destination": "/explanation/magic-link"
+      "destination": "/get-started/how-to-connect"
     },
     {
       "source": "/explanation/connector-lifecycle",
-      "destination": "/explanation/magic-link"
+      "destination": "/get-started/how-to-connect"
     },
     {
       "source": "/how-to/data-model/restrict-models-and-fields",
-      "destination": "/explanation/scope-and-permissions"
+      "destination": "/get-started/scoping"
     },
     {
       "source": "/how-to/setup/look-up-an-integration-slug",
-      "destination": "/integrations"
+      "destination": "/get-started/integrations"
     },
     {
       "source": "/how-to/reading-data/filter-with-modified-after",
-      "destination": "/how-to/reading-data/filter-and-narrow-a-collection"
+      "destination": "/guides/reading-writing/querying-data"
     },
     {
       "source": "/how-to/sync-control/change-sync-frequency",
-      "destination": "/explanation/how-syncing-works"
+      "destination": "/guides/reading-writing/syncing"
     },
     {
       "source": "/how-to/sync-control/force-a-resync",
-      "destination": "/explanation/how-syncing-works"
+      "destination": "/guides/reading-writing/syncing"
     },
     {
       "source": "/how-to/sync-control/sync-a-development-connector",
-      "destination": "/explanation/how-syncing-works"
+      "destination": "/guides/reading-writing/syncing"
     },
     {
       "source": "/how-to/sync-control/trigger-a-job-on-sync-complete",
-      "destination": "/explanation/how-syncing-works"
+      "destination": "/guides/reading-writing/syncing"
     },
     {
       "source": "/how-to/data-model/inspect-the-raw-upstream-payload",
-      "destination": "/how-to/reading-data/include-raw-data-and-custom-fields"
+      "destination": "/guides/reading-writing/raw-data"
     },
     {
       "source": "/webhooks/events",
-      "destination": "/webhooks/overview"
+      "destination": "/guides/reading-writing/webhooks"
     },
     {
       "source": "/webhooks/delivery",
-      "destination": "/webhooks/overview"
+      "destination": "/guides/reading-writing/webhooks"
     },
     {
       "source": "/how-to/reliability/distinguish-created-from-modified",
-      "destination": "/webhooks/overview"
+      "destination": "/guides/reading-writing/webhooks"
     },
     {
       "source": "/explanation/write-support",
-      "destination": "/explanation/how-meta-apis-work"
+      "destination": "/guides/reading-writing/meta-apis"
     },
     {
       "source": "/how-to/writing-data-back/check-write-support",
-      "destination": "/explanation/how-meta-apis-work"
+      "destination": "/guides/reading-writing/meta-apis"
     },
     {
       "source": "/how-to/writing-data-back/fetch-a-write-schema",
-      "destination": "/explanation/how-meta-apis-work"
+      "destination": "/guides/reading-writing/meta-apis"
     },
     {
       "source": "/how-to/data-model/map-a-custom-field-from-the-dashboard",
-      "destination": "/explanation/how-custom-fields-work"
+      "destination": "/guides/extending/custom-fields"
     },
     {
       "source": "/how-to/data-model/map-custom-fields-with-the-api",
-      "destination": "/explanation/how-custom-fields-work"
+      "destination": "/guides/extending/custom-fields"
     },
     {
       "source": "/how-to/data-model/test-a-jmespath",
-      "destination": "/explanation/how-custom-fields-work"
+      "destination": "/guides/extending/custom-fields"
     },
     {
       "source": "/how-to/data-model/scope-a-mapping",
-      "destination": "/explanation/how-custom-fields-work"
+      "destination": "/guides/extending/custom-fields"
     },
     {
       "source": "/how-to/data-model/make-a-passthrough-request",
-      "destination": "/explanation/passthrough"
+      "destination": "/guides/extending/passthrough"
     },
     {
       "source": "/explanation/status-and-terminations",
-      "destination": "/explanation/employee-and-org-models"
+      "destination": "/guides/data-models/employee-and-org"
     },
     {
       "source": "/how-to/reading-data/read-employee-data",
-      "destination": "/explanation/employee-and-org-models"
+      "destination": "/guides/data-models/employee-and-org"
     },
     {
       "source": "/how-to/reading-data/read-employee-documents",
-      "destination": "/explanation/employee-and-org-models"
+      "destination": "/guides/data-models/employee-and-org"
     },
     {
       "source": "/how-to/reading-data/read-payroll-data",
-      "destination": "/explanation/payroll-and-time-models"
+      "destination": "/guides/data-models/payroll"
     },
     {
       "source": "/how-to/reading-data/read-time-and-attendance-data",
-      "destination": "/explanation/time-and-attendance-models"
+      "destination": "/guides/data-models/time-and-attendance"
     },
     {
       "source": "/how-to/reading-data/read-benefits-data",
-      "destination": "/explanation/benefits-models"
+      "destination": "/guides/data-models/benefits"
     },
     {
       "source": "/how-to/ats/read-candidates-and-applications",
-      "destination": "/explanation/ats-models"
+      "destination": "/guides/data-models/recruiting"
     },
     {
       "source": "/how-to/ats/track-an-application-through-stages",
-      "destination": "/explanation/ats-models"
+      "destination": "/guides/data-models/recruiting"
     },
     {
       "source": "/how-to/ats/sync-interview-feedback",
-      "destination": "/explanation/ats-models"
+      "destination": "/guides/data-models/recruiting"
     },
     {
       "source": "/how-to/ats/exclude-eeoc-data",
-      "destination": "/explanation/ats-models"
+      "destination": "/guides/data-models/recruiting"
     },
     {
       "source": "/how-to/connections/update-credentials",
-      "destination": "/how-to/reliability/detect-a-connection-that-needs-relinking"
+      "destination": "/guides/troubleshooting/connections-to-relink"
     },
     {
       "source": "/how-to/troubleshooting/trace-an-unexpected-record",
-      "destination": "/how-to/troubleshooting/trace-a-missing-record"
+      "destination": "/guides/troubleshooting/missing-or-extra-records"
     },
     {
       "source": "/how-to/reading-data/paginate-through-results",
@@ -1276,11 +1272,259 @@
     },
     {
       "source": "/how-to/setup/move-a-connector-between-environments",
-      "destination": "/platform/overview"
+      "destination": "/get-started/platform"
     },
     {
       "source": "/how-to/connections/rename-or-delete-a-connector",
-      "destination": "/platform/overview"
+      "destination": "/get-started/platform"
+    },
+    {
+      "source": "/platform/overview",
+      "destination": "/get-started/platform"
+    },
+    {
+      "source": "/explanation/core-concepts",
+      "destination": "/get-started/core-concepts"
+    },
+    {
+      "source": "/explanation/environments",
+      "destination": "/get-started/environments"
+    },
+    {
+      "source": "/explanation/magic-link",
+      "destination": "/get-started/how-to-connect"
+    },
+    {
+      "source": "/explanation/scope-and-permissions",
+      "destination": "/get-started/scoping"
+    },
+    {
+      "source": "/explanation/sftp-and-file-connectors",
+      "destination": "/get-started/connection-methods"
+    },
+    {
+      "source": "/integrations",
+      "destination": "/get-started/integrations"
+    },
+    {
+      "source": "/integrations-coverage/model-availability",
+      "destination": "/get-started/model-availability"
+    },
+    {
+      "source": "/how-to/guides/sync-census-data-for-quoting",
+      "destination": "/get-started/use-cases/sync-census-data"
+    },
+    {
+      "source": "/how-to/guides/cascade-a-termination-downstream",
+      "destination": "/get-started/use-cases/identify-a-termination"
+    },
+    {
+      "source": "/how-to/guides/read-benefit-coverage",
+      "destination": "/get-started/use-cases/read-benefit-coverage"
+    },
+    {
+      "source": "/how-to/guides/write-payroll-deductions-back",
+      "destination": "/get-started/use-cases/write-ichra-deductions"
+    },
+    {
+      "source": "/how-to/writing-data-back/create-an-employee",
+      "destination": "/get-started/use-cases/create-an-employee"
+    },
+    {
+      "source": "/how-to/writing-data-back/create-an-employee-payroll-run",
+      "destination": "/get-started/use-cases/write-payroll-deductions"
+    },
+    {
+      "source": "/guides/reading-and-writing-overview",
+      "destination": "/guides/reading-writing/overview"
+    },
+    {
+      "source": "/how-to/reading-data/filter-and-narrow-a-collection",
+      "destination": "/guides/reading-writing/querying-data"
+    },
+    {
+      "source": "/explanation/record-identity",
+      "destination": "/guides/reading-writing/record-identity"
+    },
+    {
+      "source": "/explanation/enum-values",
+      "destination": "/guides/reading-writing/enum-values"
+    },
+    {
+      "source": "/explanation/how-syncing-works",
+      "destination": "/guides/reading-writing/syncing"
+    },
+    {
+      "source": "/how-to/reading-data/include-raw-data-and-custom-fields",
+      "destination": "/guides/reading-writing/raw-data"
+    },
+    {
+      "source": "/webhooks/overview",
+      "destination": "/guides/reading-writing/webhooks"
+    },
+    {
+      "source": "/explanation/how-meta-apis-work",
+      "destination": "/guides/reading-writing/meta-apis"
+    },
+    {
+      "source": "/explanation/how-custom-fields-work",
+      "destination": "/guides/extending/custom-fields"
+    },
+    {
+      "source": "/explanation/passthrough",
+      "destination": "/guides/extending/passthrough"
+    },
+    {
+      "source": "/sdk/frontend-sdk",
+      "destination": "/guides/sdk/frontend-sdk"
+    },
+    {
+      "source": "/guides/mcp",
+      "destination": "/guides/sdk/mcp"
+    },
+    {
+      "source": "/explanation/employee-and-org-models",
+      "destination": "/guides/data-models/employee-and-org"
+    },
+    {
+      "source": "/explanation/payroll-and-time-models",
+      "destination": "/guides/data-models/payroll"
+    },
+    {
+      "source": "/explanation/benefits-models",
+      "destination": "/guides/data-models/benefits"
+    },
+    {
+      "source": "/explanation/time-and-attendance-models",
+      "destination": "/guides/data-models/time-and-attendance"
+    },
+    {
+      "source": "/explanation/ats-models",
+      "destination": "/guides/data-models/recruiting"
+    },
+    {
+      "source": "/explanation/lms-models",
+      "destination": "/guides/data-models/learning"
+    },
+    {
+      "source": "/how-to/setup/go-live-checklist",
+      "destination": "/guides/go-live/checklist"
+    },
+    {
+      "source": "/explanation/errors-issues-and-limits",
+      "destination": "/guides/troubleshooting/errors-and-issues"
+    },
+    {
+      "source": "/how-to/troubleshooting/logs",
+      "destination": "/guides/troubleshooting/logs"
+    },
+    {
+      "source": "/how-to/troubleshooting/monitor-sync-status",
+      "destination": "/guides/troubleshooting/sync-status"
+    },
+    {
+      "source": "/how-to/reliability/detect-a-connection-that-needs-relinking",
+      "destination": "/guides/troubleshooting/connections-to-relink"
+    },
+    {
+      "source": "/how-to/troubleshooting/trace-a-missing-record",
+      "destination": "/guides/troubleshooting/missing-or-extra-records"
+    },
+    {
+      "source": "/how-to/troubleshooting/diagnose-a-partial-sync",
+      "destination": "/guides/troubleshooting/partial-syncs"
+    },
+    {
+      "source": "/how-to/troubleshooting/reconcile-record-counts",
+      "destination": "/guides/troubleshooting/record-counts"
+    },
+    {
+      "source": "/how-to/troubleshooting/resolve-a-permission-error",
+      "destination": "/guides/troubleshooting/permission-errors"
+    },
+    {
+      "source": "/custom-fields/lookup/list-models",
+      "destination": "/api-reference/custom-fields/list-models"
+    },
+    {
+      "source": "/custom-fields/lookup/list-integrations",
+      "destination": "/api-reference/custom-fields/list-integrations"
+    },
+    {
+      "source": "/custom-fields/api/create-custom-field",
+      "destination": "/api-reference/custom-fields/create-custom-field"
+    },
+    {
+      "source": "/custom-fields/api/list-custom-fields",
+      "destination": "/api-reference/custom-fields/list-custom-fields"
+    },
+    {
+      "source": "/custom-fields/api/get-custom-field",
+      "destination": "/api-reference/custom-fields/get-custom-field"
+    },
+    {
+      "source": "/custom-fields/api/delete-custom-field",
+      "destination": "/api-reference/custom-fields/delete-custom-field"
+    },
+    {
+      "source": "/custom-fields/api/create-mapping",
+      "destination": "/api-reference/custom-fields/create-mapping"
+    },
+    {
+      "source": "/custom-fields/api/list-mappings",
+      "destination": "/api-reference/custom-fields/list-mappings"
+    },
+    {
+      "source": "/custom-fields/api/update-mapping",
+      "destination": "/api-reference/custom-fields/update-mapping"
+    },
+    {
+      "source": "/custom-fields/api/delete-mapping",
+      "destination": "/api-reference/custom-fields/delete-mapping"
+    },
+    {
+      "source": "/custom-fields/api/get-raw-data",
+      "destination": "/api-reference/custom-fields/get-raw-data"
+    },
+    {
+      "source": "/custom-fields/api/preview",
+      "destination": "/api-reference/custom-fields/preview"
+    },
+    {
+      "source": "/custom-fields/api/get-configuration",
+      "destination": "/api-reference/custom-fields/get-configuration"
+    },
+    {
+      "source": "/how-to/guides/auto-enrol-a-new-hire",
+      "destination": "/parked/auto-enrol-a-new-hire"
+    },
+    {
+      "source": "/how-to/guides/detect-cobra-qualifying-events",
+      "destination": "/parked/detect-cobra-qualifying-events"
+    },
+    {
+      "source": "/how-to/guides/sync-dependents-and-beneficiaries",
+      "destination": "/parked/sync-dependents-and-beneficiaries"
+    },
+    {
+      "source": "/explanation/multi-entity",
+      "destination": "/parked/multi-entity"
+    },
+    {
+      "source": "/explanation/effective-dating",
+      "destination": "/parked/effective-dating"
+    },
+    {
+      "source": "/how-to/writing-data-back/create-a-time-off-request",
+      "destination": "/parked/create-a-time-off-request"
+    },
+    {
+      "source": "/how-to/writing-data-back/create-a-timesheet-entry",
+      "destination": "/parked/create-a-timesheet-entry"
+    },
+    {
+      "source": "/how-to/ats/create-a-candidate",
+      "destination": "/parked/create-a-candidate"
     }
   ],
   "api": {

@@ -47,7 +47,7 @@ The cursor is opaque. Its value is not an offset, a record ID or a timestamp, an
 
 ## What pagination does not give you
 
-There is **no total count and no page number**, so a progress bar cannot be driven from the response. If you need a count, page the whole collection and count what arrives - see [Reconcile Record Counts](/how-to/troubleshooting/reconcile-record-counts).
+There is **no total count and no page number**, so a progress bar cannot be driven from the response. If you need a count, page the whole collection and count what arrives - see [Reconcile Record Counts](/guides/troubleshooting/record-counts).
 
 Filters are also not carried by the cursor, so changing one mid-walk invalidates your position and produces gaps or repeats. Keep every parameter identical for the whole traversal.
 
@@ -178,7 +178,7 @@ Every collection endpoint is paginated with `cursor` and `page_size`. Follow the
 
 Two things cut page count more than tuning `page_size`.
 
-Filter server-side rather than fetching everything and discarding - and on scheduled runs fetch only what changed with `modified_after` - see [Querying the data](/how-to/reading-data/filter-and-narrow-a-collection).
+Filter server-side rather than fetching everything and discarding - and on scheduled runs fetch only what changed with `modified_after` - see [Querying the data](/guides/reading-writing/querying-data).
 
 ### If this didn't work
 
@@ -186,7 +186,7 @@ Filter server-side rather than fetching everything and discarding - and on sched
   <Accordion title="Records are missing or repeated across pages">
     Check every parameter is byte-identical between requests. The most common cause is recomputing a timestamp filter per page - compute it once before the loop.
 
-    A sync running mid-walk also shifts the underlying data. Page against a stable dataset by gating the run on the sync-completed event - see [Trigger a job on completion](/explanation/how-syncing-works).
+    A sync running mid-walk also shifts the underlying data. Page against a stable dataset by gating the run on the sync-completed event - see [Trigger a job on completion](/guides/reading-writing/syncing).
   </Accordion>
 
   <Accordion title="The loop never terminates">
@@ -194,7 +194,7 @@ Filter server-side rather than fetching everything and discarding - and on sched
   </Accordion>
 
   <Accordion title="429 partway through">
-    Rate limits are 200 requests per minute per connector token. Honour `Retry-After` and resume from the cursor you were on - see [Errors & issues](/explanation/errors-issues-and-limits).
+    Rate limits are 200 requests per minute per connector token. Honour `Retry-After` and resume from the cursor you were on - see [Errors & issues](/guides/troubleshooting/errors-and-issues).
 
     Different connectors have independent limits, so paging several customers in parallel is fine; paging one customer harder is not.
   </Accordion>
@@ -206,6 +206,6 @@ Filter server-side rather than fetching everything and discarding - and on sched
 
 ## Related
 
-- [Querying the data](/how-to/reading-data/filter-and-narrow-a-collection) - filters that must stay constant across a walk
+- [Querying the data](/guides/reading-writing/querying-data) - filters that must stay constant across a walk
 - [Rate Limits](/api-reference/basics/rate-limits) - what bounds how fast you can page
-- [Record Counts](/how-to/troubleshooting/reconcile-record-counts) - counting a collection
+- [Record Counts](/guides/troubleshooting/record-counts) - counting a collection

@@ -1,0 +1,112 @@
+---
+title: "Environments"
+description: "What Development and Production keep separate, what they share despite being separate, and how to pick one for a given connection."
+---
+
+{/* CONTENT PASS: merged from explanation/environments + how-to/setup/choose-an-environment. The two behaviour tables overlap - collapse to one in the content pass. */}
+
+Every organisation has two environments: Development and Production. Most people arrive expecting two isolated copies of the same account. **Half of that is right, and the wrong half is where the surprises come from.**
+
+## Separate data, shared configuration
+
+| | Development | Production |
+| --- | --- | --- |
+| Connectors, records, logs | Separate | Separate |
+| API keys | Separate | Separate |
+| Webhook deliveries | Separate | Separate |
+| Automatic sync | None - you trigger every one | Every 24 hours by default |
+| Connectors | Unlimited, unbilled | Counted and billed |
+| Key sharing | Safe to share within the team | Treat as a production secret |
+| Scope configuration | **Shared** | **Shared** |
+| Custom field definitions | **Shared** | **Shared** |
+
+The boundary is enforced by the API key, not by anything on the request:
+
+- **A Development key reaches Development connectors only.** The wrong key returns `401` - indistinguishable from a malformed one, so it reads as a credentials bug rather than an environment mistake.
+- **Webhook deliveries follow the connector.** A webhook must cover an environment to receive anything from it.
+- **Records, logs and sync history stay put.** Nothing crosses.
+
+<Warning>
+Configuration is not separate. Scope and custom field definitions belong to the organisation, so **a change made while testing in Development is a change in Production at the same moment** - on connectors carrying live customer data.
+</Warning>
+
+The upside of that same rule: the scope and mappings you build while testing are the ones in force when you go live. You configure once, not twice.
+
+## Choosing one
+
+| Use Development when | Use Production when |
+| --- | --- |
+| Testing an integration before go-live | A paying customer's live connection |
+| A sandbox or demo tenant of an HRIS | Data feeds anything customer-facing |
+| Internal test accounts, however realistic | You need syncs to run unattended |
+| Validating field mappings | |
+
+The deciding question is whether anything downstream depends on the data being current without someone triggering it.
+
+Then use the matching key. Copy it from **Settings → API Key**, where Production and Development have separate blocks - see [Authentication](/api-reference/basics/authentication).
+
+<Warning>
+Production connectors are counted and billed automatically. Test connections left in Production get billed as live ones - the most common cause of an unexpected connector count is testing done against a Production key.
+</Warning>
+
+## How an environment gets decided
+
+At creation, and only at creation.
+
+| Created by | Takes the environment of |
+| --- | --- |
+| Magic Link from the dashboard | whichever environment the dashboard is in |
+| Link token from your backend | the API key that created it |
+
+A connector can be moved afterwards - the authorisation survives and the end user is not involved - but the switch is handled by the Bindbee team, not a dashboard control.
+
+## What behaves differently
+
+### Development
+
+**Nothing syncs on its own.** Every refresh is one you trigger.
+
+This is the environment's most common surprise, because it looks exactly like a bug: the read succeeds, the data is simply old, and nothing in the response says so. See [Syncing](/guides/reading-writing/syncing).
+
+Connectors are unlimited and unbilled. And because a Development key can only ever reach sandbox tenants, it is safe for a team to share.
+
+### Production
+
+**Syncs run without you**, every 24 hours by default - adjustable, though not from the dashboard.
+
+That schedule sets the ceiling on freshness. A record edited an hour ago stays invisible until the next sync. Webhooks tell you a sync finished sooner; they do not make it happen sooner.
+
+Connectors are counted and billed, and a test connection created against a Production key is indistinguishable from a live one.
+
+<Warning>
+Incomplete connectors - where the end user opened the link but never finished authorising - sit in the same list as active ones. Counting without filtering is the usual reason a connector count looks wrong. Filter to **Active Connectors** before counting.
+</Warning>
+
+**Regenerating the key invalidates the old one immediately**, across every connector at once.
+
+## Why it works this way
+
+**Isolation contains mistakes.** A wrong call made while integrating should never reach a real customer's data - hence separate connectors, records and keys.
+
+**Configuration describes your product, not a place.** The fields your application reads are a property of what you are building. Duplicating them per environment would mean configuring twice, then drifting the moment one copy changed.
+
+**Scheduled extracts are the expensive half of the product.** They are real requests against a customer's system, subject to that vendor's rate limits - so Development does not run them unattended for connectors nobody is watching.
+
+## What this means for you
+
+- **Decide the environment before creating the connection**, since it is settled at creation.
+- **Trigger a sync before trusting Development data.**
+- **Settle scope before testing.** It reaches live Production connectors as you change it.
+- **Filter to active connectors before counting**, or incomplete ones inflate the number.
+- **Treat a wrong environment as recoverable** - a connector can be moved without the end user reconnecting.
+- **Plan a key rotation as a deploy.** Every service on the old key breaks the moment you regenerate.
+
+<Note>
+  There are only two environments. Since Development connectors are unlimited and unbilled, teams typically run staging against Development with a separate set of connectors and a shared Development key.
+</Note>
+
+## Related
+
+- [Core concepts](/get-started/core-concepts) - where environments sit in the hierarchy
+- [Authentication](/api-reference/basics/authentication) - how keys are supplied
+- [Syncing](/guides/reading-writing/syncing) - why Development needs a manual trigger
