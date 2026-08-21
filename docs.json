@@ -157,14 +157,16 @@
                 "group": "Integrations",
                 "pages": [
                   "api-reference/integrations/get-integrations"
-                ]
+                ],
+                "expanded": true
               },
               {
                 "group": "Embedded Link",
                 "pages": [
                   "sdk/create-link-token",
                   "sdk/get-connector-token"
-                ]
+                ],
+                "expanded": true
               },
               {
                 "group": "Connectors",
@@ -172,31 +174,54 @@
                   "api-reference/connectors/get-connectors",
                   "api-reference/connectors/resync-connector",
                   "api-reference/connectors/delete-connector"
-                ]
+                ],
+                "expanded": true
               },
               {
                 "group": "Custom Fields",
                 "pages": [
-                  "custom-fields/lookup/list-models",
-                  "custom-fields/lookup/list-integrations",
-                  "custom-fields/api/create-custom-field",
-                  "custom-fields/api/list-custom-fields",
-                  "custom-fields/api/get-custom-field",
-                  "custom-fields/api/delete-custom-field",
-                  "custom-fields/api/create-mapping",
-                  "custom-fields/api/list-mappings",
-                  "custom-fields/api/update-mapping",
-                  "custom-fields/api/delete-mapping",
-                  "custom-fields/api/get-raw-data",
-                  "custom-fields/api/preview",
-                  "custom-fields/api/get-configuration"
-                ]
+                  {
+                    "group": "Lookup",
+                    "pages": [
+                      "custom-fields/lookup/list-models",
+                      "custom-fields/lookup/list-integrations"
+                    ]
+                  },
+                  {
+                    "group": "Definitions",
+                    "pages": [
+                      "custom-fields/api/create-custom-field",
+                      "custom-fields/api/list-custom-fields",
+                      "custom-fields/api/get-custom-field",
+                      "custom-fields/api/delete-custom-field"
+                    ]
+                  },
+                  {
+                    "group": "Mappings",
+                    "pages": [
+                      "custom-fields/api/create-mapping",
+                      "custom-fields/api/list-mappings",
+                      "custom-fields/api/update-mapping",
+                      "custom-fields/api/delete-mapping"
+                    ]
+                  },
+                  {
+                    "group": "Discovery & Validation",
+                    "pages": [
+                      "custom-fields/api/get-raw-data",
+                      "custom-fields/api/preview",
+                      "custom-fields/api/get-configuration"
+                    ]
+                  }
+                ],
+                "expanded": true
               },
               {
                 "group": "Passthrough",
                 "pages": [
                   "api-reference/passthrough/make-passthrough-request"
-                ]
+                ],
+                "expanded": true
               }
             ]
           },
@@ -255,7 +280,8 @@
                     ],
                     "tag": "BETA"
                   }
-                ]
+                ],
+                "expanded": true
               },
               {
                 "group": "Organization",
@@ -282,7 +308,8 @@
                     ],
                     "tag": "BETA"
                   }
-                ]
+                ],
+                "expanded": true
               },
               {
                 "group": "Payroll",
@@ -325,7 +352,8 @@
                     ],
                     "tag": "BETA"
                   }
-                ]
+                ],
+                "expanded": true
               },
               {
                 "group": "Benefits",
@@ -359,7 +387,8 @@
                     ],
                     "tag": "BETA"
                   }
-                ]
+                ],
+                "expanded": true
               },
               {
                 "group": "Time & Attendance",
@@ -389,7 +418,8 @@
                       "hris/timesheet-entries/create-timesheet-entries"
                     ]
                   }
-                ]
+                ],
+                "expanded": true
               }
             ]
           },
@@ -459,7 +489,8 @@
                       "ats/offer/create-offer"
                     ]
                   }
-                ]
+                ],
+                "expanded": true
               },
               {
                 "group": "Evaluation",
@@ -512,7 +543,8 @@
                       "ats/tag/create-tag"
                     ]
                   }
-                ]
+                ],
+                "expanded": true
               },
               {
                 "group": "Organization",
@@ -541,7 +573,8 @@
                       "ats/remote-user/create-remote-user"
                     ]
                   }
-                ]
+                ],
+                "expanded": true
               }
             ]
           },
@@ -555,7 +588,8 @@
                 "pages": [
                   "lms/users/get-users",
                   "lms/users/get-user-by-id"
-                ]
+                ],
+                "expanded": true
               },
               {
                 "group": "Content",
@@ -588,7 +622,8 @@
                       "lms/categories/get-category-by-id"
                     ]
                   }
-                ]
+                ],
+                "expanded": true
               },
               {
                 "group": "Progress",
@@ -607,7 +642,8 @@
                       "lms/enrollments/get-enrollment-by-id"
                     ]
                   }
-                ]
+                ],
+                "expanded": true
               }
             ]
           }
