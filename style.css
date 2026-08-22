@@ -72,6 +72,18 @@ img,
   border-radius: 4px !important;
 }
 
+/* Sidebar weight tiers. The section header is font-semibold (600); pages and
+   model groups inherit the body weight (400). First-level groups sat with the
+   pages, so an expanded section read as one flat list. 500 puts them on their
+   own tier - heavier than what they contain, lighter than the section above.
+
+   .sidebar-group is only on the outermost <ul> of a section; nested lists carry
+   space-y-px alone, so the child combinators stop at the first level. Matching
+   <button> rather than <li> is what separates groups from plain page links. */
+.sidebar-group > li > button {
+  font-weight: 500;
+}
+
 /* Breadcrumbs: keep the brand colour the section eyebrow had before
    styling.eyebrows was switched from "section" to "breadcrumbs". */
 .breadcrumb-list .breadcrumb-item,
