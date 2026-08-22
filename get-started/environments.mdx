@@ -14,7 +14,7 @@ Every organisation has two environments: Development and Production. Most people
 | Connectors, records, logs | Separate | Separate |
 | API keys | Separate | Separate |
 | Webhook deliveries | Separate | Separate |
-| Automatic sync | None - you trigger every one | Every 24 hours by default |
+| Automatic sync | Initial sync only - no recurring schedule | Every 24 hours by default |
 | Connectors | Unlimited, unbilled | Counted and billed |
 | Key sharing | Safe to share within the team | Treat as a production secret |
 | Scope configuration | **Shared** | **Shared** |
@@ -64,7 +64,7 @@ A connector can be moved afterwards - the authorisation survives and the end use
 
 ### Development
 
-**Nothing syncs on its own.** Every refresh is one you trigger.
+**The initial sync runs on its own; nothing after it does.** A new connector reads its full scope as soon as it is authorised, and then never refreshes again until you trigger it.
 
 This is the environment's most common surprise, because it looks exactly like a bug: the read succeeds, the data is simply old, and nothing in the response says so. See [Syncing](/guides/reading-writing/syncing).
 
