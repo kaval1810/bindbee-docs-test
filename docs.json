@@ -1554,7 +1554,7 @@
   "navbar": {
     "links": [
       {
-        "label": "Connection Guides",
+        "label": "Setup Instructions",
         "href": "https://help.bindbee.dev/"
       },
       {
