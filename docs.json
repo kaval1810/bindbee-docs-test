@@ -275,7 +275,8 @@
                     ],
                     "tag": "BETA"
                   }
-                ]
+                ],
+                "expanded": true
               },
               {
                 "group": "Organization",
@@ -302,7 +303,8 @@
                     ],
                     "tag": "BETA"
                   }
-                ]
+                ],
+                "expanded": true
               },
               {
                 "group": "Payroll",
@@ -345,7 +347,8 @@
                     ],
                     "tag": "BETA"
                   }
-                ]
+                ],
+                "expanded": true
               },
               {
                 "group": "Benefits",
@@ -379,7 +382,8 @@
                     ],
                     "tag": "BETA"
                   }
-                ]
+                ],
+                "expanded": true
               },
               {
                 "group": "Time & Attendance",
@@ -409,7 +413,8 @@
                       "hris/timesheet-entries/create-timesheet-entries"
                     ]
                   }
-                ]
+                ],
+                "expanded": true
               }
             ]
           },
@@ -479,7 +484,8 @@
                       "ats/offer/create-offer"
                     ]
                   }
-                ]
+                ],
+                "expanded": true
               },
               {
                 "group": "Evaluation",
@@ -532,7 +538,8 @@
                       "ats/tag/create-tag"
                     ]
                   }
-                ]
+                ],
+                "expanded": true
               },
               {
                 "group": "Organization",
@@ -561,7 +568,8 @@
                       "ats/remote-user/create-remote-user"
                     ]
                   }
-                ]
+                ],
+                "expanded": true
               }
             ]
           },
@@ -575,7 +583,8 @@
                 "pages": [
                   "lms/users/get-users",
                   "lms/users/get-user-by-id"
-                ]
+                ],
+                "expanded": true
               },
               {
                 "group": "Content",
@@ -608,7 +617,8 @@
                       "lms/categories/get-category-by-id"
                     ]
                   }
-                ]
+                ],
+                "expanded": true
               },
               {
                 "group": "Progress",
@@ -627,7 +637,8 @@
                       "lms/enrollments/get-enrollment-by-id"
                     ]
                   }
-                ]
+                ],
+                "expanded": true
               }
             ]
           }
