@@ -648,7 +648,7 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Help Centre",
+          "anchor": "Connection Guides",
           "href": "https://help.bindbee.dev/",
           "icon": "book-open"
         },
