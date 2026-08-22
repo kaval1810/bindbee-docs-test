@@ -23,7 +23,7 @@ description: "Create a connector, sync it, and make your first Bindbee API call.
 3. Select a category and an integration — for example **BambooHR** under HRIS.
 4. Follow the prompts to complete authorisation.
 
-<Frame caption="Connectors → Development. Note what the Dashboard says here — it is the reason step 2 exists.">
+<Frame caption="Connectors → Development. The notice here is about recurring syncs — the first one still runs on its own.">
   <img src="/images/quickstart/connectors-development.png" alt="The Connectors page on the Development tab, noting that development connectors do not sync automatically, with a Test Connector button" />
 </Frame>
 
@@ -45,19 +45,13 @@ Once the connector is created, open it and copy the **`connector_token`** from t
 
 </Step>
 
-<Step title="Run the first sync">
+<Step title="Wait for the first sync">
+
+The connector starts its initial sync the moment authorisation completes — a full read of every model in scope. On a small test tenant it usually finishes in a couple of minutes.
 
 <Warning>
-  **Development connectors do not sync automatically.** Nothing happens until you trigger it, and skipping this step returns an empty list in step 3 that looks exactly like a bug.
+  **Reads before it finishes return `200` with partial or empty results.** There is no error and nothing on the response to distinguish them — an employee list still filling looks exactly like a customer with no employees.
 </Warning>
-
-Open the connector and press **Force Sync**, or call:
-
-```bash
-curl -X POST https://api.bindbee.dev/api/embedded/v1/connectors/resync \
-  -H "Authorization: Bearer YOUR_DEV_API_KEY" \
-  -H "X-Connector-Token: YOUR_CONNECTOR_TOKEN"
-```
 
 Wait for **`sync_status`** to reach `Done`. Two fields on the connector answer different questions, and both matter beyond this page:
 
@@ -69,7 +63,7 @@ Wait for **`sync_status`** to reach `Done`. Two fields on the connector answer d
 A connector can be `COMPLETE` and still hold no data.
 
 <Note>
-  Triggering by hand is a Development behaviour. Production connectors run on a schedule — see [Sync frequency](/guides/api-basics/sync-frequency).
+  **That first sync is the only automatic one in Development.** There is no recurring schedule here, so every refresh after it is one you trigger — press **Force Sync**, or call [Force sync a connector](/api-reference/connectors/resync-connector). Production connectors run on a schedule instead; see [Sync frequency](/guides/api-basics/sync-frequency).
 </Note>
 
 </Step>

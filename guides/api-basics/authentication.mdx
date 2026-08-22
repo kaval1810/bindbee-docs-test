@@ -156,7 +156,7 @@ Passthrough does not accept an idempotency key - a retried passthrough write rea
   </Accordion>
 
   <Accordion title="The request succeeds but returns no records">
-    Authentication is fine; the connector has no synced data yet. Development connectors do not sync automatically - see [Development connectors](/guides/reading-writing/syncing).
+    Authentication is fine; the connector has no synced data yet - the initial sync may still be running, and Development connectors have no recurring schedule after it - see [Development connectors](/guides/reading-writing/syncing).
 
     If it's a Production connector, check [Sync status](/guides/troubleshooting/sync-status).
   </Accordion>

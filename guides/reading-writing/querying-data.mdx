@@ -184,7 +184,7 @@ The more reliable pattern is to run the incremental read when the sync-completed
   <Accordion title="A record you know changed didn't come back">
     Check the sync ran after the change. Until the connector syncs, the change doesn't exist in Bindbee - see [Sync status](/guides/troubleshooting/sync-status).
 
-    On a Development connector there's no schedule at all, so nothing is new until you trigger a sync.
+    A Development connector has no recurring schedule, so after its initial sync nothing is new until you trigger one.
   </Accordion>
 
   <Accordion title="You're reading a related model that didn't update">

@@ -93,7 +93,7 @@ Production connectors sync every 24 hours by default. Two things are adjustable:
 <Info>
   **Before you start**
 
-  - The connector is in Production. Development connectors have no schedule at all - see [Development connectors](/guides/reading-writing/syncing).
+  - The connector is in Production. Development connectors have no recurring schedule - see [Development connectors](/guides/reading-writing/syncing).
   - For a start-time change, you know your own processing window.
 </Info>
 
@@ -274,7 +274,7 @@ A forced resync starts a sync now. Use it after a relink, after a permission cha
 
 ## Development connectors
 
-Development connectors do not sync on a schedule. Their data is whatever the last triggered sync produced, so it stays frozen until you act.
+Development connectors run the same initial sync as Production ones - it starts on authorisation and needs nothing from you. What they do not have is the **recurring** schedule that follows it, so after that first run the data is whatever the last triggered sync produced, frozen until you act.
 
 This is the single most common source of "the data looks stale" during development.
 

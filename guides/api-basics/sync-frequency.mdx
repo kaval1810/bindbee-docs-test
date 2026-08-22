@@ -19,7 +19,7 @@ A Production connector pulls scoped data on a schedule. **The cadence is a prope
 **Six hours is the floor.** It is not an arbitrary limit: each sync pulls the full in-scope dataset from the source system, and most HR systems permit only a small number of requests per minute per tenant. Some cannot sustain a full extract every six hours, and a shorter cadence produces failures rather than fresher data.
 
 <Note>
-  Development connectors have no schedule at all. Every sync is one you trigger - see [Syncing](/guides/reading-writing/syncing).
+  Development connectors run an initial sync on authorisation and then have no recurring schedule - every refresh after that is one you trigger - see [Syncing](/guides/reading-writing/syncing).
 </Note>
 
 ## Start time
