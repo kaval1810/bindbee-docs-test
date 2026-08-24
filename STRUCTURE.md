@@ -1,6 +1,6 @@
 # Bindbee docs — structure (v3)
 
-Generated from `docs.json` on 2026-08-24 at commit `fb63d97`.
+Generated from `docs.json` on 2026-08-24 at commit `917747e`.
 Run `python3 scripts/gen-structure.py` to refresh; hand edits will drift from the nav.
 
 ## Summary
@@ -12,14 +12,15 @@ Run `python3 scripts/gen-structure.py` to refresh; hand edits will drift from th
 | API Reference | 143 |
 | **Total in nav** | **186** |
 
-**67** are written pages; **119** are generated endpoint stubs whose frontmatter is a single `openapi:` line, rendered from `spec.json`.
+**50** are editorial pages written by hand. The other **136** render from `spec.json` via an `openapi:` line — 17 of those also carry a hand-written title, so they read like editorial pages in the sidebar but their body is generated.
 `docs.json` also carries **216** redirects.
 
 ### Reading the tree
 
 - A trailing `/` marks a group rather than a page.
 - Brackets carry the group's `docs.json` flags: a tag (`BETA`), `expanded` if it opens by default, and the Lucide icon name.
-- Page rows show the **sidebar label**, then the path. Where a page's `title` differs from its `sidebarTitle` the title follows after `·` — the sidebar stays short while the page heading and search result stay descriptive.
+- Page rows show the **sidebar label**, then the path. What follows `·` is context: for an editorial page it is the `title` where that differs from the `sidebarTitle`; for an endpoint page it is the operation the body is generated from.
+- A row with no `·` and no method is an editorial page.
 
 ## Tree
 
@@ -97,29 +98,29 @@ API Reference
 │   │   ├── POST /api/embedded/v1/link/create-link-token   (sdk/create-link-token)
 │   │   └── GET /api/embedded/v1/connectors/connector_token/{temporary_token}   (sdk/get-connector-token)
 │   ├── Connectors/
-│   │   ├── Get Connectors   (api-reference/connectors/get-connectors)
-│   │   ├── Force Resync a Connector   (api-reference/connectors/resync-connector)
-│   │   └── Delete Connector   (api-reference/connectors/delete-connector)
+│   │   ├── Get Connectors   (api-reference/connectors/get-connectors)  ·  title: GET /api/hris/v1/connectors
+│   │   ├── Force Resync a Connector   (api-reference/connectors/resync-connector)  ·  title: POST /api/embedded/v1/connectors/resync
+│   │   └── Delete Connector   (api-reference/connectors/delete-connector)  ·  title: DELETE /api/hris/v1/connectors/{connector_id}/delete
 │   ├── Custom Fields/
 │   │   ├── Lookup/
-│   │   │   ├── List Models   (api-reference/custom-fields/list-models)
-│   │   │   └── List Integrations   (api-reference/custom-fields/list-integrations)
+│   │   │   ├── List Models   (api-reference/custom-fields/list-models)  ·  title: GET /api/v1/lookup/models
+│   │   │   └── List Integrations   (api-reference/custom-fields/list-integrations)  ·  title: GET /api/v1/lookup/integrations
 │   │   ├── Definitions/
-│   │   │   ├── Create Custom Field   (api-reference/custom-fields/create-custom-field)
-│   │   │   ├── List Custom Fields   (api-reference/custom-fields/list-custom-fields)
-│   │   │   ├── Get Custom Field   (api-reference/custom-fields/get-custom-field)
-│   │   │   └── Delete Custom Field   (api-reference/custom-fields/delete-custom-field)
+│   │   │   ├── Create Custom Field   (api-reference/custom-fields/create-custom-field)  ·  title: POST /api/v1/custom-fields
+│   │   │   ├── List Custom Fields   (api-reference/custom-fields/list-custom-fields)  ·  title: GET /api/v1/custom-fields
+│   │   │   ├── Get Custom Field   (api-reference/custom-fields/get-custom-field)  ·  title: GET /api/v1/custom-fields/{custom_field_id}
+│   │   │   └── Delete Custom Field   (api-reference/custom-fields/delete-custom-field)  ·  title: DELETE /api/v1/custom-fields/{custom_field_id}
 │   │   ├── Mappings/
-│   │   │   ├── Create Mapping   (api-reference/custom-fields/create-mapping)
-│   │   │   ├── List Mappings   (api-reference/custom-fields/list-mappings)
-│   │   │   ├── Update Mapping   (api-reference/custom-fields/update-mapping)
-│   │   │   └── Delete Mapping   (api-reference/custom-fields/delete-mapping)
+│   │   │   ├── Create Mapping   (api-reference/custom-fields/create-mapping)  ·  title: POST /api/v1/custom-fields/mapping
+│   │   │   ├── List Mappings   (api-reference/custom-fields/list-mappings)  ·  title: GET /api/v1/custom-fields/mapping
+│   │   │   ├── Update Mapping   (api-reference/custom-fields/update-mapping)  ·  title: PATCH /api/v1/custom-fields/mapping/{custom_field_mapping_id}
+│   │   │   └── Delete Mapping   (api-reference/custom-fields/delete-mapping)  ·  title: DELETE /api/v1/custom-fields/mapping/{custom_field_mapping_id}
 │   │   └── Discovery & Validation/
-│   │       ├── Get Raw Data   (api-reference/custom-fields/get-raw-data)
-│   │       ├── Preview   (api-reference/custom-fields/preview)
-│   │       └── Get Configuration   (api-reference/custom-fields/get-configuration)
+│   │       ├── Get Raw Data   (api-reference/custom-fields/get-raw-data)  ·  title: GET /api/v1/custom-fields/raw-data
+│   │       ├── Preview   (api-reference/custom-fields/preview)  ·  title: POST /api/v1/custom-fields/preview
+│   │       └── Get Configuration   (api-reference/custom-fields/get-configuration)  ·  title: GET /api/v1/custom-fields/configuration
 │   └── Passthrough/
-│       └── Make a request   (api-reference/passthrough/make-passthrough-request)  ·  title: Make Passthrough Request
+│       └── Make a request   (api-reference/passthrough/make-passthrough-request)  ·  title: POST /api/v1/passthrough
 ├── HR & Payroll (HRIS)/  [users]
 │   ├── Overview   (hris/overview)  ·  title: HR & Payroll (HRIS)
 │   ├── Employee Data/  [expanded]

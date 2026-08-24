@@ -30,16 +30,18 @@ def meta(slug):
     if not m:
         return (slug.rsplit("/", 1)[-1], None, "page")
     fm = m.group(1)
-    title, side = field(fm, "title"), field(fm, "sidebarTitle")
-    if title or side:
-        label = side or title
-        return (label, title if (side and title and side != title) else None, "page")
-    op = field(fm, "openapi")
+    title, side, op = field(fm, "title"), field(fm, "sidebarTitle"), field(fm, "openapi")
     if op:
+        # An openapi: line means the page renders from spec.json. 17 of these also
+        # carry a hand-written title; they are still endpoint pages, not editorial.
         parts = op.split(None, 1)
         if len(parts) == 2 and parts[0].lower() in METHODS:
             op = f"{parts[0].upper()} {parts[1]}"
-        return (op, None, "endpoint")
+        label = side or title or op
+        return (label, op if (title or side) else None, "endpoint")
+    if title or side:
+        label = side or title
+        return (label, title if (side and title and side != title) else None, "page")
     return (slug.rsplit("/", 1)[-1], None, "page")
 
 
@@ -82,6 +84,10 @@ all_mdx = sorted(
     if not any(x.startswith((".", "_")) or x == "node_modules" for x in p.parts)
 )
 orphans = [s for s in all_mdx if s not in in_nav]
+TITLED_EP = sum(1 for s in in_nav
+                if (m := FM.match((ROOT / (s + ".mdx")).read_text()))
+                and "openapi:" in m.group(1)
+                and ("title:" in m.group(1) or "sidebarTitle:" in m.group(1)))
 redirects = len(d.get("redirects", []))
 sha = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--short", "HEAD"],
                      capture_output=True, text=True).stdout.strip() or "unknown"
@@ -101,8 +107,10 @@ o += [f"| {n} | {c} |" for n, c in per_tab]
 o += [
     f"| **Total in nav** | **{sum(stats.values())}** |",
     "",
-    f"**{stats['page']}** are written pages; **{stats['endpoint']}** are generated endpoint "
-    "stubs whose frontmatter is a single `openapi:` line, rendered from `spec.json`.",
+    f"**{stats['page']}** are editorial pages written by hand. The other "
+    f"**{stats['endpoint']}** render from `spec.json` via an `openapi:` line — {TITLED_EP} of "
+    "those also carry a hand-written title, so they read like editorial pages in the sidebar "
+    "but their body is generated.",
     f"`docs.json` also carries **{redirects}** redirects.",
 ]
 if stats["missing"]:
@@ -115,9 +123,10 @@ o += [
     "- A trailing `/` marks a group rather than a page.",
     "- Brackets carry the group's `docs.json` flags: a tag (`BETA`), `expanded` if it opens "
     "by default, and the Lucide icon name.",
-    "- Page rows show the **sidebar label**, then the path. Where a page's `title` differs "
-    "from its `sidebarTitle` the title follows after `·` — the sidebar stays short while the "
-    "page heading and search result stay descriptive.",
+    "- Page rows show the **sidebar label**, then the path. What follows `·` is context: for "
+    "an editorial page it is the `title` where that differs from the `sidebarTitle`; for an "
+    "endpoint page it is the operation the body is generated from.",
+    "- A row with no `·` and no method is an editorial page.",
     "",
     "## Tree",
     "",
