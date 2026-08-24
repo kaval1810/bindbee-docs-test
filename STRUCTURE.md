@@ -1,6 +1,6 @@
 # Bindbee docs — structure (v3)
 
-Generated from `docs.json` on 2026-08-24 at commit `917747e`.
+Generated from `docs.json` on 2026-08-24 at commit `2f25434`.
 Run `python3 scripts/gen-structure.py` to refresh; hand edits will drift from the nav.
 
 ## Summary
@@ -98,29 +98,29 @@ API Reference
 │   │   ├── POST /api/embedded/v1/link/create-link-token   (sdk/create-link-token)
 │   │   └── GET /api/embedded/v1/connectors/connector_token/{temporary_token}   (sdk/get-connector-token)
 │   ├── Connectors/
-│   │   ├── Get Connectors   (api-reference/connectors/get-connectors)  ·  title: GET /api/hris/v1/connectors
-│   │   ├── Force Resync a Connector   (api-reference/connectors/resync-connector)  ·  title: POST /api/embedded/v1/connectors/resync
-│   │   └── Delete Connector   (api-reference/connectors/delete-connector)  ·  title: DELETE /api/hris/v1/connectors/{connector_id}/delete
+│   │   ├── Get Connectors   (api-reference/connectors/get-connectors)  ·  renders: GET /api/hris/v1/connectors
+│   │   ├── Force Resync a Connector   (api-reference/connectors/resync-connector)  ·  renders: POST /api/embedded/v1/connectors/resync
+│   │   └── Delete Connector   (api-reference/connectors/delete-connector)  ·  renders: DELETE /api/hris/v1/connectors/{connector_id}/delete
 │   ├── Custom Fields/
 │   │   ├── Lookup/
-│   │   │   ├── List Models   (api-reference/custom-fields/list-models)  ·  title: GET /api/v1/lookup/models
-│   │   │   └── List Integrations   (api-reference/custom-fields/list-integrations)  ·  title: GET /api/v1/lookup/integrations
+│   │   │   ├── List Models   (api-reference/custom-fields/list-models)  ·  renders: GET /api/v1/lookup/models
+│   │   │   └── List Integrations   (api-reference/custom-fields/list-integrations)  ·  renders: GET /api/v1/lookup/integrations
 │   │   ├── Definitions/
-│   │   │   ├── Create Custom Field   (api-reference/custom-fields/create-custom-field)  ·  title: POST /api/v1/custom-fields
-│   │   │   ├── List Custom Fields   (api-reference/custom-fields/list-custom-fields)  ·  title: GET /api/v1/custom-fields
-│   │   │   ├── Get Custom Field   (api-reference/custom-fields/get-custom-field)  ·  title: GET /api/v1/custom-fields/{custom_field_id}
-│   │   │   └── Delete Custom Field   (api-reference/custom-fields/delete-custom-field)  ·  title: DELETE /api/v1/custom-fields/{custom_field_id}
+│   │   │   ├── Create Custom Field   (api-reference/custom-fields/create-custom-field)  ·  renders: POST /api/v1/custom-fields
+│   │   │   ├── List Custom Fields   (api-reference/custom-fields/list-custom-fields)  ·  renders: GET /api/v1/custom-fields
+│   │   │   ├── Get Custom Field   (api-reference/custom-fields/get-custom-field)  ·  renders: GET /api/v1/custom-fields/{custom_field_id}
+│   │   │   └── Delete Custom Field   (api-reference/custom-fields/delete-custom-field)  ·  renders: DELETE /api/v1/custom-fields/{custom_field_id}
 │   │   ├── Mappings/
-│   │   │   ├── Create Mapping   (api-reference/custom-fields/create-mapping)  ·  title: POST /api/v1/custom-fields/mapping
-│   │   │   ├── List Mappings   (api-reference/custom-fields/list-mappings)  ·  title: GET /api/v1/custom-fields/mapping
-│   │   │   ├── Update Mapping   (api-reference/custom-fields/update-mapping)  ·  title: PATCH /api/v1/custom-fields/mapping/{custom_field_mapping_id}
-│   │   │   └── Delete Mapping   (api-reference/custom-fields/delete-mapping)  ·  title: DELETE /api/v1/custom-fields/mapping/{custom_field_mapping_id}
+│   │   │   ├── Create Mapping   (api-reference/custom-fields/create-mapping)  ·  renders: POST /api/v1/custom-fields/mapping
+│   │   │   ├── List Mappings   (api-reference/custom-fields/list-mappings)  ·  renders: GET /api/v1/custom-fields/mapping
+│   │   │   ├── Update Mapping   (api-reference/custom-fields/update-mapping)  ·  renders: PATCH /api/v1/custom-fields/mapping/{custom_field_mapping_id}
+│   │   │   └── Delete Mapping   (api-reference/custom-fields/delete-mapping)  ·  renders: DELETE /api/v1/custom-fields/mapping/{custom_field_mapping_id}
 │   │   └── Discovery & Validation/
-│   │       ├── Get Raw Data   (api-reference/custom-fields/get-raw-data)  ·  title: GET /api/v1/custom-fields/raw-data
-│   │       ├── Preview   (api-reference/custom-fields/preview)  ·  title: POST /api/v1/custom-fields/preview
-│   │       └── Get Configuration   (api-reference/custom-fields/get-configuration)  ·  title: GET /api/v1/custom-fields/configuration
+│   │       ├── Get Raw Data   (api-reference/custom-fields/get-raw-data)  ·  renders: GET /api/v1/custom-fields/raw-data
+│   │       ├── Preview   (api-reference/custom-fields/preview)  ·  renders: POST /api/v1/custom-fields/preview
+│   │       └── Get Configuration   (api-reference/custom-fields/get-configuration)  ·  renders: GET /api/v1/custom-fields/configuration
 │   └── Passthrough/
-│       └── Make a request   (api-reference/passthrough/make-passthrough-request)  ·  title: POST /api/v1/passthrough
+│       └── Make a request   (api-reference/passthrough/make-passthrough-request)  ·  renders: POST /api/v1/passthrough
 ├── HR & Payroll (HRIS)/  [users]
 │   ├── Overview   (hris/overview)  ·  title: HR & Payroll (HRIS)
 │   ├── Employee Data/  [expanded]

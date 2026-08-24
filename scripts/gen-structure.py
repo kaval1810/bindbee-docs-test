@@ -65,7 +65,8 @@ def emit(items, prefix):
             label, title, kind = meta(item)
             stats[kind] += 1
             mark = "!! " if kind == "missing" else ""
-            note = f'  ·  title: {title}' if title else ""
+            word = "renders" if kind == "endpoint" else "title"
+            note = f"  ·  {word}: {title}" if title else ""
             lines.append(f"{prefix}{elbow}{mark}{label}   ({item}){note}")
 
 
