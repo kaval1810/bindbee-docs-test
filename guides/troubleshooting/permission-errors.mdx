@@ -2,6 +2,7 @@
 title: "Resolve a Source-System Permission Error"
 sidebarTitle: "Permission errors"
 description: "Map a sync failure or missing field back to the specific permission the end user's HRIS credentials are missing."
+icon: "lock"
 ---
 
 Most sync failures that aren't credential expiry are permission failures in the source system. Bindbee can only read what the connected credentials are allowed to read, and many HRIS platforms return an empty result rather than an error when permission is missing - so a permission problem often presents as missing data.

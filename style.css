@@ -15,12 +15,10 @@
 }
 
 #sidebar-content {
-  width: 17rem !important;
+  width: 15rem !important;
 }
 
-#content-area {
-  margin-left: max(0px, calc(50vw - 348px - 17rem)) !important;
-}
+
 
 #page-title {
   font-weight: 600 !important;
@@ -99,4 +97,54 @@ img,
 .dark .breadcrumb-list .breadcrumb-item,
 .dark .breadcrumb-list .breadcrumb-item a {
   color: #FA923D !important;
+}
+
+/* "Related" sections: a document icon per row instead of a bullet, the way
+   Mintlify's own docs present related topics.
+
+   Mintlify slugifies heading text into an id, so h2#related is the whole hook -
+   all 53 pages keep writing a plain markdown list and nothing in the content
+   changes. "Related" is the last section on every page that has one, so the
+   sibling combinator cannot reach a list that isn't part of it.
+
+   The icon is a mask rather than a background image so it takes currentColor
+   and follows the theme into dark mode on its own. */
+#content-area h2[id="related"] ~ ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+#content-area h2[id="related"] ~ ul > li {
+  position: relative;
+  padding-left: 1.9rem;
+}
+
+#content-area h2[id="related"] ~ ul > li::marker {
+  content: "";
+}
+
+#content-area h2[id="related"] ~ ul > li::before {
+  --related-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z'/%3E%3Cpath d='M14 2v4a2 2 0 0 0 2 2h4'/%3E%3Cpath d='M10 9H8'/%3E%3Cpath d='M16 13H8'/%3E%3Cpath d='M16 17H8'/%3E%3C/svg%3E");
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.15em;
+  width: 1.25em;
+  height: 1.25em;
+  opacity: 0.5;
+  background-color: currentColor;
+
+  /* Longhands, not the `mask: ... center / contain` shorthand. The shorthand
+     resets mask-size in some engines, and an SVG with only a viewBox has no
+     intrinsic size to fall back on - the image then renders larger than the box
+     and you see a cropped corner of it. Explicit 100% 100% against a square box
+     cannot crop, and width/height on the SVG gives it an intrinsic size too. */
+  -webkit-mask-image: var(--related-icon);
+  mask-image: var(--related-icon);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
 }
