@@ -51,9 +51,20 @@ Every term Bindbee's docs use with a specific meaning. This table is the single 
 A vendor can be offered in more than one category, so a connector is pinned to a category as well as an integration. A customer using SAP SuccessFactors for both HR and recruiting has **two** connectors, not one - see [Integration & Coverage](/get-started/integrations).
 </Note>
 
+## Two tokens
+
+Requests carry two credentials, answering different questions.
+
+- **API key** - identifies your organisation. Secret, server-side, never in a browser.
+- **Connector token** - names whose data you want. Issued per connector, and distinct from the connector's `id`, which is how you refer to the connector itself in a URL.
+
+Anything that touches one customer's data needs **both** - one for authority, one for subject. Without the token, Bindbee knows who is asking but not whose employees you want.
+
+A few endpoints need only the key, because there is no subject to name: listing connectors, listing integrations, configuring custom fields, reading webhook logs. See [Authentication](/api-reference/basics/authentication).
+
 ## Where settings live
 
-Above all of this sits your **organisation** - your company's account. It has two **environments**, Development and Production, holding separate connectors, keys and logs.
+The same levels tell you where a setting lives, and how far a change to it reaches. Above them sits your **organisation** - your company's account - holding two **environments**, Development and Production, with separate connectors, keys and logs.
 
 Every setting sits at exactly one level, and that level is its blast radius.
 
@@ -68,18 +79,9 @@ Every setting sits at exactly one level, and that level is its blast radius.
 Environments separate *data*, not *configuration*. Scope and custom fields are organisation-level, so **a change made while testing in Development is a change in Production too.** Decide your scope before you start testing, not after - see [Environments](/get-started/environments).
 </Warning>
 
-## Two tokens
-
-Requests carry two credentials, answering different questions.
-
-- **API key** - identifies your organisation. Secret, server-side, never in a browser.
-- **Connector token** - names whose data you want. Issued per connector, and distinct from the connector's `id`, which is how you refer to the connector itself in a URL.
-
-Anything that touches one customer's data needs **both** - one for authority, one for subject. Without the token, Bindbee knows who is asking but not whose employees you want.
-
-A few endpoints need only the key, because there is no subject to name: listing connectors, listing integrations, configuring custom fields, reading webhook logs. See [Authentication](/api-reference/basics/authentication).
-
 ## Normalisation is opinionated
+
+Levels and tokens settle *whose* data a request reaches. The rest of this page is about *what shape* it arrives in.
 
 Bindbee returns the same employee shape whether your customer runs Workday, BambooHR, or a nightly SFTP drop. That consistency is the point of a unified API, and it is only achievable by making decisions on your behalf. **Every one of those decisions loses something.**
 
