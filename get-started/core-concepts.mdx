@@ -5,8 +5,6 @@ description: "The five levels, every term the docs use with a specific meaning, 
 icon: "lightbulb"
 ---
 
-{/* CONTENT PASS: merged from explanation/core-concepts + explanation/unified-model. Structure settled; trim overlap between "Two tokens" and Authentication, and between "Coverage varies" and Model availability, in the content pass. */}
-
 Five words carry most of the weight in Bindbee's API, and three of them sound interchangeable. The one that matters most: **an integration is a vendor system, a connector is one customer's connection to it.** That difference decides whether a change affects one customer or all of them.
 
 ## The five levels
@@ -14,7 +12,7 @@ Five words carry most of the weight in Bindbee's API, and three of them sound in
 ```mermaid
 flowchart LR
     CAT["Category<br/>HRIS · ATS · LMS"] --> INT["Integration<br/>BambooHR, Workday"]
-    INT --> CON["Connector<br/>one customer's connection"]
+    INT --> CON["Connector<br/>A customer's connection"]
     CON --> MOD["Model<br/>employee, benefit"]
     MOD --> REC["Record<br/>one synced instance"]
 ```
@@ -37,7 +35,7 @@ Every term Bindbee's docs use with a specific meaning. This table is the single 
 | **Organisation** | Your Bindbee account. Scope and custom fields are configured at this level |
 | **Environment** | Development or Production. Separate connectors, keys and logs; **shared** scope and custom field configuration |
 | **API key** | Authenticates your organisation. Sent as `Authorization: Bearer`. Every endpoint requires it |
-| **Connector token** | Names which customer's connection a request acts on. Sent as `X-Connector-Token`. Required wherever the request reaches one customer's data |
+| **Connector token** | Names which customer's connection a request acts on. Sent as `X-Connector-Token`. Required wherever the request reaches one customer's data. Distinct from the connector's `id`, which is how a URL names the connector itself |
 | **Scope** | The models and fields Bindbee requests from a connected system. Set once per organisation; a field outside scope is absent from responses, not `null` |
 | **Sync** | The job that pulls scoped data from the source system and normalizes it. Scheduled in Production, manual in Development |
 | **Custom field** | A value the unified model does not carry, mapped out of the raw payload with a JMESPath expression and returned alongside the record |
@@ -51,32 +49,22 @@ Every term Bindbee's docs use with a specific meaning. This table is the single 
 A vendor can be offered in more than one category, so a connector is pinned to a category as well as an integration. A customer using SAP SuccessFactors for both HR and recruiting has **two** connectors, not one - see [Integration & Coverage](/get-started/integrations).
 </Note>
 
-## Two tokens
-
-Requests carry two credentials, answering different questions.
-
-- **API key** - identifies your organisation. Secret, server-side, never in a browser.
-- **Connector token** - names whose data you want. Issued per connector, and distinct from the connector's `id`, which is how you refer to the connector itself in a URL.
-
-Anything that touches one customer's data needs **both** - one for authority, one for subject. Without the token, Bindbee knows who is asking but not whose employees you want.
-
-A few endpoints need only the key, because there is no subject to name: listing connectors, listing integrations, configuring custom fields, reading webhook logs. See [Authentication](/api-reference/basics/authentication).
+Anything reaching one customer's data needs both credentials: the key for authority, the token for subject. Which endpoints need which is in [Authentication](/api-reference/basics/authentication).
 
 ## Where settings live
 
-The same levels tell you where a setting lives, and how far a change to it reaches. Above them sits your **organisation** - your company's account - holding two **environments**, Development and Production, with separate connectors, keys and logs.
+The same levels tell you where a setting lives, and how far a change to it reaches. Category and model hold no settings - configuration hangs off the three levels between them, with your **organisation** at the top.
 
-Every setting sits at exactly one level, and that level is its blast radius.
-
-| Set at | What lives there | Changing it affects |
+| Set at | What lives there | A change reaches |
 | --- | --- | --- |
 | **Organisation** | Scope, custom field definitions | Every customer, both environments |
-| **Integration** | Custom field mappings, usually | Every customer on that vendor system |
-| **Connector** | Credentials, sync schedule | One customer |
-| **Environment** | Connectors, API keys, logs | That side only - **not** configuration |
+| **Integration** | Custom field mappings | Every customer on that vendor system |
+| **Connector** | Credentials, sync schedule, mapping overrides | One customer |
+
+A mapping set on a connector wins over the one set on its integration - see [Two scopes, and which one wins](/guides/extending/custom-fields).
 
 <Warning>
-Environments separate *data*, not *configuration*. Scope and custom fields are organisation-level, so **a change made while testing in Development is a change in Production too.** Decide your scope before you start testing, not after - see [Environments](/get-started/environments).
+**Environments are not a fourth level.** Development and Production partition connectors, keys, records and logs - not configuration. Scope and custom field definitions are organisation-level, so **a change made while testing in Development is a change in Production too.** Decide your scope before you start testing, not after - see [Environments](/get-started/environments).
 </Warning>
 
 ## Normalisation is opinionated
@@ -117,17 +105,15 @@ That gives you three ways to reach a value, and they differ in more than conveni
 Both `raw_data` and `custom_fields` default to **off**. A mapped custom field does not appear in a response until you ask for it, which is the usual reason a mapping looks like it silently failed. See [Raw Data](/guides/reading-writing/raw-data).
 </Warning>
 
-Raw data is where you go when a unified field is empty, when the fallback chain picked the wrong source, or when the value has no unified equivalent at all. But it is deliberately not normalised - its shape is whatever that integration returns, and it changes when the vendor changes their API. **Reading it directly in application code means writing integration-specific handling** - the thing you adopted a unified API to avoid. Promote what you need into a [custom field](/guides/extending/custom-fields) instead.
+Raw data is where you go when a unified field is empty, when the fallback chain picked the wrong source, or when the value has no unified equivalent at all. It is deliberately not normalised, so **reading it directly in application code means writing integration-specific handling** - the thing you adopted a unified API to avoid. Promote what you need into a [custom field](/guides/extending/custom-fields) instead; for when to reach for which, see [Raw data](/guides/reading-writing/raw-data).
 
 ## Coverage varies by integration
 
-Two things limit what the unified model can give you for a particular customer.
+**Not every integration supports every model.** Coverage follows what the source system exposes and differs integration by integration, even within one category. Check [Model availability](/get-started/model-availability) before you commit to a workflow, then confirm it against a real connector - see [Check a connector's actual coverage](/get-started/integrations).
 
-**Not every integration supports every model.** Coverage follows what the source system exposes, and it differs integration by integration even within one category - see [Model availability](/get-started/model-availability).
+**Some models are still settling.** Any model carrying a **BETA** badge works, but its field names and shapes are not yet frozen. Pin what you depend on and expect to revisit it.
 
-**Some models are still settling.** Any model carrying a **BETA** badge in the API reference works, but its field names and shapes are not yet frozen.
-
-{/* VERIFY: does Beta carry a stated notice period or deprecation policy before a contract change? */}
+{/* VERIFY: does Beta carry a stated notice period or deprecation policy before a contract change? Four data-model pages send readers here for the definition of BETA, so this page owns the answer. */}
 
 ## Why it works this way
 
