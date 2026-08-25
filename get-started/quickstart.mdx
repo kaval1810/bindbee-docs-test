@@ -6,10 +6,10 @@ icon: "rocket"
 
 ## Prerequisites
 
-- A Bindbee account, provisioned during onboarding — there is no self-serve signup. Without one, email [support@bindbee.dev](mailto:support@bindbee.dev).
-- Your **Development API key**, from [app.bindbee.dev/settings/keys](https://app.bindbee.dev/settings/keys).
+- A Bindbee account. Access is provisioned during onboarding — there is no self-serve signup. If you don't have access, email [support@bindbee.dev](mailto:support@bindbee.dev).
+- Your **Development API key** from [app.bindbee.dev/settings/keys](https://app.bindbee.dev/settings/keys).
 
-<Frame caption="Settings → API Key. Development and Production keys are separate — neither works against the other's connectors.">
+<Frame caption="Settings → API Key. Production and Development are separate keys, and neither works against the other's connectors.">
   <img src="/images/quickstart/api-keys.png" alt="The API Key settings page, showing a Production Key block and a Development Key block, each with a masked value and a Regenerate Key button" />
 </Frame>
 
@@ -19,9 +19,10 @@ icon: "rocket"
 
 <Step title="Create a test connector">
 
-Go to [app.bindbee.dev](https://app.bindbee.dev) and open **Connectors**. On the Development tab, press **+ Test Connector**, then pick a category and an integration — BambooHR under HRIS, say.
-
-Follow the prompts to complete authorisation.
+1. Go to [app.bindbee.dev](https://app.bindbee.dev) and open **Connectors**.
+2. Switch to the **Development** tab and press **+ Test Connector**.
+3. Select a category and an integration — for example **BambooHR** under HRIS.
+4. Follow the prompts to complete authorisation.
 
 <Frame caption="Connectors → Development. The notice here is about recurring syncs — the first one still runs on its own.">
   <img src="/images/quickstart/connectors-development.png" alt="The Connectors page on the Development tab, noting that development connectors do not sync automatically, with a Test Connector button" />
@@ -32,47 +33,45 @@ Follow the prompts to complete authorisation.
 </Warning>
 
 <Accordion title="Need a third-party account?">
-  What the flow asks for depends on the integration. Some complete against a demo tenant; others need credentials for a real account — for BambooHR, a free [trial account](https://www.bamboohr.com/signup/h2) works. Provisioning one can take a while, so start it now if yours needs it.
+  What the flow asks for depends on the integration. Some complete against a demo tenant; others want credentials for a real account — for BambooHR, a free [trial account](https://www.bamboohr.com/signup/h2) works. Provisioning one can take a while, so start it before the rest of this page if your integration needs it.
 
   {/* VERIFY - decides whether this page is minutes or days. Does "+ Test Connector" have a first-party fixture mode returning data with no third-party account at all? Kombo ships exactly that, deterministic so it works in CI; Finch opens Connect in sandbox mode with good_user / good_pass. Bindbee has the primitive - the button is called Test Connector, and spec.json carries is_test_connector and for_test_connector ("scoped to a demo/test connector") - but whether it removes the dependency is unconfirmed. */}
 </Accordion>
 
-Open the new connector and copy its **`connector_token`** from the Overview tab — step 3 needs it.
+Once the connector is created, open it and copy the **`connector_token`** from the **Overview** tab. You need it in step 3.
 
 <Warning>
-  **Screenshot needed** — the connector **Overview** tab with `connector_token` visible behind its reveal control. Save to `images/quickstart/connector-overview.png` and replace this callout with a `<Frame>`.
+  **Screenshot needed** — the connector **Overview** tab with `connector_token` visible behind its reveal control, and `status` / `sync_status` in shot. Save to `images/quickstart/connector-overview.png` and replace this callout with a `<Frame>`.
 </Warning>
 
 </Step>
 
 <Step title="Wait for the first sync">
 
-Authorisation starts the initial sync — a full read of every model in scope. On a small test tenant it takes a couple of minutes.
+The connector starts its initial sync the moment authorisation completes — a full read of every model in scope. On a small test tenant it usually finishes in a couple of minutes.
 
 <Warning>
-  **Reads before it finishes return `200` with partial or empty results.** Nothing on the response tells the two apart — an employee list still filling looks exactly like a customer with no employees.
+  **Reads before it finishes return `200` with partial or empty results.** There is no error and nothing on the response to distinguish them — an employee list still filling looks exactly like a customer with no employees.
 </Warning>
 
-Open the connector and watch the **Sync** panel. Wait until the run's **Status** reads **Synced**.
+Wait for **`sync_status`** to reach `Done`. Two fields on the connector answer different questions, and both matter beyond this page:
 
-The same value over the API is `sync_status`, and it reads `Done` rather than `Synced`. It is a separate field from `status`, and the two answer different questions:
-
-| API field | Answers | Dashboard | Watch for |
-| --- | --- | --- | --- |
-| `status` | Are the credentials good? | The connector's own state | `RELINK_NEEDED` |
-| `sync_status` | Did the last run succeed? | The **Status** column in the Sync panel | `Failed` |
+| Field | Answers | Watch for |
+| --- | --- | --- |
+| `status` | Are the credentials good? | `RELINK_NEEDED` |
+| `sync_status` | Did the last run succeed? | `Failed` |
 
 A connector can be `COMPLETE` and still hold no data.
 
 <Note>
-  **That first sync is the only automatic one in Development.** Every refresh after it is one you trigger — press **Force Sync**, or call [Force sync a connector](/api-reference/connectors/resync-connector). Production connectors run on a schedule instead; see [Sync frequency](/api-reference/basics/sync-frequency).
+  **That first sync is the only automatic one in Development.** There is no recurring schedule here, so every refresh after it is one you trigger — press **Force Sync**, or call [Force sync a connector](/api-reference/connectors/resync-connector). Production connectors run on a schedule instead; see [Sync frequency](/api-reference/basics/sync-frequency).
 </Note>
 
 </Step>
 
 <Step title="Make your first API call">
 
-Send a `GET` to the Employees endpoint:
+Send a `GET` request to the Employees endpoint:
 
 ```bash
 curl https://api.bindbee.dev/api/hris/v1/employees \
@@ -97,83 +96,35 @@ curl https://api.bindbee.dev/api/hris/v1/employees \
       "id": "018b18ef-c487-703c-afd9-0ca478ccd9d6",
       "remote_id": "123321",
       "modified_at": "2026-08-14T09:12:04Z",
-      "raw_data": null,
-      "custom_fields": null,
-      "employee_number": "1",
-      "company": "018af1fe-1250-772d-87c5-6f725a579e8a",
-      "first_name": "Kunal",
-      "middle_name": "Christopher",
-      "last_name": "Tyagi",
-      "preferred_name": null,
-      "display_full_name": "Kunal Tyagi",
-      "username": "kunaltyagi",
+      "first_name": "Jane",
+      "last_name": "Doe",
+      "work_email": "jane.doe@acme.com",
       "designation": "Chief Technology Officer",
-      "groups": ["018af1fe-1250-772d-87c5-6f725a579e8a"],
       "department": "Engineering",
-      "division": "Bangalore Division",
-      "work_email": "kunal@bindbee.dev",
-      "personal_email": "kunaltyagi77@gmail.com",
-      "mobile_phone_number": "+1234567890",
-      "home_phone_number": null,
-      "country_code": "+91",
-      "home_location": {
-        "name": "UK-HO-London",
-        "street_1": "1011",
-        "street_2": "Lane number 4, Golden Villa",
-        "city": "London",
-        "state": "LND",
-        "postal_code": "56273",
-        "country": "UK"
-      },
-      "work_location": {
-        "name": "UK-HO-London",
-        "street_1": "1011",
-        "street_2": "Lane number 4, Golden Villa",
-        "city": "London",
-        "state": "LND",
-        "postal_code": "56273",
-        "country": "UK"
-      },
-      "work_locations": ["018af1fe-1250-772d-87c5-6f725a579e8a"],
-      "manager": "018aeaff-cc7c-7837-988a-965762bd63c1",
-      "pay_group": "018af1fe-1250-77c5-9fcd-4bca1e4568f4",
-      "ssn": "1234567890",
-      "gender": "MALE",
-      "ethnicity": "ASIAN_OR_INDIAN_SUBCONTINENT",
-      "marital_status": "SINGLE",
-      "tobacco_use": true,
-      "date_of_birth": "1986-10-27T00:00:00Z",
-      "start_date": "2023-03-05T00:00:00Z",
-      "remote_created_at": "2023-03-01T00:00:00Z",
       "employment_status": "ACTIVE",
-      "termination_date": null,
-      "termination_reason": null,
-      "avatar": "http://alturl.com/h2h8m",
-      "payroll_run_calendar": "018af1fe-1250-77c5-9fcd-4bca1e4568f4"
+      "start_date": "2023-03-05T00:00:00Z"
     }
   ]
 }
 ```
 
-That is the whole Employee model — **40 fields**, the same 40 whether the source is BambooHR, Workday, ADP or any other supported system. `first_name`, `work_email` and `employment_status` mean the same thing everywhere.
+Each object in `items` is a **unified model** — the same shape whether the source is BambooHR, Workday, ADP, or any other supported system. Fields like `first_name`, `work_email`, and `employment_status` mean the same thing across every integration.
 
-Every record carries two identifiers. **`id`** is Bindbee's — stable, same shape everywhere, the one to store; `remote_id` is the source system's own, useful for reconciliation.
+Two identifiers appear on every record. **`id`** is Bindbee's — stable, same shape everywhere, the one to store. **`remote_id`** is the source system's own, useful for reconciliation.
 
-Three things to read off it before you build against it:
-
-- **A `null` is not a gap in the model.** It means the source system did not supply that field for that person, or the connector's credentials cannot reach it. The key is still there.
-- **`raw_data` and `custom_fields` stay `null` until you ask.** Add `include_raw_data=true` or `include_custom_fields=true` — see [Raw data](/guides/reading-writing/raw-data) and [Custom fields](/guides/extending/custom-fields).
-- **Related records arrive as IDs, not nested objects.** `company`, `manager`, `groups`, `work_locations` and `pay_group` are Bindbee IDs you resolve with a second call, or inline with `expand`.
+<Info>
+  If `items` comes back empty, the sync has not finished. Check `sync_status` on the connector and try again — see step 2.
+</Info>
 
 ---
 
 ## What just happened
 
-1. You created a **connector** — one authorised connection to one source system.
+1. You created a **connector** — one authorized connection to one source system.
 2. You **synced** it, pulling that system's data into Bindbee's copy.
 3. You called the **Unified API** with your API key and the connector token, and got normalised data back.
 
-That is the core of every Bindbee integration. Production differs in two ways: connectors sync on a schedule rather than on demand, and your end users authorise them through Magic Link instead of you entering credentials — see [How to connect](/get-started/how-to-connect).
+That is the core of every Bindbee integration. In production two things change: connectors sync on a schedule rather than on demand, and your end users create them through Magic Link rather than you entering credentials — see [How to connect](/get-started/how-to-connect).
 
 ---
 
