@@ -54,7 +54,9 @@ The connector starts its initial sync the moment authorisation completes — a f
   **Reads before it finishes return `200` with partial or empty results.** There is no error and nothing on the response to distinguish them — an employee list still filling looks exactly like a customer with no employees.
 </Warning>
 
-Wait for **`sync_status`** to reach `Done`. Two fields on the connector answer different questions, and both matter beyond this page:
+Wait for the run's **Status** to read **Synced** in the connector's **Sync** panel. The API calls that same value `sync_status`, where it reads `Done`.
+
+Two fields on the connector answer different questions over the API, and both matter beyond this page:
 
 | Field | Answers | Watch for |
 | --- | --- | --- |
@@ -82,39 +84,6 @@ curl https://api.bindbee.dev/api/hris/v1/employees \
 </Step>
 
 </Steps>
-
----
-
-## The response
-
-```json
-{
-  "cursor": "MDE4YjE4ZWYtYzk5Yy03YTg2LTk5NDYtN2I3YzlkNTQzM2U1",
-  "page_size": 50,
-  "items": [
-    {
-      "id": "018b18ef-c487-703c-afd9-0ca478ccd9d6",
-      "remote_id": "123321",
-      "modified_at": "2026-08-14T09:12:04Z",
-      "first_name": "Jane",
-      "last_name": "Doe",
-      "work_email": "jane.doe@acme.com",
-      "designation": "Chief Technology Officer",
-      "department": "Engineering",
-      "employment_status": "ACTIVE",
-      "start_date": "2023-03-05T00:00:00Z"
-    }
-  ]
-}
-```
-
-Each object in `items` is a **unified model** — the same shape whether the source is BambooHR, Workday, ADP, or any other supported system. Fields like `first_name`, `work_email`, and `employment_status` mean the same thing across every integration.
-
-Two identifiers appear on every record. **`id`** is Bindbee's — stable, same shape everywhere, the one to store. **`remote_id`** is the source system's own, useful for reconciliation.
-
-<Info>
-  If `items` comes back empty, the sync has not finished. Check `sync_status` on the connector and try again — see step 2.
-</Info>
 
 ---
 
