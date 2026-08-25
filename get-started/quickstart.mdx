@@ -56,6 +56,10 @@ The connector starts its initial sync the moment authorisation completes — a f
 
 Open the connector and watch the **Sync** panel. Wait until the run's **Status** reads **Synced**.
 
+<Frame caption="The connector's Sync panel. Wait for Status to read Synced before calling the API; Force Sync triggers the next run.">
+  <img src="/images/quickstart/sync-panel.png" alt="The Sync panel on a connector, listing sync #1 with trigger Automatic, status Synced, and the time it completed, alongside a Force Sync button" />
+</Frame>
+
 A run can finish and still leave the connector holding nothing — if the source system had no records in scope, or the credentials could not reach them.
 
 <Note>
@@ -73,6 +77,8 @@ curl https://api.bindbee.dev/api/hris/v1/employees \
   -H "Authorization: Bearer YOUR_DEV_API_KEY" \
   -H "X-Connector-Token: YOUR_CONNECTOR_TOKEN"
 ```
+
+Every field the response can carry, with a sample payload, is on [Get Employees](/hris/employee/get-employees).
 
 </Step>
 
