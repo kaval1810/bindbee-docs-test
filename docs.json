@@ -589,8 +589,7 @@
                 "pages": [
                   "lms/users/get-users",
                   "lms/users/get-user-by-id"
-                ],
-                "expanded": true
+                ]
               },
               {
                 "group": "Content",

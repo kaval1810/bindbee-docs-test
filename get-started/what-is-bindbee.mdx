@@ -1,42 +1,38 @@
 ---
 title: "What is Bindbee?"
-description: "One API and one data model for reading and writing HR, payroll, ATS and LMS data across the systems your customers already run."
+description: "Bindbee provides a Unified API for HR, payroll, ATS, and LMS data across 65+ platforms so you can read and write across every system your customers already use, through a single integration."
 icon: "info"
 ---
 
-Your customers keep their people data in whatever system they already bought - BambooHR, ADP, Workday, Paycom, or a smaller payroll provider. Your product needs the same employee record out of all of them.
+Your customers keep their people data in different system they already bought BambooHR, ADP, Workday, Paycom, or a smaller payroll provider. Your product needs the same employee record out of all of them.
 
-Bindbee sits between those systems and yours. You integrate once, against one API and one data model. Each customer connects their own system, and their data reaches your code in the same shape no matter where it came from.
+Bindbee sits between those systems and yours. You integrate once, against one API and one data model. Whichever system a customer connects, their data is normalized to a single schema before it reaches your code.
 
-## What you get
+## Bindbee features
 
 <CardGroup cols={2}>
-  <Card title="One model, four categories" icon="layers">
-    HRIS, payroll, ATS and LMS. An employee from Workday and an employee parsed
-    from an SFTP drop reach you with the same fields and the same types.
+  <Card title="Self-serve setup, a few clicks" icon="unplug">
+    They authorize through a [magic link](/get-started/how-to-connect) or an
+    [embedded SDK](/guides/sdk/frontend-sdk) in your product.
   </Card>
 
-  <Card title="Customers connect their own systems" icon="shield-check">
-    They authorize through a link or a flow embedded in your product. Their
-    credentials never touch your code.
+  <Card title="One API, four categories" icon="git-fork">
+    [HRIS, payroll, ATS, LMS](/get-started/integrations) — whether an employee record comes from Workday or an [SFTP file](/get-started/connection-methods), it reaches you with the same fields and types.
   </Card>
 
-  <Card title="Nothing is hidden from you" icon="code">
-    The full source payload stays available as `raw_data`. Whatever the unified
-    model doesn't carry, you can map as a custom field.
+  <Card title="Nothing is hidden from you" icon="eye-off">
+    The full source payload stays available as [`raw_data`](/guides/reading-writing/raw-data).
+    Whatever the unified model doesn't carry, you can map as a [custom field](/guides/extending/custom-fields).
   </Card>
 
-  <Card title="Changes come to you" icon="webhook">
-    Webhooks tell your app when a record changes, so you never have to poll.
+  <Card title="You can write back too" icon="pencil">
+    Create an employee, push a deduction, the same API [sends changes back](/guides/reading-writing/overview)
+    to the customer's system.
   </Card>
 </CardGroup>
 
-<Info>
-  **65+ integrations**, covering the long-tail systems your customers actually
-  run - not just the well-known ones.
-</Info>
 
-## Reading and writing
+## Reading and writing data
 
 Most integrations start by reading: Bindbee pulls from the source system,
 normalizes it, and serves it through the unified API.
@@ -44,37 +40,32 @@ normalizes it, and serves it through the unified API.
 Bindbee writes back too. Write coverage grows model by model, so check the API
 reference for what's supported today.
 
-Every integration runs through the same five stages, in this order.
-
-| | Stage | What happens |
-| --- | --- | --- |
-| **1** | **Scope** | You declare which models and fields you want. |
-| **2** | **Connect** | Your customer authorizes their HR system, creating a connector. |
-| **3** | **Sync** | Bindbee pulls from the source and normalizes it. |
-| **4** | **Read** | You call the unified API and get normalized records back. |
-| **5** | **Stay current** | Webhooks notify your app the moment something changes. |
-
-The tutorial walks all five against a test account, before you point anything at
-a real customer.
+Setting this up is mostly one-time configuration — what you scope, how a
+customer connects, and how often the sync runs. The [Platform](/get-started/platform)
+tour covers each piece, and the [quickstart](/get-started/quickstart) walks through them against a test
+account before you point anything at a real customer.
 
 ## What Bindbee is not
 
 - **Not a system of record.** Bindbee reads from and writes to your customer's HR system. It does not replace it, and it does not run payroll.
-- **Bounded by the source.** If a field doesn't exist in the source system, or the customer's admin didn't grant access to it, it won't appear in the unified model — and it's absent rather than an error.
+- **Bounded by the source.** If a field doesn't exist in the source system, or the customer's admin didn't grant access to it, it won't appear in the unified model and it's absent rather than an error.
 
 ## Where to go from here
 
 <CardGroup cols={2}>
-  <Card title="Platform Overview" icon="workflow" href="/get-started/platform">
-    Environments, connectors, syncs and scoping — the vocabulary the rest of the docs assumes.
-  </Card>
-
-  <Card title="Quickstart" icon="bolt" href="/get-started/quickstart">
+  <Card title="Quickstart" icon="rocket" href="/get-started/quickstart">
     Prerequisites and the fastest path to your first API response.
   </Card>
 
+  <Card title="Platform Overview" icon="layout-dashboard" href="/get-started/platform">
+    Environments, connectors, syncs and scoping — the vocabulary the rest of the docs assumes.
+  </Card>
 
-  <Card title="API reference" icon="code" href="/api-reference/basics/authentication">
+  <Card title="Core concepts" icon="lightbulb" href="/get-started/core-concepts">
+    Integration, connector, model, record — the five terms the docs use with a specific meaning.
+  </Card>
+
+  <Card title="API reference" icon="terminal" href="/api-reference/basics/authentication">
     Endpoints, parameters and schemas.
   </Card>
 </CardGroup>

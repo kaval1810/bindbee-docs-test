@@ -6,113 +6,135 @@ icon: "layout-dashboard"
 
 {/* CONTENT PASS: absorbed how-to/setup/move-a-connector-between-environments and how-to/connections/rename-or-delete-a-connector as labels under Connectors, per the finalised structure. Scoping and Issues sections removed - they are owned by Scoping and Errors & Issues. Screenshots still needed for Custom Fields and Webhooks. */}
 
-Four things carry every integration, and they happen in that order. You set **scope** once - the models and fields Bindbee may request. Your customer authorises their system, which creates a **connector**. That connector **syncs**, pulling the scoped data and normalizing it. When something looks wrong, **logs** show the exact request and response behind it.
-
-The Dashboard is where you watch all four.
-
-<Info>
-  Ready to build instead? The [Quickstart](/get-started/quickstart) takes you from an empty environment to employee data in your own code.
-</Info>
-
 ## Dashboard
 
-What you land on after signing in, and where you manage every integration from one place: how many API requests have been made, which of your customers is on which connector, and whether any connector currently has a problem.
+What you land on after signing in. Connectors are grouped by integration with a count each, so you can see how many of your customers are on BambooHR versus Workday, and narrow to one category with the **All / HRIS / ATS / LMS** tabs.
 
+<Frame>
 <img
-  src="https://images.unifyx.dev/documentation_images/dashboard_final.png"
-  alt="The Bindbee Dashboard, showing API request volume and connector status"
+  src="/images/platform/dashboard.png"
+  alt="The Bindbee Dashboard, with a New Connector button, connectors grouped by integration - BambooHR 114, Workday 80, Quickbooks 21, UKG Ready 15 - and counts reading Active Connectors 162, Pending Connectors 112 and Relink Needed 38"
   className="block"
 />
+</Frame>
+
+---
 
 ## Magic Link
 
-Where you create a hosted authorisation link for a named customer and watch it complete. Select the integration, set `origin_id` to your own customer identifier, and send the link to whoever administers their HRIS.
+A connection page Bindbee hosts for you. Send it to whoever runs your customer's HR system; they sign in and approve access, and the connector is created. **Their credentials never pass through your product**, and you don't build any of these screens.
 
 See [How to connect](/get-started/how-to-connect) for this and the two other routes.
 
-## Connectors
-
-A connector is one customer's authorised link to one third-party system - **one connector per customer, per system.** Find them under **Connectors**, with separate **Development** and **Production** tabs.
-
+<Frame>
 <img
-  src="https://images.unifyx.dev/documentation_images/connector.png"
-  alt="The Connectors list in the Bindbee Dashboard"
+  src="/images/platform/magic-link.jpg"
+  alt="The four Magic Link screens in order: Create Connector with organisation name, a category set to HRIS and a Unique Customer ID; Select integration with BambooHR chosen; a consent screen listing data models such as Benefit, Company and Employee with an Allow and Continue button; and a choice between OAuth authentication and an API key"
   className="block"
 />
+</Frame>
 
-From a connector you can open its issues and its logs, both the fastest route to why a sync misbehaved.
+---
 
-<Note>
-  Filter to **Active Connectors** before counting. Incomplete connectors - where the end user opened the link but never finished authorising - sit in the same list, and are the usual reason a count looks wrong.
-</Note>
+## Connectors
 
-### Moving a connector between environments
+A connector is one customer's authorised link to one third-party system - **one connector = per customer, per system.** Find them under **Connectors**, with separate **Development** and **Production** tabs.
 
-A connector's environment is fixed at creation, but it can be moved afterwards without the end user reconnecting. Authorisation and record history survive, so **the IDs your system has stored stay valid** - which is why moving beats deleting and recreating.
+<Frame>
+<img
+  src="/images/platform/connector.png"
+  alt="The Bindbee Dashboard, with a New Connector button, connectors grouped by integration - BambooHR 114, Workday 80, Quickbooks 21, UKG Ready 15 - and counts reading Active Connectors 162, Pending Connectors 112 and Relink Needed 38"
+  className="block"
+/>
+</Frame>
 
-It is not self-serve: send the connector list and the target environment to support. Two things change once it lands:
+### Moving, renaming and deleting
 
-- **The API key.** Environment isolation is enforced on the key, so calls for moved connectors must use the target environment's. A stale key returns `401`, which is the first symptom of a service you missed. Webhooks are environment-specific too.
-- **Sync behaviour.** Moving to Development stops automatic syncs; moving to Production starts them on the 24-hour cadence.
+| Action | What happens | How |
+| --- | --- | --- |
+| **Move between environments** | Keeps the authorisation and every ID you have stored - nobody reconnects. Switch those calls to the target environment's API key. | Ask support |
+| **Rename** | Changes the display name only. Match connectors on `origin_id`, never on the name. | Ask support |
+| **Delete** | Discards the synced data *and the record IDs built from it*. Fine for an abandoned, duplicate or churned connector; [relink](/guides/troubleshooting/connections-to-relink) expired credentials and [resync](/guides/reading-writing/syncing) bad data instead. | [Delete Connector](/api-reference/connectors/delete-connector) |
 
-### Renaming or deleting a connector
-
-**Renaming** changes the display name shown in the dashboard and returned as `connector.display_name`. Nothing in the API is keyed on it, and it is a support request rather than a dashboard control - so don't rely on the display name to tell connectors apart. `origin_id` is what actually resolves a connector to your customer record.
-
-**Deleting** discards the connector's synced data *and the record identities built from it*. Reconnecting the same customer afterwards produces a new connector with new IDs, so every employee, employment and benefit ID you stored becomes a dangling reference.
-
-| Situation | Delete? |
-| --- | --- |
-| An incomplete connector the end user abandoned | Yes |
-| A duplicate created by mistake, never used | Yes |
-| A customer that has genuinely churned | Yes |
-| A test connection in Production that's being billed | No - move it to Development |
-| Credentials expired | No - [relink it](/guides/troubleshooting/connections-to-relink) |
-| Sync failing or data looks wrong | No - [resync](/guides/reading-writing/syncing) |
-
-See [Delete Connector](/api-reference/connectors/delete-connector) for the endpoint.
+---
 
 ## Logs
 
 Every request and response, per connector, with the source system's own error preserved. Open **Logs**, or reach one connector's logs from its own page.
 
+When a sync misbehaves this is the first place to look - see [Logs](/guides/troubleshooting/logs).
+
+<Frame>
 <img
-  src="https://images.unifyx.dev/documentation_images/logs.png"
+  src="/images/platform/logs.png"
   alt="The Logs view in the Bindbee Dashboard, listing requests by connector"
   className="block"
 />
+</Frame>
 
-When a sync misbehaves this is the first place to look - see [Logs](/guides/troubleshooting/logs).
+
+---
 
 ## Custom Fields
 
 Where you define values the unified model does not carry and map them out of the source system's own payload.
 
-<Warning>
-  **Screenshot needed** — the Custom Fields screen with a field and its mapping visible. Save to `images/platform/custom-fields.png` and replace this callout with a `<Frame>`.
-</Warning>
+Learn more on [Custom Fields](/guides/extending/custom-fields).
 
-See [Custom Fields](/guides/extending/custom-fields).
+<Frame>
+<img
+  src="/images/platform/custom_field.png"
+  alt="The Logs view in the Bindbee Dashboard, listing requests by connector"
+  className="block"
+/>
+</Frame>
+
+---
 
 ## Webhooks
 
 Where you register a destination URL, choose which events reach it, and find the signing key.
 
-<Warning>
-  **Screenshot needed** — **Configure → Webhooks**, showing the destination URL, event checkboxes and the Security section. Save to `images/platform/webhooks.png` and replace this callout with a `<Frame>`.
-</Warning>
-
 See [Webhook](/guides/reading-writing/webhooks).
+
+<Frame>
+<img
+  src="/images/platform/webhook.png"
+  alt="The Logs view in the Bindbee Dashboard, listing requests by connector"
+  className="block"
+/>
+</Frame>
+
+---
 
 ## Changelog
 
 What has changed in the Bindbee platform - new integrations, new models and fields, and behaviour changes worth knowing about before they reach your connectors.
 
-<Warning>
-  **Screenshot needed** — the Changelog view in the Dashboard, with a couple of entries visible so the level of detail is clear. Save to `images/platform/changelog.png` and replace this callout with a `<Frame>`.
-</Warning>
+<Frame>
+<img
+  src="/images/platform/changelog.jpg"
+  alt="The Logs view in the Bindbee Dashboard, listing requests by connector"
+  className="block"
+/>
+</Frame>
 
-Check it before a release, and after a connector starts behaving differently without a change on your side.
+---
+
+**Most of an integration is configuration you do once.**
+| | What it is | How often |
+| --- | --- | --- |
+| <Icon icon="sliders-horizontal" /> **[Scope](/get-started/scoping)** | A setting: which models and fields Bindbee is allowed to fetch. Turn on what you need, leave the rest off. | Set once, change whenever |
+| <Icon icon="link" /> **[Connect](/get-started/how-to-connect)** | Your customer authorises their HR system, which creates a connector. | Once per customer |
+| <Icon icon="refresh-cw" /> **[Sync](/guides/reading-writing/syncing)** | Bindbee pulls the scoped data from the source and normalizes it. Every 24 hours by default; [other cadences](/api-reference/basics/sync-frequency) are available on request. | Runs on its own |
+| <Icon icon="search" /> **[Read and check](/guides/reading-writing/querying-data)** | Once a sync finishes, the data is there to read. You can watch [sync health](/guides/troubleshooting/sync-status) from the dashboard or through the API. | Whenever you need it |
+| <Icon icon="webhook" /> **[Webhooks](/guides/reading-writing/webhooks)** | Optional. Give Bindbee a URL and it tells you when a sync finishes or a connection breaks, instead of you checking. | Set once |
+| <Icon icon="scroll-text" /> **[Logs](/guides/troubleshooting/logs)** | Every request and response behind a sync, with the source system's own error preserved. | When something looks wrong |
+
+<Info>
+  Ready to build instead? The [Quickstart](/get-started/quickstart) takes you from an empty environment to employee data in your own code.
+</Info>
+
 
 {/* VERIFY: three things before this section is finished.
      1. Does the Changelog have a direct URL? If so it belongs in navigation.global.anchors beside Setup Instructions and Status, not only here.
