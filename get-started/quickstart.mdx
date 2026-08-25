@@ -6,8 +6,8 @@ icon: "rocket"
 
 ## Prerequisites
 
-- A Bindbee account. Access is provisioned during onboarding — there is no self-serve signup. If you don't have access, email [support@bindbee.dev](mailto:support@bindbee.dev).
-- Your **Development API key** from [app.bindbee.dev/settings/keys](https://app.bindbee.dev/settings/keys).
+- A Bindbee account. Access is provisioned during onboarding. If you don't have access, email [Bindbee Support](mailto:support@bindbee.dev).
+- Your **Development API key** from [Bindbee Dashboard](https://app.bindbee.dev/settings/keys).
 
 <Frame caption="Settings → API Key. Production and Development are separate keys, and neither works against the other's connectors.">
   <img src="/images/quickstart/api-keys.png" alt="The API Key settings page, showing a Production Key block and a Development Key block, each with a masked value and a Regenerate Key button" />
@@ -41,29 +41,22 @@ icon: "rocket"
 Once the connector is created, open it and copy the **`connector_token`** from the **Overview** tab. You need it in step 3.
 
 <Warning>
-  **Screenshot needed** — the connector **Overview** tab with `connector_token` visible behind its reveal control, and `status` / `sync_status` in shot. Save to `images/quickstart/connector-overview.png` and replace this callout with a `<Frame>`.
+  **Screenshot needed** — the connector **Overview** tab with `connector_token` visible behind its reveal control. Save to `images/quickstart/connector-overview.png` and replace this callout with a `<Frame>`.
 </Warning>
 
 </Step>
 
 <Step title="Wait for the first sync">
 
-The connector starts its initial sync the moment authorisation completes — a full read of every model in scope. On a small test tenant it usually finishes in a couple of minutes.
+The connector starts its initial sync the moment authorisation completes — a full read of every model in scope. It usually finishes in a couple of minutes.
 
 <Warning>
   **Reads before it finishes return `200` with partial or empty results.** There is no error and nothing on the response to distinguish them — an employee list still filling looks exactly like a customer with no employees.
 </Warning>
 
-Wait for the run's **Status** to read **Synced** in the connector's **Sync** panel. The API calls that same value `sync_status`, where it reads `Done`.
+Open the connector and watch the **Sync** panel. Wait until the run's **Status** reads **Synced**.
 
-Two fields on the connector answer different questions over the API, and both matter beyond this page:
-
-| Field | Answers | Watch for |
-| --- | --- | --- |
-| `status` | Are the credentials good? | `RELINK_NEEDED` |
-| `sync_status` | Did the last run succeed? | `Failed` |
-
-A connector can be `COMPLETE` and still hold no data.
+A run can finish and still leave the connector holding nothing — if the source system had no records in scope, or the credentials could not reach them.
 
 <Note>
   **That first sync is the only automatic one in Development.** There is no recurring schedule here, so every refresh after it is one you trigger — press **Force Sync**, or call [Force sync a connector](/api-reference/connectors/resync-connector). Production connectors run on a schedule instead; see [Sync frequency](/api-reference/basics/sync-frequency).
