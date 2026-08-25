@@ -13,12 +13,13 @@ Five words carry most of the weight in Bindbee's API, and three of them sound in
 
 ```mermaid
 flowchart LR
-    INT["Integration<br/>BambooHR, Workday"] --> CON["Connector<br/>one customer's connection"]
-    CAT["Category<br/>HRIS · ATS · LMS"] --> CON
-    CAT --> MOD["Model<br/>employee, benefit"]
-    CON --> REC["Record<br/>one synced instance"]
-    MOD --> REC
+    CAT["Category<br/>HRIS · ATS · LMS"] --> INT["Integration<br/>BambooHR, Workday"]
+    INT --> CON["Connector<br/>one customer's connection"]
+    CON --> MOD["Model<br/>employee, benefit"]
+    MOD --> REC["Record<br/>one synced instance"]
 ```
+
+Each level narrows the one before it. A **category** contains the **integrations** Bindbee supports for that kind of system; an integration has one **connector** per customer who uses it; a connector syncs the **models** its category defines; and each model holds the **records** belonging to that customer.
 
 If 40 of your customers use BambooHR, you have **1** BambooHR integration and **40** BambooHR connectors.
 
