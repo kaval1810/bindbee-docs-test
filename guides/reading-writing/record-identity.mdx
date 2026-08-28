@@ -11,15 +11,13 @@ Every object the Unified API returns carries two identifiers:
 {
   "id": "018b18ef-c487-703c-afd9-0ca478ccd9d6",
   "remote_id": "3235005483341316245",
-  "first_name": "Kunal",
-  "last_name": "Tyagi"
 }
 ```
 
 | Field | Owned by | What it is |
 |---|---|---|
 | `id` | Bindbee | Bindbee's own identifier for the record |
-| `remote_id` | The third-party system | The ID that system uses for the same record in its API |
+| `remote_id` | 3rd-party system | ID that system uses for the same record in its API |
 
 They are not interchangeable. Picking the wrong one is one of the more common sources of subtle bugs in an integration, so it is worth being deliberate about which goes where in your database.
 
@@ -35,14 +33,14 @@ The short version: **store both, key on `id`, index `remote_id` for lookups and 
 
 **Where it shows up**
 
-- **Get-by-id endpoints.** `GET /api/hris/v1/employees/{id}` takes the Bindbee `id`.
-- **The `ids` filter.** Pass one or more, comma separated with no spaces, to fetch a specific set in a single call.
-- **Relation fields.** `manager`, `company`, `groups`, `work_locations`, `pay_group` and `payroll_run_calendar` all return Bindbee IDs, not third-party ones. An employee's `manager` value resolves against the Employees endpoint by `id`.
-- **`expand`.** Expanding a relation resolves it through Bindbee IDs — see [Querying Data](/guides/reading-writing/querying-data).
+- **Get-by-id endpoints:** `GET /api/hris/v1/employees/{id}` takes the Bindbee`id`.
+- **The `ids` filter:** Pass one or more, comma separated with no spaces, to fetch a specific set in a single call.
+- **Relation fields:** `manager`, `company`, `groups`, `work_locations`, `pay_group` and `payroll_run_calendar` all return Bindbee IDs, not third-party ones. An employee's `manager` value resolves against the Employees endpoint by `id`.
+- **`expand`:** Expanding a relation resolves it through Bindbee IDs — see [Querying Data](/guides/reading-writing/querying-data).
 
 **Properties**
 
-- Stable across syncs. The same record keeps the same `id` from one sync to the next.
+- Stable across syncs. The same record keeps the same`id` from one sync to the next.
 - Consistent in shape across every connector, so your schema does not have to accommodate a different identifier format per HRIS.
 - Scoped to your environment. Development and Production hold separate data, so the same underlying employee has different IDs in each — see [Environments](/get-started/environments).
 
@@ -58,7 +56,9 @@ Because relations are expressed in Bindbee IDs, `id` is the only identifier that
 
 - **Format varies by system.** A numeric string in one HRIS, a UUID in another, an alphanumeric code in a third. Never parse it, pad it, cast it to an integer, or assume a length.
 - **Nullable.** Some systems do not expose a stable API identifier for every object type. When that happens, `remote_id` is `null`. Any logic that depends on it needs a fallback.
-- **Unique only within a connector.** Two customers on two different HRIS instances can easily both have an employee with `remote_id` of `1`. It is not safe as a global key.
+- **Unique only within a connector.** Two customers on two different HRIS instances can easily both have an employee with `remote_id` of `1`. It is not safe as a global key, and the same person under two connectors is legitimately two records — see [Trace a duplicate record](/guides/troubleshooting/missing-or-extra-records).
+
+{/* VERIFY: does identity key composition vary by model? Checked: every synced model schema in spec.json carries remote_id (44 of 44; only HrisConnectorResponse lacks it, and it is not a synced model), so the field is universal. What is still unconfirmed is the keying logic - whether connector + remote_id is the key for every model, or whether models with composite or derived source identifiers resolve differently. */}
 
 **What it is good for**
 
@@ -76,7 +76,7 @@ The connector token scopes that lookup to a single connector, which is what make
 
 ---
 
-## Side by side
+## Side by side comparison
 
 | | `id` | `remote_id` |
 |---|---|---|
@@ -112,28 +112,6 @@ curl -X GET "https://api.bindbee.dev/api/hris/v1/employees?employee_number=00000
 
 ---
 
-## Identity is resolved per connector
-
-Bindbee treats a record as one it already holds when the `remote_id` matches **within that connector**. A new `remote_id` is a new record, always.
-
-There is no name matching, no fuzzy comparison, no attempt to recognise that two identifiers describe the same human. So the same person under two connectors is two records with two different `id` values, and a source system that reissues an identifier produces a second record beside the first.
-
-{/* VERIFY: does identity key composition vary by model? Checked: every synced model schema in spec.json carries remote_id (44 of 44; only HrisConnectorResponse lacks it, and it is not a synced model), so the field is universal. What is still unconfirmed is the keying logic - whether connector + remote_id is the key for every model, or whether models with composite or derived source identifiers resolve differently. */}
-
-### Why Bindbee will not merge them
-
-Automatic merging is the obvious feature to want here, and the one thing a platform in this position should not do.
-
-**Merging asserts that two humans are the same human, on evidence that is often ambiguous.** Names repeat. Personal emails get reused. Contractors are rehired as employees with deliberately separate records, because the business needs them separated.
-
-A platform that merges on similarity will eventually merge two different people — one person's compensation, benefits or bank details surfacing under another's identity. **Far worse than a duplicate, and silent.**
-
-Following the source system's identity exactly means Bindbee is never the thing that introduced the error. If the HRIS says these are two records, you get two records — and you keep the ability to decide otherwise using context Bindbee does not have: your own user accounts, your onboarding history, your tolerance for a false match.
-
-The cost is that reconciliation is yours. Match on stable personal attributes, where work email is usually the strongest single signal. Treat an unexplained jump in record count as a duplicate signal rather than as growth.
-
----
-
 ## Storing them
 
 A workable shape for the employees table on your side:
@@ -158,17 +136,13 @@ Do not use `remote_id` as a primary key in a multi-tenant database. It is unique
 
 <AccordionGroup>
   <Accordion title="Why is remote_id null on some records?">
-    The source system did not expose a stable API identifier for that object. This is more common on derived or sub-objects than on top-level records like employees. Fall back to `id` for anything functional, and hide the field rather than rendering an empty value in your UI.
+    The source system did not expose a stable API identifier for that object. This is more common on derived or sub-objects than on top-level records like employees. Fall back to `id` for anything functional, and hide the field rather than rendering an empty value in your UI. If you need to work out what the source's own ID scheme looks like, read the original payload with `include_raw_data=true` — see [Raw Data](/guides/reading-writing/raw-data).
   </Accordion>
 
   <Accordion title="Can I write back using remote_id?">
     No. Where a write references an existing record — attaching a file to a candidate, for instance — it is addressed by Bindbee `id`. Most writes are creates, which reference no existing record at all.
 
     If you are holding a third-party identifier, resolve it to a Bindbee record first with the `remote_id` filter, then act on the `id` you get back.
-  </Accordion>
-
-  <Accordion title="Where can I see the raw third-party payload?">
-    Pass `include_raw_data=true` on any list or get-by-id request. The `raw_data` object contains the original response Bindbee used to build the unified record, which is where the source system's own identifier fields live. Useful when a customer's ID scheme is not obvious — see [Raw Data](/guides/reading-writing/raw-data).
   </Accordion>
 
   <Accordion title="Do IDs change when a connector is relinked?">
