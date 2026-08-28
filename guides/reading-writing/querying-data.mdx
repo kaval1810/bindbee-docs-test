@@ -42,22 +42,20 @@ Filters are query parameters on the list endpoint. A few rules apply everywhere:
 - **Filters are inclusive only.** Nothing excludes — fetch the values you want rather than the ones you don't.
 - **Filtering happens before pagination.** Page through a filtered result set with `cursor` exactly as you would an unfiltered one.
 
-### Available filters on Get Employees
+### The filters worth knowing about
 
-| Parameter | Type | Description | Example |
-|---|---|---|---|
-| `ids` | string | One or more Bindbee employee IDs | `01931edf-04b6-7391-8a5c-93ac4b395316` |
-| `remote_id` | string | The third-party API ID of the matching object | `3235005483341316245` |
-| `manager_id` | string | Return employees reporting to these managers | `01931edf-04b6-7391-8a5c-93ac4b395316` |
-| `company_id` | string | Return employees at these companies | `01931edf-04c8-7649-a470-d85f6161bd1a` |
-| `employee_number` | string | The employee number shown in the third-party UI | `000000168` |
-| `first_name` | string | Case-insensitive match on first name | `Jane` |
-| `last_name` | string | Case-insensitive match on last name | `Doe` |
-| `work_email` | string | Case-insensitive match on work email | `jane.doe@acme.com` |
-| `employment_status` | string | `ACTIVE`, `PENDING`, `INACTIVE`, `ACTIVE_EXTERNAL`, `INACTIVE_EXTERNAL`, `LEAVE`, `DECEASED`, `RETIRED` or `-` | `ACTIVE` |
-| `groups` | string | Return employees belonging to these groups | `01931edf-04b6-7391-8a5c-93ac4b395316` |
-| `work_locations` | string | Return employees at these work locations | `01931edf-04c8-7649-a470-d85f6161bd1a` |
-| `pay_group_id` | string | Return employees in these pay groups | `01931edf-04b6-7391-8a5c-93ac4b395316` |
+[Get Employees](/hris/employee/get-employees) lists every supported filter, generated from the API spec. These are the ones with behaviour worth explaining:
+
+| Parameter | Description | Example |
+|---|---|---|
+| `ids` | One or more Bindbee employee IDs | `01931edf-04b6-7391-8a5c-93ac4b395316` |
+| `company_id` | Employees at one or more companies | `01931edf-04c8-7649-a470-d85f6161bd1a` |
+| `groups` | Employees belonging to one or more groups | `01931edf-04b6-7391-8a5c-93ac4b395316` |
+| `employment_status` | `ACTIVE`, `PENDING`, `INACTIVE`, `ACTIVE_EXTERNAL`, `INACTIVE_EXTERNAL`, `LEAVE`, `DECEASED`, `RETIRED` or `-` | `ACTIVE` |
+| `remote_id` | The third-party API ID of the matching object | `3235005483341316245` |
+| `employee_number` | The employee number shown in the third-party UI | `000000168` |
+
+The rest — `manager_id`, `work_locations`, `pay_group_id`, and the name and email filters — behave exactly as the rules above describe.
 
 Two more parameters shape the payload rather than the result set. Both default to `false`:
 
