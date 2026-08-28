@@ -1,102 +1,281 @@
 ---
-title: "Querying the data"
-sidebarTitle: "Querying data"
-description: "Narrow a collection with filters, and fetch only what changed with modified_after."
+title: "Querying Data"
+description: "Narrow, enrich, and incrementally sync data from the Unified API using filters, expand, and modified_after."
 icon: "search"
 ---
 
-Filters run against Bindbee's copy, never against the source system. **What you can ask for is fixed by what Bindbee stored, and when you can ask is fixed by when it last synced** — which explains most of what follows.
+Every list endpoint returns data Bindbee has already synced from the connected system. Three sets of query parameters control what comes back:
 
-## Narrowing a collection
+| Parameter | What it does |
+|---|---|
+| **Filters** | Narrow the result set to the records you care about |
+| **`expand`** | Return related objects inline instead of just their IDs |
+| **`modified_after`** | Return only records updated since a point in time |
 
-Every filter is work Bindbee does instead of your application. At the maximum `page_size` of 200, a connector with 20,000 employees is a 100-page walk against a budget of [200 requests per minute](/api-reference/basics/rate-limits). Narrowing to the records you actually want makes it one request.
+All three work alongside `cursor` and `page_size`, and can be combined in a single request.
 
-| Parameter | Matches | Takes |
-| --- | --- | --- |
-| `ids` | Bindbee record IDs | Several, comma-separated |
-| `manager_id` | Employees reporting to a manager | Several |
-| `company_id` | Employees at a company | Several |
-| `groups` | Group membership | Several |
-| `work_locations` | Work location | Several |
-| `pay_group_id` | Pay group | Several |
-| `employment_status` | Status — [see below](#employment-status) | One |
-| `remote_id` | The source system's own ID | One |
-| `employee_number` | HRIS employee number, not unique everywhere | One |
-| `work_email` | Work email | One |
-| `first_name`, `last_name` | Name | One |
-| `modified_after` | Sync recency — [see below](#fetching-only-what-changed) | One |
+The examples here use [Get Employees](/hris/employee/get-employees), but the same behaviour applies across HRIS, Payroll, ATS and LMS endpoints. The exact filter set differs per model, so check the reference page for the endpoint you are calling.
 
-Three things follow from filtering a stored copy rather than a live system:
+<Note>
+Queries run against Bindbee's synced copy of the data, not against the third-party API in real time. Results reflect the last successful sync for that connector — see [Sync frequency](/api-reference/basics/sync-frequency).
+</Note>
 
-**Matches are exact, and only ever inclusive.** `first_name=Jo` does not match `John`, and no parameter excludes. Fetch the statuses you want rather than excluding the ones you don't — a few inclusive requests still beat paging everything.
-
-**Commas are `OR`; separate parameters are `AND`.** `groups=<A>,<B>&employment_status=ACTIVE` returns active employees who are in group A or group B.
-
-**Not everything you can read, you can filter.** Custom fields come back in responses but are never filterable, so a custom field still leaves you filtering client-side. Where the source system supports a filter natively, [Passthrough](/guides/extending/passthrough) reaches it directly, at the cost of a provider-specific response shape.
+Every request needs your API key and the connector token for the end customer whose data you are reading:
 
 ```bash
-curl --request GET \
-  --url 'https://api.bindbee.dev/api/hris/v1/employees?groups=<GROUP_A>,<GROUP_B>&employment_status=ACTIVE&page_size=200' \
-  --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
-  --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+curl -X GET "https://api.bindbee.dev/api/hris/v1/employees" \
+  -H "Authorization: Bearer <BINDBEE_API_KEY>" \
+  -H "X-Connector-Token: <CONNECTOR_TOKEN>"
 ```
 
-`expand` is not a filter either. It changes the shape of what comes back rather than which records do — `expand=manager[first_name,last_name]` saves a second request for a related record, but does not shorten the page walk.
+---
 
-## Employment status
+## Filters
 
-The standard values are `ACTIVE` · `PENDING` · `INACTIVE` · `ACTIVE_EXTERNAL` · `INACTIVE_EXTERNAL` · `LEAVE` · `DECEASED` · `RETIRED` · `-`, and the parameter is not limited to them: any connector-specific status that appears in a response can also be filtered on. A value you can see is a value you can query.
+### How filters work
+
+Filters are query parameters on the list endpoint. A few rules apply everywhere:
+
+- **Multiple filters combine with AND.** `employment_status=ACTIVE&company_id=<id>` returns active employees at that company only.
+- **ID parameters accept comma-separated lists**, which behave as OR within that parameter. Do not put spaces after the commas.
+- **Name and email filters are case-insensitive.**
+- **Filters are inclusive only.** Nothing excludes — fetch the values you want rather than the ones you don't.
+- **Filtering happens before pagination.** Page through a filtered result set with `cursor` exactly as you would an unfiltered one.
+
+### Available filters on Get Employees
+
+| Parameter | Type | Description | Example |
+|---|---|---|---|
+| `ids` | string | One or more Bindbee employee IDs | `01931edf-04b6-7391-8a5c-93ac4b395316` |
+| `remote_id` | string | The third-party API ID of the matching object | `3235005483341316245` |
+| `manager_id` | string | Return employees reporting to these managers | `01931edf-04b6-7391-8a5c-93ac4b395316` |
+| `company_id` | string | Return employees at these companies | `01931edf-04c8-7649-a470-d85f6161bd1a` |
+| `employee_number` | string | The employee number shown in the third-party UI | `000000168` |
+| `first_name` | string | Case-insensitive match on first name | `Jane` |
+| `last_name` | string | Case-insensitive match on last name | `Doe` |
+| `work_email` | string | Case-insensitive match on work email | `jane.doe@acme.com` |
+| `employment_status` | string | See [Employment status](#employment-status) | `ACTIVE` |
+| `groups` | string | Return employees belonging to these groups | `01931edf-04b6-7391-8a5c-93ac4b395316` |
+| `work_locations` | string | Return employees at these work locations | `01931edf-04c8-7649-a470-d85f6161bd1a` |
+| `pay_group_id` | string | Return employees in these pay groups | `01931edf-04b6-7391-8a5c-93ac4b395316` |
+
+Two more parameters shape the payload rather than the result set. Both default to `false`:
+
+| Parameter | Type | Description |
+|---|---|---|
+| `include_raw_data` | boolean | Include the original third-party payload Bindbee used to build the unified record |
+| `include_custom_fields` | boolean | Include any [custom fields](/guides/extending/custom-fields) configured for the model |
+
+<Note>
+Custom fields are returned, never filtered on. If you need to narrow by one, request it and filter client-side. Where the source system supports the filter natively, [Passthrough](/guides/extending/passthrough) reaches it directly, at the cost of a provider-specific response shape.
+</Note>
+
+### Employment status
+
+The standard values are `ACTIVE`, `PENDING`, `INACTIVE`, `ACTIVE_EXTERNAL`, `INACTIVE_EXTERNAL`, `LEAVE`, `DECEASED`, `RETIRED` and `-`. The parameter is not limited to them: any connector-specific status that appears in a response can also be filtered on, so a value you can see is a value you can query.
 
 **`-` means the source system supplied no status.** Treat it as unknown rather than inactive, and remember that filtering for any specific status excludes it — the usual reason a status query returns fewer records than expected.
 
-**`_EXTERNAL` usually marks someone who is not a direct employee**, a contractor or contingent worker. Excluding those two values is the common fix for a headcount that reads higher than the customer expects, but the API assigns them no fixed meaning, so confirm what your connector puts there first.
+**`_EXTERNAL` usually marks someone who is not a direct employee**, a contractor or contingent worker. Excluding those two values is the common fix for a headcount that reads higher than the customer expects, though the API assigns them no fixed meaning, so confirm what your connector puts there first.
 
 <Warning>
-  Which upstream value maps to which status varies by integration. Verify against one connector before relying on a status filter across all of them.
+Which upstream value maps to which status varies by integration. Verify against one connector before relying on a status filter across all of them.
 </Warning>
 
-## Fetching only what changed
+### Examples
 
-`modified_after` returns records **synced by Bindbee** after a timestamp — not records the source system changed after it. Two things follow:
-
-**A resync makes everything look new.** Records re-synced during that run match the filter even when nothing changed upstream, so an incremental read can return the whole dataset. Processing has to be idempotent: an unchanged record must be safe to handle twice.
-
-**Sync cadence is your real resolution.** An edit in the HRIS is invisible until the next sync picks it up, so a 24-hour cadence means up to 24 hours of latency however often you poll.
+Active employees at one company:
 
 ```bash
-curl --request GET \
-  --url 'https://api.bindbee.dev/api/hris/v1/employees?modified_after=2026-08-13T00:00:00Z&page_size=200' \
-  --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
-  --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+curl -X GET "https://api.bindbee.dev/api/hris/v1/employees?employment_status=ACTIVE&company_id=018af1fe-1250-772d-87c5-6f725a579e8a" \
+  -H "Authorization: Bearer <BINDBEE_API_KEY>" \
+  -H "X-Connector-Token: <CONNECTOR_TOKEN>"
 ```
 
-The watermark discipline is one rule in three parts: **take the timestamp before you read, reuse the identical string on every page, and store it only once the whole walk succeeds.** Taking it afterwards loses records synced mid-run; recomputing it per page corrupts the cursor's position; advancing it on failure loses whatever the failed run never returned. Send an explicit `Z` — with no offset the value is read as UTC anyway, but not visibly.
+Fetch a specific set of employees by ID in one call:
 
-Rather than polling on a fixed schedule, run the read when the sync-completed event fires and pass your stored watermark. The event says data has landed; the filter says what is new — see [Trigger a job on completion](/guides/reading-writing/syncing).
+```bash
+curl -X GET "https://api.bindbee.dev/api/hris/v1/employees?ids=01931edf-04b6-7391-8a5c-93ac4b395316,01931edf-04c8-7649-a470-d85f6161bd1a" \
+  -H "Authorization: Bearer <BINDBEE_API_KEY>" \
+  -H "X-Connector-Token: <CONNECTOR_TOKEN>"
+```
 
-## If this didn't work
+Look up an employee you only know by their identifier in the source system:
 
-<AccordionGroup>
-  <Accordion title="A filter returns nothing though the records clearly exist">
-    For `remote_id` and `employee_number`, confirm the value against `raw_data`. What the HRIS shows in its own UI is often not the identifier its API returns — see [Inspect raw data](/guides/reading-writing/raw-data).
-  </Accordion>
+```bash
+curl -X GET "https://api.bindbee.dev/api/hris/v1/employees?remote_id=3235005483341316245" \
+  -H "Authorization: Bearer <BINDBEE_API_KEY>" \
+  -H "X-Connector-Token: <CONNECTOR_TOKEN>"
+```
 
-  <Accordion title="The count doesn't match the customer's headcount">
-    Usually a population-definition mismatch rather than missing data: contingent workers included, terminated employees retained, or one person holding several employment records. See [Record counts](/guides/troubleshooting/record-counts).
-  </Accordion>
+<Tip>
+Use `id` for anything you store on your side. It is Bindbee's stable identifier and stays consistent across syncs. Use `remote_id` when you need to reconcile against a record your customer sees in their own HRIS or payroll UI — and confirm the value against `raw_data` first, since what the HRIS shows in its UI is often not the identifier its API returns.
+</Tip>
 
-  <Accordion title="A related model didn't come back in an incremental read">
-    `modified_after` is per model. An employee changing does not mark their employment or benefit records as synced, so filtering those separately misses related changes. Read them without the filter, or subscribe to data-change events for the model.
-  </Accordion>
+---
 
-  <Accordion title="You need to know what changed, not just which records">
-    The filter returns current state, not a diff. Compare against your own stored copy, or subscribe to the data-change events, which return the IDs of affected records per model.
-  </Accordion>
-</AccordionGroup>
+## Expand
+
+### How expand works
+
+Relation fields on a unified model return as Bindbee IDs by default. On the Employee model that includes `manager`, `company`, `groups`, `work_locations`, `pay_group` and `payroll_run_calendar`. Getting a manager's name would normally mean a second call to Get Employee By Id.
+
+`expand` removes that round trip by returning the related object inline.
+
+**Syntax**
+
+- Pass one or more relation names, comma separated, with **no spaces anywhere** in the value.
+- Optionally restrict which fields come back for a relation by listing them in square brackets.
+
+```
+expand=manager
+expand=manager[first_name,last_name]
+expand=manager[first_name,last_name],company,pay_group
+```
+
+### Example
+
+Default response, relations as IDs:
+
+```json
+{
+  "id": "018b18ef-c487-703c-afd9-0ca478ccd9d6",
+  "first_name": "Kunal",
+  "last_name": "Tyagi",
+  "manager": "018aeaff-cc7c-7837-988a-965762bd63c1",
+  "company": "018af1fe-1250-772d-87c5-6f725a579e8a"
+}
+```
+
+The same request with `expand=manager[first_name,last_name],company`:
+
+```bash
+curl -X GET "https://api.bindbee.dev/api/hris/v1/employees?expand=manager[first_name,last_name],company" \
+  -H "Authorization: Bearer <BINDBEE_API_KEY>" \
+  -H "X-Connector-Token: <CONNECTOR_TOKEN>"
+```
+
+```json
+{
+  "id": "018b18ef-c487-703c-afd9-0ca478ccd9d6",
+  "first_name": "Kunal",
+  "last_name": "Tyagi",
+  "manager": {
+    "first_name": "Jane",
+    "last_name": "Doe"
+  },
+  "company": {
+    "id": "018af1fe-1250-772d-87c5-6f725a579e8a",
+    "name": "Acme Inc"
+  }
+}
+```
+
+### Notes
+
+- Field selection is the difference between a manageable payload and a very large one. If you only need a manager's name to render a row, ask for the name, not the whole employee record.
+- If you still need the related record's identifier after selecting fields, include `id` in the bracket list.
+- Expanding several relations at `page_size=200` produces large responses. Lower the page size if you see slow responses or timeouts.
+- A relation that is null on the record stays null when expanded.
+
+---
+
+## modified_after
+
+### How modified_after works
+
+`modified_after` takes an ISO 8601 datetime and returns only objects whose `modified_at` value is later than it.
+
+```
+modified_after=2024-02-21T21:22:12.993Z
+```
+
+If you do not supply a timezone offset, the value is interpreted as UTC.
+
+<Note>
+`modified_at` is the datetime Bindbee last updated its copy of the record. It is not the third party's own "last updated" field. `modified_after` therefore answers "what has changed in Bindbee since I last looked", which is what you want for keeping your database in step.
+</Note>
+
+```bash
+curl -X GET "https://api.bindbee.dev/api/hris/v1/employees?modified_after=2024-02-21T21:22:12.993Z" \
+  -H "Authorization: Bearer <BINDBEE_API_KEY>" \
+  -H "X-Connector-Token: <CONNECTOR_TOKEN>"
+```
+
+### The delta sync pattern
+
+1. On first run, pull everything with no `modified_after`, paging through with `cursor`.
+2. Record the highest `modified_at` you saw across all pages, in UTC.
+3. On the next run, pass that value as `modified_after`.
+4. Upsert the returned records into your store, keyed on `id`.
+5. Update your stored watermark and repeat.
+
+```python
+params = {"page_size": 200}
+if last_synced_at:
+    params["modified_after"] = last_synced_at
+
+while True:
+    response = requests.get(
+        "https://api.bindbee.dev/api/hris/v1/employees",
+        params=params,
+        headers=headers,
+    ).json()
+
+    for employee in response["items"]:
+        upsert(employee)  # key on employee["id"]
+
+    if not response["cursor"]:
+        break
+    params["cursor"] = response["cursor"]
+```
+
+### Things to watch
+
+- **Match your polling to the sync frequency.** Bindbee syncs connectors once every 24 hours by default, and this is configurable. Polling far more often than the connector syncs mostly returns empty pages. For near real-time updates, use [webhooks](/guides/reading-writing/webhooks) instead of tight polling.
+- **A resync makes everything look new.** Records re-synced during a full resync get a fresh `modified_at` even when nothing changed upstream, so an incremental read can return the entire dataset. Expected behaviour, not a bug.
+- **Always upsert, never insert blindly.** The same record can appear in more than one window. Keying on `id` keeps this safe.
+- **Store the watermark in UTC** and subtract a small buffer, for example one minute, before using it. That avoids dropping a record that landed between two pages of a long paginated run.
+- **`modified_after` is per model.** An employee changing does not mark their employment or benefit records as modified, so filtering those separately misses related changes. Read them without the filter, or subscribe to data-change events for the model.
+- **Combine it with filters.** `modified_after` plus `employment_status=ACTIVE` gives you only the active employees that changed, which is usually a much smaller set to process.
+
+---
+
+## Putting it together
+
+Filters, `expand`, `modified_after` and pagination all compose in a single request:
+
+```bash
+curl -X GET "https://api.bindbee.dev/api/hris/v1/employees?\
+employment_status=ACTIVE&\
+modified_after=2024-02-21T21:22:12.993Z&\
+expand=manager[first_name,last_name],work_locations&\
+include_custom_fields=true&\
+page_size=200" \
+  -H "Authorization: Bearer <BINDBEE_API_KEY>" \
+  -H "X-Connector-Token: <CONNECTOR_TOKEN>"
+```
+
+That request returns active employees changed since the given timestamp, with each manager's name and work locations resolved inline and any configured custom fields attached, 200 records per page.
+
+---
 
 ## Related
 
-- [Pagination](/api-reference/basics/pagination) — walking a collection
-- [Rate limits](/api-reference/basics/rate-limits) — the budget a page walk spends
-- [Syncing](/guides/reading-writing/syncing) — what sets the ceiling on freshness
-- [Webhook](/guides/reading-writing/webhooks) — learning that data changed
+<CardGroup cols={2}>
+  <Card title="Pagination" icon="list" href="/api-reference/basics/pagination">
+    Page through large result sets with `cursor` and `page_size`.
+  </Card>
+
+  <Card title="Sync frequency" icon="refresh-cw" href="/api-reference/basics/sync-frequency">
+    How often Bindbee pulls fresh data from each connector.
+  </Card>
+
+  <Card title="Webhooks" icon="webhook" href="/guides/reading-writing/webhooks">
+    Get notified when data is created or modified instead of polling.
+  </Card>
+
+  <Card title="Custom fields" icon="table" href="/guides/extending/custom-fields">
+    Extend unified models with fields specific to your use case.
+  </Card>
+</CardGroup>
