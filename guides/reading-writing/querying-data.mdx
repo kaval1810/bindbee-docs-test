@@ -1,10 +1,10 @@
 ---
 title: "Querying Data"
-description: "Narrow, enrich, and incrementally sync data from the Unified API using filters, expand, and modified_after."
+description: "Narrow, enrich, and incrementally sync data from the Unified API using **filters**, **expand** and **modified_after**."
 icon: "search"
 ---
 
-Every list endpoint returns data Bindbee has already synced from the connected system. Three sets of query parameters control what comes back:
+Every list endpoint returns data Bindbee has already synced from the connected system. Three sets of query parameters control what you get:
 
 | Parameter | What it does |
 |---|---|
@@ -98,9 +98,7 @@ curl -X GET "https://api.bindbee.dev/api/hris/v1/employees?remote_id=32350054833
   -H "X-Connector-Token: <CONNECTOR_TOKEN>"
 ```
 
-<Tip>
-Use `id` for anything you store on your side. It is Bindbee's stable identifier and stays consistent across syncs. Use `remote_id` when you need to reconcile against a record your customer sees in their own HRIS or payroll UI — and confirm the value against `raw_data` first, since what the HRIS shows in its UI is often not the identifier its API returns.
-</Tip>
+If that last one returns nothing, check the value against `raw_data` before assuming the filter is broken — what the HRIS displays on screen is often not the identifier its API returns. For which identifier to store, see [id vs remote_id](/guides/reading-writing/record-identity).
 
 ---
 
