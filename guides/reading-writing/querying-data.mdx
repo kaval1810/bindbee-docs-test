@@ -8,7 +8,7 @@ Every list endpoint returns data Bindbee has already synced from the connected s
 
 | Parameter | What it does |
 |---|---|
-| **Filters** | Narrow the result set to the records you care about |
+| **`filters`** | Narrow the result set to the records you care about |
 | **`expand`** | Return related objects inline instead of just their IDs |
 | **`modified_after`** | Return only records updated since a point in time |
 
@@ -54,7 +54,7 @@ Filters are query parameters on the list endpoint. A few rules apply everywhere:
 | `first_name` | string | Case-insensitive match on first name | `Jane` |
 | `last_name` | string | Case-insensitive match on last name | `Doe` |
 | `work_email` | string | Case-insensitive match on work email | `jane.doe@acme.com` |
-| `employment_status` | string | See [Employment status](#employment-status) | `ACTIVE` |
+| `employment_status` | string | `ACTIVE`, `PENDING`, `INACTIVE`, `ACTIVE_EXTERNAL`, `INACTIVE_EXTERNAL`, `LEAVE`, `DECEASED`, `RETIRED` or `-` | `ACTIVE` |
 | `groups` | string | Return employees belonging to these groups | `01931edf-04b6-7391-8a5c-93ac4b395316` |
 | `work_locations` | string | Return employees at these work locations | `01931edf-04c8-7649-a470-d85f6161bd1a` |
 | `pay_group_id` | string | Return employees in these pay groups | `01931edf-04b6-7391-8a5c-93ac4b395316` |
@@ -67,20 +67,10 @@ Two more parameters shape the payload rather than the result set. Both default t
 | `include_custom_fields` | boolean | Include any [custom fields](/guides/extending/custom-fields) configured for the model |
 
 <Note>
-Custom fields are returned, never filtered on. If you need to narrow by one, request it and filter client-side. Where the source system supports the filter natively, [Passthrough](/guides/extending/passthrough) reaches it directly, at the cost of a provider-specific response shape.
+Custom fields are returned, never filtered on.
 </Note>
 
-### Employment status
-
-The standard values are `ACTIVE`, `PENDING`, `INACTIVE`, `ACTIVE_EXTERNAL`, `INACTIVE_EXTERNAL`, `LEAVE`, `DECEASED`, `RETIRED` and `-`. The parameter is not limited to them: any connector-specific status that appears in a response can also be filtered on, so a value you can see is a value you can query.
-
-**`-` means the source system supplied no status.** Treat it as unknown rather than inactive, and remember that filtering for any specific status excludes it — the usual reason a status query returns fewer records than expected.
-
-**`_EXTERNAL` usually marks someone who is not a direct employee**, a contractor or contingent worker. Excluding those two values is the common fix for a headcount that reads higher than the customer expects, though the API assigns them no fixed meaning, so confirm what your connector puts there first.
-
-<Warning>
-Which upstream value maps to which status varies by integration. Verify against one connector before relying on a status filter across all of them.
-</Warning>
+`employment_status` is not a closed set — a connector's own status values are filterable too, and `-` marks a record the source gave no status for, so filtering for any specific status excludes those records. See [Enum values](/guides/reading-writing/enum-values).
 
 ### Examples
 
