@@ -5,28 +5,34 @@ description: "Narrow a collection with filters, and fetch only what changed with
 icon: "search"
 ---
 
-Filters run on Bindbee's side, so what they save is requests. At the maximum `page_size` of 200, a connector with 20,000 employees is a 100-page walk; narrowing to the 200 records you actually want makes it one. That matters because the [rate limit](/api-reference/basics/rate-limits) is 200 requests per minute **per connector**, and a full page walk is the quickest way to reach it.
+Filters run against Bindbee's copy, never against the source system. **What you can ask for is fixed by what Bindbee stored, and when you can ask is fixed by when it last synced** — which explains most of what follows.
 
-Every filter you add narrows further — they combine with `AND`.
+## Narrowing a collection
 
-## What you can filter on
+Every filter is work Bindbee does instead of your application. At the maximum `page_size` of 200, a connector with 20,000 employees is a 100-page walk against a budget of [200 requests per minute](/api-reference/basics/rate-limits). Narrowing to the records you actually want makes it one request.
 
-| Parameter | Matches | Multiple values |
+| Parameter | Matches | Takes |
 | --- | --- | --- |
-| `ids` | Bindbee record IDs | Comma-separated, no spaces |
-| `remote_id` | The source system's own ID | Single value |
-| `employee_number` | Employee number from the HRIS | Single value — not unique on every system |
-| `work_email` | Work email | Single value |
-| `first_name`, `last_name` | Name | Single value |
-| `employment_status` | Status — [see below](#employment-status-needs-care) | Single value |
-| `manager_id` | Employees reporting to a manager | Comma-separated |
-| `company_id` | Employees at a company | Comma-separated |
-| `groups` | Group membership | Comma-separated group IDs |
-| `work_locations` | Location | Comma-separated location IDs |
-| `pay_group_id` | Pay group | Comma-separated |
-| `modified_after` | Sync recency | [See below](#fetching-only-what-changed) |
+| `ids` | Bindbee record IDs | Several, comma-separated |
+| `manager_id` | Employees reporting to a manager | Several |
+| `company_id` | Employees at a company | Several |
+| `groups` | Group membership | Several |
+| `work_locations` | Work location | Several |
+| `pay_group_id` | Pay group | Several |
+| `employment_status` | Status — [see below](#employment-status) | One |
+| `remote_id` | The source system's own ID | One |
+| `employee_number` | HRIS employee number, not unique everywhere | One |
+| `work_email` | Work email | One |
+| `first_name`, `last_name` | Name | One |
+| `modified_after` | Sync recency — [see below](#fetching-only-what-changed) | One |
 
-Commas and separate parameters do different things:
+Three things follow from filtering a stored copy rather than a live system:
+
+**Matches are exact, and only ever inclusive.** `first_name=Jo` does not match `John`, and no parameter excludes. Fetch the statuses you want rather than excluding the ones you don't — a few inclusive requests still beat paging everything.
+
+**Commas are `OR`; separate parameters are `AND`.** `groups=<A>,<B>&employment_status=ACTIVE` returns active employees who are in group A or group B.
+
+**Not everything you can read, you can filter.** Custom fields come back in responses but are never filterable, so a custom field still leaves you filtering client-side. Where the source system supports a filter natively, [Passthrough](/guides/extending/passthrough) reaches it directly, at the cost of a provider-specific response shape.
 
 ```bash
 curl --request GET \
@@ -35,30 +41,15 @@ curl --request GET \
   --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
 ```
 
-Two group IDs on one parameter is `OR` — an employee in either group matches. `employment_status` on its own parameter is `AND` — they must also be active. So this returns active employees who are in group A or group B.
+`expand` is not a filter either. It changes the shape of what comes back rather than which records do — `expand=manager[first_name,last_name]` saves a second request for a related record, but does not shorten the page walk.
 
-When you already hold IDs, from a webhook payload for instance, request them directly rather than filtering a full page walk:
+## Employment status
 
-```bash
-curl --request GET \
-  --url 'https://api.bindbee.dev/api/hris/v1/employees?ids=019f618e-c850-716d-a510-74639514abf6,019f618e-c88c-7328-9575-ab78958608d2' \
-  --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
-  --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
-```
+The standard values are `ACTIVE` · `PENDING` · `INACTIVE` · `ACTIVE_EXTERNAL` · `INACTIVE_EXTERNAL` · `LEAVE` · `DECEASED` · `RETIRED` · `-`, and the parameter is not limited to them: any connector-specific status that appears in a response can also be filtered on. A value you can see is a value you can query.
 
-**`expand` is not a filter.** It changes the shape of what comes back rather than which records do. Pass comma-separated relation names with no spaces, optionally naming the fields you want in brackets — `expand=manager[first_name,last_name]`. It saves you a second request for a related record; it does not reduce how many records you page through.
+**`-` means the source system supplied no status.** Treat it as unknown rather than inactive, and remember that filtering for any specific status excludes it — the usual reason a status query returns fewer records than expected.
 
-## Employment status needs care
-
-`employment_status` takes these standard values:
-
-`ACTIVE` · `PENDING` · `INACTIVE` · `ACTIVE_EXTERNAL` · `INACTIVE_EXTERNAL` · `LEAVE` · `DECEASED` · `RETIRED` · `-`
-
-It is not limited to them. Any connector-specific status that appears in a response can also be passed as a filter, so a value you can see on a record is a value you can query.
-
-**`-` means the source system supplied no status.** Treat it as unknown rather than as inactive, and note that a filter for any specific status excludes it.
-
-**`_EXTERNAL` usually marks someone who is not a direct employee** — a contractor or contingent worker. Excluding those two values is the common fix for a headcount that reads higher than the customer expects. The API assigns them no fixed meaning, though, so confirm what your connector puts there before relying on it.
+**`_EXTERNAL` usually marks someone who is not a direct employee**, a contractor or contingent worker. Excluding those two values is the common fix for a headcount that reads higher than the customer expects, but the API assigns them no fixed meaning, so confirm what your connector puts there first.
 
 <Warning>
   Which upstream value maps to which status varies by integration. Verify against one connector before relying on a status filter across all of them.
@@ -66,94 +57,40 @@ It is not limited to them. Any connector-specific status that appears in a respo
 
 ## Fetching only what changed
 
-`modified_after` returns only records **synced by Bindbee** after a given timestamp — not records the source system changed after it. Two things follow.
+`modified_after` returns records **synced by Bindbee** after a timestamp — not records the source system changed after it. Two things follow:
 
-**A full resync makes everything look new.** Records re-synced during that run match `modified_after` even when nothing changed upstream, so your incremental read returns the whole dataset. Downstream processing has to be idempotent: an unchanged record must be safe to reprocess.
+**A resync makes everything look new.** Records re-synced during that run match the filter even when nothing changed upstream, so an incremental read can return the whole dataset. Processing has to be idempotent: an unchanged record must be safe to handle twice.
 
-**Sync cadence is your true resolution.** A record edited in the HRIS is invisible until the next sync picks it up, so a 24-hour cadence means up to 24 hours of latency however often you poll. Polling more often than the connector syncs adds load without adding freshness.
+**Sync cadence is your real resolution.** An edit in the HRIS is invisible until the next sync picks it up, so a 24-hour cadence means up to 24 hours of latency however often you poll.
 
-<Steps>
-  <Step title="Capture a timestamp before you read">
-    Record the current UTC time *before* issuing the request, and store it only once the run completes. Taking it afterwards opens a window where records synced mid-run are never returned.
+```bash
+curl --request GET \
+  --url 'https://api.bindbee.dev/api/hris/v1/employees?modified_after=2026-08-13T00:00:00Z&page_size=200' \
+  --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+  --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+```
 
-    **Result:** A watermark per connector.
-  </Step>
+The watermark discipline is one rule in three parts: **take the timestamp before you read, reuse the identical string on every page, and store it only once the whole walk succeeds.** Taking it afterwards loses records synced mid-run; recomputing it per page corrupts the cursor's position; advancing it on failure loses whatever the failed run never returned. Send an explicit `Z` — with no offset the value is read as UTC anyway, but not visibly.
 
-  <Step title="Pass it as ISO 8601">
-    ```bash
-    curl --request GET \
-      --url 'https://api.bindbee.dev/api/hris/v1/employees?modified_after=2026-08-13T00:00:00Z&page_size=200' \
-      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
-      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
-    ```
-
-    With no timezone offset the value is interpreted as UTC. Send an explicit `Z` rather than relying on that.
-
-    **Result:** Only records synced after that instant.
-  </Step>
-
-  <Step title="Hold the filter constant while paging">
-    Compute the timestamp once, before the loop, and reuse the identical string on every page. Recomputing it per page corrupts the cursor's position — see [Pagination](/api-reference/basics/pagination).
-
-    **Result:** A complete, non-overlapping set.
-  </Step>
-
-  <Step title="Advance the watermark only on success">
-    Persist the new timestamp after the full page walk succeeds. On failure, keep the old one and let the next run re-read the overlap.
-
-    **Result:** Failures cost duplicate work, never lost records.
-  </Step>
-</Steps>
-
-Polling on a fixed schedule means either reading too early, while a sync is still running, or waiting longer than you need to. The more reliable pattern is to run the incremental read when the sync-completed event fires, passing your stored watermark: the event tells you data has landed, the filter tells you what is new. See [Trigger a job on completion](/guides/reading-writing/syncing).
+Rather than polling on a fixed schedule, run the read when the sync-completed event fires and pass your stored watermark. The event says data has landed; the filter says what is new — see [Trigger a job on completion](/guides/reading-writing/syncing).
 
 ## If this didn't work
 
 <AccordionGroup>
-  <Accordion title="A filter returns nothing though records clearly exist">
-    Filters are exact matches, not partial. `first_name=Jo` won't match `John`.
-
-    For `remote_id` and `employee_number`, confirm the value against `raw_data` — the value shown in the HRIS UI is often not the identifier its API returns. See [Inspect raw data](/guides/reading-writing/raw-data).
-  </Accordion>
-
-  <Accordion title="employment_status returns fewer records than expected">
-    Records with no upstream status carry `-`, and a filter for any specific status excludes them. Query `-` on its own to see how many fall into that bucket.
-
-    If the count is still short, the connector may be returning a status outside the standard set. Those are filterable, but only against the exact value — read a page without the filter and look at what `employment_status` actually contains.
+  <Accordion title="A filter returns nothing though the records clearly exist">
+    For `remote_id` and `employee_number`, confirm the value against `raw_data`. What the HRIS shows in its own UI is often not the identifier its API returns — see [Inspect raw data](/guides/reading-writing/raw-data).
   </Accordion>
 
   <Accordion title="The count doesn't match the customer's headcount">
-    Usually a population-definition mismatch rather than missing data: contingent workers included, terminated employees retained, or one person holding several employment records.
-
-    See [Record counts](/guides/troubleshooting/record-counts).
+    Usually a population-definition mismatch rather than missing data: contingent workers included, terminated employees retained, or one person holding several employment records. See [Record counts](/guides/troubleshooting/record-counts).
   </Accordion>
 
-  <Accordion title="You need to filter on a field with no parameter">
-    Two options. If the value is in `raw_data`, map it as a [custom field](/guides/extending/custom-fields) — though custom fields are returned, not filtered on, so you would still filter client-side.
-
-    Where the source system supports the filter natively, [Passthrough](/guides/extending/passthrough) reaches it directly, at the cost of a provider-specific response shape.
-  </Accordion>
-
-  <Accordion title="You want to exclude records rather than include them">
-    Filters are inclusive only. Fetch the statuses you want rather than excluding the ones you don't — several inclusive requests still beat paging everything.
-  </Accordion>
-
-  <Accordion title="An incremental read returned the entire dataset">
-    Almost always a resync — everything was re-synced, so everything matches. Expected behaviour, not a bug. This is why idempotent processing matters.
-  </Accordion>
-
-  <Accordion title="A record you know changed didn't come back">
-    Check the sync ran after the change. Until the connector syncs, the change does not exist in Bindbee — see [Sync status](/guides/troubleshooting/sync-status).
-
-    A Development connector has no recurring schedule, so after its initial sync nothing is new until you trigger one.
-  </Accordion>
-
-  <Accordion title="You're reading a related model that didn't update">
-    `modified_after` is per model. An employee changing does not mark their employment or benefit records as synced, so filtering those separately can miss related changes. Either read them without the filter, or subscribe to data-change events for the model.
+  <Accordion title="A related model didn't come back in an incremental read">
+    `modified_after` is per model. An employee changing does not mark their employment or benefit records as synced, so filtering those separately misses related changes. Read them without the filter, or subscribe to data-change events for the model.
   </Accordion>
 
   <Accordion title="You need to know what changed, not just which records">
-    The filter returns current state, not a diff. To act on specific changes, compare against your own stored copy, or subscribe to the data-change events, which return the IDs of affected records per model.
+    The filter returns current state, not a diff. Compare against your own stored copy, or subscribe to the data-change events, which return the IDs of affected records per model.
   </Accordion>
 </AccordionGroup>
 
