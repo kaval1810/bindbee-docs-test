@@ -45,7 +45,8 @@ flowchart LR
     BB -.->|"the schema this connector needs"| YOU
     YOU -->|POST| BB
     BB -->|write| SRC["Source system"]
-    SRC -.->|"its own result"| YOU
+    SRC -.->|"its own answer"| BB
+    BB -.->|"in Bindbee's envelope"| YOU
     SRC -->|"next sync"| COPY["Bindbee's copy"]
 ```
 
