@@ -1558,7 +1558,7 @@
     "links": [
       {
         "label": "Setup",
-        "icon": "book-open",
+        "icon": "wrench",
         "href": "https://help.bindbee.dev/"
       },
       {
