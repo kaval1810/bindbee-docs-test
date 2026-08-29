@@ -1558,10 +1558,12 @@
     "links": [
       {
         "label": "Setup",
+        "icon": "book-open",
         "href": "https://help.bindbee.dev/"
       },
       {
         "label": "Status",
+        "icon": "signal",
         "href": "https://status.bindbee.dev"
       },
       {
