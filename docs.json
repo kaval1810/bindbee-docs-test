@@ -147,7 +147,7 @@
         "groups": [
           {
             "group": "API Basics",
-            "icon": "book-open",
+            "icon": "braces",
             "pages": [
               "api-reference/basics/authentication",
               "api-reference/basics/pagination",
