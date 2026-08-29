@@ -37,13 +37,23 @@ Three things follow from it:
 
 ## The write path
 
-Writing does not go through the copy. **A write is submitted to the source system and reports what came back**, which makes it asymmetric with reading in three ways.
+Writing does not go through the copy. **A write is submitted to the source system and reports what came back**, which makes it asymmetric with reading in four ways.
+
+```mermaid
+flowchart LR
+    YOU["Your application"] -->|POST| BB["Bindbee"]
+    BB -->|write| SRC["Source system"]
+    SRC -.->|"its own result"| YOU
+    SRC -->|"next sync"| COPY["Bindbee's copy"]
+```
 
 **The request shape is not fixed.** What a system requires to create an employee differs by system, and by tenant within a system. You ask the connector for the schema first - see [Meta APIs](/guides/reading-writing/meta-apis).
 
 **Not every model accepts writes**, and support varies by integration.
 
 **Failures are business failures.** Insufficient leave balance, a closed payroll period, a mandatory custom field - none are conditions Bindbee can evaluate in advance, and the useful message is the source system's own.
+
+**Your own write is not readable back straight away.** It lands in the source system, but reads still serve the copy - so it appears in a `GET` only once the next sync has picked it up. Force a resync if you need to confirm sooner - see [Syncing](/guides/reading-writing/syncing).
 
 <Warning>
   Retrying a write without `X-Idempotency-Key` can create a duplicate in the customer's HRIS. A `5xx` may be returned *after* the record was created - see [Errors & Issues](/guides/troubleshooting/errors-and-issues).
