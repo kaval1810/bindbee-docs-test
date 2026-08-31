@@ -1,99 +1,118 @@
 ---
 title: "Dashboard Configuration"
 sidebarTitle: "Dashboard"
-description: "Create and configure Custom Fields visually from the Bindbee Dashboard."
+description: "Create a Custom Field and map it to a value in the raw payload, visually from the Bindbee Dashboard."
 icon: "layout-dashboard"
 ---
 
-Creating a Custom Field from the dashboard takes two steps: create the field, then map it. For the concepts see the [Custom Fields overview](/guides/extending/custom-fields). For the programmatic route see [API Configuration](/guides/extending/custom-fields/api-workflow).
+Creating a Custom Field from the dashboard is two steps: create the field, then map it to a value in the source system's raw payload. For the concepts see the [Custom Fields overview](/guides/extending/custom-fields). For the programmatic route see [API Configuration](/guides/extending/custom-fields/api-workflow).
+
+## The Custom Fields page
+
+**Configure → Custom Fields** lists every field in your organisation, with how many mappings each has, its category and model, and who last changed it.
+
+<Frame caption="Configure → Custom Fields. The Mapping column counts how many mappings a field has — a field with none carries no data yet.">
+  <img src="/images/custom-fields/custom-fields-list.png" alt="The Custom Fields page listing fields with their mapping count, category, selected model, last updated date and creator" />
+</Frame>
 
 ## Step 1: Create the field
 
-Click **New Field** in the top right, fill in the dialog, then click **Create**.
+Click **New Field** in the top right.
 
-<Warning>
-  **Screenshot needed** — Custom Fields list page with the "New Field" button highlighted in the top right. Upload to `new-field-button.png` on the documentation image host, then replace this callout with a `<Frame>` captioned "Create a new custom field from the Custom Fields page."
-</Warning>
+<Frame caption="The Create custom field dialog. Category and model are chosen together — the field belongs to that pair.">
+  <img src="/images/custom-fields/create-field-dialog.png" alt="Create custom field dialog with fields for name, category, model and short description" />
+</Frame>
 
-<Warning>
-  **Screenshot needed** — The "New Field" dialog with name, description, category and model filled in (e.g. guardian_mobile / HRIS / employee). Upload to `new-field-dialog.png` on the documentation image host, then replace this callout with a `<Frame>` captioned "Name the field and pick the category and model it extends."
-</Warning>
+| Field | Notes |
+| --- | --- |
+| **Name of custom field** | Required. Must be unique and follow `snake_case`, for example `employee_insurance_id`. |
+| **Select model** | Required. Pick the **Category** first, then the **model** the field extends. |
+| **Short Description** | Optional. A note explaining what the field holds. |
 
-<Note>
-  Names must be **unique** within the model and follow **snake\_case**.
-</Note>
+Press **Create**. The field now exists but carries no data — it needs a mapping.
 
-## Step 2: Configure mappings
+## Step 2: Choose the mapping type
 
-You are redirected to the mapping screen, where you can set up **Connector Level** and **Organization Level** mappings for the field.
+You land on the field's page, which prompts you to create the first mapping. The two options are the two scopes.
 
-<Warning>
-  **Screenshot needed** — Mapping configuration screen showing the Connector Level / Organization Level toggle. Upload to `mapping-screen.png` on the documentation image host, then replace this callout with a `<Frame>` captioned "The mapping screen, with both scope options."
-</Warning>
+<Frame caption="Create your first mapping. The panel below summarises the same three steps this page walks through.">
+  <img src="/images/custom-fields/first-mapping.png" alt="Custom field info page offering for Specific Connector or for Integration as the first mapping, above a Steps to create custom field panel" />
+</Frame>
 
-| | Connector Level | Organization Level |
-| --- | --- | --- |
-| Applies to | One connector instance | Every connector of that integration |
-| Select from dropdown | Your connector | Your integration |
-| Then fill the data field | Three options below | Three options below |
-
-Fill the **Data field** box in any of three ways:
-
-<CardGroup cols={3}>
-  <Card title="Pick from options" icon="list">
-    Select a mapping from the suggested list.
-  </Card>
-
-  <Card title="Browse raw JSON" icon="code">
-    Click `</>` to open the raw response, then click the field you want.
-  </Card>
-
-  <Card title="Type the path" icon="keyboard">
-    Enter the JMESPath expression directly.
-  </Card>
-</CardGroup>
-
-<Warning>
-  **Screenshot needed** — Raw JSON panel opened via the `</>` button, with a field being clicked to map it. Upload to `raw-json-viewer.png` on the documentation image host, then replace this callout with a `<Frame>` captioned "Click the `</>` button to browse the connector's raw response and select a field."
-</Warning>
+| Option | Applies to |
+| --- | --- |
+| **for Specific Connector** | Selected connectors only |
+| **for Integration** | Every connector using that integration |
 
 <Info>
-  Add multiple mappings to a single custom field with **Add New**, repeating the process for other connectors or integrations.
+  Where both exist for the same field, the connector mapping wins on that connector. See [Scopes](/guides/extending/custom-fields#scopes).
 </Info>
 
+## Step 3: Pick the source
+
+A mapping row has three parts: **Mapping type**, **Source**, and **Data field**.
+
+For a connector mapping, the Source dropdown is a searchable list of your connectors:
+
+<Frame caption="Connector mappings pick one connector by name. The list is searchable.">
+  <img src="/images/custom-fields/mapping-for-connector.png" alt="Mapping row set to for Connector with the Select Connector dropdown open, showing a searchable list of connectors" />
+</Frame>
+
+For an integration mapping, it is the integration itself:
+
+<Frame caption="Integration mappings apply to every connector on that integration.">
+  <img src="/images/custom-fields/mapping-for-integration.png" alt="Mapping row set to for Integration with BambooHR selected as the source" />
+</Frame>
+
+Use **Add new** to give one field several mappings — different connectors, or a connector override alongside an integration default.
+
+## Step 4: Select the data field
+
+Click the **Data field** box to open the picker. It has two tabs.
+
+### Live data
+
+Search a real employee, then choose a value from their raw payload. Because you can see the actual value, this is the surest way to confirm you are mapping the right key.
+
+<Frame caption="Live data. Pick an employee on the left, then a field from their raw data on the right.">
+  <img src="/images/custom-fields/data-field-live-data.png" alt="Data field picker on the Live data tab, with an employee search list beside the raw data fields for the selected employee" />
+</Frame>
+
 <Warning>
-  An incorrect JMESPath does not raise an error. When you request `custom_fields` through the API, the response returns `"INVALID_JSON_PATH"` for that field instead of the value.
+  **Live data is only available for the Employee model on connector-level custom fields.** For any other model, or for an integration-level mapping, use the JSON Path tab.
 </Warning>
 
-## Find fields using Employee Search
+### JSON Path
 
-A field may not exist for every employee. Sometimes it only appears in the `raw_data` of one. Employee Search shows live connector data so you can locate it while configuring the mapping.
+Browse a sample payload and select the field you want, or switch to **Enter path** and type the expression directly.
 
-<Steps>
-  <Step title="Open the search">
-    Click the employee search field at the top of the data panel.
-  </Step>
+What the sample shows depends on the scope of the mapping. A connector mapping shows that connector's own data:
 
-  <Step title="Find the employee">
-    Enter a name or email address, then select the right result.
-  </Step>
+<Frame caption="A connector mapping previews sample data from that specific connector.">
+  <img src="/images/custom-fields/data-field-json-path-connector.png" alt="JSON Path tab showing sample data from a named connector, with search and enter path controls" />
+</Frame>
 
-  <Step title="Map the field">
-    Review the raw data in the right hand panel, select the field you want, then click **Map Field**.
-  </Step>
-</Steps>
+An integration mapping has no single connector to read from, so it shows a sample from one of your connectors on that integration:
 
-<Warning>
-  **Screenshot needed** — Employee search box at the top of the data panel with results showing. Upload to `employee-search.png` on the documentation image host, then replace this callout with a `<Frame>` captioned "Search for an employee to load their live connector data."
-</Warning>
+<Frame caption="An integration mapping previews a sample from one of your connectors on that integration, not from a specific one.">
+  <img src="/images/custom-fields/data-field-json-path-integration.png" alt="JSON Path tab showing sample data from one of your BambooHR connectors, with a tooltip explaining the live data limitation" />
+</Frame>
 
-<Warning>
-  **Screenshot needed** — Selected employee's raw data in the right hand panel with the "Map Field" button visible. Upload to `map-field.png` on the documentation image host, then replace this callout with a `<Frame>` captioned "Select the field from the employee's raw data and confirm with Map Field."
-</Warning>
+Select the field, then press **Map field**. Save the mapping row with the tick.
 
 <Note>
-  Data structures differ across integrations depending on how each platform structures and returns its information.
+  Structures differ between integrations. An expression that works on one platform will not necessarily work on another, so check each integration you map rather than assuming the shape carries over.
 </Note>
+
+## When the value appears
+
+**The field is populated on the connector's next sync**, not immediately. To see it sooner, [force a resync](/guides/reading-writing/syncing#forcing-a-resync).
+
+Once it resolves, request it with `include_custom_fields=true` — see [Retrieve custom fields](/guides/extending/custom-fields#retrieve-custom-fields).
+
+<Warning>
+  An incorrect path does not raise an error. The API returns `"INVALID_JSON_PATH"` in place of the value, so confirm the mapping resolves before relying on it.
+</Warning>
 
 ## Next steps
 
