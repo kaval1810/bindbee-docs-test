@@ -1,6 +1,6 @@
 ---
 title: "Webhooks"
-description: "Receive notifications when a connector syncs or when synced data changes, instead of polling the API."
+description: "Receive real-time notifications when a connector syncs or when synced data changes, instead of polling the API."
 icon: "webhook"
 ---
 
@@ -150,8 +150,8 @@ This is the part that changes between events, so handle it per event rather than
 
 ## Sample payloads
 
-<Tabs>
-  <Tab title="Connector Sync Started">
+<AccordionGroup>
+  <Accordion title="Connector Sync Started">
     ```json
     {
       "webhook": {
@@ -184,9 +184,9 @@ This is the part that changes between events, so handle it per event rather than
       }
     }
     ```
-  </Tab>
+  </Accordion>
 
-  <Tab title="Connector Synced">
+  <Accordion title="Connector Synced">
     ```json
     {
       "webhook": {
@@ -219,9 +219,9 @@ This is the part that changes between events, so handle it per event rather than
       }
     }
     ```
-  </Tab>
+  </Accordion>
 
-  <Tab title="Connector Sync Error">
+  <Accordion title="Connector Sync Error">
     ```json
     {
       "webhook": {
@@ -258,9 +258,9 @@ This is the part that changes between events, so handle it per event rather than
       }
     }
     ```
-  </Tab>
+  </Accordion>
 
-  <Tab title="Employee Data Changed">
+  <Accordion title="Employee Data Changed">
     `data` is a flat array of employee IDs. Fetch them with the `ids` parameter on [Get Employees](/hris/employee/get-employees).
 
     ```json
@@ -291,9 +291,9 @@ This is the part that changes between events, so handle it per event rather than
       }
     }
     ```
-  </Tab>
+  </Accordion>
 
-  <Tab title="Connector Data Modified">
+  <Accordion title="Connector Data Modified">
     `data` is keyed by model name. Iterate the keys rather than assuming which models are present, since that depends on what changed in the sync.
 
     ```json
@@ -329,8 +329,8 @@ This is the part that changes between events, so handle it per event rather than
       }
     }
     ```
-  </Tab>
-</Tabs>
+  </Accordion>
+</AccordionGroup>
 
 ---
 
