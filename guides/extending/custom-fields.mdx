@@ -9,9 +9,9 @@ A unified model has a fixed schema. An `employee` always exposes `first_name`, `
 
 ```mermaid
 flowchart LR
-    A["Raw upstream payload<br/>from the HRIS"] --> B["JMESPath<br/>data.employee.guardian_mobile"]
-    B --> C["Custom field<br/>guardian_mobile"]
-    C --> D["Unified response<br/>include_custom_fields=true"]
+    A["Raw upstream payload<br/>from the HRIS"] --> B["JMESPath:<br/>data.employee.guardian_mobile"]
+    B --> C["Custom field:<br/>guardian_mobile"]
+    C --> D["Unified response:<br/>include_custom_fields=true"]
 ```
 
 ## Building blocks
@@ -33,7 +33,7 @@ A field carries no data until it has a mapping. A mapping carries a scope.
 
 ```mermaid
 flowchart TD
-    A["guardian_mobile"] --> B["Org mapping<br/>integration_slug: workday"]
+    A["Custom field: guardian_mobile"] --> B["Org mapping<br/>integration_slug: workday"]
     A --> C["Connector mapping<br/>connector_token: abc123"]
     B --> D["Workday connector A<br/>uses org mapping"]
     B --> E["Workday connector B<br/>uses org mapping"]
@@ -46,11 +46,11 @@ flowchart TD
 
 ## Choose how to configure
 
-Both routes create the same underlying configuration and can coexist.
+You can manage Custom Fields in two ways. Both create the same underlying configuration and can coexist — pick whichever fits the task.
 
 <CardGroup cols={2}>
   <Card title="Dashboard Configuration" icon="monitor" href="/guides/extending/custom-fields/dashboard">
-    Visual flow with a raw JSON viewer and employee search. Best for ad hoc setup and one off changes.
+    Visual flow with a raw JSON viewer and employee search. Best for ad hoc setup and one-off field changes.
   </Card>
 
   <Card title="API Configuration" icon="code" href="/guides/extending/custom-fields/api-workflow">
@@ -88,28 +88,28 @@ GET https://api.bindbee.dev/api/hris/v1/employees?include_custom_fields=true
   An invalid or unresolvable JMESPath does not raise an error. The response returns `"INVALID_JSON_PATH"` in place of the value. Validate before saving, using the dashboard preview button or the API [preview endpoint](/guides/extending/custom-fields/api-workflow#step-3-validate-the-jmespath).
 </Warning>
 
-## Best practices
+## Best Practices
 
-<CardGroup cols={2}>
-  <Card title="Name fields clearly" icon="tag">
-    snake\_case, descriptive. Avoid `custom1`, `custom2`.
-  </Card>
+1. **Naming Conventions**
 
-  <Card title="Preview every expression" icon="eye">
-    Check the resolved value and its type before saving the mapping.
-  </Card>
+   - Use clear, descriptive names.
+   - Follow snake_case formatting.
+   - Avoid generic names like `custom1`, `custom2`.
 
-  <Card title="Scope deliberately" icon="layers">
-    Org level for data consistent across an integration, connector level for overrides. Check for an existing org mapping before duplicating it.
-  </Card>
+2. **JMESPath Expressions**
 
-  <Card title="Automate and verify" icon="refresh-cw">
-    Keep config in version control via the API. Run the `configuration` endpoint after provisioning a connector to confirm every field is mapped.
-  </Card>
-</CardGroup>
+   - Always preview an expression before saving it.
+   - Consider data type consistency across connectors of the same integration.
 
-<Tip>
-  Data structures differ across integrations. An expression that works for one platform will not always work for another, so check type consistency across connectors of the same integration.
-</Tip>
+3. **Organization vs Connector Level Mapping**
+
+   - Use **Organization Level** mappings for data that's consistent across all connectors of an integration.
+   - Use **Connector Level** mappings for connector-specific overrides.
+   - Review existing **Organization Level** mappings before creating connector-level duplicates.
+
+4. **Automation**
+
+   - Use the [API Configuration](/custom-fields/api-workflow) flow to keep custom field configuration in version control or replicate it across environments (dev → staging → prod).
+   - The `configuration` endpoint is a good health check — run it after provisioning a new connector to confirm every expected field has a mapping.
 
 For the full expression syntax, see the [JMESPath documentation](https://jmespath.org/).
