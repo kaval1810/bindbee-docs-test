@@ -6,23 +6,26 @@ icon: "webhook"
 
 Webhooks let Bindbee push updates to you. When a sync starts, finishes or fails, and when records are created or updated, Bindbee sends a `POST` to a URL you control.
 
-The reason to use them is efficiency. Without them you poll to find out whether anything changed, and most of those calls return nothing new. The data-change events go further than a "something happened" signal: they carry the IDs of the records that moved, so you can fetch exactly those instead of re-reading a full list.
-
-**Neither kind of event carries the data itself.** A change event tells you something happened and gives you enough to go and read it — your handler's job is to fetch, not to consume a payload. That is deliberate: a record carried in a webhook is a snapshot from the moment the event fired and may be stale by the time your handler runs.
-
 ---
 
 ## Events
 
-Five events are available. The dashboard shows the label in the left column; the payload carries the event string in the middle.
+Five events are available. The dashboard groups them under **Get notified when**, and each label is the event string in title case.
+
+**On Connector changes**
 
 | Dashboard label | Event | Fires when |
 | --- | --- | --- |
-| Sync start | `connector_sync_started` | A sync job begins for a connector |
-| Sync completed | `connector_synced` | A sync job finishes successfully |
-| Sync error | `connector_sync_error` | A sync job fails |
-| Employee model change | `employee_data_changed` | One or more employee records were created or updated |
-| Data model change | `connector_data_modified` | One or more records in any supported model were created or updated |
+| Connector Synced | `connector_synced` | A sync job finishes successfully |
+| Connector Sync Started | `connector_sync_started` | A sync job begins for a connector |
+| Connector Sync Error | `connector_sync_error` | A sync job fails |
+
+**On Data model changes**
+
+| Dashboard label | Event | Fires when |
+| --- | --- | --- |
+| Connector Data Modified | `connector_data_modified` | One or more records in any supported model were created or updated |
+| Employee Data Changed | `employee_data_changed` | One or more employee records were created or updated |
 
 <Tip>
   `connector_synced` is the event most integrations start with. It is the cleanest signal that a newly connected account has finished its initial sync and is ready to use in your product — see [Triggering a job on completion](/guides/reading-writing/syncing).

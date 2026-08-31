@@ -21,7 +21,7 @@ Source-system credentials expire, get rotated, or lose permissions. When that ha
 
 <Steps>
   <Step title="Subscribe to the sync error event">
-    Create a webhook for the environment you're operating in and select **Sync error**. See [Create a Webhook](/guides/reading-writing/webhooks).
+    Create a webhook for the environment you're operating in and select **Connector Sync Error**. See [Create a Webhook](/guides/reading-writing/webhooks).
 
     **Result:** Your endpoint receives a `connector_sync_error` payload whenever a sync fails.
   </Step>
@@ -80,7 +80,7 @@ Source-system credentials expire, get rotated, or lose permissions. When that ha
   <Step title="Detect syncs that never start">
     A failed sync fires an event. A sync that simply doesn't run does not.
 
-    Subscribe to **Sync start** as well, record the `sync.sync_id` and timestamp per connector, and alert when the gap since the last start exceeds the connector's configured cadence plus a margin. When you need data sooner than the next scheduled run, call [Force a resync](/api-reference/connectors/resync-connector).
+    Subscribe to **Connector Sync Started** as well, record the `sync.sync_id` and timestamp per connector, and alert when the gap since the last start exceeds the connector's configured cadence plus a margin. When you need data sooner than the next scheduled run, call [Force a resync](/api-reference/connectors/resync-connector).
 
     **Result:** Silent stalls surface as alerts rather than as stale reads.
   </Step>

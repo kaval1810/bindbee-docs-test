@@ -63,7 +63,7 @@ Before investigating missing or unexpected data, establish what the last sync ac
 
 ## Monitoring this programmatically
 
-For continuous monitoring rather than one-off checks, subscribe to sync events instead of polling. Sync start, sync completed, and sync error together cover the states above, and each payload carries a `sync` object with `sync_id`, `sync_name`, and `sync_type` - where `sync_type` distinguishes `AUTOMATED` from `MANUAL`, so you can tell a scheduled run from one you or support triggered.
+For continuous monitoring rather than one-off checks, subscribe to sync events instead of polling. Connector Sync Started, Connector Synced and Connector Sync Error together cover the states above, and each payload carries a `sync` object with `sync_id`, `sync_name`, and `sync_type` - where `sync_type` distinguishes `AUTOMATED` from `MANUAL`, so you can tell a scheduled run from one you or support triggered.
 
 See [Choose Webhook Events](/guides/reading-writing/webhooks).
 
