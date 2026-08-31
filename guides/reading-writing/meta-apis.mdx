@@ -35,13 +35,37 @@ The asymmetry surprises people who assume HRIS, being the largest category, is t
 
 ## Which operations have a schema
 
-| Operation | Meta endpoint |
-| --- | --- |
-| Create Employee | `GET /api/hris/v1/employees/meta/post` |
-| Create Employee Payroll Run | `GET /api/hris/v1/employee-payroll-runs/meta/post` |
-| Create Timesheet Entry | `GET /api/hris/v1/timesheet-entry/meta/post` |
-| Create Time Off | `GET /api/hris/v1/time-off/meta/post` |
-| Create Candidate | `GET /api/ats/v1/candidates/create/meta` |
+<CardGroup cols={2}>
+  <Card title="Create Employee" icon="user-plus" href="/hris/employee/get-create-employee-meta">
+    `GET /api/hris/v1/employees/meta/post`
+  </Card>
+
+  <Card title="Create Employee Payroll Run" icon="banknote" href="/hris/employee-payroll-runs/get-create-employee-payroll-run-meta">
+    `GET /api/hris/v1/employee-payroll-runs/meta/post`
+  </Card>
+
+  <Card title="Create Timesheet" icon="clock" href="/hris/timesheet-entries/get-create-timesheet-meta">
+    `GET /api/hris/v1/timesheet-entry/meta/post`
+  </Card>
+
+  <Card title="Create Time Off" icon="calendar-clock" href="/hris/time-off/get-create-time-off-meta">
+    `GET /api/hris/v1/time-off/meta/post`
+  </Card>
+
+  <Card title="Create Candidate" icon="id-card" href="/ats/candidate/meta-create-candidate">
+    `GET /api/ats/v1/candidates/create/meta`
+  </Card>
+</CardGroup>
+
+Each maps to the write endpoint it describes:
+
+| Operation | Meta endpoint | Write endpoint |
+| --- | --- | --- |
+| Create Employee | `GET /api/hris/v1/employees/meta/post` | `POST /api/hris/v1/employees` |
+| Create Employee Payroll Run | `GET /api/hris/v1/employee-payroll-runs/meta/post` | `POST /api/hris/v1/employee-payroll-runs` |
+| Create Timesheet | `GET /api/hris/v1/timesheet-entry/meta/post` | `POST /api/hris/v1/timesheet-entry` |
+| Create Time Off | `GET /api/hris/v1/time-off/meta/post` | `POST /api/hris/v1/time-off` |
+| Create Candidate | `GET /api/ats/v1/candidates/create/meta` | `POST /api/ats/v1/candidates` |
 
 **Most write operations have no meta endpoint.** The ATS creates in particular are largely uncovered — of the seventeen, only Create Candidate has a schema. For the rest the request shape comes from the API reference, and the per-tenant variation a schema would have told you has to be discovered by attempting the write and reading the failure.
 
@@ -87,13 +111,52 @@ Where a unified write genuinely is not available but the source system's own API
 
 ## Calling a Meta API
 
-Meta endpoints are scoped to a connector, not to an integration:
+Meta endpoints take the same two headers as every other Bindbee call, and are scoped to a **connector**, not to an integration.
 
-```bash
-curl https://api.bindbee.dev/api/hris/v1/employees/meta/post \
-  -H "Authorization: Bearer <BINDBEE_API_KEY>" \
-  -H "X-Connector-Token: <CONNECTOR_TOKEN>"
+| Header | Value |
+| --- | --- |
+| `Authorization` | `Bearer YOUR_BINDBEE_API_KEY` |
+| `X-Connector-Token` | The `connector_token` of the end user you are writing to, from the connector's **Overview** tab |
+
+Base URLs are `https://api.bindbee.dev` for US and `https://api-eu.bindbee.dev` for EU — see [Authentication](/api-reference/basics/authentication).
+
+<CodeGroup>
+```bash cURL
+curl --request GET \
+  --url https://api.bindbee.dev/api/hris/v1/employees/meta/post \
+  --header 'Authorization: Bearer YOUR_BINDBEE_API_KEY' \
+  --header 'X-Connector-Token: END_USER_CONNECTOR_TOKEN'
 ```
+
+```javascript Node
+const response = await fetch(
+  "https://api.bindbee.dev/api/hris/v1/employees/meta/post",
+  {
+    headers: {
+      Authorization: `Bearer ${process.env.BINDBEE_API_KEY}`,
+      "X-Connector-Token": connectorToken,
+    },
+  }
+);
+
+const schema = await response.json();
+```
+
+```python Python
+import os
+import requests
+
+response = requests.get(
+    "https://api.bindbee.dev/api/hris/v1/employees/meta/post",
+    headers={
+        "Authorization": f"Bearer {os.environ['BINDBEE_API_KEY']}",
+        "X-Connector-Token": connector_token,
+    },
+)
+
+schema = response.json()
+```
+</CodeGroup>
 
 <Note>
   Because the scope is a connector, you need an existing connection before you can fetch a schema. You cannot inspect the write requirements for an integration a customer has not connected yet. Build your write flow to fetch the schema at request time rather than assuming it at design time.
@@ -297,7 +360,7 @@ Whatever you put here is forwarded to the integration as part of the write. Beca
 
 ---
 
-## Building the request
+## Building and submitting the write
 
 Construct a body that satisfies the required fields and conforms to the declared types, formats and accepted values. Given a schema where `first_name` and `last_name` are required:
 
@@ -313,6 +376,50 @@ Construct a body that satisfies the required fields and conforms to the declared
 ```
 
 `first_name` and `last_name` satisfy the required fields, `work_email` conforms to the `email` format, and `employee_number` passes through as an integration-specific attribute.
+
+Submit it to the write endpoint using the same connector token:
+
+<CodeGroup>
+```bash cURL
+curl --request POST \
+  --url https://api.bindbee.dev/api/hris/v1/employees \
+  --header 'Authorization: Bearer YOUR_BINDBEE_API_KEY' \
+  --header 'X-Connector-Token: END_USER_CONNECTOR_TOKEN' \
+  --header 'Content-Type: application/json' \
+  --header 'X-Idempotency-Key: 7c9e6679-7425-40de-944b-e07fc1f90ae7' \
+  --data '{
+    "first_name": "Jane",
+    "last_name": "Doe",
+    "work_email": "jane@acme.com"
+  }'
+```
+
+```javascript Node
+const response = await fetch("https://api.bindbee.dev/api/hris/v1/employees", {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${process.env.BINDBEE_API_KEY}`,
+    "X-Connector-Token": connectorToken,
+    "Content-Type": "application/json",
+    "X-Idempotency-Key": idempotencyKey,
+  },
+  body: JSON.stringify({
+    first_name: "Jane",
+    last_name: "Doe",
+    work_email: "jane@acme.com",
+  }),
+});
+```
+</CodeGroup>
+
+<Tip>
+  All four HRIS write endpoints accept `X-Idempotency-Key`. Derive it from your own record for the thing being created, not from a random value, and reuse the same key on every retry so a retried request cannot create a duplicate in the customer's system.
+
+  {/* VERIFY: x-idempotency-key is declared on exactly four operations in spec.json, all HRIS.
+      None of the seventeen ATS creates declare it, yet how-to guidance elsewhere tells readers
+      to send it on ATS writes. Either the header is honoured there and the spec is incomplete,
+      or duplicate candidates on retry are unprotected. */}
+</Tip>
 
 ---
 
@@ -349,6 +456,16 @@ A schema may not exist yet for a given operation and integration:
 | `429` | Rate limit exceeded — see the `Retry-After` and `X-RateLimit-*` headers |
 
 A `403` here is worth reading carefully. It often means writes are disabled for that model rather than that anything is wrong with your credentials.
+
+---
+
+## Best practices
+
+* **Fetch per connector, not per organisation.** Two end users on different systems will not have the same requirements.
+* **Refresh periodically.** Enum values such as pay statement types and time-off policies change inside the end user's own system.
+* **Drive your UI from the schema.** Rendering a form from `properties`, `required` and `enumInformation` keeps your product in step with what each system accepts.
+* **Validate before submitting.** Catching a missing required field locally avoids an avoidable `422` round trip.
+* **Treat `integration_params` as first class.** It is validated, so a missing value there fails the write exactly as a missing unified field does.
 
 ---
 
