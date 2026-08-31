@@ -459,68 +459,50 @@ Retries are triggered only for request or network-layer failures, including:
 | Other request errors | Proxy error, response decoding error, too many redirects |
 
 ---
-
+ 
 ## Monitoring deliveries
-
-Delivery logs are on the [Webhooks tab](https://app.bindbee.dev/logs/webhooks) under Logs, and on each webhook's own page.
-
-Three endpoints cover the same ground programmatically, which is what you want for alerting on delivery failures rather than discovering them by hand.
-
-**[List your webhooks](/api-reference/webhooks/list-webhooks)**, for their IDs, names, URLs, enabled state and when each last fired:
-
+ 
+### In the dashboard
+ 
+Delivery logs are on the [Webhooks tab](https://app.bindbee.dev/logs/webhooks) under Logs. Logs for one specific webhook are also shown on that webhook's own page.
+ 
+### Through the API
+ 
+Three endpoints cover the same ground programmatically, which is useful for alerting on delivery failures rather than discovering them by hand.
+ 
+**List your webhooks** to get their IDs, names, URLs, enabled state, and when each last fired:
+ 
 ```bash
 curl -G https://api.bindbee.dev/api/v1/webhooks \
-  -H "Authorization: Bearer <BINDBEE_API_KEY>" \
+  -H "Authorization: Bearer <YOUR_API_KEY>" \
   -d is_active=true
 ```
-
-**[List delivery attempts](/api-reference/webhooks/list-webhook-logs)**, with filters:
-
+ 
+**List delivery attempts**, with filters:
+ 
 ```bash
 curl -G https://api.bindbee.dev/api/v1/webhooks/logs \
-  -H "Authorization: Bearer <BINDBEE_API_KEY>" \
+  -H "Authorization: Bearer <YOUR_API_KEY>" \
   -d errors_only=true \
   -d created_at_from=2026-08-01T00:00:00Z
 ```
-
+ 
 | Parameter | Purpose |
 | --- | --- |
 | `webhook_id` | Deliveries for one webhook |
 | `connector_id` | Deliveries triggered for one connector |
-| `webhook_action` | Comma-separated event types, for example `connector_synced,employee_data_changed` |
-| `response_code` | Comma-separated status codes, for example `200,403,503` |
+| `webhook_action` | Comma separated event types, for example `connector_synced,employee_data_changed` |
+| `response_code` | Comma separated status codes, for example `200,403,503` |
 | `created_at_from`, `created_at_to` | ISO 8601 bounds, interpreted as UTC when no offset is supplied |
-| `errors_only` | When `true`, only deliveries whose response code was `400` or above |
-
-**[Get one delivery](/api-reference/webhooks/get-webhook-log-detail)** by its log ID, for the full request and response detail including the status code your endpoint returned:
-
+| `errors_only` | When `true`, only deliveries that returned `4xx` or `5xx` |
+ 
+**Get one delivery** by its log ID for the full request and response detail, including the status code your endpoint returned:
+ 
 ```bash
 curl https://api.bindbee.dev/api/v1/webhooks/logs/<LOG_ID> \
-  -H "Authorization: Bearer <BINDBEE_API_KEY>"
+  -H "Authorization: Bearer <YOUR_API_KEY>"
 ```
-
-<Note>
-  These three endpoints have their own pagination bounds: `/webhooks` defaults to `20` with a maximum of `100`, and `/webhooks/logs` defaults to `25` with a maximum of `50`. Everything else on the API is `50` and `200` — see [Pagination](/api-reference/basics/pagination).
-</Note>
-
----
-
-## What webhooks cannot tell you
-
-**That nothing happened.** Silence is ambiguous — no events could mean no changes, a delivery failure, or a connector that broke three weeks ago. Watch connector health separately, via [Monitor sync status](/guides/troubleshooting/sync-status).
-
-**That you received everything.** Delivery is best-effort and the retry window is 60 seconds. A deploy that takes your endpoint down for two minutes loses those events permanently, with no error in your logs or Bindbee's. Do not try to recover the events — take the earliest plausible start and latest plausible end of the outage and read current state with `modified_after` for each affected connector and model, as in [Querying Data](/guides/reading-writing/querying-data). If a record changed three times during the outage, current state is what you wanted anyway.
-
-**Which field changed.** An event says a record changed, not which attribute or what it was before.
-
-**Whether a record was created or updated.** Data-change events say a record changed, not which — there is no flag in the payload, so compare against your own stored copy. The first sync is the case to design for: it loads the entire population, so everything classifies as created. Process it as a bulk import rather than triggering per-record workflows, or a newly connected customer gets a welcome email sent to their whole workforce.
-
-**That a record was deleted.** Disappearance is a non-event. Only a scheduled read finds it.
-
-{/* VERIFY: ordering - can events for one connector arrive out of sequence? Retry behaviour is documented; ordering is not, and it determines whether a handler can trust event order or must re-read state. */}
-
-{/* VERIFY: a created-versus-modified flag in the payload was discussed with engineering in 2026. If it shipped, make it the primary method and demote comparing against a stored copy. */}
-
+ 
 ---
 
 ## Related
