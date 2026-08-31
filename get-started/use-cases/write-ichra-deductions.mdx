@@ -5,29 +5,28 @@ description: "Take a benefit election in your product and land it as a deduction
 icon: "receipt"
 ---
 
-This is the round trip behind most benefits products: read the enrolment, calculate the amount, write it to payroll, confirm it landed.
+The round trip behind most benefits products: read the enrolment, work out the amount, write it to payroll, confirm it landed.
 
 ## What you'll use
 
-**Models** - employee, benefit, employer benefit, employee payroll run, payroll run calendar, payroll code
+**Models** - [employee](/hris/employee/get-employees), [benefit](/hris/benefits/get-benefits), [employer benefit](/hris/employer-benefits/get-employer-benefits), [employee payroll run](/hris/employee-payroll-runs/get-employee-payroll-runs), [payroll run calendar](/hris/payroll-run-calendar/get-payroll-run-calendars), [payroll code](/hris/payroll-codes/get-payroll-codes)
+
 **Events** - `connector_synced`, `connector_data_modified`
 
 <Info>
   **Before you start**
 
-  - You have the customer's plan-to-code mapping. No model provides it - see the constraints below.
-  - You know the customer's payroll cut-off. It is not readable through the API.
+  - You have the customer's plan-to-code mapping, for connectors that don't supply one.
+  - You know the customer's payroll cut-off. It isn't readable through the API.
 </Info>
 
 ## Steps
 
 <Steps>
   <Step title="Confirm the integration supports payroll writes">
-    Write support varies by integration, and a plan that assumes it works everywhere fails late.
+    Write support varies by integration - see [Check write support](/guides/reading-writing/meta-apis). Where writes aren't supported, [Passthrough](/guides/extending/passthrough) is the fallback, at the cost of a provider-specific shape.
 
-    Check before building - see [Check write support](/guides/reading-writing/meta-apis). Where writes aren't supported, [Passthrough](/guides/extending/passthrough) is the fallback, at the cost of a provider-specific shape.
-
-    **Result:** Confirmation this round trip is possible on this platform.
+    **Result:** Confirmation this round trip is possible here.
   </Step>
 
   <Step title="Read the enrolment and its plan">
@@ -38,7 +37,7 @@ This is the round trip behind most benefits products: read the enrolment, calcul
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    Take the plan year from the benefit's effective dates, not from the payroll date - see [Reading benefits](/guides/data-models/benefits).
+    Take the plan year from the benefit's effective dates, never from the payroll date - a deduction paid in January can belong to the prior plan year. See [Reading benefits](/guides/data-models/benefits).
 
     **Result:** The election and the period it belongs to.
   </Step>
@@ -51,9 +50,7 @@ This is the round trip behind most benefits products: read the enrolment, calcul
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    Each code carries `name`, `code`, `type` and `sub_type`. The model is currently **BETA** - it works, but field names and shapes are not yet frozen, so pin what you depend on and expect to revisit it.
-
-    **Read the plan first.** The employer benefit carries `payroll_codes`, referencing the codes that represent it in payroll, and `deduction_code` for the raw string. Use those rather than a mapping you maintain by hand. Keep your own only as the fallback for connectors where the field is empty.
+    **Read the plan first.** The employer benefit carries `payroll_codes` and `deduction_code`. Use those rather than a hand-maintained mapping, and keep your own only for connectors that leave them empty.
 
     ```python
     codes = employer_benefit.get("payroll_codes") or []
@@ -62,6 +59,8 @@ This is the round trip behind most benefits products: read the enrolment, calcul
         if code not in {c["code"] for c in payroll_codes}:
             raise MappingStale(plan_id, code)            # fail loudly, don't guess
     ```
+
+    A wrong code posts a real deduction against the wrong plan, and it shows up as a payroll discrepancy weeks later rather than an API error. The payroll code model is **BETA**, so pin what you depend on.
 
     **Result:** A code that exists in this customer's payroll configuration.
   </Step>
@@ -74,7 +73,7 @@ This is the round trip behind most benefits products: read the enrolment, calcul
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    The calendar tells you when runs are scheduled. It does not tell you when payroll closes for processing - that deadline is the customer's operational schedule, and you have to agree it separately.
+    The calendar tells you when runs are scheduled, not when payroll closes for processing. That deadline is the customer's operational schedule - agree it separately.
 
     **Result:** The period you're targeting, and how long you have.
   </Step>
@@ -87,7 +86,7 @@ This is the round trip behind most benefits products: read the enrolment, calcul
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    Build the body from this rather than hardcoding it - required fields and enum values differ per integration. Read the `required` array on every nested object, and use `enumInformation` rather than inferring from value names. See [Fetch a schema](/guides/reading-writing/meta-apis).
+    Build the body from this rather than hardcoding it. Read the `required` array on every nested object, and use `enumInformation` instead of guessing from value names - see [Fetch a schema](/guides/reading-writing/meta-apis).
 
     **Result:** The exact body this integration accepts.
   </Step>
@@ -103,13 +102,13 @@ This is the round trip behind most benefits products: read the enrolment, calcul
       --data '{ ... }'
     ```
 
-    Derive the key from your own record for this deduction - employee, plan, and period - not from a random value or a timestamp. A retry must reuse the same key, or you post the deduction twice against a real employee's pay. See [Employee payroll run](/get-started/use-cases/write-payroll-deductions).
+    Derive the key from employee, plan and period - not a random value or a timestamp. A retry must reuse the same key, or you post the deduction twice against real pay. See [Employee payroll run](/get-started/use-cases/write-payroll-deductions).
 
-    **Result:** One deduction line, however many times the request is retried.
+    **Result:** One deduction line, however many times you retry.
   </Step>
 
-  <Step title="Confirm it landed in the intended period">
-    A `2xx` means the source system accepted the write, not that it is visible yet. Read it back after the next sync.
+  <Step title="Confirm it landed in the right period">
+    A `2xx` means the source system accepted the write, not that it's visible yet. Read it back after the next sync.
 
     ```bash
     curl --request GET \
@@ -118,48 +117,42 @@ This is the round trip behind most benefits products: read the enrolment, calcul
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    Check the period, not just the presence - a write submitted after cut-off can be silently applied to the following run. See [Reading payroll](/guides/data-models/payroll).
+    Check the period, not just that it exists - a write submitted after cut-off can be silently applied to the following run. See [Reading payroll](/guides/data-models/payroll).
 
     **Result:** Confirmation the deduction is in the run you intended.
   </Step>
 </Steps>
 
-## Constraints specific to this combination
-
-**Plan-to-deduction-code mapping is yours to own only where the plan does not supply it.** The employer benefit carries `payroll_codes`, referencing the codes that represent that plan, plus `deduction_code` for the raw string - read those first. Both are nullable, so where a connector leaves them empty you do need a mapping established with the customer at onboarding and stored against the connector. A wrong code posts a real deduction against the wrong plan, and it surfaces as a payroll discrepancy weeks later rather than as an API error.
-
-**Plan year cannot be derived from the payroll date.** Payroll runs carry period and check dates; benefits carry coverage and effective dates. A deduction paid in January can belong to the prior plan year because payroll timing and plan year boundaries don't align. Assign the plan year from the benefit's effective dates, never from the payment date.
-
-**The cut-off is invisible through the API.** Payroll closes for processing before the pay date, and that deadline is the customer's operational schedule, not a field you can read. A write submitted after close is either rejected or silently applied to the next period. Agree the deadline per customer and treat missed changes as catch-up adjustments in the following period rather than assuming a retroactive edit is possible.
-
-**Sync latency sits between election and write.** An election made in the HRIS isn't visible to you until the connector syncs, so the usable window between election and payroll cut-off is shorter than it appears. Where timing is tight, [force a resync](/guides/reading-writing/syncing) rather than waiting for the schedule.
+<Note>
+  Sync latency sits between the election and your write, so the usable window before cut-off is shorter than it looks. Where timing is tight, [force a resync](/guides/reading-writing/syncing) rather than waiting for the schedule.
+</Note>
 
 ## If this didn't work
 
 <AccordionGroup>
   <Accordion title="The write returned 501">
-    The Meta schema isn't published for this integration and model. That is not the same as the write being unsupported - see [Meta APIs](/guides/reading-writing/meta-apis#which-operations-have-a-schema).
+    The Meta schema isn't published for this integration and model. That isn't the same as the write being unsupported - see [Meta APIs](/guides/reading-writing/meta-apis#which-operations-have-a-schema).
   </Accordion>
 
   <Accordion title="The write returned 422 though the body matches the schema">
-    The schema is the structural contract; the payroll system enforces rules beyond it - codes that must exist in its configuration, closed periods, approval states. The `detail` array names the field it rejected - see [Errors & issues](/guides/troubleshooting/errors-and-issues).
+    The schema is the structural contract; the payroll system enforces more on top - codes that must already exist, closed periods, approval states. The `detail` array names the field it rejected - see [Errors & issues](/guides/troubleshooting/errors-and-issues).
   </Accordion>
 
   <Accordion title="The deduction landed in the wrong period">
-    Submitted after the customer's cut-off. Treat it as a catch-up adjustment in the following period rather than attempting a retroactive edit.
+    Submitted after the customer's cut-off. Treat it as a catch-up adjustment in the following period rather than a retroactive edit.
   </Accordion>
 
   <Accordion title="The deduction appears twice">
-    A retry without a consistent `X-Idempotency-Key`, or the same change submitted through two paths. Correct it in the payroll system and fix the key derivation before retrying anything else.
+    A retry without a consistent `X-Idempotency-Key`, or the same change submitted through two paths. Correct it in the payroll system, then fix the key derivation.
   </Accordion>
 
   <Accordion title="The deduction is against the wrong plan">
-    A stale plan-to-code mapping. Validate the code against the current payroll codes before every write rather than trusting a mapping stored at onboarding.
+    A stale plan-to-code mapping. Validate the code against the current payroll codes before every write.
   </Accordion>
 </AccordionGroup>
 
 ## Related
 
-- [Reading benefits](/guides/data-models/benefits)
-- [Employee payroll run](/get-started/use-cases/write-payroll-deductions)
-- [Reading payroll](/guides/data-models/payroll)
+- [Reading benefits](/guides/data-models/benefits) - the four benefit models, and where the plan year comes from
+- [Employee payroll run](/get-started/use-cases/write-payroll-deductions) - the write itself, step by step
+- [Reading payroll](/guides/data-models/payroll) - payroll runs, payslip lines, and the codes that classify them

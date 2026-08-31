@@ -1,174 +1,68 @@
 ---
 title: "Authentication"
-description: "The headers every Bindbee API request carries, how to send them, and which endpoints require which one."
+description: "The two headers every Bindbee API request carries, where to find them, and which endpoints need which."
 ---
 
-Every request to the Bindbee API carries an API key. Requests that reach one customer's data carry a connector token as well.
+Every request carries an API key. Requests that touch one customer's data carry a connector token as well.
 
-| Header | Format | Identifies |
+| Header | Value | Identifies |
 | --- | --- | --- |
-| `Authorization` | `Bearer YOUR_BINDBEE_API_KEY` | Your organisation |
-| `X-Connector-Token` | `END_USER_CONNECTOR_TOKEN` | One customer's connection |
+| `Authorization` | `Bearer YOUR_API_KEY` | Your organisation |
+| `X-Connector-Token` | `YOUR_CONNECTOR_TOKEN` | One customer's connection |
 
-## Bindbee API Key
 
-The API key authenticates you as an authorised user, and every endpoint requires it.
+## Where to find them
 
-Find both keys in the [API Key](https://app.bindbee.dev/settings/keys) tab under Settings. Each environment has its own, and **Regenerate Key** replaces one immediately - invalidating anything still using the old value.
+**API key** - Settings → [API Key](https://app.bindbee.dev/settings/keys). Each environment has its own, and a development key does not work against production data - see [Environments](/get-started/environments). Regenerating a key invalidates the old value immediately.
 
-<Frame caption="Settings → API Key. One key per environment, regenerated independently.">
-  <img src="/images/quickstart/api-keys.png" alt="The API Key settings page, showing a Production Key block and a Development Key block, each with a masked value and a Regenerate Key button" />
-</Frame>
+**Connector token** - it exists once the end user has authorised the connection. Where you read it depends on how they connected - see [How to connect](/get-started/how-to-connect).
 
-{/* VERIFY: is a key's value re-viewable after creation, or only copyable once? This page and the quickstart both previously said "shown once on creation", but the Dashboard presents both keys as persistent masked fields with a copy affordance, which suggests otherwise. The distinction matters - it decides whether losing a key means retrieving it or rotating it. */}
-
-Keys are scoped to an environment. A development key does not work against production data - see [Environments](/get-started/environments).
-
-## Connector Tokens
-
-The `connector_token` names which customer's connection a request acts on. It is issued once the end user has authorised the connection, however that connection was created - a hosted Magic Link, the embedded component, or a link generated programmatically - see [How to connect](/get-started/how-to-connect).
-
-<Tip>
-  You can find a `connector_token` in the connector's **Connector Details**
-  panel, masked behind a reveal control with a copy button. It is also returned
-  by [Get Connectors](/api-reference/connectors/get-connectors), and by the
-  [token exchange](/sdk/get-connector-token) in the embedded flow.
-</Tip>
-
-<img
-  src="https://images.unifyx.dev/documentation_images/connector.png"
-  alt="Connector Token"
-  className="block"
-/>
+- **Embedded Link** - `onSuccess` hands your frontend a short-lived `temporary_token`, which cannot read data. Swap it from your backend with the [token exchange](/sdk/get-connector-token).
+- **Magic Link or programmatic link** - there is no temporary token. Look the connector up by the `origin_id` you set, with [Get Connectors](/api-reference/connectors/get-connectors).
+- **Any route** - the connector's **Connector Details** panel in the dashboard, for a one-off lookup.
 
 <Warning>
-  A connector token is scoped to one API category. An HRIS connector's token
-  used against `/api/ats/v1/*` returns `403` even though both credentials are
-  valid - see [Errors & issues](/guides/troubleshooting/errors-and-issues).
+  A connector token is scoped to one API category. An HRIS token used against
+  `/api/ats/v1/*` returns `403` even though both credentials are valid.
 </Warning>
 
-## Sending both headers
+## Which endpoints need the connector token
 
-<Steps>
-  <Step title="Generate your API key">
-    Open **Settings → API Key** in the dashboard and copy the key from the block for the environment you are calling. Each environment has its own, and they are not interchangeable.
+The API key is required everywhere. The connector token is required only where the request names a customer.
 
-    **Result:** You have a key string. Store it as a secret. If you lose it, generate a replacement from the same screen; regenerating invalidates the previous key for every connector in that environment.
-  </Step>
+| Endpoints | `X-Connector-Token` |
+| --- | --- |
+| Unified data (`/api/{category}/v1/*`), [passthrough](/api-reference/passthrough/make-passthrough-request), [resync](/api-reference/connectors/resync-connector) | **Required** |
+| [Connectors](/api-reference/connectors/get-connectors), [integrations](/api-reference/integrations/get-integrations), [custom fields](/api-reference/custom-fields/list-custom-fields), [webhooks](/api-reference/webhooks/list-webhooks), [link token](/sdk/create-link-token) | Not used |
 
-  <Step title="Copy the connector token">
-    Open the connector and copy `connector_token` from the **Overview** tab.
-
-    **Result:** You have a token scoped to exactly one end user's connection.
-  </Step>
-
-  <Step title="Send both headers">
-    Pass the API key as a `Bearer` token in `Authorization`, and the connector token in `X-Connector-Token`.
-
-    <CodeGroup>
-      ```bash cURL
-      curl --request GET \
-        --url 'https://api.bindbee.dev/api/hris/v1/employees?page_size=50' \
-        --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
-        --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
-      ```
-
-      ```python Python
-      import requests
-
-      requests.get(
-          "https://api.bindbee.dev/api/hris/v1/employees",
-          params={"page_size": 50},
-          headers={
-              "Authorization": f"Bearer {BINDBEE_API_KEY}",
-              "X-Connector-Token": CONNECTOR_TOKEN,
-          },
-      )
-      ```
-
-      ```javascript Node
-      await fetch(
-        "https://api.bindbee.dev/api/hris/v1/employees?page_size=50",
-        {
-          headers: {
-            Authorization: `Bearer ${BINDBEE_API_KEY}`,
-            "X-Connector-Token": CONNECTOR_TOKEN,
-          },
-        }
-      );
-      ```
-    </CodeGroup>
-
-    **Result:** A `200` with a paginated list of employees.
-  </Step>
-</Steps>
-
-## Which endpoints take what
-
-The API key is always required. The connector token is required only where the request names a customer.
-
-| Endpoint group | `Authorization` | `X-Connector-Token` |
-| --- | --- | --- |
-| **Unified data** (`/api/{category}/v1/*`) | Required | **Required** |
-| [Passthrough](/api-reference/passthrough/make-passthrough-request) | Required | **Required** |
-| [Force a resync](/api-reference/connectors/resync-connector) | Required | **Required** |
-| [Connector list](/api-reference/connectors/get-connectors) and [delete](/api-reference/connectors/delete-connector) | Required | Not used |
-| [Integrations](/api-reference/integrations/get-integrations) | Required | Not used |
-| [Custom fields](/api-reference/custom-fields/list-custom-fields), mappings and [lookup](/api-reference/custom-fields/list-integrations) | Required | Not used |
-| [Events & payloads](/guides/reading-writing/webhooks) and delivery logs | Required | Not used |
-| [Link token](/sdk/create-link-token) and [token exchange](/sdk/get-connector-token) | Required | Not used |
-
-`category` is `hris`, `ats` or `lms`. Connector-scoped endpoints act on one end user; the rest act across your whole account, so they take the API key alone.
-
-Sending a connector token where it is not used is harmless. Omitting it where it is required returns an error rather than an empty result.
+`category` is `hris`, `ats` or `lms`. Sending a connector token where it is not used is harmless; omitting it where it is required returns an error rather than an empty result.
 
 ## A third header on writes
 
-Write endpoints take `X-Idempotency-Key`. It is not part of authentication - it stops a retried request creating a duplicate record in the customer's system.
+Four HRIS write endpoints also take `X-Idempotency-Key` - `POST /employees`, `/employee-payroll-runs`, `/time-off` and `/timesheet-entry`. It stops a retried request creating a duplicate record.
 
-`X-Idempotency-Key: YOUR_STABLE_KEY`
+```
+X-Idempotency-Key: YOUR_STABLE_KEY
+```
 
-Derive it from your own record for the thing being created, not from a random value or a timestamp, and reuse the same key on every retry. See [Employee](/get-started/use-cases/create-an-employee).
+Derive it from your own record for the thing being created, not from a random value or a timestamp, and reuse the same key on every retry. Passthrough does not accept it - a retried passthrough write reaches the provider as a second write.
 
-{/* VERIFY: spec.json declares x-idempotency-key on exactly four operations, all HRIS -
-    POST /employees, /employee-payroll-runs, /time-off, /timesheet-entry. None of the
-    seventeen ATS create endpoints declare it, yet how-to/ats/create-a-candidate.mdx
-    instructs readers to send it. Either the header is honoured on ATS and the spec is
-    incomplete, or the ATS how-to is telling people to send a header that does nothing -
-    in which case duplicate candidates on retry are unprotected. Confirm with engineering
-    before narrowing or broadening the claim on this page. */}
+{/* VERIFY: spec.json declares x-idempotency-key on only these four HRIS operations, yet
+    how-to/ats/create-a-candidate.mdx instructs readers to send it. Either the spec is
+    incomplete or that how-to promises protection that doesn't exist, leaving duplicate
+    candidates on retry unguarded. Confirm with engineering before widening this claim. */}
 
-Passthrough does not accept an idempotency key - a retried passthrough write reaches the provider as a second write.
+## Auth errors
 
-## If this didn't work
+| Code | Cause |
+| --- | --- |
+| `401` | API key missing, malformed, or from the other environment. Check for the `Bearer ` prefix and a single space |
+| `403` | Credentials valid but not permitted here - a token used against a different category, or a model whose writes are disabled for that integration |
 
-<AccordionGroup>
-  <Accordion title="401 Unauthorized">
-    The API key is missing, malformed, or belongs to a different environment.
-
-    Check that the header value includes the `Bearer ` prefix and a single space before the key. Then confirm the key's environment matches the connector's - a Development key on a Production connector returns `401`, not a clearer error.
-  </Accordion>
-
-  <Accordion title="403 Forbidden">
-    The credentials are valid but don't permit this resource. The two common causes are a connector token used against a different API category - an HRIS-only connector called on `/api/ats/v1/*` - and a model whose writes are disabled for that integration.
-
-    For the second case, see [Check write support](/guides/reading-writing/meta-apis).
-  </Accordion>
-
-  <Accordion title="The request succeeds but returns no records">
-    Authentication is fine; the connector has no synced data yet - the initial sync may still be running, and Development connectors have no recurring schedule after it - see [Development connectors](/guides/reading-writing/syncing).
-
-    If it's a Production connector, check [Sync status](/guides/troubleshooting/sync-status).
-  </Accordion>
-
-  <Accordion title="The connector token stopped working after the end user reconnected">
-    Relinking preserves the `connector_token`, so a working token does not stop working because a customer re-authorised. What usually happened is that the connector was deleted and a fresh link issued instead of relinked - that mints a new connector, a new token, and new record IDs. See [Update credentials](/guides/troubleshooting/connections-to-relink).
-
-    Read the current token from the connector's **Connector Details** panel or via [Get Connectors](/api-reference/connectors/get-connectors), and key your stored tokens by connector ID so a replacement never sits alongside the old value.
-  </Accordion>
-</AccordionGroup>
+A `200` with no records is not an auth problem - the connector has no synced data yet. See [Sync status](/guides/troubleshooting/sync-status).
 
 ## Related
 
 - [Rate Limits](/api-reference/basics/rate-limits) - enforced per connector token, not per API key
 - [Environments](/get-started/environments) - why a key works against one and not the other
+- [Errors & issues](/guides/troubleshooting/errors-and-issues) - the full status-code list

@@ -28,8 +28,7 @@
               "get-started/what-is-bindbee",
               "get-started/quickstart",
               "get-started/platform"
-            ],
-            "icon": "flag-triangle-right"
+            ]
           },
           {
             "group": "Core Concepts",
@@ -39,16 +38,14 @@
               "get-started/how-to-connect",
               "get-started/scoping",
               "get-started/connection-methods"
-            ],
-            "icon": "shapes"
+            ]
           },
           {
             "group": "Integrations",
             "pages": [
               "get-started/integrations",
               "get-started/model-availability"
-            ],
-            "icon": "blocks"
+            ]
           },
           {
             "group": "Use Cases",
@@ -59,8 +56,7 @@
               "get-started/use-cases/write-ichra-deductions",
               "get-started/use-cases/create-an-employee",
               "get-started/use-cases/write-payroll-deductions"
-            ],
-            "icon": "target"
+            ]
           }
         ]
       },
@@ -85,8 +81,7 @@
               "guides/reading-writing/raw-data",
               "guides/reading-writing/webhooks",
               "guides/reading-writing/meta-apis"
-            ],
-            "icon": "arrow-right-left"
+            ]
           },
           {
             "group": "Extending the Model",
@@ -98,19 +93,17 @@
                   "guides/extending/custom-fields/dashboard",
                   "guides/extending/custom-fields/api-workflow"
                 ],
-                "icon": "sliders-horizontal"
+                "icon": "network"
               },
               "guides/extending/passthrough"
-            ],
-            "icon": "puzzle"
+            ]
           },
           {
             "group": "SDK & MCP",
             "pages": [
               "guides/sdk/frontend-sdk",
               "guides/sdk/mcp"
-            ],
-            "icon": "smartphone"
+            ]
           },
           {
             "group": "Data Models",
@@ -121,15 +114,13 @@
               "guides/data-models/time-and-attendance",
               "guides/data-models/recruiting",
               "guides/data-models/learning"
-            ],
-            "icon": "database"
+            ]
           },
           {
             "group": "Checklist",
             "pages": [
               "guides/go-live-checklist"
-            ],
-            "icon": "circle-check"
+            ]
           },
           {
             "group": "Troubleshooting",
@@ -154,8 +145,7 @@
                 ]
               },
               "guides/troubleshooting/permission-errors"
-            ],
-            "icon": "stethoscope"
+            ]
           }
         ]
       },
@@ -672,6 +662,23 @@
                 "expanded": true
               }
             ]
+          }
+        ]
+      },
+      {
+        "tab": "Resources",
+        "icon": "library-big",
+        "align": "end",
+        "menu": [
+          {
+            "item": "Walkthrough",
+            "icon": "monitor-play",
+            "href": "https://help.bindbee.dev/"
+          },
+          {
+            "item": "Status",
+            "icon": "signal",
+            "href": "https://status.bindbee.dev"
           }
         ]
       }
@@ -1582,16 +1589,6 @@
   },
   "navbar": {
     "links": [
-      {
-        "label": "Setup",
-        "icon": "wrench",
-        "href": "https://help.bindbee.dev/"
-      },
-      {
-        "label": "Status",
-        "icon": "signal",
-        "href": "https://status.bindbee.dev"
-      },
       {
         "label": "Website",
         "icon": "globe",

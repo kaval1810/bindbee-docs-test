@@ -1,13 +1,16 @@
 ---
-title: "Cascade a Termination Downstream"
+title: "Identify a Employee Termination"
 sidebarTitle: "Identify a termination"
 description: "React to an employee leaving by revoking access, ending coverage, and notifying downstream vendors."
 icon: "user-minus"
 ---
 
+When someone leaves, you need to revoke access, end coverage, and tell downstream vendors - each on its own date.
+
 ## What you'll use
 
-**Models** - employee, employment, benefit, dependent benefit
+**Models** - [employee](/hris/employee/get-employees), [employment](/hris/employments/get-employments), [benefit](/hris/benefits/get-benefits), [dependent benefit](/hris/dependent-benefits/get-dependent-benefits)
+
 **Events** - `employee_data_changed`, `connector_synced`, `connector_sync_error`
 
 <Info>
@@ -34,13 +37,13 @@ icon: "user-minus"
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    `employment_status`, `termination_date` and `termination_reason` are all on the employee, so this one call carries everything the decision needs.
+    `employment_status`, `termination_date` and `termination_reason` all sit on the employee, so one call carries everything the decision needs.
 
     **Result:** Status and termination details in one response.
   </Step>
 
-  <Step title="Match the full set of terminal statuses">
-    Four statuses are departures, and one that looks like one isn't.
+  <Step title="Match every terminal status">
+    Four statuses are departures, and one that looks like a departure isn't.
 
     ```python
     TERMINAL = {"INACTIVE", "RETIRED", "DECEASED", "INACTIVE_EXTERNAL"}
@@ -50,13 +53,13 @@ icon: "user-minus"
         handle_departure(emp)
     ```
 
-    `INACTIVE_EXTERNAL` covers contractors ending an engagement, and matching only on `INACTIVE` silently misses them - see [Filtering](/guides/reading-writing/querying-data) for the full enum.
+    `INACTIVE_EXTERNAL` is a contractor ending an engagement. Matching only on `INACTIVE` silently misses them - see [Filtering](/guides/reading-writing/querying-data) for the full enum.
 
     **Result:** Every real departure, and no false ones.
   </Step>
 
-  <Step title="Schedule on the termination date, don't act on arrival">
-    Terminations are recorded when entered, with an effective date often weeks out.
+  <Step title="Schedule on the termination date">
+    Terminations are recorded when they're entered, often weeks before they take effect. Act on the date, not on the event.
 
     ```python
     termination_date = emp["termination_date"]
@@ -66,9 +69,9 @@ icon: "user-minus"
         offboard(emp)
     ```
 
-    Keep the scheduled action cancellable. Rescinded resignations and entry errors are common enough that destructive-on-arrival costs more than it saves.
+    Keep the scheduled action cancellable. Rescinded resignations, entry errors and quick rehires are common enough that destructive-on-arrival costs more than it saves - see [Unexpected records](/guides/troubleshooting/missing-or-extra-records).
 
-    **Result:** Access ends on the last day, not on the day the HR team typed it in.
+    **Result:** Access ends on the last day, not the day HR typed it in.
   </Step>
 
   <Step title="Read coverage end dates separately">
@@ -81,13 +84,13 @@ icon: "user-minus"
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    Use the benefit's own end date - frequently the end of the month rather than the termination date - and expect a window where someone is terminated with coverage still active. See [Reading benefits](/guides/data-models/benefits).
+    Use the benefit's own end date, which is often the end of the month. Expect a window where someone is terminated with coverage still active - see [Reading benefits](/guides/data-models/benefits).
 
     **Result:** The real loss-of-coverage date, per plan.
   </Step>
 
   <Step title="Reconcile on a schedule">
-    This is the one workflow where the reconciliation pass is not optional. Run it independently of events.
+    Terminations are low-volume, so a lost webhook leaves no visible gap - and exhausted deliveries are never redelivered. Run this pass independently of events.
 
     ```bash
     curl --request GET \
@@ -96,43 +99,29 @@ icon: "user-minus"
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    Compare terminal-status employees against those you've offboarded. A missed delivery is never redelivered - see [Recover a Missed Webhook Delivery](/guides/reading-writing/webhooks) - and terminations are low-volume enough that a gap shows no symptom at all.
+    Compare terminal-status employees against those you've offboarded - see [Recover a Missed Webhook Delivery](/guides/reading-writing/webhooks).
 
     **Result:** A backstop that closes what events dropped.
   </Step>
 </Steps>
 
-## Constraints specific to this combination
-
-**Terminal status is not one value.** `INACTIVE`, `RETIRED`, and `DECEASED` are all departures with different downstream handling, and `INACTIVE_EXTERNAL` covers contractors ending an engagement. Matching only on `INACTIVE` misses real terminations. Equally, `LEAVE` is not a termination and must not trigger offboarding - an employee on parental leave whose access is revoked is a support escalation.
-
-**Future-dated terminations arrive early.** Many HRIS platforms record a termination when it's entered, with an effective date weeks out. Acting on the status change rather than the date revokes access before the person's last day. Gate every action on the termination date, and schedule rather than execute on arrival.
-
-**Terminations are frequently reversed.** Entered in error, rescinded resignations, and rehires within the same period all occur. Where possible make offboarding reversible for a window rather than destructive on arrival - and note that a rehire may return as a new employment on the same employee, or a new employee entirely, depending on the platform. See [Unexpected records](/guides/troubleshooting/missing-or-extra-records).
-
-**Coverage ends on its own schedule.** Benefit end dates are set separately from the termination date, often to the end of the month. Don't infer coverage loss from employment status - read the benefit's end date.
-
-**A missed event is silent.** Terminations are low-volume, so a lost webhook delivery produces no visible gap. Since exhausted deliveries are never redelivered - see [Recover a Missed Webhook Delivery](/guides/reading-writing/webhooks) - run a periodic reconciliation query for recently terminated employees rather than relying on events alone. This is the one workflow where the reconciliation pass is not optional.
-
-**Some platforms stop returning terminated records entirely.** Where that happens, disappearance is the only signal, and it's indistinguishable from a sync or permission problem. Confirm the platform's behaviour before treating absence as a departure - see [Missing records](/guides/troubleshooting/missing-or-extra-records).
-
 ## If this didn't work
 
 <AccordionGroup>
   <Accordion title="Access was revoked while someone was on leave">
-    `LEAVE` was matched as terminal. It is not a departure, and this is the most expensive false positive in the workflow.
+    `LEAVE` was matched as terminal. It isn't a departure, and this is the most expensive false positive in the workflow.
   </Accordion>
 
   <Accordion title="Access ended before the person's last day">
-    The status change was acted on rather than the termination date. Schedule on the date.
+    You acted on the status change instead of the termination date. Schedule on the date.
   </Accordion>
 
   <Accordion title="Contractors ended without notice, or not at all">
-    `INACTIVE_EXTERNAL` handled as either an ordinary termination or not at all. Decide deliberately which downstream actions apply to contingent workers.
+    `INACTIVE_EXTERNAL` was treated as an ordinary termination, or skipped. Decide deliberately which downstream actions apply to contractors.
   </Accordion>
 
   <Accordion title="An employee disappeared instead of going inactive">
-    Some platforms stop returning terminated records. That is indistinguishable from a scope or permission change - see [Missing records](/guides/troubleshooting/missing-or-extra-records) before treating absence as a departure.
+    Some platforms stop returning terminated records. That looks identical to a scope or permission change - check [Missing records](/guides/troubleshooting/missing-or-extra-records) before treating absence as a departure.
   </Accordion>
 
   <Accordion title="Coverage was ended too early">
@@ -142,5 +131,5 @@ icon: "user-minus"
 
 ## Related
 
-- [Reading employees](/guides/data-models/employee-and-org)
-- [Recover a Missed Webhook Delivery](/guides/reading-writing/webhooks)
+- [Reading employees](/guides/data-models/employee-and-org) - where `employment_status` and `termination_date` live
+- [Recover a Missed Webhook Delivery](/guides/reading-writing/webhooks) - what to do when an event never arrived

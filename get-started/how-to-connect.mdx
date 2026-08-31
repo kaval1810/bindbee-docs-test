@@ -6,23 +6,15 @@ icon: "link"
 
 {/* CONTENT PASS: merged from explanation/connector-lifecycle (connection half), explanation/magic-link, how-to/connections/embed-the-connection-flow (walkthrough only), how-to/connections/create-a-connector-programmatically. All three routes restated origin_id and the environment rule - both are now stated once, above the routes. */}
 
-You are not the one who connects to your customer's HR system. They are.
-
-That inversion shapes a surprising amount - where credentials live, who to contact when a connection breaks, and **why you cannot simply fix a permissions problem yourself.**
-
 ## Authorisation belongs to the customer
 
-Reaching a company's HR data requires credentials from that company. Only someone with administrative access to their HRIS can grant them, and in almost every case they cannot delegate that to a third party even if they wanted to.
+Your customer connects their own HR system, not you. Only an admin at their company can grant access, and they can't hand that job over - so you start the connection, they approve it in their own system, and Bindbee holds the credentials. **They never pass through your servers.**
 
-So the flow puts your customer's administrator in the middle. You initiate a connection for a named customer, they authorise it against their own system, and Bindbee holds the resulting credentials. **Those credentials never pass through your infrastructure and are never yours to store.**
-
-<Info>
-A connection problem is therefore usually not yours to fix. Expired credentials, insufficient permissions and revoked access all resolve on the customer's side. Your job is to detect the condition and prompt the right person - see [Connection Needing Relink](/guides/troubleshooting/connections-to-relink).
-</Info>
+That's also why a broken connection isn't yours to fix. Expired credentials, missing permissions and revoked access are all resolved on the customer's side - your job is to spot it and prompt the right person. See [Connection Needing Relink](/guides/troubleshooting/connections-to-relink).
 
 ## Three ways to connect
 
-All three produce a connector, all three put the administrator in control, and **none lets the end user choose which system to connect** - the integration slug is fixed before the session exists.
+All three create a connector and put your customer's admin in control. **None lets them pick which system to connect** - you choose the integration up front.
 
 | | Magic Link | Embedded Link | Programmatically |
 | --- | --- | --- | --- |
@@ -33,37 +25,29 @@ All three produce a connector, all three put the administrator in control, and *
 
 Two rules apply whichever route you take.
 
-**The environment is fixed at creation.** A link made while the dashboard is in Development produces a Development connector; a link made from a link token takes the environment of the API key that created it. It can be changed afterwards, but not by you - see [Environments](/get-started/environments).
+**The environment is fixed at creation.** A link made in Development creates a Development connector; a link token uses the environment of the API key behind it. Changing it later means asking support - see [Environments](/get-started/environments).
 
-**Set `origin_id` to your own stable customer identifier.** Every webhook payload returns it as `connector.origin_id`, so an incoming sync or error event resolves to your customer record with no mapping table. It cannot be added afterwards. Use a customer or tenant ID, not an email or company name that can change.
+**Set `origin_id` (Unique Customer ID) to an ID from your own system.** It comes back on every webhook, so events map to your customer with no lookup table. It can't be added later, so use an ID that won't change - not an email or company name.
 
 ## Magic Link
 
-A hosted URL your customer opens to authorise their HRIS. They enter their own credentials; you never handle them.
+A hosted page your customer opens to authorise their own system. You never handle their credentials.
 
 <Steps>
-  <Step title="Confirm the environment">
-    Check the dashboard is in the environment you intend.
-
-    **Result:** You're in the right environment.
-  </Step>
-
   <Step title="Create the link">
-    Go to **Magic Link** and start a new link. Select the integration, then fill in the end user's details, including `origin_id`.
+    Check you're in the right environment, then go to **New connector**, fill in the customer's details - including **Unique Customer ID** (`origin_id`) and pick the integration.
 
     **Result:** A link on the `link.bindbee.dev` domain.
   </Step>
 
   <Step title="Send it to the customer">
-    Forward the URL to the person who administers their HRIS - not necessarily your day-to-day contact. They'll need credentials or admin rights in the source system.
+    Send it to whoever administers their HR system - they need admin rights there, so it may not be your usual contact. Include the setup guide from [help.bindbee.dev](https://help.bindbee.dev).
 
-    Send the matching setup guide from [help.bindbee.dev](https://help.bindbee.dev) alongside it. Those guides are white-labelled and carry no Bindbee branding, so they're safe to forward.
-
-    **Result:** The customer has the link and instructions for their platform.
+    **Result:** The customer has the link and instructions.
   </Step>
 
-  <Step title="Confirm the connection completed">
-    The customer sees a confirmation screen once authorisation succeeds. The connector then appears under **Connectors**, with a `connector_token` in its **Connector Details** panel.
+  <Step title="Wait for them to finish">
+    Some systems take seconds over for succeed. The connector then appears under **Connectors**, with its `connector_token` in **Connector Details**.
 
     **Result:** An active connector, and the token you pass as `X-Connector-Token`.
   </Step>
@@ -71,94 +55,42 @@ A hosted URL your customer opens to authorise their HRIS. They enter their own c
 
 {/* VERIFY: link lifetime and expiry behaviour. Confirm how long a generated Magic Link remains valid, what an end user sees after expiry, and whether a link is single-use or reusable. */}
 
-### What the end user actually does
-
-The person opening the link is your customer's HR or IT administrator, not a developer. They see their own system, are asked to authorise access, and are done.
-
-What varies underneath is considerable. Some systems use OAuth and it takes seconds. Others need the administrator to generate an API key inside their HRIS first, create a dedicated integration user with specific role permissions, or configure a file delivery.
-
-For those, **the flow guides them but cannot complete the work for them** - some of it happens in their HR system, not in Bindbee. That is why per-system setup guides are written for an administrator rather than a developer, and why the harder integrations have a long tail between "link sent" and "connector active".
-
-<Note>
-  **Hosted does not mean manual.** The same hosted page can be reached from a link created programmatically - self-serve onboarding with no front-end at all.
-</Note>
-
 ## Embedded Link
 
-Embedding the same flow keeps the customer inside your product, under your own logo and colours, and hands your backend the `connector_token` directly.
+The same flow inside your product, in your own branding, handing your backend the `connector_token` directly.
 
 <Steps>
   <Step title="Generate a link token">
-    A `link_token` initialises one embed session for one end customer. Create it from your backend, never the browser - it is issued against your API key.
+    Call [Create Link Token](/sdk/create-link-token) from your backend - never the browser, since it uses your API key. One token per customer, with the payload shown under [Programmatically](#programmatically).
 
-    ```bash cURL
-    curl --request POST \
-      --url 'https://api.bindbee.dev/api/embedded/v1/link/create-link-token' \
-      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
-      --header 'Content-Type: application/json' \
-      --data '{
-        "end_user_data": {
-          "org_name": "Acme Corp.",
-          "origin_id": "064e1cd7-49ad-4e6d-8005-7e4c92fe9675"
-        },
-        "category": "HRIS",
-        "integration": "bamboohr"
-      }'
-    ```
-
-    **Result:** a `link_token` to hand to your frontend.
+    **Result:** A `link_token` to hand to your frontend.
   </Step>
 
   <Step title="Mount the flow in your frontend">
-    Use the React package if you have React, the CDN script otherwise - see [Frontend SDK](/guides/sdk/frontend-sdk) for both in full.
+    Use the React hook or the CDN script - see [Frontend SDK](/guides/sdk/frontend-sdk) for both, with every callback.
 
-    ```jsx React
-    import { useBindbeeMagiclink } from "@bindbee/react-link";
-
-    const Connect = ({ linkToken }) => {
-      const { open } = useBindbeeMagiclink({
-        linkToken,
-        onSuccess: (temporaryToken) => sendToBackend(temporaryToken),
-        onClose: () => console.log("closed without finishing"),
-      });
-      return <button onClick={open}>Connect your HR system</button>;
-    };
-    ```
-
-    **Result:** the customer completes authorization without leaving your product, and `onSuccess` returns a `temporary_token`.
+    **Result:** The customer connects without leaving your product, and `onSuccess` returns a `temporary_token`.
   </Step>
 
   <Step title="Exchange the temporary token">
-    The `temporary_token` is short-lived and cannot read data. Exchange it from your backend and store the result.
+    The `temporary_token` is short-lived and can't read data. Exchange it from your backend with [Get Connector Token](/sdk/get-connector-token), which returns `connector_token` and `connector_id`. Store both: the token authenticates every later call, the ID identifies the connector for support.
 
-    ```bash cURL
-    curl --request GET \
-      --url 'https://api.bindbee.dev/api/embedded/v1/connectors/connector_token/<TEMPORARY_TOKEN>' \
-      --header 'Authorization: Bearer <BINDBEE_API_KEY>'
-    ```
-
-    ```json
-    { "connector_token": "...", "connector_id": "..." }
-    ```
-
-    Store both. `connector_token` authenticates every later call; `connector_id` is what you use for support and for keying stored tokens.
-
-    **Result:** a `connector_token`, stored against your customer record.
-  </Step>
-
-  <Step title="Apply your branding">
-    Go to **Settings → Organization** and set your **logo**, **favicon** and **brand colour**. The embedded component picks them up.
-
-    **Result:** the flow renders in your own branding for every customer.
+    **Result:** A `connector_token`, stored against your customer record.
   </Step>
 </Steps>
 
+<Note>
+Set your **logo**, **favicon** and **brand colour** in **Settings → Branding** - the embedded flow picks them up.
+</Note>
+
 ## Programmatically
 
-Creating links in the dashboard works while you're onboarding customers one at a time. Once connection is part of your product's own signup flow, generate them from your backend and skip the front-end entirely.
+The same link, created from your backend instead of the dashboard - for when connecting is part of your own signup flow.
 
 <Steps>
-  <Step title="Build the link token payload">
+  <Step title="Create the link token">
+    Post this to `create-link-token` with your API key. `email` is optional; everything else is required. Full schema in [Create Link Token](/sdk/create-link-token).
+
     ```json
     {
       "end_user_data": {
@@ -170,60 +102,23 @@ Creating links in the dashboard works while you're onboarding customers one at a
     }
     ```
 
-    | Field | Purpose |
-    | --- | --- |
-    | `org_name` | The customer's organisation name, shown in the dashboard. Required |
-    | `origin_id` | **Your** identifier for this customer. Required |
-    | `email` | The end user's email. Optional |
-    | `category` | `HRIS`, `ATS`, or `LMS`. Required |
-    | `integration` | The integration slug. Required |
-
-    **Result:** A payload identifying who is connecting and to what.
+    **Result:** A `link_token` to redirect the customer to.
   </Step>
 
-  <Step title="Create the link and deliver it">
-    Post the payload to `create-link-token` with your API key, from your backend. The response carries a single field:
+  <Step title="Confirm it with a webhook">
+    Subscribe to sync events once, and the webhook tells you when the customer has authorised - match the incoming `origin_id` (Unique Customer ID) to your customer record. No polling, and nothing to wait for if they've already finished. See [Webhook](/guides/reading-writing/webhooks).
 
-    ```json
-    { "link_token": "..." }
-    ```
-
-    Redirect the customer to it, or embed it in your own onboarding flow. See [Create Link Token](/sdk/create-link-token) for the full schema.
-
-    **Result:** The customer authorises without you sending a link by hand.
-  </Step>
-
-  <Step title="Wait for the connector via webhook">
-    Connector creation completes when the customer finishes authorising, which may be minutes or days later. Don't poll.
-
-    Subscribe to sync events so you learn when the connection is live and has data - see [Webhook](/guides/reading-writing/webhooks). Match the incoming `origin_id` to your customer record.
-
-    **Result:** Your system learns about the connection when it's actually usable.
+    **Result:** You hear about the connection when it's actually usable.
   </Step>
 
   <Step title="Store the connector token">
-    Fetch the connector by the `origin_id` you set, and read `connector_token` from it.
-
-    ```bash
-    curl --request GET \
-      --url 'https://api.bindbee.dev/api/hris/v1/connectors?origin_id=064e1cd7-49ad-4e6d-8005-7e4c92fe9675&is_active=true' \
-      --header 'Authorization: Bearer <BINDBEE_API_KEY>'
-    ```
-
-    <Note>
-      There is no `temporary_token` in this flow. That exchange belongs to the
-      embedded route. With a hosted link you read the token from the connector.
-    </Note>
+    Fetch the connector by `origin_id` with [Get Connectors](/api-reference/connectors/get-connectors) and read `connector_token` from it. There's no `temporary_token` here - that belongs to the embedded route.
 
     **Result:** You can read and write for that customer.
   </Step>
 </Steps>
 
-### Letting the customer choose the integration
-
-`integration` is required, so the platform is decided before the link exists - there is no flow where the end user picks it.
-
-If your customers use different systems, collect that choice in your own UI first and generate the matching link. Render the options from the lookup endpoint, which is already filtered to what your organization can actually connect - see [Integration & Coverage](/get-started/integrations).
+**`integration`** is required, so you pick the system before the link exists. If your customers use different ones, ask in your own UI first and build the matching link - list the options from the lookup endpoint, which only returns what you can actually connect. See [Integration & Coverage](/get-started/integrations).
 
 ## If this didn't work
 
@@ -245,7 +140,7 @@ If your customers use different systems, collect that choice in your own UI firs
   </Accordion>
 
   <Accordion title="You generated two links for the same customer">
-    Two completed links produce two connectors, both billed in Production. Check for an existing connector by `origin_id` before generating, and relink rather than reissuing.
+    Two completed links produce two connectors, both billed in Production. Check for an existing connector by `origin_id` (Unique Customer ID) before generating, and relink rather than reissuing.
   </Accordion>
 
   <Accordion title="The customer's credentials were wrong, or have since changed">
