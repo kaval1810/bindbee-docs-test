@@ -1,6 +1,6 @@
 # Bindbee docs — structure (v3)
 
-Generated from `docs.json` on 2026-08-31 at commit `3820828`.
+Generated from `docs.json` on 2026-08-31 at commit `b0fd86e`.
 Run `python3 scripts/gen-structure.py` to refresh; hand edits will drift from the nav.
 
 ## Summary
@@ -8,11 +8,11 @@ Run `python3 scripts/gen-structure.py` to refresh; hand edits will drift from th
 | Tab | Pages |
 | --- | ---: |
 | Get Started | 16 |
-| Guide | 27 |
+| Guide | 29 |
 | API Reference | 146 |
-| **Total in nav** | **189** |
+| **Total in nav** | **191** |
 
-**50** are editorial pages written by hand. The other **139** render from `spec.json` via an `openapi:` line — 20 of those also carry a hand-written title, so they read like editorial pages in the sidebar but their body is generated.
+**52** are editorial pages written by hand. The other **139** render from `spec.json` via an `openapi:` line — 20 of those also carry a hand-written title, so they read like editorial pages in the sidebar but their body is generated.
 `docs.json` also carries **217** redirects.
 
 ### Reading the tree
@@ -57,9 +57,12 @@ Guide
 │   ├── Syncing   (guides/reading-writing/syncing)
 │   ├── Raw data   (guides/reading-writing/raw-data)  ·  title: Raw Data
 │   ├── Webhooks   (guides/reading-writing/webhooks)
-│   └── Meta APIs   (guides/reading-writing/meta-apis)  ·  title: Meta APIs for write operations
+│   └── Meta APIs   (guides/reading-writing/meta-apis)  ·  title: Meta APIs for Write Operations
 ├── Extending the Model/
-│   ├── Custom fields   (guides/extending/custom-fields)  ·  title: Custom Fields
+│   ├── Custom Fields/
+│   │   ├── Overview   (guides/extending/custom-fields)  ·  title: Custom Fields
+│   │   ├── Dashboard   (guides/extending/custom-fields/dashboard)  ·  title: Dashboard Configuration
+│   │   └── API   (guides/extending/custom-fields/api-workflow)  ·  title: API Configuration
 │   └── Passthrough   (guides/extending/passthrough)
 ├── SDK & MCP/
 │   ├── Frontend SDK   (guides/sdk/frontend-sdk)

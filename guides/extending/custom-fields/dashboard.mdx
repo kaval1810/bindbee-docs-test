@@ -1,0 +1,120 @@
+---
+title: "Dashboard Configuration"
+sidebarTitle: "Dashboard"
+description: "Create and configure Custom Fields visually from the Bindbee Dashboard."
+icon: "browser"
+---
+
+Creating a Custom Field from the dashboard takes two steps: create the field, then map it. For the concepts see the [Custom Fields overview](/guides/extending/custom-fields). For the programmatic route see [API Configuration](/guides/extending/custom-fields/api-workflow).
+
+## Step 1: Create the field
+
+Click **New Field** in the top right, fill in the dialog, then click **Create**.
+
+{/* SCREENSHOT: Custom Fields list page with the "New Field" button highlighted in the top right */}
+
+<Frame caption="Create a new custom field from the Custom Fields page.">
+  <img src="https://images.unifyx.dev/documentation_images/custom-fields/new-field-button.png" alt="New Field button on the Custom Fields page" className="block" />
+</Frame>
+
+{/* SCREENSHOT: The "New Field" dialog with name, description, category and model filled in (e.g. guardian_mobile / HRIS / employee) */}
+
+<Frame caption="Name the field and pick the category and model it extends.">
+  <img src="https://images.unifyx.dev/documentation_images/custom-fields/new-field-dialog.png" alt="New Field dialog" className="block" />
+</Frame>
+
+<Note>
+  Names must be **unique** within the model and follow **snake\_case**.
+</Note>
+
+## Step 2: Configure mappings
+
+You are redirected to the mapping screen, where you can set up **Connector Level** and **Organization Level** mappings for the field.
+
+{/* SCREENSHOT: Mapping configuration screen showing the Connector Level / Organization Level toggle */}
+
+<Frame caption="The mapping screen, with both scope options.">
+  <img src="https://images.unifyx.dev/documentation_images/custom-fields/mapping-screen.png" alt="Custom field mapping configuration screen" className="block" />
+</Frame>
+
+| | Connector Level | Organization Level |
+| --- | --- | --- |
+| Applies to | One connector instance | Every connector of that integration |
+| Select from dropdown | Your connector | Your integration |
+| Then fill the data field | Three options below | Three options below |
+
+Fill the **Data field** box in any of three ways:
+
+<CardGroup cols={3}>
+  <Card title="Pick from options" icon="list">
+    Select a mapping from the suggested list.
+  </Card>
+
+  <Card title="Browse raw JSON" icon="code">
+    Click `</>` to open the raw response, then click the field you want.
+  </Card>
+
+  <Card title="Type the path" icon="keyboard">
+    Enter the JMESPath expression directly.
+  </Card>
+</CardGroup>
+
+{/* SCREENSHOT: Raw JSON panel opened via the </> button, with a field being clicked to map it */}
+
+<Frame caption="Click the `</>` button to browse the connector's raw response and select a field.">
+  <img src="https://images.unifyx.dev/documentation_images/custom-fields/raw-json-viewer.png" alt="Raw JSON response viewer" className="block" />
+</Frame>
+
+<Info>
+  Add multiple mappings to a single custom field with **Add New**, repeating the process for other connectors or integrations.
+</Info>
+
+<Warning>
+  An incorrect JMESPath does not raise an error. When you request `custom_fields` through the API, the response returns `"INVALID_JSON_PATH"` for that field instead of the value.
+</Warning>
+
+## Find fields using Employee Search
+
+A field may not exist for every employee. Sometimes it only appears in the `raw_data` of one. Employee Search shows live connector data so you can locate it while configuring the mapping.
+
+<Steps>
+  <Step title="Open the search">
+    Click the employee search field at the top of the data panel.
+  </Step>
+
+  <Step title="Find the employee">
+    Enter a name or email address, then select the right result.
+  </Step>
+
+  <Step title="Map the field">
+    Review the raw data in the right hand panel, select the field you want, then click **Map Field**.
+  </Step>
+</Steps>
+
+{/* SCREENSHOT: Employee search box at the top of the data panel with results showing */}
+
+<Frame caption="Search for an employee to load their live connector data.">
+  <img src="https://images.unifyx.dev/documentation_images/custom-fields/employee-search.png" alt="Employee search in the mapping data panel" className="block" />
+</Frame>
+
+{/* SCREENSHOT: Selected employee's raw data in the right hand panel with the "Map Field" button visible */}
+
+<Frame caption="Select the field from the employee's raw data and confirm with Map Field.">
+  <img src="https://images.unifyx.dev/documentation_images/custom-fields/map-field.png" alt="Employee raw data panel with Map Field button" className="block" />
+</Frame>
+
+<Note>
+  Data structures differ across integrations depending on how each platform structures and returns its information.
+</Note>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Retrieve custom fields" icon="download" href="/guides/extending/custom-fields#retrieve-custom-fields">
+    Add `include_custom_fields=true` to your unified requests.
+  </Card>
+
+  <Card title="API Configuration" icon="code" href="/guides/extending/custom-fields/api-workflow">
+    Do the same thing programmatically.
+  </Card>
+</CardGroup>

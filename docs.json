@@ -86,7 +86,14 @@
           {
             "group": "Extending the Model",
             "pages": [
-              "guides/extending/custom-fields",
+              {
+                "group": "Custom Fields",
+                "pages": [
+                  "guides/extending/custom-fields",
+                  "guides/extending/custom-fields/dashboard",
+                  "guides/extending/custom-fields/api-workflow"
+                ]
+              },
               "guides/extending/passthrough"
             ]
           },
