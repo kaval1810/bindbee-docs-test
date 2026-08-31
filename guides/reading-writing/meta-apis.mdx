@@ -64,6 +64,15 @@ Coverage also varies by integration. An operation can be available for an integr
 
 ## Checking write support
 
+```mermaid
+flowchart LR
+    W["A write you<br/>want to make"] --> Q{"Meta endpoint<br/>for it?"}
+    Q -- no --> REF["Build from the<br/>API reference"]
+    Q -- yes --> G["GET it for<br/>this connector"]
+    G -- "200" --> S["Build from<br/>the schema"]
+    G -- "501" --> U["Unknown,<br/>not unsupported"]
+```
+
 There is no published capability matrix, and [Get Integrations](/api-reference/integrations/get-integrations) does not return per-operation write flags. **Probing the Meta endpoint is the reliable programmatic check available today** — a schema coming back means the operation is implemented for that connector's integration.
 
 It tells you more than yes-or-no. `required` and `isRequired` show what the integration insists on, and a required `integration_params` block means the write needs platform-specific values you have to source before you can call it at all.
@@ -233,6 +242,16 @@ This is why `enumInformation` exists. The accepted values are opaque provider id
 ## Integration-specific fields
 
 Two fields carry values that are not part of the unified model. They look similar and behave differently.
+
+```mermaid
+flowchart LR
+    B["Request body"] --> U["Unified fields"]
+    B --> I["integration_params"]
+    B --> A["additional_attributes"]
+    U --> V["Validated against<br/>the schema"]
+    I --> V
+    A --> P["Passed through<br/>unvalidated"]
+```
 
 | | `integration_params` | `additional_attributes` |
 | --- | --- | --- |
