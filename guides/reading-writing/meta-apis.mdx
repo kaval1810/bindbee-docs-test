@@ -79,26 +79,6 @@ schema = requests.get(
   The response is JSON Schema compatible. Pass it to standard tooling for client side validation, or render it into an input form for your end users.
 </Tip>
 
-## Request workflow
-
-<Steps>
-  <Step title="Fetch the schema">
-    Call the Meta endpoint for the write operation and the connector you are targeting.
-  </Step>
-
-  <Step title="Read the schema">
-    Review required fields, data types, accepted values, and any integration specific parameters.
-  </Step>
-
-  <Step title="Build the request body">
-    Construct a body that conforms to the schema, including every field listed in `required`.
-  </Step>
-
-  <Step title="Submit the write request">
-    Send the body to the matching write endpoint using the same connector token.
-  </Step>
-</Steps>
-
 ## Schema keywords
 
 | Keyword | Purpose |
