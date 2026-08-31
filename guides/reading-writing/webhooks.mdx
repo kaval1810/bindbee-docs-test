@@ -458,7 +458,6 @@ valid_signature = ActiveSupport::SecurityUtils.secure_compare(expected_signature
 ```
 </CodeGroup>
 
-
 ---
 
 ## Monitoring deliveries
@@ -500,10 +499,6 @@ curl https://api.bindbee.dev/api/v1/webhooks/logs/<LOG_ID> \
   -H "Authorization: Bearer <BINDBEE_API_KEY>"
 ```
 
-<Tip>
-  Polling `GET /webhooks/logs?errors_only=true` on a schedule is a simple way to catch a silently broken endpoint. A webhook that stops being delivered is easy to miss, because nothing arrives to tell you.
-</Tip>
-
 <Note>
   These three endpoints have their own pagination bounds: `/webhooks` defaults to `20` with a maximum of `100`, and `/webhooks/logs` defaults to `25` with a maximum of `50`. Everything else on the API is `50` and `200` — see [Pagination](/api-reference/basics/pagination).
 </Note>
@@ -522,16 +517,6 @@ curl https://api.bindbee.dev/api/v1/webhooks/logs/<LOG_ID> \
 
 {/* VERIFY: ordering - can events for one connector arrive out of sequence? Retry behaviour is documented; ordering is not, and it determines whether a handler can trust event order or must re-read state. */}
 
-### Recovering a missed delivery
-
-Do not try to recover the events. Take the earliest plausible start and latest plausible end of the outage — overlapping is free, a gap is not — then read current state with `modified_after` for each affected connector and model. If a record changed three times during the outage, current state is what you want anyway. See [Querying Data](/guides/reading-writing/querying-data).
-
-One thing an incremental read will not surface: a connector that broke during the outage produces *no* new data, so check sync status per connector as well.
-
-### When polling is the better instrument
-
-You poll **Bindbee, not the source system**, so it costs nothing upstream. Polling every five minutes against a 24-hour sync produces 288 identical responses a day — time it off the schedule instead. Poll the connector list rather than the data endpoints, use `next_sync_start_time` to decide when to read, then read with `modified_after` for the connectors whose `last_sync_start_time` moved.
-
 ---
 
 ## Created versus modified records
@@ -540,13 +525,7 @@ Data-change events tell you a record was created **or** updated, without saying 
 
 <Warning>
   There is currently no created-versus-modified flag in the webhook payload.
-
-  {/* VERIFY: this was raised with engineering in 2026 and a payload flag was discussed. If it shipped, make it the primary method and demote the comparison approach above. */}
 </Warning>
-
-**The first sync looks like everything was created.** The initial sync on a new connector loads the entire population, so every record is new to you. That is technically correct and rarely what you want — sending a welcome email to an entire workforce because a connector was just connected is a real failure mode.
-
-Handle onboarding separately from steady state: process the first sync as a bulk import without triggering per-record workflows, then switch to event-driven handling. `sync.sync_name` increments per run, which is one way to recognise the first.
 
 ---
 
