@@ -1,195 +1,137 @@
 ---
 title: "Raw Data"
 sidebarTitle: "Raw data"
-description: "Return the source system's own payload alongside a record, and inspect it to find a value the unified model drops."
+description: "See the original payload Bindbee received from a third-party system, why it is there, and when to use it instead of the unified fields."
 icon: "file-code"
 ---
 
-{/* CONTENT PASS: merged from how-to/reading-data/include-raw-data-and-custom-fields, how-to/data-model/inspect-the-raw-upstream-payload. Both explain include_raw_data - keep one parameter explanation. */}
+Bindbee normalizes every record it syncs into a unified model, so an employee from Workday and an employee from BambooHR arrive in your application in exactly the same shape.
 
+Raw data is the layer underneath. It is the payload Bindbee received from the third-party system before normalization, returned alongside the normalized fields on request.
 
-Both are omitted by default. Each is a query parameter you opt into per request.
+You need it in three situations: confirming how a value was normalized, discovering a provider field the unified schema does not cover, and debugging a discrepancy a customer has reported. It is a diagnostic and discovery tool, not a data source to build on — [Using raw data safely](#using-raw-data-safely) explains why.
 
-<Info>
-  **Before you start**
+---
 
-  - For custom fields, at least one field is mapped and resolves on this connector - see [Map from the dashboard](/guides/extending/custom-fields).
-</Info>
+## Requesting raw data
 
-## Steps
+Add `include_raw_data=true` to any list or retrieve request. It defaults to `false`.
 
-<Steps>
-  <Step title="Add the parameter">
-    | Parameter | Adds |
-    | --- | --- |
-    | `include_custom_fields=true` | A `custom_fields` object per record |
-    | `include_raw_data=true` | A `raw_data` object per record, untransformed |
+```bash
+curl -G https://api.bindbee.dev/api/hris/v1/employees \
+  -H "Authorization: Bearer <BINDBEE_API_KEY>" \
+  -H "X-Connector-Token: <CONNECTOR_TOKEN>" \
+  -d include_raw_data=true
+```
 
-    ```bash
-    curl --request GET \
-      --url 'https://api.bindbee.dev/api/hris/v1/employees?include_custom_fields=true&page_size=200' \
-      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
-      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
-    ```
+The `raw_data` object appears on each record:
 
-    Both are available on collection and single-record endpoints across models.
-
-    **Result:** The extra keys inline.
-  </Step>
-
-  <Step title="Read custom fields by name">
-    ```json
-    {
-      "id": "019f618e-c850-716d-a510-74639514abf6",
-      "first_name": "Ada",
-      "custom_fields": {
-        "cost_center_name": "Engineering-NA",
-        "guardian_mobile": "+1-555-123-4567"
-      }
+```json
+{
+  "id": "018b18ef-c487-703c-afd9-0ca478ccd9d6",
+  "remote_id": "123321",
+  "first_name": "Jane",
+  "employment_status": "ACTIVE",
+  "marital_status": "SINGLE",
+  "raw_data": {
+    "employeeNumber": "000000168",
+    "firstName": "Jane",
+    "employmentStatus": "Active",
+    "maritalStatus": "S",
+    "customFields": {
+      "badgeId": "B-4417"
     }
-    ```
+  }
+}
+```
 
-    Only fields with a mapping that resolves on this connector appear. A field mapped for one connector and not another is absent rather than null on the second.
+Reading it against the normalized fields shows exactly what happened: `Active` became `ACTIVE`, `S` became `SINGLE`, and `badgeId` has no unified equivalent. The first two are [enum normalization](/guides/reading-writing/enum-values); the third is what custom fields exist for.
 
-    **Result:** Your mapped values alongside unified fields.
-  </Step>
+<Note>
+  Raw data is available on the **88 data endpoints** across HRIS, ATS and LMS. It is not returned by the connector, integration, webhook, custom field or meta endpoints, since those describe Bindbee's own resources rather than synced third-party records.
+</Note>
 
-  <Step title="Lower page_size when including raw data">
-    `raw_data` carries the source system's full payload per record, which is frequently larger than the unified record itself. At `page_size=200` responses become slow and heavy.
+---
 
-    Drop to 25-50 when including it, or filter to specific records instead.
+## What it contains
 
-    **Result:** Responses that return in reasonable time.
-  </Step>
-</Steps>
+`raw_data` is an untyped JSON object. Bindbee makes no promises about its contents beyond it being what the provider returned.
 
-## Which to use when
+* **Field names follow the provider, not Bindbee.** Expect `firstName`, `first_name`, `EmpFirstName`, or whatever that system uses.
+* **The structure differs per connector.** A key that exists on one integration will not exist on another, and nesting depth varies.
+* **It can change without notice.** Providers add, rename and remove fields on their own schedule.
+* **It can be `null`.** Some records have no raw payload retained.
 
-| Goal | Use |
-| --- | --- |
-| Consume a value in production | `include_custom_fields` |
-| Find a field to map | The [raw-data endpoint](/guides/reading-writing/raw-data), not this parameter |
-| Spot-check a mapping across many records | `include_raw_data`, with a small `page_size` |
-| Audit what the source returns for one person | `include_raw_data` with an `ids` filter |
+---
+
+## Inspecting structure before you have a record
+
+To see the shape of a provider's payload without pulling records, use the raw data endpoint. It is the fastest way to find the path to a field you want to map.
+
+```bash
+curl -G https://api.bindbee.dev/api/v1/custom-fields/raw-data \
+  -H "Authorization: Bearer <BINDBEE_API_KEY>" \
+  -d category=HRIS \
+  -d model=employee \
+  -d connector_token=<CONNECTOR_TOKEN>
+```
+
+| Parameter | Required | Notes |
+| --- | --- | --- |
+| `category` | Yes | `HRIS`, `ATS` or `LMS` |
+| `model` | Yes | The model slug, for example `employee` |
+| `connector_token` | One of the two | Returns the latest synced row for that connector |
+| `integration_slug` | One of the two | Returns the integration's canned sample payload |
+
+Pass exactly one of `connector_token` or `integration_slug`. Providing both, or neither, returns a `422`.
+
+With `connector_token` you get that connector's most recently synced row. **If the connector has never synced, the response falls back to the integration's canned sample** — enough to write a mapping against, but confirm the shape once real data lands. With `integration_slug` you get the sample directly, which is useful when building against an integration before any customer has connected it.
+
+<Tip>
+  Three ways to look at upstream data, and they are not interchangeable. Use this **endpoint** to find a field. Use `include_raw_data` with a small `page_size` to spot-check a mapping across records, or with an `ids` filter to audit one person. Use `include_custom_fields` for anything you consume in production.
+</Tip>
+
+---
+
+## Using raw data safely
+
+The rule is straightforward: **read raw data, do not build on it.**
+
+Code that reaches into `raw_data` for a value works for the one connector you tested against and silently breaks for every other one, because the key it depends on does not exist there. It also breaks when that provider renames the field.
+
+When you find a value your product genuinely needs, promote it to a [custom field](/guides/extending/custom-fields). You map it once with a JMESPath expression, per integration or per connector, and it then arrives on a stable key in the `custom_fields` object on every record.
+
+| | Raw data | Custom fields |
+| --- | --- | --- |
+| Purpose | Inspection and discovery | Consuming provider-specific values in production |
+| Key names | The provider's | Yours, chosen once and stable |
+| Behaviour across connectors | Different everywhere | The same key on every connector you map |
+| Safe to depend on | No | Yes |
+
+Use raw data to find the value; use custom fields to consume it.
 
 <Warning>
-  `include_raw_data=true` is a debugging tool. Leaving it on in production inflates every response, slows every page, and means your code depends on provider-specific shapes that change without notice - which is exactly what the unified model exists to avoid.
-
-  If you need a raw value routinely, map it as a custom field instead.
+  `include_raw_data` increases response size, sometimes considerably, since it returns the full provider payload for every record in the page. Leave it off in production paths and turn it on when you are investigating something.
 </Warning>
 
-## If this didn't work
-
-<AccordionGroup>
-  <Accordion title="custom_fields is missing entirely">
-    Confirm `include_custom_fields=true` is on the request. If it is, no mapped field resolves on this connector - check with the configuration endpoint, see [Scope a mapping](/guides/extending/custom-fields).
-  </Accordion>
-
-  <Accordion title="A field's value is INVALID_JSON_PATH">
-    The mapping's expression doesn't resolve against this connector's payload. An invalid path returns this string rather than raising an error - see [Test an expression](/guides/extending/custom-fields).
-  </Accordion>
-
-  <Accordion title="A custom field is null for some records">
-    Usually correct - not every record has every value. Confirm by checking `raw_data` for a record where you expect it.
-  </Accordion>
-
-  <Accordion title="Responses became slow after adding raw data">
-    Expected. Lower `page_size`, or use the raw-data endpoint for a single record instead of paging everything with raw data attached.
-  </Accordion>
-
-  <Accordion title="You want raw data for one employee only">
-    Combine with a filter: `?ids=<EMPLOYEE_ID>&include_raw_data=true`. That's far cheaper than paging the collection.
-  </Accordion>
-</AccordionGroup>
-
-## Inspecting the upstream payload
-
-When a value exists in the HRIS but not in the unified response, it is almost always present in the raw upstream payload. Inspect that payload to find the exact path, then map it.
-
-<Info>
-  **Before you start**
-
-  - You know the model the field should belong to - `employee`, `employment`, `benefit`, and so on.
-  - The connector has completed at least one sync, or you accept the integration's canned sample instead.
-</Info>
-
-### Steps
-
-<Steps>
-  <Step title="Fetch the raw payload">
-    Call the raw-data endpoint with the category and model slug. Pass `connector_token` to see this connector's most recent synced row, or `integration_slug` to see a generic sample for the integration.
-
-    ```bash
-    curl --request GET \
-      --url 'https://api.bindbee.dev/api/v1/custom-fields/raw-data?category=HRIS&model=employee&connector_token=<CONNECTOR_TOKEN>' \
-      --header 'Authorization: Bearer <BINDBEE_API_KEY>'
-    ```
-
-    **Result:** The untransformed JSON the source system returned for one record.
-
-    <Tip>
-      If the connector has never synced, the endpoint falls back to the integration's canned sample. That's enough to write a mapping against, but confirm the shape once real data lands.
-    </Tip>
-  </Step>
-
-  <Step title="Locate the field">
-    Search the payload for the value you expect. Match on the value, not the field name - source systems rarely name things the way their UI does.
-
-    **Result:** You have a JSON path, for example `personalInfo.birthDate` or `customFieldGroup[0].value`.
-  </Step>
-
-  <Step title="Write a JMESPath expression">
-    Convert the location into a [JMESPath](https://jmespath.org/) expression.
-
-    | What you see | Expression |
-    | --- | --- |
-    | `{"personalInfo": {"birthDate": "1991-03-16"}}` | `personalInfo.birthDate` |
-    | `{"fields": [{"name": "Cost Center", "value": "ENG-NA"}]}` | `fields[?name=='Cost Center'].value \| [0]` |
-    | `{"customField4611": "REG"}` | `customField4611` |
-
-    **Result:** An expression that resolves to a single value.
-  </Step>
-
-  <Step title="Confirm it resolves">
-    Dry-run the expression before saving it, using the dashboard's preview control or the preview endpoint. See [Test an expression](/guides/extending/custom-fields).
-
-    **Result:** The preview returns your value rather than `null`.
-  </Step>
-</Steps>
-
-### Map what you found
-
-Finding the path doesn't surface the field - a mapping does. Create it from the dashboard for one-off changes, or via the API when the configuration needs to be versioned or replicated across environments.
-
-### If this didn't work
-
-<AccordionGroup>
-  <Accordion title="The field isn't in the payload at all">
-    Two likely causes.
-
-    The field may not be in scope for this connector. Some models and fields are excluded from sync by configuration - see [Restrict what syncs](/get-started/scoping).
-
-    Or the source system may not expose it on this endpoint. Several HRIS platforms return different field sets to different API surfaces, and permission level changes what's returned - see [Permission errors](/guides/troubleshooting/permission-errors). If the field is genuinely absent from the API, the source system's own configuration usually has to change first.
-  </Accordion>
-
-  <Accordion title="The payload looks different from another connector on the same integration">
-    Expected. Payload shape varies with the source system's configuration, plan tier, and enabled modules, so two connectors on the same integration can differ.
-
-    Map at connector level for these, and reserve integration-level mappings for fields that are genuinely consistent. See [Scope a mapping](/guides/extending/custom-fields).
-  </Accordion>
-
-  <Accordion title="The value appears in raw data but the mapped field returns INVALID_JSON_PATH">
-    The expression didn't resolve. Bindbee returns `"INVALID_JSON_PATH"` in place of the value rather than raising an error, so this surfaces at read time rather than at save time.
-
-    Most often it's an array that needs an index or a filter, or a quoting error inside a filter expression.
-  </Accordion>
-
-  <Accordion title="You need the raw payload in the API response instead">
-    Add `include_raw_data=true` to a unified endpoint to get `raw_data` inline per record. That's useful for spot checks across many records; the raw-data endpoint above is better for discovering structure on one.
-  </Accordion>
-</AccordionGroup>
+---
 
 ## Related
 
-- [Custom Fields](/guides/extending/custom-fields) - promoting a raw value into a named field
-- [Core concepts](/get-started/core-concepts) - why the unified model drops values in the first place
+<CardGroup cols={2}>
+  <Card title="Custom fields" icon="puzzle" href="/guides/extending/custom-fields">
+    Map a raw value onto a stable key using JMESPath.
+  </Card>
+
+  <Card title="Get Raw Data" icon="search" href="/api-reference/custom-fields/get-raw-data">
+    API reference for inspecting a connector's upstream payload.
+  </Card>
+
+  <Card title="Preview" icon="flask-conical" href="/api-reference/custom-fields/preview">
+    Test a JMESPath expression against a connector before saving it.
+  </Card>
+
+  <Card title="Enum values" icon="list" href="/guides/reading-writing/enum-values">
+    Why a source value became the normalized one you see.
+  </Card>
+</CardGroup>
