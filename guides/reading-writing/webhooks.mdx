@@ -61,6 +61,100 @@ Webhooks are configured in the dashboard, under **Configure → Webhooks**.
 
 ---
 
+## Securing your endpoint
+
+To secure your API endpoint, ensure it verifies that POST requests are genuinely from Bindbee and not from a malicious source, and that payloads haven’t been tampered with during transit.
+
+You can achieve this by checking if the `X-Bindbee-Webhook-Signature` field in the request header matches an encoded combination of your organization’s unique webhook signature and the payload of the incoming request.
+
+In the Webhooks configuration page, you should find a Security section where you can access your signature key. This key is unique to your organization and can be regenerated if it becomes known to an unauthorized party.
+
+<Warning>
+  **Screenshot needed** — the **Security** section of the Webhooks page, showing the signature key field and the regenerate control. The key must be redacted or a dummy value. Save to `images/webhooks/signature-key.png` and replace this callout with a `<Frame>`.
+</Warning>
+
+<CodeGroup>
+```python Python
+import base64, hashlib, hmac
+
+signature_key = "YOUR_WEBHOOK_SIGNATURE_KEY"
+
+received_signature = request.headers.get("X-Bindbee-Webhook-Signature")
+if not received_signature:
+    raise ValueError("Signature header missing; request may not be from Bindbee.")
+
+# Raw body bytes, not a re-serialised parsed object
+body_bytes = request.body if isinstance(request.body, bytes) else request.body.encode("utf-8")
+
+hmac_digest = hmac.new(
+    signature_key.encode("utf-8"),
+    body_bytes,
+    hashlib.sha256,
+).digest()
+
+expected_signature = base64.urlsafe_b64encode(hmac_digest).decode()
+signature_valid = hmac.compare_digest(expected_signature, received_signature)
+```
+
+```javascript Node
+const crypto = require("crypto");
+const express = require("express");
+const app = express();
+
+// Capture the raw body before Express parses it
+app.use(express.json({
+  verify: (req, res, buf) => { req.rawBody = buf; },
+}));
+
+const webhookSecret = "YOUR_WEBHOOK_SIGNATURE_KEY";
+
+app.post("/hooks/bindbee", (req, res) => {
+  // Node lower-cases incoming header names
+  const receivedSignature = req.headers["x-bindbee-webhook-signature"];
+  if (!receivedSignature) return res.status(401).send("Missing signature");
+
+  const expectedSignature = crypto
+    .createHmac("sha256", webhookSecret)
+    .update(req.rawBody)
+    .digest("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_");
+
+  const a = Buffer.from(expectedSignature, "utf-8");
+  const b = Buffer.from(receivedSignature, "utf-8");
+
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+    return res.status(401).send("Invalid signature");
+  }
+
+  // Respond first, process afterwards
+  res.sendStatus(200);
+  enqueue(req.body);
+});
+```
+
+```ruby Ruby
+require 'base64'
+require 'openssl'
+
+secret_key = 'YOUR_WEBHOOK_SIGNATURE_KEY'
+
+received_signature = request.headers['X-Bindbee-Webhook-Signature']
+raise 'Signature header missing; request may not be from Bindbee.' unless received_signature
+
+# Read the raw body, and rewind so later code can read it too
+request.body.rewind
+request_body = request.body.read
+
+hmac_digest = OpenSSL::HMAC.digest(OpenSSL::Digest.new('sha256'), secret_key, request_body)
+expected_signature = Base64.urlsafe_encode64(hmac_digest)
+
+valid_signature = ActiveSupport::SecurityUtils.secure_compare(expected_signature, received_signature)
+```
+</CodeGroup>
+
+---
+
 ## Payload structure
 
 Every payload shares a common envelope. Four objects are always present, and one more appears on failures.
@@ -366,100 +460,6 @@ Retries are triggered only for request or network-layer failures, including:
 
 ---
 
-## Securing your endpoint
-
-To secure your API endpoint, ensure it verifies that POST requests are genuinely from Bindbee and not from a malicious source, and that payloads haven’t been tampered with during transit.
-
-You can achieve this by checking if the `X-Bindbee-Webhook-Signature` field in the request header matches an encoded combination of your organization’s unique webhook signature and the payload of the incoming request.
-
-In the Webhooks configuration page, you should find a Security section where you can access your signature key. This key is unique to your organization and can be regenerated if it becomes known to an unauthorized party.
-
-<Warning>
-  **Screenshot needed** — the **Security** section of the Webhooks page, showing the signature key field and the regenerate control. The key must be redacted or a dummy value. Save to `images/webhooks/signature-key.png` and replace this callout with a `<Frame>`.
-</Warning>
-
-<CodeGroup>
-```python Python
-import base64, hashlib, hmac
-
-signature_key = "YOUR_WEBHOOK_SIGNATURE_KEY"
-
-received_signature = request.headers.get("X-Bindbee-Webhook-Signature")
-if not received_signature:
-    raise ValueError("Signature header missing; request may not be from Bindbee.")
-
-# Raw body bytes, not a re-serialised parsed object
-body_bytes = request.body if isinstance(request.body, bytes) else request.body.encode("utf-8")
-
-hmac_digest = hmac.new(
-    signature_key.encode("utf-8"),
-    body_bytes,
-    hashlib.sha256,
-).digest()
-
-expected_signature = base64.urlsafe_b64encode(hmac_digest).decode()
-signature_valid = hmac.compare_digest(expected_signature, received_signature)
-```
-
-```javascript Node
-const crypto = require("crypto");
-const express = require("express");
-const app = express();
-
-// Capture the raw body before Express parses it
-app.use(express.json({
-  verify: (req, res, buf) => { req.rawBody = buf; },
-}));
-
-const webhookSecret = "YOUR_WEBHOOK_SIGNATURE_KEY";
-
-app.post("/hooks/bindbee", (req, res) => {
-  // Node lower-cases incoming header names
-  const receivedSignature = req.headers["x-bindbee-webhook-signature"];
-  if (!receivedSignature) return res.status(401).send("Missing signature");
-
-  const expectedSignature = crypto
-    .createHmac("sha256", webhookSecret)
-    .update(req.rawBody)
-    .digest("base64")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_");
-
-  const a = Buffer.from(expectedSignature, "utf-8");
-  const b = Buffer.from(receivedSignature, "utf-8");
-
-  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
-    return res.status(401).send("Invalid signature");
-  }
-
-  // Respond first, process afterwards
-  res.sendStatus(200);
-  enqueue(req.body);
-});
-```
-
-```ruby Ruby
-require 'base64'
-require 'openssl'
-
-secret_key = 'YOUR_WEBHOOK_SIGNATURE_KEY'
-
-received_signature = request.headers['X-Bindbee-Webhook-Signature']
-raise 'Signature header missing; request may not be from Bindbee.' unless received_signature
-
-# Read the raw body, and rewind so later code can read it too
-request.body.rewind
-request_body = request.body.read
-
-hmac_digest = OpenSSL::HMAC.digest(OpenSSL::Digest.new('sha256'), secret_key, request_body)
-expected_signature = Base64.urlsafe_encode64(hmac_digest)
-
-valid_signature = ActiveSupport::SecurityUtils.secure_compare(expected_signature, received_signature)
-```
-</CodeGroup>
-
----
-
 ## Monitoring deliveries
 
 Delivery logs are on the [Webhooks tab](https://app.bindbee.dev/logs/webhooks) under Logs, and on each webhook's own page.
@@ -509,23 +509,17 @@ curl https://api.bindbee.dev/api/v1/webhooks/logs/<LOG_ID> \
 
 **That nothing happened.** Silence is ambiguous — no events could mean no changes, a delivery failure, or a connector that broke three weeks ago. Watch connector health separately, via [Monitor sync status](/guides/troubleshooting/sync-status).
 
-**That you received everything.** Delivery is best-effort and the retry window is 60 seconds. A deploy that takes your endpoint down for two minutes loses those events permanently, with no error in your logs or Bindbee's.
+**That you received everything.** Delivery is best-effort and the retry window is 60 seconds. A deploy that takes your endpoint down for two minutes loses those events permanently, with no error in your logs or Bindbee's. Do not try to recover the events — take the earliest plausible start and latest plausible end of the outage and read current state with `modified_after` for each affected connector and model, as in [Querying Data](/guides/reading-writing/querying-data). If a record changed three times during the outage, current state is what you wanted anyway.
 
 **Which field changed.** An event says a record changed, not which attribute or what it was before.
+
+**Whether a record was created or updated.** Data-change events say a record changed, not which — there is no flag in the payload, so compare against your own stored copy. The first sync is the case to design for: it loads the entire population, so everything classifies as created. Process it as a bulk import rather than triggering per-record workflows, or a newly connected customer gets a welcome email sent to their whole workforce.
 
 **That a record was deleted.** Disappearance is a non-event. Only a scheduled read finds it.
 
 {/* VERIFY: ordering - can events for one connector arrive out of sequence? Retry behaviour is documented; ordering is not, and it determines whether a handler can trust event order or must re-read state. */}
 
----
-
-## Created versus modified records
-
-Data-change events tell you a record was created **or** updated, without saying which. If your logic differs — a new hire versus a job-title edit, first-time enrolment versus a change to an existing one — you have to determine it yourself by comparing against your own stored copy.
-
-<Warning>
-  There is currently no created-versus-modified flag in the webhook payload.
-</Warning>
+{/* VERIFY: a created-versus-modified flag in the payload was discussed with engineering in 2026. If it shipped, make it the primary method and demote comparing against a stored copy. */}
 
 ---
 

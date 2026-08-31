@@ -42,11 +42,11 @@ Writing does not go through the copy. **A write is submitted to the source syste
 ```mermaid
 flowchart LR
     YOU["Your application"] -->|"GET meta"| BB["Bindbee"]
-    BB -.->|"the schema this connector needs"| YOU
+    BB -.->|"connector schema"| YOU
     YOU -->|POST| BB
     BB -->|write| SRC["Source system"]
-    SRC -.->|"its own answer"| BB
-    BB -.->|"in Bindbee's envelope"| YOU
+    SRC -.->|"write result"| BB
+    BB -.->|"write result"| YOU
     SRC -->|"next sync"| COPY["Bindbee's copy"]
 ```
 

@@ -1,15 +1,20 @@
 ---
 title: "Raw Data"
 sidebarTitle: "Raw data"
-description: "See the original payload Bindbee received from a third-party system, why it is there, and when to use it instead of the unified fields."
+description: "See the original payload Bindbee received from a third-party system, why it is there and when to use it instead of the unified fields."
 icon: "file-code"
 ---
 
 Bindbee normalizes every record it syncs into a unified model, so an employee from Workday and an employee from BambooHR arrive in your application in exactly the same shape.
 
-Raw data is the layer underneath. It is the payload Bindbee received from the third-party system before normalization, returned alongside the normalized fields on request.
+**Raw data is the layer underneath.** It is the payload Bindbee received from the third-party system before normalization, returned alongside the normalized fields on request.
 
-You need it in three situations: confirming how a value was normalized, discovering a provider field the unified schema does not cover, and debugging a discrepancy a customer has reported. It is a diagnostic and discovery tool, not a data source to build on — [Using raw data safely](#using-raw-data-safely) explains why.
+You need it in three situations:
+- confirming how a value was normalized
+- discovering a provider field the unified schema does not cover
+- debugging a discrepancy a customer has reported
+
+It is a diagnostic and discovery tool, not a data source to build on — [Using raw data safely](#using-raw-data-safely) explains why.
 
 ---
 
@@ -86,10 +91,6 @@ curl -G https://api.bindbee.dev/api/v1/custom-fields/raw-data \
 Pass exactly one of `connector_token` or `integration_slug`. Providing both, or neither, returns a `422`.
 
 With `connector_token` you get that connector's most recently synced row. **If the connector has never synced, the response falls back to the integration's canned sample** — enough to write a mapping against, but confirm the shape once real data lands. With `integration_slug` you get the sample directly, which is useful when building against an integration before any customer has connected it.
-
-<Tip>
-  Three ways to look at upstream data, and they are not interchangeable. Use this **endpoint** to find a field. Use `include_raw_data` with a small `page_size` to spot-check a mapping across records, or with an `ids` filter to audit one person. Use `include_custom_fields` for anything you consume in production.
-</Tip>
 
 ---
 
