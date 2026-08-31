@@ -28,7 +28,7 @@ Five events are available. The dashboard groups them under **Get notified when**
 | Employee Data Changed | `employee_data_changed` | One or more employee records were created or updated |
 
 <Tip>
-  `connector_synced` is the event most integrations start with. It is the cleanest signal that a newly connected account has finished its initial sync and is ready to use in your product — see [Triggering a job on completion](/guides/reading-writing/syncing).
+  `connector_synced` is the event most integrations start with. It is the cleanest signal that a newly connected account has finished its initial sync and is ready to use in your product.
 </Tip>
 
 ---
@@ -339,14 +339,36 @@ This is the part that changes between events, so handle it per event rather than
 
 ## Delivery and retries
 
+When a webhook event is triggered, Bindbee sends a `POST` request to your configured destination URL. If the request fails, Bindbee automatically retries the delivery **up to 4 times within 60 seconds**.
+
+Each delivery attempt has a timeout of **10 seconds**. Your server should respond within this window to avoid the request being treated as timed out.
+
+### Retry behaviour
+
 | Property | Value |
 | --- | --- |
-| Method | `POST` |
-| Timeout | 10 seconds per attempt |
-| Maximum retries | Up to 4 |
+| Maximum retries | Up to 4 retries |
 | Retry window | Within 60 seconds |
+| Request timeout | 10 seconds per attempt |
+| Request method | `POST` |
+| Retry trigger | Request and network-layer failures, and all non-`2xx` responses |
 
-Retries are triggered by request and network-layer failures — timeouts (connection, read, write, pool), connection errors, protocol errors, and proxy, decoding or redirect failures.
+### Failures that trigger retries
+
+| Failure category | Examples |
+| --- | --- |
+| Timeout errors | Connection timeout, read timeout, write timeout, connection pool timeout |
+| Connection errors | Connection error, read error, write error, close error |
+| Protocol errors | Local protocol error, remote protocol error, unsupported protocol error |
+| Other request errors | Proxy error, response decoding error, too many redirects |
+
+{/* VERIFY: does a non-2xx from a reachable endpoint consume a retry, or only request and
+    network-layer failures? The two statements on the live page disagree - its Retry trigger
+    row says "and all non-2xx responses" while the section above the failure table says
+    retries fire "only for request or network-layer failures". Kept the inclusive reading
+    here because connections-to-relink.mdx already tells readers every non-2xx counts against
+    the budget, but one of the three is wrong and it decides whether a handler that returns
+    500 gets redelivered. */}
 
 Because a retried delivery is indistinguishable from the original at the payload level and carries the same `sync_id` and `webhook_id`, **your handler must be idempotent.** Processing the same event twice should be a no-op.
 
