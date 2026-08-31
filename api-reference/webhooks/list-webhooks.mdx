@@ -1,0 +1,13 @@
+---
+title: "List Webhooks"
+description: "List the webhooks configured for your organisation, with their URLs, subscribed state and when each last fired."
+openapi: get /api/v1/webhooks
+---
+
+Returns every webhook on the organisation, including `is_enabled` and `last_triggered_at` — the pair to watch if deliveries have quietly stopped arriving.
+
+Pass `is_active=true` to return only enabled webhooks. `for_test_connector` distinguishes a Development webhook from a Production one.
+
+<Note>
+  This endpoint defaults to `page_size=20` with a maximum of `100`, rather than the `50` and `200` used elsewhere — see [Pagination](/api-reference/basics/pagination).
+</Note>

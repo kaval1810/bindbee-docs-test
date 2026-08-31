@@ -1,6 +1,6 @@
 # Bindbee docs — structure (v3)
 
-Generated from `docs.json` on 2026-08-24 at commit `69deff1`.
+Generated from `docs.json` on 2026-08-31 at commit `3820828`.
 Run `python3 scripts/gen-structure.py` to refresh; hand edits will drift from the nav.
 
 ## Summary
@@ -9,10 +9,10 @@ Run `python3 scripts/gen-structure.py` to refresh; hand edits will drift from th
 | --- | ---: |
 | Get Started | 16 |
 | Guide | 27 |
-| API Reference | 143 |
-| **Total in nav** | **186** |
+| API Reference | 146 |
+| **Total in nav** | **189** |
 
-**50** are editorial pages written by hand. The other **136** render from `spec.json` via an `openapi:` line — 17 of those also carry a hand-written title, so they read like editorial pages in the sidebar but their body is generated.
+**50** are editorial pages written by hand. The other **139** render from `spec.json` via an `openapi:` line — 20 of those also carry a hand-written title, so they read like editorial pages in the sidebar but their body is generated.
 `docs.json` also carries **217** redirects.
 
 ### Reading the tree
@@ -50,13 +50,13 @@ Get Started
 Guide
 ├── Reading & Writing Data/
 │   ├── Overview   (guides/reading-writing/overview)  ·  title: Reading & Writing Data
-│   ├── Querying the data   (guides/reading-writing/querying-data)
+│   ├── Querying Data   (guides/reading-writing/querying-data)
 │   ├── Data Basics/  [table-2]
 │   │   ├── id vs remote_id   (guides/reading-writing/record-identity)  ·  title: Record identity
 │   │   └── Enum values   (guides/reading-writing/enum-values)
 │   ├── Syncing   (guides/reading-writing/syncing)
 │   ├── Raw data   (guides/reading-writing/raw-data)  ·  title: Raw Data
-│   ├── Webhooks   (guides/reading-writing/webhooks)  ·  title: Webhook
+│   ├── Webhooks   (guides/reading-writing/webhooks)
 │   └── Meta APIs   (guides/reading-writing/meta-apis)  ·  title: Meta APIs for write operations
 ├── Extending the Model/
 │   ├── Custom fields   (guides/extending/custom-fields)  ·  title: Custom Fields
@@ -86,7 +86,7 @@ Guide
     └── Permission errors   (guides/troubleshooting/permission-errors)  ·  title: Resolve a Source-System Permission Error
 
 API Reference
-├── API Basics/  [book-open]
+├── API Basics/  [braces]
 │   ├── Authentication   (api-reference/basics/authentication)
 │   ├── Pagination   (api-reference/basics/pagination)
 │   ├── Sync frequency   (api-reference/basics/sync-frequency)  ·  title: Sync Frequency
@@ -98,6 +98,10 @@ API Reference
 │   │   ├── Get Connectors   (api-reference/connectors/get-connectors)  ·  renders: GET /api/hris/v1/connectors
 │   │   ├── Force Resync a Connector   (api-reference/connectors/resync-connector)  ·  renders: POST /api/embedded/v1/connectors/resync
 │   │   └── Delete Connector   (api-reference/connectors/delete-connector)  ·  renders: DELETE /api/hris/v1/connectors/{connector_id}/delete
+│   ├── Webhooks/
+│   │   ├── List Webhooks   (api-reference/webhooks/list-webhooks)  ·  renders: GET /api/v1/webhooks
+│   │   ├── List Webhook Logs   (api-reference/webhooks/list-webhook-logs)  ·  renders: GET /api/v1/webhooks/logs
+│   │   └── Get Webhook Log Detail   (api-reference/webhooks/get-webhook-log-detail)  ·  renders: GET /api/v1/webhooks/logs/{log_id}
 │   ├── Frontend SDK/
 │   │   ├── POST /api/embedded/v1/link/create-link-token   (sdk/create-link-token)
 │   │   └── GET /api/embedded/v1/connectors/connector_token/{temporary_token}   (sdk/get-connector-token)
@@ -123,7 +127,7 @@ API Reference
 │       └── Make a request   (api-reference/passthrough/make-passthrough-request)  ·  renders: POST /api/v1/passthrough
 ├── HR & Payroll (HRIS)/  [users]
 │   ├── Overview   (hris/overview)  ·  title: HR & Payroll (HRIS)
-│   ├── Employee Data/
+│   ├── Employee Data/  [expanded]
 │   │   ├── Employee/
 │   │   │   ├── GET /api/hris/v1/employees   (hris/employee/get-employees)
 │   │   │   ├── GET /api/hris/v1/employees/{id}   (hris/employee/get-employee-by-id)
@@ -146,7 +150,7 @@ API Reference
 │   │       ├── GET /api/hris/v1/documents   (hris/documents/get-documents)
 │   │       ├── GET /api/hris/v1/documents/{id}   (hris/documents/get-document-by-id)
 │   │       └── GET /api/hris/v1/documents/{id}/download   (hris/documents/get-document-download-url)
-│   ├── Organization/
+│   ├── Organization/  [expanded]
 │   │   ├── Company/
 │   │   │   ├── GET /api/hris/v1/companies   (hris/companies/get-companies)
 │   │   │   └── GET /api/hris/v1/companies/{id}   (hris/companies/get-company-by-id)
@@ -156,7 +160,7 @@ API Reference
 │   │   └── Location/  [BETA]
 │   │       ├── GET /api/hris/v1/locations   (hris/locations/get-locations)
 │   │       └── GET /api/hris/v1/locations/{id}   (hris/locations/get-location-by-id)
-│   ├── Payroll/
+│   ├── Payroll/  [expanded]
 │   │   ├── Payroll Runs/
 │   │   │   ├── GET /api/hris/v1/payroll-runs   (hris/payroll-runs/get-payroll-runs)
 │   │   │   └── GET /api/hris/v1/payroll-runs/{id}   (hris/payroll-runs/get-payroll-run-by-id)
@@ -174,7 +178,7 @@ API Reference
 │   │   └── Payroll Codes/  [BETA]
 │   │       ├── GET /api/hris/v1/payroll-codes   (hris/payroll-codes/get-payroll-codes)
 │   │       └── GET /api/hris/v1/payroll-codes/{id}   (hris/payroll-codes/get-payroll-code-by-id)
-│   ├── Benefits/
+│   ├── Benefits/  [expanded]
 │   │   ├── Employee Benefits/
 │   │   │   ├── GET /api/hris/v1/benefits   (hris/benefits/get-benefits)
 │   │   │   └── GET /api/hris/v1/benefits/{id}   (hris/benefits/get-benefit-by-id)
@@ -187,7 +191,7 @@ API Reference
 │   │   └── Benefit Coverage/  [BETA]
 │   │       ├── GET /api/hris/v1/benefit-coverages   (hris/benefit-coverages/get-benefit-coverages)
 │   │       └── GET /api/hris/v1/benefit-coverages/{id}   (hris/benefit-coverages/get-benefit-coverage-by-id)
-│   └── Time & Attendance/
+│   └── Time & Attendance/  [expanded]
 │       ├── Time Off/
 │       │   ├── GET /api/hris/v1/time-off   (hris/time-off/get-time-off-list)
 │       │   ├── GET /api/hris/v1/time-off/{id}   (hris/time-off/get-time-off-by-id)
@@ -203,7 +207,7 @@ API Reference
 │           └── POST /api/hris/v1/timesheet-entry   (hris/timesheet-entries/create-timesheet-entries)
 ├── Recruiting (ATS)/  [user-plus]
 │   ├── Overview   (ats/overview)  ·  title: Recruiting (ATS)
-│   ├── Talent Acquisition/
+│   ├── Talent Acquisition/  [expanded]
 │   │   ├── Candidate/
 │   │   │   ├── GET /api/ats/v1/candidates   (ats/candidate/get-candidates)
 │   │   │   ├── GET /api/ats/v1/candidates/{id}   (ats/candidate/get-candidate-by-id)
@@ -234,7 +238,7 @@ API Reference
 │   │       ├── GET /api/ats/v1/offers   (ats/offer/get-offers)
 │   │       ├── GET /api/ats/v1/offers/{id}   (ats/offer/get-offer-by-id)
 │   │       └── POST /api/ats/v1/offers   (ats/offer/create-offer)
-│   ├── Evaluation/
+│   ├── Evaluation/  [expanded]
 │   │   ├── Activity/
 │   │   │   ├── GET /api/ats/v1/activities   (ats/activity/get-activities)
 │   │   │   ├── GET /api/ats/v1/activities/{id}   (ats/activity/get-activity-by-id)
@@ -259,7 +263,7 @@ API Reference
 │   │       ├── GET /api/ats/v1/tags   (ats/tag/get-tags)
 │   │       ├── GET /api/ats/v1/tags/{id}   (ats/tag/get-tag-by-id)
 │   │       └── POST /api/ats/v1/tags   (ats/tag/create-tag)
-│   └── Organization/
+│   └── Organization/  [expanded]
 │       ├── Department/
 │       │   ├── GET /api/ats/v1/departments   (ats/department/get-departments)
 │       │   ├── GET /api/ats/v1/departments/{id}   (ats/department/get-department-by-id)
@@ -277,7 +281,7 @@ API Reference
     ├── Users/
     │   ├── GET /api/lms/v1/users   (lms/users/get-users)
     │   └── GET /api/lms/v1/users/{id}   (lms/users/get-user-by-id)
-    ├── Content/
+    ├── Content/  [expanded]
     │   ├── Courses/
     │   │   ├── GET /api/lms/v1/courses   (lms/courses/get-courses)
     │   │   └── GET /api/lms/v1/courses/{id}   (lms/courses/get-course-by-id)
@@ -290,7 +294,7 @@ API Reference
     │   └── Categories/
     │       ├── GET /api/lms/v1/categories   (lms/categories/get-categories)
     │       └── GET /api/lms/v1/categories/{id}   (lms/categories/get-category-by-id)
-    └── Progress/
+    └── Progress/  [expanded]
         ├── Completions/
         │   ├── GET /api/lms/v1/completions   (lms/completions/get-completions)
         │   └── GET /api/lms/v1/completions/{id}   (lms/completions/get-completion-by-id)

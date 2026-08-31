@@ -1,0 +1,9 @@
+---
+title: "Get Webhook Log Detail"
+description: "Retrieve one delivery attempt in full, including the request Bindbee sent and the response your endpoint returned."
+openapi: get /api/v1/webhooks/logs/{log_id}
+---
+
+The same fields as a log list entry, plus `request` and `response`. That makes this the only way to see what your endpoint actually replied with on a failed delivery, rather than just its status code.
+
+Take the `log_id` from [List Webhook Logs](/api-reference/webhooks/list-webhook-logs).

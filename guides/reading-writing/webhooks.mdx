@@ -339,9 +339,9 @@ This is the part that changes between events, so handle it per event rather than
 
 ## Delivery and retries
 
-When a webhook event is triggered, Bindbee sends a `POST` request to your configured destination URL. If the request fails, Bindbee automatically retries the delivery **up to 4 times within 60 seconds**.
+When a webhook event is triggered, Bindbee sends a POST request to your configured destination URL. If the request fails due to a request or network-layer issue, Bindbee automatically retries the delivery up to 4 times within 60 seconds.
 
-Each delivery attempt has a timeout of **10 seconds**. Your server should respond within this window to avoid the request being treated as timed out.
+Each delivery attempt has a timeout of 10 seconds. Your server should respond within this window to avoid the request being treated as timed out.
 
 ### Retry behaviour
 
@@ -355,6 +355,8 @@ Each delivery attempt has a timeout of **10 seconds**. Your server should respon
 
 ### Failures that trigger retries
 
+Retries are triggered only for request or network-layer failures, including:
+
 | Failure category | Examples |
 | --- | --- |
 | Timeout errors | Connection timeout, read timeout, write timeout, connection pool timeout |
@@ -362,32 +364,18 @@ Each delivery attempt has a timeout of **10 seconds**. Your server should respon
 | Protocol errors | Local protocol error, remote protocol error, unsupported protocol error |
 | Other request errors | Proxy error, response decoding error, too many redirects |
 
-{/* VERIFY: does a non-2xx from a reachable endpoint consume a retry, or only request and
-    network-layer failures? The two statements on the live page disagree - its Retry trigger
-    row says "and all non-2xx responses" while the section above the failure table says
-    retries fire "only for request or network-layer failures". Kept the inclusive reading
-    here because connections-to-relink.mdx already tells readers every non-2xx counts against
-    the budget, but one of the three is wrong and it decides whether a handler that returns
-    500 gets redelivered. */}
-
-Because a retried delivery is indistinguishable from the original at the payload level and carries the same `sync_id` and `webhook_id`, **your handler must be idempotent.** Processing the same event twice should be a no-op.
-
-<Warning>
-  Your endpoint has 10 seconds to respond. Do not do the work inline: verify the signature, queue the payload, return a `2xx` immediately, then process asynchronously. Handlers that fetch records or write to a database before responding are the most common cause of timeouts, and a timeout costs you the retry budget.
-</Warning>
-
 ---
 
 ## Securing your endpoint
 
-Anyone who discovers your webhook URL can `POST` to it. Verify every incoming request before acting on it.
+To secure your API endpoint, ensure it verifies that POST requests are genuinely from Bindbee and not from a malicious source, and that payloads haven’t been tampered with during transit.
 
-Bindbee signs each delivery and sends the result in the `X-Bindbee-Webhook-Signature` header. The signature is a **base64url-encoded HMAC-SHA256 of the raw request body**, keyed with your organisation's webhook signature key.
+You can achieve this by checking if the `X-Bindbee-Webhook-Signature` field in the request header matches an encoded combination of your organization’s unique webhook signature and the payload of the incoming request.
 
-Your signature key is in the **Security** section of the Webhooks configuration page. It is unique to your organisation and can be regenerated if it is ever exposed.
+In the Webhooks configuration page, you should find a Security section where you can access your signature key. This key is unique to your organization and can be regenerated if it becomes known to an unauthorized party.
 
 <Warning>
-  Compute the HMAC over the **raw request body**, exactly as received. If your framework parses the JSON and you re-serialise it, key order and whitespace can change and the signature will never match. Capture the raw bytes before parsing.
+  **Screenshot needed** — the **Security** section of the Webhooks page, showing the signature key field and the regenerate control. The key must be redacted or a dummy value. Save to `images/webhooks/signature-key.png` and replace this callout with a `<Frame>`.
 </Warning>
 
 <CodeGroup>
@@ -470,9 +458,6 @@ valid_signature = ActiveSupport::SecurityUtils.secure_compare(expected_signature
 ```
 </CodeGroup>
 
-<Warning>
-  **Screenshot needed** — the **Security** section of the Webhooks page, showing the signature key field and the regenerate control. The key must be redacted or a dummy value. Save to `images/webhooks/signature-key.png` and replace this callout with a `<Frame>`.
-</Warning>
 
 ---
 
@@ -482,7 +467,7 @@ Delivery logs are on the [Webhooks tab](https://app.bindbee.dev/logs/webhooks) u
 
 Three endpoints cover the same ground programmatically, which is what you want for alerting on delivery failures rather than discovering them by hand.
 
-**List your webhooks**, for their IDs, names, URLs, enabled state and when each last fired:
+**[List your webhooks](/api-reference/webhooks/list-webhooks)**, for their IDs, names, URLs, enabled state and when each last fired:
 
 ```bash
 curl -G https://api.bindbee.dev/api/v1/webhooks \
@@ -490,7 +475,7 @@ curl -G https://api.bindbee.dev/api/v1/webhooks \
   -d is_active=true
 ```
 
-**List delivery attempts**, with filters:
+**[List delivery attempts](/api-reference/webhooks/list-webhook-logs)**, with filters:
 
 ```bash
 curl -G https://api.bindbee.dev/api/v1/webhooks/logs \
@@ -508,7 +493,7 @@ curl -G https://api.bindbee.dev/api/v1/webhooks/logs \
 | `created_at_from`, `created_at_to` | ISO 8601 bounds, interpreted as UTC when no offset is supplied |
 | `errors_only` | When `true`, only deliveries whose response code was `400` or above |
 
-**Get one delivery** by its log ID, for the full request and response detail including the status code your endpoint returned:
+**[Get one delivery](/api-reference/webhooks/get-webhook-log-detail)** by its log ID, for the full request and response detail including the status code your endpoint returned:
 
 ```bash
 curl https://api.bindbee.dev/api/v1/webhooks/logs/<LOG_ID> \

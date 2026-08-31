@@ -1,0 +1,13 @@
+---
+title: "List Webhook Logs"
+description: "List webhook delivery attempts, filtered by webhook, connector, event type, response code or time range."
+openapi: get /api/v1/webhooks/logs
+---
+
+Each entry records one delivery attempt: which webhook fired, for which connector, and the `response_code` your endpoint returned.
+
+Polling this with `errors_only=true` on a schedule is the practical way to catch a silently broken endpoint — nothing else tells you deliveries have stopped succeeding. See [Monitoring deliveries](/guides/reading-writing/webhooks#monitoring-deliveries).
+
+<Note>
+  This endpoint defaults to `page_size=25` with a maximum of `50` — see [Pagination](/api-reference/basics/pagination).
+</Note>
