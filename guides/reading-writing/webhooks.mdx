@@ -390,8 +390,10 @@ Your signature key is in the **Security** section of the Webhooks configuration 
   Compute the HMAC over the **raw request body**, exactly as received. If your framework parses the JSON and you re-serialise it, key order and whitespace can change and the signature will never match. Capture the raw bytes before parsing.
 </Warning>
 
-<CodeGroup>
-```python Python
+<AccordionGroup>
+<Accordion title="Python">
+
+```python
 import base64, hashlib, hmac
 
 signature_key = "YOUR_WEBHOOK_SIGNATURE_KEY"
@@ -413,7 +415,11 @@ expected_signature = base64.urlsafe_b64encode(hmac_digest).decode()
 signature_valid = hmac.compare_digest(expected_signature, received_signature)
 ```
 
-```javascript Node
+</Accordion>
+
+<Accordion title="Node">
+
+```javascript
 const crypto = require("crypto");
 const express = require("express");
 const app = express();
@@ -450,7 +456,11 @@ app.post("/hooks/bindbee", (req, res) => {
 });
 ```
 
-```ruby Ruby
+</Accordion>
+
+<Accordion title="Ruby">
+
+```ruby
 require 'base64'
 require 'openssl'
 
@@ -468,7 +478,9 @@ expected_signature = Base64.urlsafe_encode64(hmac_digest)
 
 valid_signature = ActiveSupport::SecurityUtils.secure_compare(expected_signature, received_signature)
 ```
-</CodeGroup>
+
+</Accordion>
+</AccordionGroup>
 
 <Warning>
   **Screenshot needed** — the **Security** section of the Webhooks page, showing the signature key field and the regenerate control. The key must be redacted or a dummy value. Save to `images/webhooks/signature-key.png` and replace this callout with a `<Frame>`.
