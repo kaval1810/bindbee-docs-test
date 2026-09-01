@@ -101,7 +101,7 @@
           {
             "group": "SDK & MCP",
             "pages": [
-              "guides/sdk/frontend-sdk",
+              "guides/sdk/embedded-sdk",
               "guides/sdk/mcp"
             ]
           },
@@ -190,7 +190,7 @@
                 ]
               },
               {
-                "group": "Frontend SDK",
+                "group": "Embedded SDK",
                 "pages": [
                   "sdk/create-link-token",
                   "sdk/get-connector-token"
@@ -1411,7 +1411,11 @@
     },
     {
       "source": "/sdk/frontend-sdk",
-      "destination": "/guides/sdk/frontend-sdk"
+      "destination": "/guides/sdk/embedded-sdk"
+    },
+    {
+      "source": "/guides/sdk/frontend-sdk",
+      "destination": "/guides/sdk/embedded-sdk"
     },
     {
       "source": "/guides/mcp",

@@ -1,0 +1,198 @@
+---
+title: "Embedded SDK"
+sidebarTitle: "Embedded SDK"
+description: "Embed Bindbee's connector link flow inside your own product with the React SDK."
+icon: "code"
+---
+
+[Magic Link](/features/magic-link) hands your customer a URL and needs no frontend code. The Embedded SDK does the same job inside your product: your user clicks a button in your UI, authorises their HR system in an overlay, and never leaves your app.
+
+```mermaid
+flowchart LR
+    A["Your server<br/>create link token"] --> B["Your frontend<br/>useBindbeeMagiclink"]
+    B --> C["Link flow overlay<br/>user authorises"]
+    C -.->|temporary token| B
+    B --> D["Your server<br/>exchange for connector token"]
+
+    classDef node fill:#F9F9F8,stroke:#E06D10,stroke-width:1.5px,color:#111,rx:8,ry:8
+    class A,B,C,D node
+```
+
+The two server steps are server steps for a reason. Both use your API key, which must never reach the browser.
+
+## Install
+
+<CodeGroup>
+```bash npm
+npm install --save @bindbee/react-link
+```
+
+```bash yarn
+yarn add @bindbee/react-link
+```
+</CodeGroup>
+
+React 18 or later. The package ships its own TypeScript types.
+
+## Quickstart
+
+```jsx App.jsx
+import { useBindbeeMagiclink } from "@bindbee/react-link";
+
+const App = ({ linkToken }) => {
+  const { open } = useBindbeeMagiclink({
+    linkToken,
+    onSuccess: (temporaryToken) => {
+      // Send this to your backend to exchange for a connector token
+      fetch("/api/bindbee/exchange", {
+        method: "POST",
+        body: JSON.stringify({ temporaryToken }),
+      });
+    },
+    onClose: () => console.log("Linking flow closed"),
+  });
+
+  return <button onClick={open}>Connect your HR system</button>;
+};
+```
+
+## Step 1: Create a link token
+
+Call this from your backend. It returns a short-lived token that authorises one linking session for one end user.
+
+```bash
+POST /api/embedded/v1/link/create-link-token
+Authorization: Bearer YOUR_BINDBEE_API_KEY
+```
+
+<CodeGroup>
+```json Request
+{
+  "end_user_data": {
+    "org_name": "Acme Inc",
+    "origin_id": "acme-4471",
+    "email": "hr@acme.com"
+  },
+  "category": "HRIS",
+  "integration": "bamboohr"
+}
+```
+
+```json Response
+{
+  "link_token": "KJDXZk8zC8Tdr-suQCy7zkALZVLjhKXyMd83leqheEGQpBx_evXrHA"
+}
+```
+</CodeGroup>
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| `end_user_data.org_name` | Yes | The customer organisation this connector belongs to. Minimum 2 characters. |
+| `end_user_data.origin_id` | Yes | Your own unique identifier for the end user. This is how you match the connector back to a record in your system. |
+| `end_user_data.email` | No | Contact email for the end user. |
+| `category` | Yes | One of `HRIS`, `ATS`, `LMS`, `CUSTOM`. |
+| `integration` | Yes | The integration slug, for example `bamboohr`. |
+
+<Warning>
+  Create link tokens on your **server**, never in the browser. This endpoint takes your Bindbee API key, and exposing that key would let anyone read every connector in your account.
+</Warning>
+
+## Step 2: Open the link flow
+
+Pass the token to the hook. Calling `open()` mounts a full-screen overlay on top of your app, where the user signs in to their HR system and authorises access.
+
+<ParamField body="linkToken" type="string" required>
+  The token from Step 1. One token, one linking session.
+</ParamField>
+
+<ParamField body="serverUrl" type="string">
+  Set to `https://api-eu.bindbee.dev` for the EU region. Defaults to US.
+</ParamField>
+
+<ParamField body="onSuccess" type="(temporary_token: string) => void">
+  Fires when the user completes the flow. You get a temporary token, not the connector token.
+</ParamField>
+
+<ParamField body="onClose" type="() => void">
+  Fires when the overlay is dismissed, whether or not linking succeeded.
+</ParamField>
+
+The hook returns `{ open }`. Call it from a click handler.
+
+<Note>
+  Register **one instance** of `useBindbeeMagiclink` per page. A second instance logs an error and will not behave predictably. Lift the hook to a shared parent if several places need to trigger it.
+</Note>
+
+## Step 3: Exchange for a connector token
+
+The temporary token from `onSuccess` is not an API credential. Send it to your backend and exchange it for the real one.
+
+```bash
+GET /api/embedded/v1/connectors/connector_token/{temporary_token}
+Authorization: Bearer YOUR_BINDBEE_API_KEY
+```
+
+```json Response
+{
+  "connector_token": "jk23h4jk23hk4j2h3kj4h23kjh4k23jh4k2j3h4",
+  "connector_id": "123e4567-e89b-12d3-a456-426614174000"
+}
+```
+
+Store the `connector_token` against the customer record you identified with `origin_id`. It is the credential every later call uses, as the `X-Connector-Token` header on unified endpoints, [Passthrough](/features/passthrough), and [custom fields](/guides/extending/custom-fields).
+
+<Warning>
+  This exchange also uses your API key, so it belongs on your server. Treat the returned `connector_token` as a secret: it grants access to that customer's HR data.
+</Warning>
+
+## Behaviour worth knowing
+
+| | |
+| --- | --- |
+| Overlay | A fixed, full-screen iframe with id `magic-link-flow`, prepended to `document.body`. |
+| Page scroll | Locked while the overlay is open, restored on close. |
+| Dismissal | Closing from inside the flow removes the iframe and fires `onClose`. |
+| Repeat opens | Calling `open()` while the overlay is already mounted does nothing. |
+| Styling | The flow is Bindbee-hosted. Branding is configured in the dashboard, not through the SDK. |
+
+## Errors
+
+| Status | Meaning | Fix |
+| --- | --- | --- |
+| `401` | API key missing or invalid. | Check the `Authorization` header on your server call. |
+| `403` | Credentials valid but not permitted for this resource. | Confirm the category and integration are enabled for your account. |
+| `404` | No connector found for that temporary token. | Tokens are single use and short-lived. Re-run the flow. |
+| `422` | Validation failed. | Check `org_name`, `origin_id`, `category` and `integration`. |
+| `429` | Rate limit exceeded. | Retry after `Retry-After`. See [Rate limits](/api-reference/basics/rate-limits). |
+
+## Not using React?
+
+<CardGroup cols={2}>
+  <Card title="Magic Link" icon="link" href="/features/magic-link">
+    Generate a hosted URL from the dashboard and send it to your customer. No frontend code at all.
+  </Card>
+
+  <Card title="Other frameworks" icon="mail">
+    The SDK currently ships for React. For Vue, Angular or plain JavaScript, email support@bindbee.dev.
+  </Card>
+</CardGroup>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key" href="/api-reference/basics/authentication">
+    API keys and connector tokens.
+  </Card>
+
+  <Card title="Connectors" icon="plug" href="/features/connectors">
+    View and manage the connectors your users create.
+  </Card>
+
+  <Card title="Webhooks" icon="bell" href="/webhooks/overview">
+    Get notified when a new connector finishes its first sync.
+  </Card>
+
+  <Card title="npm package" icon="box" href="https://www.npmjs.com/package/@bindbee/react-link">
+    `@bindbee/react-link` on npm.
+  </Card>
+</CardGroup>

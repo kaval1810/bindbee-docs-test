@@ -5,7 +5,9 @@ description: "Create a Custom Field and map it to a value in the raw payload, vi
 icon: "layout-dashboard"
 ---
 
-Creating a Custom Field from the dashboard is two steps: create the field, then map it to a value in the source system's raw payload. For the concepts see the [Custom Fields overview](/guides/extending/custom-fields). For the programmatic route see [API Configuration](/guides/extending/custom-fields/api-workflow).
+Creating a Custom Field from the dashboard is two steps: create the field, then map it to a value in the source system's raw payload.
+
+*For the concepts see the [Custom Fields overview](/guides/extending/custom-fields). For the programmatic route see [API Configuration](/guides/extending/custom-fields/api-workflow).*
 
 ## The Custom Fields page
 
@@ -19,7 +21,7 @@ Creating a Custom Field from the dashboard is two steps: create the field, then 
 
 Click **New Field** in the top right.
 
-<Frame caption="The Create custom field dialog. Category and model are chosen together — the field belongs to that pair.">
+<Frame caption="Create custom field dialog">
   <img src="/images/custom-fields/create-field-dialog.png" alt="Create custom field dialog with fields for name, category, model and short description" />
 </Frame>
 
@@ -35,7 +37,7 @@ Press **Create**. The field now exists but carries no data — it needs a mappin
 
 You land on the field's page, which prompts you to create the first mapping. The two options are the two scopes.
 
-<Frame caption="Create your first mapping. The panel below summarises the same three steps this page walks through.">
+<Frame caption="Create your first mapping.">
   <img src="/images/custom-fields/first-mapping.png" alt="Custom field info page offering for Specific Connector or for Integration as the first mapping, above a Steps to create custom field panel" />
 </Frame>
 
@@ -79,7 +81,7 @@ Search a real employee, then choose a value from their raw payload. Because you 
 </Frame>
 
 <Warning>
-  **Live data is only available for the Employee model on connector-level custom fields.** For any other model, or for an integration-level mapping, use the JSON Path tab.
+  **Live data is only available for the Employee model on connector-level custom fields.** We'll be adding support for other models soon. For any other model, or for an integration-level mapping, use the JSON Path tab.
 </Warning>
 
 ### JSON Path
