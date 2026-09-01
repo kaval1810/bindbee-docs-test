@@ -140,7 +140,6 @@
                 "icon": "scale",
                 "pages": [
                   "guides/troubleshooting/missing-or-extra-records",
-                  "guides/troubleshooting/partial-syncs",
                   "guides/troubleshooting/record-counts"
                 ]
               },
@@ -666,21 +665,10 @@
         ]
       },
       {
-        "tab": "Resources",
-        "icon": "library-big",
+        "tab": "Help Center",
+        "icon": "life-buoy",
         "align": "end",
-        "menu": [
-          {
-            "item": "Walkthrough",
-            "icon": "monitor-play",
-            "href": "https://help.bindbee.dev/"
-          },
-          {
-            "item": "Status",
-            "icon": "signal",
-            "href": "https://status.bindbee.dev"
-          }
-        ]
+        "href": "https://help.bindbee.dev/"
       }
     ]
   },
@@ -1044,10 +1032,6 @@
     {
       "source": "/features/environments/production",
       "destination": "/get-started/environments#production"
-    },
-    {
-      "source": "/api-reference/basics/sync-frequency",
-      "destination": "/guides/reading-writing/syncing"
     },
     {
       "source": "/get-started/tutorial-overview",
@@ -1475,7 +1459,7 @@
     },
     {
       "source": "/how-to/troubleshooting/diagnose-a-partial-sync",
-      "destination": "/guides/troubleshooting/partial-syncs"
+      "destination": "/guides/troubleshooting/sync-status#diagnose-a-partial-sync"
     },
     {
       "source": "/how-to/troubleshooting/reconcile-record-counts",
@@ -1568,6 +1552,10 @@
     {
       "source": "/how-to/ats/create-a-candidate",
       "destination": "/parked/create-a-candidate"
+    },
+    {
+      "source": "/guides/troubleshooting/partial-syncs",
+      "destination": "/guides/troubleshooting/sync-status#diagnose-a-partial-sync"
     }
   ],
   "api": {
@@ -1594,6 +1582,11 @@
   "navbar": {
     "links": [
       {
+        "label": "Status",
+        "icon": "signal",
+        "href": "https://status.bindbee.dev"
+      },
+      {
         "label": "Website",
         "icon": "globe",
         "href": "https://bindbee.dev?utm_source=documentation&utm_medium=documentation-footer&utm_campaign=documentation"
@@ -1607,7 +1600,8 @@
   },
   "footer": {
     "socials": {
-      "twitter": "https://twitter.com/bindbee?utm_source=documentation&utm_medium=documentation-footer&utm_campaign=documentation",
+      "website": "https://www.bindbee.dev/",
+      "x": "https://x.com/bindbee?utm_source=documentation&utm_medium=documentation-footer&utm_campaign=documentation",
       "linkedin": "https://www.linkedin.com/company/bindbee/?utm_source=documentation&utm_medium=documentation-footer&utm_campaign=documentation"
     }
   },

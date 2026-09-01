@@ -1,7 +1,7 @@
 ---
 title: "Monitor Sync Status"
 sidebarTitle: "Sync status"
-description: "Check whether a connector's most recent sync succeeded, what it loaded, and when the next one runs."
+description: "Check whether a connector's most recent sync succeeded, what it loaded, when the next one runs, and how to diagnose a run that completed only in part."
 icon: "activity"
 ---
 
@@ -13,7 +13,7 @@ Before investigating missing or unexpected data, establish what the last sync ac
   - You can identify the connector, by name or by ID.
 </Info>
 
-## Steps
+## Check the last sync
 
 <Steps>
   <Step title="Open the connector's sync history">
@@ -61,6 +61,58 @@ Before investigating missing or unexpected data, establish what the last sync ac
   </Step>
 </Steps>
 
+## Diagnose a partial sync
+
+A partial sync means some models loaded and others didn't. The connector is authenticated and running - the failure is scoped to specific models, so the fix is different from a total failure.
+
+<Steps>
+  <Step title="Identify which models failed">
+    From the per-model breakdown, note every model that reports an error, and the record count on the ones that succeeded.
+
+    **Result:** A list of failed models. That list is the diagnosis - the cause is usually shared across all of them.
+  </Step>
+
+  <Step title="Classify the failure">
+    Match the failed set against these patterns.
+
+    | Pattern | Likely cause | Where to go |
+    | --- | --- | --- |
+    | One model family fails, e.g. all payroll or all benefits | The credentials lack permission for that area of the source API | [Permission errors](/guides/troubleshooting/permission-errors) |
+    | A model fails only on large populations | Upstream request size or timeout limits | Retry the sync, below |
+    | Different models fail on different runs | Transient upstream errors or rate limiting at the source | Retry the sync, below |
+    | Every model fails | Not a partial sync - treat it as a failed sync | [Connections needing relink](/guides/troubleshooting/connections-to-relink) |
+
+    **Result:** You know whether this needs a configuration change on the customer's side, a retry, or an escalation.
+  </Step>
+
+  <Step title="Retry the sync">
+    For transient and size-related failures, trigger a fresh run rather than waiting for the next scheduled one.
+
+    ```bash
+    curl --request POST \
+      --url 'https://api.bindbee.dev/api/embedded/v1/connectors/resync' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    See [Force a resync](/guides/reading-writing/syncing#forcing-a-resync).
+
+    **Result:** A new run starts. If the same models fail again with the same error, it isn't transient - go back to the previous step.
+
+    <Warning>
+      Resync; do not delete and recreate. Deleting a connector discards its sync history and the record identities built from it, which changes the IDs your system has already stored.
+    </Warning>
+  </Step>
+
+  <Step title="Check whether the succeeded models are internally consistent">
+    A partial sync can leave related models out of step - employees loaded but employments didn't, or benefits loaded but dependents didn't. Reads against the succeeded models will look complete while the relationships between them are incomplete.
+
+    Treat the connector's data as provisional until a run completes cleanly, and gate downstream processing on the sync-completed event rather than a clock. See [Trigger a job on completion](/guides/reading-writing/syncing#triggering-a-job-on-completion).
+
+    **Result:** Downstream systems don't act on a half-loaded dataset.
+  </Step>
+</Steps>
+
 ## Monitoring this programmatically
 
 For continuous monitoring rather than one-off checks, subscribe to sync events instead of polling. Connector Sync Started, Connector Synced and Connector Sync Error together cover the states above, and each payload carries a `sync` object with `sync_id`, `sync_name`, and `sync_type` - where `sync_type` distinguishes `AUTOMATED` from `MANUAL`, so you can tell a scheduled run from one you or support triggered.
@@ -74,10 +126,6 @@ See [Choose Webhook Events](/guides/reading-writing/webhooks).
     Check whether the connector is Development, which doesn't auto-sync. On a Production connector, this indicates a stall - see [Connections needing relink](/guides/troubleshooting/connections-to-relink), then [force a resync](/api-reference/connectors/resync-connector) if you need the data now.
   </Accordion>
 
-  <Accordion title="The status is Partial">
-    Some models failed while others succeeded. See [Partial syncs](/guides/troubleshooting/partial-syncs).
-  </Accordion>
-
   <Accordion title="The sync says Done but a model has zero records">
     The sync succeeded and the model genuinely returned nothing. Usually the model is out of scope for the connector, or the credentials lack permission for that endpoint - a permission failure often returns an empty set rather than an error. See [Permission errors](/guides/troubleshooting/permission-errors).
   </Accordion>
@@ -85,11 +133,31 @@ See [Choose Webhook Events](/guides/reading-writing/webhooks).
   <Accordion title="The sync has been running for a long time">
     Duration scales with population size and with how many API calls the source system requires per record. Large extracts on some systems take substantially longer than others.
 
-    Don't delete and recreate the connector to force a restart - that discards sync history and the record identities built from it. Wait for the run to finish, then [force a resync](/api-reference/connectors/resync-connector) if needed.
+    Wait for the run to finish, then [force a resync](/api-reference/connectors/resync-connector) if needed. Don't delete and recreate the connector to force a restart, for the reason given under **Retry the sync** above.
+  </Accordion>
+
+  <Accordion title="The same model fails on every run with a permission-style error">
+    This needs a change in the source system, not in Bindbee. Identify the required permission and have the customer's administrator grant it, then resync. Per-system steps live in the [setup instructions](https://help.bindbee.dev).
+  </Accordion>
+
+  <Accordion title="A model fails only for large customers">
+    Some source systems impose response-size or processing limits that only bite above a certain population. Filtering the extract on the source side to confirm the limit is the cause is a useful diagnostic - if a filtered run succeeds and an unfiltered one fails within seconds, the failure is a size or definition problem rather than a timeout.
+
+    Report this with the connector ID and the failing model; extract handling is adjusted per integration.
+  </Accordion>
+
+  <Accordion title="Records loaded but fields are empty">
+    That isn't a partial sync. The model loaded; the fields weren't populated or aren't exposed at the current permission level. See [Missing records](/guides/troubleshooting/missing-or-extra-records) and [Inspect raw data](/guides/reading-writing/raw-data).
+  </Accordion>
+
+  <Accordion title="A partial sync coincides with a spike in your own API calls">
+    Sync failures and read failures are separate. If your reads are returning `429`, that's the [rate limit](/api-reference/basics/rate-limits) on the connector token and unrelated to the sync.
   </Accordion>
 </AccordionGroup>
 
 ## Related
 
-- [Logs](/guides/troubleshooting/logs) - what the request log shows
+- [Logs](/guides/troubleshooting/logs) - what the request log shows, and per-request errors
 - [How syncing works](/guides/reading-writing/syncing) - the schedule a status is measured against
+- [Force Resync a Connector](/api-reference/connectors/resync-connector) - API reference for triggering a run
+- [Permission errors](/guides/troubleshooting/permission-errors) - when a model family fails consistently

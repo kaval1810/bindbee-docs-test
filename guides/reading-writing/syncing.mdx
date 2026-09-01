@@ -45,7 +45,7 @@ Two status fields appear here and they answer different questions:
 | Field | Values | Describes |
 | --- | --- | --- |
 | `status` | `COMPLETE`, `INCOMPLETE`, `RELINK_NEEDED` | The link status of the connector |
-| `sync_status` | `Syncing`, `Done`, `Failed` | The status of the most recent sync job |
+| `sync_status` | `Syncing`, `Synced`, `Partial`, `Failed` | The status of the most recent sync job |
 
 A connector can be `COMPLETE` and still hold no data, because the two are independent.
 
@@ -55,7 +55,7 @@ A connector can be `COMPLETE` and still hold no data, because the two are indepe
 
 ## The recurring schedule
 
-After the initial sync, a Production connector syncs again automatically, **once every 24 hours by default**. Nothing is required from you or your end user. The interval is configurable — see [Sync frequency](/api-reference/basics/sync-frequency) for the available cadences and how the start time is set.
+After the initial sync, a Production connector syncs again automatically, **once every 24 hours by default**. Nothing is required from you or your end user. The interval is configurable on request — see [Sync frequency](/api-reference/basics/sync-frequency).
 
 `last_sync_start_time` is when the most recent job began; `next_sync_start_time` is when the next scheduled one will.
 
@@ -81,9 +81,9 @@ curl -X POST https://api.bindbee.dev/api/embedded/v1/connectors/resync \
   -H "X-Connector-Token: <CONNECTOR_TOKEN>"
 ```
 
-Unlike the connector list above, this endpoint scopes by header. To know when the data has landed, listen for `connector_synced` or poll `sync_status` until it returns to `Done`.
+Unlike the connector list above, [this endpoint](/api-reference/connectors/resync-connector) scopes by header. To know when the data has landed, listen for `connector_synced` or poll `sync_status` until it returns to `Done`.
 
-Reasonable moments to force one:
+**Reasonable moments to force one:**
 
 * Your end user just changed something in their HRIS and expects to see it in your product straight away.
 * You completed a write and want the unified models to reflect it before the next scheduled run — writes reach the source system directly, so they are not readable until a sync picks them up.
@@ -114,7 +114,7 @@ If `status` has become `RELINK_NEEDED`, the credentials themselves stopped worki
 
 <CardGroup cols={2}>
   <Card title="Sync frequency" icon="refresh-cw" href="/api-reference/basics/sync-frequency">
-    The available cadences, and what the schedule does not bound.
+    How often a connector syncs, and how to change it.
   </Card>
 
   <Card title="Force Resync a Connector" icon="zap" href="/api-reference/connectors/resync-connector">

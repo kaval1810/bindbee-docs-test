@@ -14,9 +14,6 @@ flowchart LR
     A["Your app<br/>method, path, body"] --> B["Bindbee<br/>attaches auth,<br/>resolves base URL"]
     B --> C["Vendor API<br/>Workday, BambooHR, ..."]
     C -.->|raw vendor response, unchanged| A
-
-    classDef node fill:#F9F9F8,stroke:#E06D10,stroke-width:1.5px,color:#111,rx:8,ry:8
-    class A,B,C node
 ```
 
 Everything past that first hop belongs to the vendor: the path, the body, the response shape, the errors.

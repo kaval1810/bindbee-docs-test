@@ -13,9 +13,6 @@ Creating a Custom Field from the dashboard is two steps: create the field, then 
 
 **Configure → Custom Fields** lists every field in your organisation, with how many mappings each has, its category and model, and who last changed it.
 
-<Frame caption="Configure → Custom Fields. The Mapping column counts how many mappings a field has — a field with none carries no data yet.">
-  <img src="/images/custom-fields/custom-fields-list.png" alt="The Custom Fields page listing fields with their mapping count, category, selected model, last updated date and creator" />
-</Frame>
 
 ## Step 1: Create the field
 
@@ -35,11 +32,8 @@ Press **Create**. The field now exists but carries no data — it needs a mappin
 
 ## Step 2: Choose the mapping type
 
-You land on the field's page, which prompts you to create the first mapping. The two options are the two scopes.
+You land on the field's page, which prompts you to create the first mapping. The two options are the two mapping types.
 
-<Frame caption="Create your first mapping.">
-  <img src="/images/custom-fields/first-mapping.png" alt="Custom field info page offering for Specific Connector or for Integration as the first mapping, above a Steps to create custom field panel" />
-</Frame>
 
 | Option | Applies to |
 | --- | --- |
@@ -47,7 +41,7 @@ You land on the field's page, which prompts you to create the first mapping. The
 | **for Integration** | Every connector using that integration |
 
 <Info>
-  Where both exist for the same field, the connector mapping wins on that connector. See [Scopes](/guides/extending/custom-fields#scopes).
+  Where both exist for the same field, the connector mapping wins on that connector. See [Type of mapping](/guides/extending/custom-fields#type-of-mapping).
 </Info>
 
 ## Step 3: Pick the source
@@ -56,17 +50,8 @@ A mapping row has three parts: **Mapping type**, **Source**, and **Data field**.
 
 For a connector mapping, the Source dropdown is a searchable list of your connectors:
 
-<Frame caption="Connector mappings pick one connector by name. The list is searchable.">
-  <img src="/images/custom-fields/mapping-for-connector.png" alt="Mapping row set to for Connector with the Select Connector dropdown open, showing a searchable list of connectors" />
-</Frame>
 
-For an integration mapping, it is the integration itself:
-
-<Frame caption="Integration mappings apply to every connector on that integration.">
-  <img src="/images/custom-fields/mapping-for-integration.png" alt="Mapping row set to for Integration with BambooHR selected as the source" />
-</Frame>
-
-Use **Add new** to give one field several mappings — different connectors, or a connector override alongside an integration default.
+For an integration mapping, it is the integration itself: Use **Add new** to give one field several mappings — different connectors, or a connector override alongside an integration default.
 
 ## Step 4: Select the data field
 
@@ -88,7 +73,7 @@ Search a real employee, then choose a value from their raw payload. Because you 
 
 Browse a sample payload and select the field you want, or switch to **Enter path** and type the expression directly.
 
-What the sample shows depends on the scope of the mapping. A connector mapping shows that connector's own data:
+What the sample shows depends on the mapping type. A connector mapping shows that connector's own data:
 
 <Frame caption="A connector mapping previews sample data from that specific connector.">
   <img src="/images/custom-fields/data-field-json-path-connector.png" alt="JSON Path tab showing sample data from a named connector, with search and enter path controls" />
@@ -96,9 +81,6 @@ What the sample shows depends on the scope of the mapping. A connector mapping s
 
 An integration mapping has no single connector to read from, so it shows a sample from one of your connectors on that integration:
 
-<Frame caption="An integration mapping previews a sample from one of your connectors on that integration, not from a specific one.">
-  <img src="/images/custom-fields/data-field-json-path-integration.png" alt="JSON Path tab showing sample data from one of your BambooHR connectors, with a tooltip explaining the live data limitation" />
-</Frame>
 
 Select the field, then press **Map field**. Save the mapping row with the tick.
 

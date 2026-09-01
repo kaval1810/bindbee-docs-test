@@ -3,22 +3,23 @@ title: "Pagination"
 description: "The cursor and page_size parameters, the response envelope, and how to walk a collection safely."
 ---
 
-{/* CONTENT PASS: merged from api-reference/basics/pagination, how-to/reading-data/paginate-through-results. Stop-on-null-cursor is stated in both halves. */}
-
-
-Every collection endpoint is paginated the same way - 53 endpoints across HRIS, ATS, LMS and the platform APIs. There is no unpaginated variant and no total count.
+Every collection endpoint is paginated the same way — 53 of them across HRIS, ATS, LMS and the platform APIs. There is no unpaginated variant and no total count.
 
 ## Query parameters
 
 | Parameter | Type | Default | Range | Behaviour |
 | --- | --- | --- | --- | --- |
-| `page_size` | integer | `50` | `1`-`200` | Number of results per page |
+| `page_size` | integer | `50` | `1`-`200` | Number of results per page. A value above 200 is rejected, not clamped |
 | `cursor` | string | none | - | Opaque pointer to the next page |
 
-Send `page_size` on the first request. Send `cursor` on every request after it, taken verbatim from the previous response, with **every other parameter unchanged** - filters are not carried by the cursor.
+Send `page_size` on the first request, then `cursor` on every request after it, copied verbatim from the previous response.
+
+<Warning>
+  **Keep every other parameter identical for the whole walk.** Filters are not carried by the cursor, so changing one mid-walk invalidates your position and produces gaps or repeats. The usual cause is recomputing a timestamp filter inside the loop — compute it once, before.
+</Warning>
 
 <Note>
-Two platform endpoints have their own bounds: `GET /api/v1/webhooks` defaults to `20` with a maximum of `100`, and `GET /api/v1/webhooks/logs` defaults to `25` with a maximum of `50`. Everything else is `50` and `200`.
+  Two platform endpoints have their own bounds: `GET /api/v1/webhooks` defaults to `20` with a maximum of `100`, and `GET /api/v1/webhooks/logs` defaults to `25` with a maximum of `50`. Everything else is `50` and `200`.
 </Note>
 
 ## Response envelope
@@ -40,16 +41,87 @@ All three fields are always present.
 | `items` | array | The records |
 
 <Warning>
-Stop on `cursor: null`, not on a short page. `page_size` reports what came back, and a page can be shorter than requested while more records remain - so treating a short page as the end silently truncates the collection.
+  Stop on `cursor: null`, not on a short page. `page_size` reports what came back, and a page can be shorter than requested while more records remain — so treating a short page as the end silently truncates the collection.
 </Warning>
 
 The cursor is opaque. Its value is not an offset, a record ID or a timestamp, and nothing in it is stable enough to store, decode or construct.
 
+## Walking a collection
+
+Request the first page, then follow the cursor until it comes back `null`.
+
+<CodeGroup>
+```python Python
+import time, requests
+
+def fetch_all(path, params, api_key, connector_token):
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "X-Connector-Token": connector_token,
+    }
+    params = {**params, "page_size": 200}
+    cursor, records = None, []
+
+    while True:
+        if cursor:
+            params["cursor"] = cursor
+        r = requests.get(f"https://api.bindbee.dev{path}",
+                         params=params, headers=headers, timeout=30)
+
+        if r.status_code == 429:
+            # Wait, then retry the same cursor - don't advance
+            time.sleep(float(r.headers.get("Retry-After", 1)))
+            continue
+
+        r.raise_for_status()
+        body = r.json()
+        records.extend(body["items"])
+        cursor = body.get("cursor")
+        if not cursor:
+            return records
+```
+
+```javascript Node
+async function fetchAll(path, params, apiKey, connectorToken) {
+  const records = [];
+  let cursor = null;
+
+  while (true) {
+    const qs = new URLSearchParams({ ...params, page_size: "200" });
+    if (cursor) qs.set("cursor", cursor);
+
+    const res = await fetch(`https://api.bindbee.dev${path}?${qs}`, {
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "X-Connector-Token": connectorToken,
+      },
+      signal: AbortSignal.timeout(30_000),
+    });
+
+    if (res.status === 429) {
+      // Wait, then retry the same cursor - don't advance
+      const wait = Number(res.headers.get("Retry-After") ?? 1);
+      await new Promise((r) => setTimeout(r, wait * 1000));
+      continue;
+    }
+    if (!res.ok) throw new Error(`${res.status}`);
+
+    const body = await res.json();
+    records.push(...body.items);
+    cursor = body.cursor;
+    if (!cursor) return records;
+  }
+}
+```
+</CodeGroup>
+
+On a `429`, wait and retry the **same** cursor rather than advancing. Limits are per connector token, so paging several customers in parallel is fine; paging one customer harder is not.
+
+The cheapest way to page less is to fetch less: filter server-side instead of discarding client-side, and on scheduled runs use `modified_after` to fetch only what changed. See [Querying the data](/guides/reading-writing/querying-data).
+
 ## What pagination does not give you
 
-There is **no total count and no page number**, so a progress bar cannot be driven from the response. If you need a count, page the whole collection and count what arrives - see [Reconcile Record Counts](/guides/troubleshooting/record-counts).
-
-Filters are also not carried by the cursor, so changing one mid-walk invalidates your position and produces gaps or repeats. Keep every parameter identical for the whole traversal.
+There is **no total count and no page number**, so a progress bar cannot be driven from the response. If you need a count, page the whole collection and count what arrives — see [Reconcile Record Counts](/guides/troubleshooting/record-counts).
 
 {/* VERIFY: is a stable sort order guaranteed across pages, and is a cursor valid
     indefinitely or does it expire? Neither is stated in spec.json or anywhere in the
@@ -58,135 +130,11 @@ Filters are also not carried by the cursor, so changing one mid-walk invalidates
     checkpoint a cursor between scheduled jobs need to know whether resuming from it
     is safe. */}
 
-## Walking a collection
-
-Every collection endpoint is paginated with `cursor` and `page_size`. Follow the cursor until it stops coming back.
-
-<Info>
-  **Before you start**
-
-  - You can make an authenticated request - see [Authentication](/api-reference/basics/authentication).
-</Info>
-
-### Steps
-
-<Steps>
-  <Step title="Request the first page">
-    Set `page_size`. The default is 50 and the maximum is 200 - a value above 200 is rejected rather than clamped.
-
-    ```bash
-    curl --request GET \
-      --url 'https://api.bindbee.dev/api/hris/v1/employees?page_size=200' \
-      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
-      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
-    ```
-
-    **Result:** A response containing `items`, `page_size`, and a `cursor`.
-
-    ```json
-    {
-      "cursor": "MDE4YjE4ZWYtYzk5Yy03YTg2LTk5NDYtN2I3YzlkNTQzM2U1",
-      "page_size": 200,
-      "items": [ ... ]
-    }
-    ```
-  </Step>
-
-  <Step title="Follow the cursor">
-    Pass the returned `cursor` back on the next request, keeping every other parameter identical.
-
-    **Result:** The next page.
-
-    <Warning>
-      Filters must stay the same across pages. Changing `employment_status`, `modified_after`, or any other filter mid-walk invalidates the cursor's position and produces gaps or repeats.
-    </Warning>
-  </Step>
-
-  <Step title="Loop until the cursor is exhausted">
-    <CodeGroup>
-      ```python Python
-      import time, requests
-
-      def fetch_all(path, params, api_key, connector_token):
-          headers = {
-              "Authorization": f"Bearer {api_key}",
-              "X-Connector-Token": connector_token,
-          }
-          params = {**params, "page_size": 200}
-          cursor, records = None, []
-
-          while True:
-              if cursor:
-                  params["cursor"] = cursor
-              r = requests.get(f"https://api.bindbee.dev{path}",
-                               params=params, headers=headers, timeout=30)
-
-              if r.status_code == 429:
-                  # Wait, then retry the same cursor - don't advance
-                  time.sleep(float(r.headers.get("Retry-After", 1)))
-                  continue
-
-              r.raise_for_status()
-              body = r.json()
-              records.extend(body["items"])
-              cursor = body.get("cursor")
-              if not cursor:
-                  return records
-      ```
-
-      ```javascript Node
-      async function fetchAll(path, params, apiKey, connectorToken) {
-        const records = [];
-        let cursor = null;
-
-        while (true) {
-          const qs = new URLSearchParams({ ...params, page_size: "200" });
-          if (cursor) qs.set("cursor", cursor);
-
-          const res = await fetch(`https://api.bindbee.dev${path}?${qs}`, {
-            headers: {
-              Authorization: `Bearer ${apiKey}`,
-              "X-Connector-Token": connectorToken,
-            },
-            signal: AbortSignal.timeout(30_000),
-          });
-
-          if (res.status === 429) {
-            // Wait, then retry the same cursor - don't advance
-            const wait = Number(res.headers.get("Retry-After") ?? 1);
-            await new Promise((r) => setTimeout(r, wait * 1000));
-            continue;
-          }
-          if (!res.ok) throw new Error(`${res.status}`);
-
-          const body = await res.json();
-          records.push(...body.items);
-          cursor = body.cursor;
-          if (!cursor) return records;
-        }
-      }
-      ```
-    </CodeGroup>
-
-    Stop when `cursor` is absent or null. Don't stop on a short page - a page returning fewer than `page_size` records is not reliably the last one.
-
-    **Result:** The full collection.
-  </Step>
-</Steps>
-
-### Reducing how much you page
-
-Two things cut page count more than tuning `page_size`.
-
-Filter server-side rather than fetching everything and discarding - and on scheduled runs fetch only what changed with `modified_after` - see [Querying the data](/guides/reading-writing/querying-data).
-
-### If this didn't work
+## If this didn't work
 
 <AccordionGroup>
   <Accordion title="Records are missing or repeated across pages">
-    Check every parameter is byte-identical between requests. The most common cause is recomputing a timestamp filter per page - compute it once before the loop.
-
-    A sync running mid-walk also shifts the underlying data. Page against a stable dataset by gating the run on the sync-completed event - see [Trigger a job on completion](/guides/reading-writing/syncing).
+    Check every parameter is byte-identical between requests. A sync running mid-walk also shifts the underlying data — page against a stable dataset by gating the run on the sync-completed event, see [Trigger a job on completion](/guides/reading-writing/syncing#triggering-a-job-on-completion).
   </Accordion>
 
   <Accordion title="The loop never terminates">
@@ -194,9 +142,7 @@ Filter server-side rather than fetching everything and discarding - and on sched
   </Accordion>
 
   <Accordion title="429 partway through">
-    Rate limits are 200 requests per minute per connector token. Honour `Retry-After` and resume from the cursor you were on - see [Errors & issues](/guides/troubleshooting/errors-and-issues).
-
-    Different connectors have independent limits, so paging several customers in parallel is fine; paging one customer harder is not.
+    Honour `Retry-After` and resume from the cursor you were on — see [Rate limits](/api-reference/basics/rate-limits).
   </Accordion>
 
   <Accordion title="Pages are slow with expanded relations">

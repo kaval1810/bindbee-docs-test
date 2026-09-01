@@ -4,70 +4,61 @@ description: "The per-request record behind every sync and every write, where to
 icon: "scroll-text"
 ---
 
-Every request Bindbee makes to a source system, and every request you make to Bindbee, is recorded. **When something is wrong and nothing in your own application errored, this is where the answer is** - because a sync failure happens in the background and never reaches your response.
+Every request between Bindbee and a source system is recorded. **When something is wrong but nothing in your own application errored, look here** — a sync fails in the background and never reaches your response.
 
-## What a log entry holds
+## Where to find them
+
+Open **Logs** in the dashboard for the whole account, or open a single connector for just that customer. The second is almost always faster.
+
+<Frame>
+<img
+  src="/images/platform/logs.png"
+  alt="The Logs view in the Bindbee Dashboard, listing requests by connector"
+  className="block"
+/>
+</Frame>
+
+## What an entry holds
 
 | Field | Holds |
 | --- | --- |
 | **Direction** | `READ` or `WRITE` |
 | **Connector** | Which customer's connection the request belongs to |
 | **Endpoint** | The path called, on Bindbee or on the source system |
-| **Status** | The response code, with the error code alongside where there is one |
-| **Request & response** | The full bodies - open an entry to expand them |
+| **Status** | The response code, and the error code where there is one |
+| **Request & response** | The full bodies. Open an entry to expand them |
 
 <Warning>
-  **Read the upstream response body before anything else.** When Bindbee's request to the HRIS fails, the log preserves the source system's own answer rather than a Bindbee interpretation of it. That body usually names the exact permission or field at fault, which a normalised message would lose - see [Errors & issues](/guides/troubleshooting/errors-and-issues).
+  **Read the upstream response body first.** When Bindbee's request to the HRIS fails, the log keeps the source system's own answer rather than a Bindbee summary of it. That body usually names the exact permission or field at fault. See [Errors & issues](/guides/troubleshooting/errors-and-issues).
 </Warning>
 
-## Where to find them
+## Find an answer
 
-Open **Logs** in the Dashboard for everything across the account, or open a single connector and use its own logs when you already know which customer is affected. The second is almost always faster.
-
-<Warning>
-  **Screenshot needed** — the Logs view with a failed entry expanded, so the request and the upstream response body are both visible. That expanded state is the thing this page is about, and a list view does not show it. Save to `images/platform/logs-expanded.png` and replace this callout with a `<Frame>`.
-</Warning>
-
-## What each question looks like here
-
-| Question | What to look for |
+| Question | Where to look |
 | --- | --- |
-| Why is this connector not returning benefits? | `READ` entries for the benefits endpoint - a `403` upstream means permissions, no entry at all means scope |
-| Why did my write fail? | The `WRITE` entry, then the source system's response body - writes fail for business reasons |
-| Did the sync run at all? | Absence of entries in the window, cross-checked against [Sync status](/guides/troubleshooting/sync-status) |
-| Which model broke a partial sync? | The first upstream error in the run - see [Partial syncs](/guides/troubleshooting/partial-syncs) |
+| Why is this connector not returning benefits? | `READ` entries for the benefits endpoint. A `403` means permissions; no entry at all means scope |
+| Why did my write fail? | The `WRITE` entry, then the source system's response body. Writes fail for business reasons |
+| Did the sync run at all? | No entries in the window, checked against [Sync status](/guides/troubleshooting/sync-status) |
+| Which model broke a partial sync? | The first upstream error in the run. See [Partial syncs](/guides/troubleshooting/sync-status#diagnose-a-partial-sync) |
 
-## Two different log surfaces
+## Connector logs are dashboard-only
 
-They are easy to confuse, and only one is reachable from code.
+There is no API for them. Anything your own monitoring acts on has to come from sync webhooks or the connector's `status` and `sync_status` fields — the same constraint that applies to Issues.
 
-| | Connector logs | Webhook delivery logs |
-| --- | --- | --- |
-| Records | Requests to and from source systems | Bindbee's delivery attempts to your endpoint |
-| Answers | Why data is wrong or missing | Why your handler did not fire |
-| API | **None - Dashboard only** | Two endpoints exist, undocumented |
+**Webhook delivery logs are a different thing.** They record Bindbee's attempts to reach *your* endpoint, so they answer why your handler did not fire, not why data is wrong. Unlike connector logs, they do have an API: [List Webhook Logs](/api-reference/webhooks/list-webhook-logs) and [Get Webhook Log Detail](/api-reference/webhooks/get-webhook-log-detail).
 
-<Warning>
-  **There is no connector logs endpoint.** Anything your own monitoring has to act on must come from sync-status webhooks or the connector's `status` and `sync_status` fields - the same constraint that applies to Issues.
-
-  Webhook delivery logs are the exception: `GET /api/v1/webhooks/logs` and `GET /api/v1/webhooks/logs/{log_id}` are both in `spec.json` and neither has a reference page.
-
-  {/* VERIFY: two things. The webhook log endpoints above are undocumented - they should either get generated pages under Platform or be removed from the spec. And: is a connector logs endpoint planned? Without one, a customer cannot build alerting on upstream failures, only on the coarser sync-status signal. Worth knowing whether to document a workaround or wait. */}
-</Warning>
+{/* VERIFY: is a connector logs endpoint planned? Without one, a customer cannot build alerting on upstream failures, only on the coarser sync-status signal. Worth knowing whether to document a workaround or wait. */}
 
 ## What logs cannot tell you
 
-**Why a field is empty.** A `200` with the field absent leaves no error to find. That is scope, permissions, or the unified model not carrying it - see [Scoping](/get-started/scoping).
-
-**That a record was deleted upstream.** Disappearance produces no request and no entry.
-
-**How long an entry is kept.**
+- **Why a field is empty.** A `200` with the field absent leaves no error to find. That is scope, permissions, or the unified model not carrying it — see [Scoping](/get-started/scoping).
+- **That a record was deleted upstream.** A disappearance produces no request, so no entry.
+- **How far back they go.** The retention window is not published, so treat logs as a tool for recent debugging rather than an audit trail.
 
 {/* VERIFY: the log retention window. Not stated anywhere, and it decides whether logs are usable for anything beyond immediate debugging. */}
 
 ## Related
 
 - [Errors & issues](/guides/troubleshooting/errors-and-issues) - which failures surface where, and how to read them
-- [Sync status](/guides/troubleshooting/sync-status) - whether the run happened at all
-- [Partial syncs](/guides/troubleshooting/partial-syncs) - working through a run that half-finished
+- [Sync status](/guides/troubleshooting/sync-status) - whether the run happened at all, and diagnosing a partial run
 - [Permission errors](/guides/troubleshooting/permission-errors) - the most common upstream failure

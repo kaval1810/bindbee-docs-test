@@ -6,7 +6,7 @@ description: "Bindbee's request limit, the headers every response carries, and t
 
 **200 requests per minute, per connector.**
 
-The limit is keyed to the `connector_token` in the request header, not to your API key, so each of your end users has an independent budget and one customer's traffic cannot exhaust another's. It applies across all endpoints - every request carrying the same connector token counts against the same 200.
+The limit is keyed to the `connector_token` in the request header, not to your API key. Each of your end users therefore has an independent budget, and one customer's traffic cannot exhaust another's. It applies across all endpoints — every request carrying the same connector token counts against the same 200.
 
 Requests beyond the limit are rejected with `429 Too Many Requests` until the window resets.
 
@@ -21,7 +21,7 @@ Every response carries the first three. `Retry-After` appears on `429` only.
 | `X-RateLimit-Reset` | Unix timestamp, in seconds, when the window resets |
 | `Retry-After` | Seconds to wait before retrying |
 
-`Retry-After` is authoritative. Prefer it over computing a delay from `X-RateLimit-Reset`, and over a fixed sleep.
+`Retry-After` is authoritative — prefer it over computing a delay from `X-RateLimit-Reset`, and over a fixed sleep. Watching `X-RateLimit-Remaining` on successful responses and slowing down before it reaches zero is cheaper than recovering from a `429`.
 
 ## A 429 response
 
@@ -37,18 +37,11 @@ Retry-After: 60
 }
 ```
 
-<Note>
-  `429` uses the same body shape as every other error status - a single
-  `detail` string. The exception is `422`, where `detail` is an array of
-  per-field objects rather than a string, so code that reads `detail` as text
-  breaks on the first validation error. See [Errors & issues](/guides/troubleshooting/errors-and-issues).
-</Note>
-
 ## The other limit, which is not yours
 
 Bindbee's 200 per minute governs how fast **you** can read. The source systems have their own limits, usually far tighter, and those govern how fast Bindbee can **sync**.
 
-You never see a `429` from that second limit - it surfaces as sync duration instead, and it is the main reason cadence is measured in hours rather than minutes. Neither you nor Bindbee can configure it away. See [Errors & issues](/guides/troubleshooting/errors-and-issues).
+You never see a `429` from that second limit — it surfaces as sync duration instead, and it is the main reason cadence is measured in hours rather than minutes. Neither you nor Bindbee can configure it away. See [Sync frequency](/api-reference/basics/sync-frequency).
 
 ## Higher limits
 
@@ -58,5 +51,4 @@ Custom limits are available for enterprise use cases. Contact [support@bindbee.d
 
 - [Errors & issues](/guides/troubleshooting/errors-and-issues) - retry logic that honours `Retry-After`, with backoff and jitter
 - [Pagination](/api-reference/basics/pagination) - resuming a walk interrupted by a `429`
-- [Errors & issues](/guides/troubleshooting/errors-and-issues) - the two limits, and why upstream errors pass through
 - [Authentication](/api-reference/basics/authentication) - the connector token the limit is keyed to

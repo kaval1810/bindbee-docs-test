@@ -1,45 +1,15 @@
 ---
 title: "Sync Frequency"
 sidebarTitle: "Sync frequency"
-description: "The cadences a connector can run on, what sets the floor, and how a change is requested."
+description: "How often a Production connector syncs, and how to change it."
 ---
 
-{/* CONTENT PASS: new page. Owns the published cadences; the Syncing guide owns the how-to and links here. Watch for drift between the two. */}
+A Production connector syncs **every 24 hours**. The schedule is set per connection, so one customer can sync on a different schedule from another.
 
-A Production connector pulls scoped data on a schedule. **The cadence is a property of the connector**, so different customers can run on different schedules.
+Need a different frequency, or a specific start time? Contact [support@bindbee.dev](mailto:support@bindbee.dev) with the connector IDs and what you need — neither is a dashboard control today.
 
-## Available cadences
-
-| Cadence | Fits |
-| --- | --- |
-| 6 hours | Same-day propagation - eligibility, enrolment, onboarding |
-| 24 hours *(default)* | Most workflows |
-| Weekly | Reference data that changes rarely, or slow source systems |
-
-**Six hours is the floor.** It is not an arbitrary limit: each sync pulls the full in-scope dataset from the source system, and most HR systems permit only a small number of requests per minute per tenant. Some cannot sustain a full extract every six hours, and a shorter cadence produces failures rather than fresher data.
+{/* VERIFY: confirm whether self-serve cadence and start-time controls have shipped. If so, this becomes a dashboard task. */}
 
 <Note>
-  Development connectors run an initial sync on authorisation and then have no recurring schedule - every refresh after that is one you trigger - see [Syncing](/guides/reading-writing/syncing).
+  Development connectors sync once on authorisation and have no recurring schedule. Every refresh after that is one you trigger — see [Syncing](/guides/reading-writing/syncing).
 </Note>
-
-## Start time
-
-Cadence sets how often; start time sets when in the day. Both are per connector, and both are changed the same way.
-
-<Warning>
-  Neither is a dashboard control today. Send support the connector IDs, the cadence, and - if you are setting one - the start time with its timezone.
-
-  {/* VERIFY: confirm whether self-serve cadence and start-time controls have shipped. If so, this becomes a dashboard task. */}
-</Warning>
-
-## What the schedule does not bound
-
-The cadence is a ceiling on freshness, not a guarantee of it. A sync that starts on time can still finish after your processing window, and duration grows with population size.
-
-**Gating your job on the sync-completed event removes that race entirely**, and works regardless of when the sync starts or how long it takes. Aligning to a fixed clock only narrows it.
-
-## Related
-
-- [Syncing](/guides/reading-writing/syncing) - triggering, monitoring and forcing syncs
-- [Rate Limits](/api-reference/basics/rate-limits) - what bounds your own reads
-- [Webhook](/guides/reading-writing/webhooks) - the completion event to gate on

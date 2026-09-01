@@ -22,27 +22,31 @@ flowchart LR
 | **Mapping** | The rule that tells Bindbee where to read the value from in the raw payload. |
 | **JMESPath** | The expression language used to point at a value inside the raw JSON. See [jmespath.org](https://jmespath.org/). |
 
-A field carries no data until it has a mapping. A mapping carries a scope.
+A field carries no data until it has a mapping. Every mapping has a type.
 
-## Scopes
+## Type of mapping
 
-| Scope | Applies to | Set with |
-| --- | --- | --- |
-| **Organization level** | Every connector of that integration in your org | `integration_slug` |
-| **Connector level** | One connector instance | `connector_token` |
+| Mapping type | Applies to | Set with | Called in the dashboard |
+| --- | --- | --- | --- |
+| **Integration level** | Every connector of that integration in your org | `integration_slug` | **for Integration** |
+| **Connector level** | One connector instance | `connector_token` | **for Specific Connector** |
+
+<Info>
+  When both levels exist for the same field, the **connector level** mapping overrides the integration level one on that connector.
+</Info>
 
 ```mermaid
 flowchart TD
-    A["Custom field: guardian_mobile"] --> B["Org mapping<br/>integration_slug: workday"]
+    A["Custom field: guardian_mobile"] --> B["Integration mapping<br/>integration_slug: workday"]
     A --> C["Connector mapping<br/>connector_token: abc123"]
-    B --> D["Workday connector A<br/>uses org mapping"]
-    B --> E["Workday connector B<br/>uses org mapping"]
+    B --> D["Workday connector A<br/>uses integration mapping"]
+    B --> E["Workday connector B<br/>uses integration mapping"]
     C --> F["Connector abc123<br/>connector mapping wins"]
 ```
 
-<Info>
-  When both levels exist for the same field, the **connector level** mapping overrides the organization level one on that connector.
-</Info>
+<Note>
+  One naming quirk to know about: the [configuration endpoint](/guides/extending/custom-fields/api-workflow#step-6-verify-the-effective-configuration) reports an integration level mapping as `"source": "organization"`. It is the same mapping type under an older name.
+</Note>
 
 ## Choose how to configure
 
@@ -59,7 +63,7 @@ You can manage Custom Fields in two ways. Both create the same underlying config
 </CardGroup>
 
 <Note>
-  Fields are tagged `source: "API"` or `source: "DASHBOARD"` depending on where they were created. Both behave identically and appear together in lookups and responses.
+  Whichever route you use, what you send on the mapping decides its type. Send `integration_slug` and Bindbee maps at the integration level; send `connector_token` and it maps at the connector level. The two are mutually exclusive — provide exactly one.
 </Note>
 
 ## Retrieve custom fields
@@ -101,11 +105,11 @@ GET https://api.bindbee.dev/api/hris/v1/employees?include_custom_fields=true
    - Always preview an expression before saving it.
    - Consider data type consistency across connectors of the same integration.
 
-3. **Organization vs Connector Level Mapping**
+3. **Integration vs Connector Level Mapping**
 
-   - Use **Organization Level** mappings for data that's consistent across all connectors of an integration.
+   - Use **Integration Level** mappings for data that's consistent across all connectors of an integration.
    - Use **Connector Level** mappings for connector-specific overrides.
-   - Review existing **Organization Level** mappings before creating connector-level duplicates.
+   - Review existing **Integration Level** mappings before creating connector-level duplicates.
 
 4. **Automation**
 

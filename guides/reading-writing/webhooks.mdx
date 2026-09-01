@@ -35,7 +35,15 @@ Five events are available. The dashboard groups them under **Get notified when**
 
 ## Creating a webhook
 
-Webhooks are configured in the dashboard, under **Configure → Webhooks**.
+Webhooks are configured in the dashboard, under **Configure → [Webhooks](https://app.bindbee.dev/webhooks)**.
+
+<Frame caption="The Add Webhook form, carrying the four steps above in order: Destination URL, Webhook Name, Webhook Type, and the events under Get notified when.">
+<img
+  src="/images/guides/webhook.jpg"
+  alt="The Add Webhook dialog, with a Destination URL field beside a Send test event button, a Webhook Name field, Webhook Type set to Production rather than Development, and checkboxes under Get notified when for Connector Synced, Connector Sync Started and Connector Sync Error, above a Create Webhook button"
+  className="block"
+/>
+</Frame>
 
 <Steps>
   <Step title="Enter your destination URL">
@@ -55,23 +63,17 @@ Webhooks are configured in the dashboard, under **Configure → Webhooks**.
   </Step>
 </Steps>
 
-<Warning>
-  **Screenshot needed** — the completed **New webhook** form in one frame: destination URL, Test URL button, name, the Production/Development selector and all five event checkboxes. Use a dummy `example.com` URL. Save to `images/webhooks/new-webhook-form.png` and replace this callout with a `<Frame>`.
-</Warning>
 
 ---
 
 ## Securing your endpoint
 
-To secure your API endpoint, ensure it verifies that POST requests are genuinely from Bindbee and not from a malicious source, and that payloads haven’t been tampered with during transit.
+Your URL is public, so anyone can post to it. Check the signature on every request, and only act on the ones that really came from Bindbee.
 
-You can achieve this by checking if the `X-Bindbee-Webhook-Signature` field in the request header matches an encoded combination of your organization’s unique webhook signature and the payload of the incoming request.
+Each request carries an `X-Bindbee-Webhook-Signature` header. Hash the raw body with your signature key and compare the result to that header. If they don't match, reject the request.
 
-In the Webhooks configuration page, you should find a Security section where you can access your signature key. This key is unique to your organization and can be regenerated if it becomes known to an unauthorized party.
+Your signature key is under **Security** on the Webhooks page. It is unique to your organization, and you can regenerate it if it ever leaks.
 
-<Warning>
-  **Screenshot needed** — the **Security** section of the Webhooks page, showing the signature key field and the regenerate control. The key must be redacted or a dummy value. Save to `images/webhooks/signature-key.png` and replace this callout with a `<Frame>`.
-</Warning>
 
 <CodeGroup>
 ```python Python

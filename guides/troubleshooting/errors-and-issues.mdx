@@ -4,7 +4,7 @@ description: "Tell whether a failure originated with you, Bindbee or the source 
 icon: "bug"
 ---
 
-Something did not work. Before you can fix it you need to know whose failure it was - **yours, Bindbee's, or the source system's.** Those three arrive through different channels and look nothing like each other.
+Something did not work. Before you can fix it you need to know whose failure it was — **yours, Bindbee's, or the source system's.** Those three arrive through different channels and look nothing like each other.
 
 ## Three origins, three channels
 
@@ -14,15 +14,11 @@ Something did not work. Before you can fix it you need to know whose failure it 
 | **The source system refused** | Not on your response at all - it happens during a sync | [Connector logs](/guides/troubleshooting/logs), or a [sync-status webhook](/guides/reading-writing/webhooks) |
 | **Nothing failed** | `200`, well-formed, data absent | Nowhere - it is [scope or permissions](/get-started/scoping) |
 
-The middle row is the one that catches people. **A source-system failure does not surface on the request you just made.**
-
-Bindbee holds a synced copy, so an upstream refusal happened in the background - possibly hours earlier - and your read succeeds against whatever was last stored.
-
-The third row has no error to look up at all - see [Scope & permissions](/get-started/scoping) for how to tell those apart.
+The middle row is the one that catches people. **A source-system failure does not surface on the request you just made.** Bindbee holds a synced copy, so an upstream refusal happened in the background — possibly hours earlier — and your read succeeds against whatever was last stored.
 
 ## Classify the status
 
-Errors fall into three groups: fix the request, back off and retry, or act on the connection. Treating them uniformly - retrying everything, or failing on everything - causes the two most common integration problems.
+Errors fall into three groups: fix the request, back off and retry, or act on the connection. Retrying everything, or failing on everything, causes the two most common integration problems.
 
 | Status | Meaning | Retry? |
 | --- | --- | --- |
@@ -33,7 +29,7 @@ Errors fall into three groups: fix the request, back off and retry, or act on th
 | `429` | Rate limit exceeded | Yes, after `Retry-After` |
 | `5xx` | Server-side | Yes, with backoff |
 
-Retrying a `4xx` other than `429` will never succeed and consumes the connector's rate limit while failing.
+Retrying a `4xx` other than `429` will never succeed, and consumes the connector's rate limit while failing.
 
 <Note>
   `422` is not a write-only code. A bad query parameter on a read returns `422`,
@@ -43,13 +39,13 @@ Retrying a `4xx` other than `429` will never succeed and consumes the connector'
 
 ## Read the response body, not just the status
 
-Every error Bindbee returns carries a `detail` field, and **its type depends on the status.** On `401`, `403`, `404` and `429` it is a string:
+Every error carries a `detail` field, and **its type depends on the status.** On `401`, `403`, `404` and `429` it is a string:
 
 ```json
 { "detail": "Rate limit exceeded" }
 ```
 
-On `422` it is an array, one entry per rejected field - here, a `page_size` above the maximum of 200:
+On `422` it is an array, one entry per rejected field — here, a `page_size` above the maximum of 200:
 
 ```json
 {
@@ -63,7 +59,7 @@ On `422` it is an array, one entry per rejected field - here, a `page_size` abov
 }
 ```
 
-`loc` is the path to the offending field and `msg` says what was expected - together they usually identify the fault without any further digging.
+`loc` is the path to the offending field and `msg` says what was expected. Together they usually identify the fault without further digging.
 
 <Warning>
   The same key holds two different types. Code that treats `detail` as a string
@@ -72,24 +68,20 @@ On `422` it is an array, one entry per rejected field - here, a `page_size` abov
   touching `detail`.
 </Warning>
 
-## Handle 429 using the headers
-
-Wait `Retry-After` seconds, then resume. Don't retry immediately, and don't use a fixed delay - the header is authoritative.
-
-Better still, watch `X-RateLimit-Remaining` on successful responses and slow down before you hit zero. Throttling proactively is cheaper than recovering. Every response carries it, not just the failures - see [Rate Limits](/api-reference/basics/rate-limits) for all four headers and what each one holds.
-
 ## The two causes of 403
 
 A `403` means the credentials are valid but don't permit this resource. Two very different situations produce it:
 
-- **A connector token used against the wrong API category** - an HRIS connector called on `/api/ats/v1/*`. That's a bug in your code.
-- **A model whose writes are disabled for that integration** - see [Check write support](/guides/reading-writing/meta-apis).
+- **A connector token used against the wrong API category** — an HRIS connector called on `/api/ats/v1/*`. That's a bug in your code.
+- **A model whose writes are disabled for that integration** — see [Check write support](/guides/reading-writing/meta-apis).
 
-Neither is retryable, and neither is a source-system permission problem - those surface as sync failures or empty results rather than `403`. See [Permission errors](/guides/troubleshooting/permission-errors).
+Neither is retryable, and neither is a source-system permission problem — those surface as sync failures or empty results rather than `403`. See [Permission errors](/guides/troubleshooting/permission-errors).
 
-## Back off exponentially on 5xx
+## Retry safely
 
-Retry with exponential backoff and jitter, capped at a few attempts. Jitter matters when many connectors fail together - without it, every client retries in lockstep.
+**On `429`,** wait `Retry-After` seconds. Don't retry immediately, and don't use a fixed delay — the header is authoritative. Better still, watch `X-RateLimit-Remaining` on successful responses and slow down before you reach zero. The limit is [200 requests per minute per connector](/api-reference/basics/rate-limits), counted against the connector token rather than the API key, so parallelising across customers is fine; hammering one customer's connector is what trips it.
+
+**On `5xx`,** retry with exponential backoff and jitter, capped at a few attempts. Jitter matters when many connectors fail together — without it, every client retries in lockstep.
 
 ```python Python
 import random, time, requests
@@ -111,6 +103,8 @@ def request_with_retry(method, url, *, max_attempts=4, timeout=30, **kwargs):
         time.sleep(delay + random.uniform(0, 0.5))   # jitter
 ```
 
+Log the status, response body, `X-RateLimit-Remaining`, connector ID and endpoint on every failure. A `403` without the endpoint is nearly undiagnosable later.
+
 <Warning>
   Retrying a write is only safe with an idempotency key. A `5xx` can be returned
   after the record was already created upstream, so a retry without
@@ -119,21 +113,19 @@ def request_with_retry(method, url, *, max_attempts=4, timeout=30, **kwargs):
   [Employee](/get-started/use-cases/create-an-employee).
 </Warning>
 
-Capture status, response body, `X-RateLimit-Remaining`, the connector ID, and the endpoint. A `403` without the endpoint is nearly undiagnosable later.
-
 ## An empty result is not an error
 
-The failure mode that costs most is a `200` with no records. Permission gaps, out-of-scope models, and stalled syncs all present this way, and code that only branches on status treats it as "the customer has no employees".
+The failure mode that costs most is a `200` with no records. Permission gaps, out-of-scope models and stalled syncs all present this way, and code that only branches on status treats it as "the customer has no employees".
 
-Where a zero count is implausible, check sync status rather than assuming absence - see [Missing records](/guides/troubleshooting/missing-or-extra-records).
+Where a zero count is implausible, check sync status rather than assuming absence — see [Missing records](/guides/troubleshooting/missing-or-extra-records).
 
 ## Upstream failures keep the source system's own answer
 
-When Bindbee's request to the HRIS fails, the record of it preserves the source system's response rather than a Bindbee interpretation of it - the upstream status, the endpoint being called, and the response body unmodified.
+When Bindbee's request to the HRIS fails, the record of it preserves the source system's response rather than a Bindbee interpretation: the upstream status, the endpoint called, and the response body unmodified.
 
-That body is the thing to read first. It contains the HR system's own error format, whatever that is: BambooHR returns a structured problem document, Dayforce its own process-result codes inside a `403`, Workday SOAP faults.
+Read that body first. It arrives in whatever format the HR system uses — BambooHR a structured problem document, Dayforce its own process-result codes inside a `403`, Workday SOAP faults. **None of it is normalised, and that is deliberate:** collapsing *"the Workday integration system user lacks Get_Workers permission on this security group"* into `PERMISSION_DENIED` would throw away the one sentence that tells an administrator what to change.
 
-**None of these are normalised, and that is the point.** The upstream message frequently names the exact permission or field at fault, which a translated message would lose.
+The same applies to writes, which fail for business reasons rather than structural ones — a time-off request rejected for insufficient balance, a hire rejected because a tenant requires a custom field, a payroll entry rejected because the period is closed. Bindbee cannot evaluate those in advance, so your user-facing messages for write failures cannot be fully generic.
 
 <Warning>
 An upstream `403` almost always means the authorising credentials lack a permission - not that Bindbee is unauthorised. **The fix is with your customer's HRIS administrator, not with your API keys.**
@@ -141,59 +133,18 @@ An upstream `403` almost always means the authorising credentials lack a permiss
 
 {/* VERIFY: the field names carrying the upstream envelope. This page previously named integration_status_code, integration_endpoint and integration_response as response-body fields. None of the three appear anywhere in spec.json, and the only documented error schemas are ErrorResponse ({detail: string}) and HTTPValidationError ({detail: [ValidationError]}). The upstream detail is visible in connector logs per how-to/troubleshooting/resolve-a-permission-error, but the field names are unconfirmed, so the prose above describes the content without naming fields. Confirm the names and where they appear, then restore them. */}
 
-## Write failures are source-shaped
+## Where background failures show up
 
-Reads mostly fail for structural reasons - credentials, permissions, coverage. **Writes fail for business reasons, and those belong entirely to the source system.**
+A sync that fails partway through never reaches your response. Two surfaces record it:
 
-A time-off request rejected for insufficient balance, a hire rejected because a tenant requires a custom field, a payroll entry rejected because the period is closed - none are conditions Bindbee can evaluate in advance.
-
-It submits the write and reports what came back.
-
-So write error handling cannot be fully generic. You can handle the transport uniformly, but the messages that tell your user what to do are shaped by whichever system they run.
-
-## Logs and issues
-
-Not every failure surfaces on a response. A sync that fails partway through happens in the background, and you find out from the connector's logs or a sync-status webhook.
-
-**Logs** hold the per-request record: which endpoint, which status, what came back. This is where you answer "why is this connector not returning benefits" when nothing in your own application errored - see [Logs](/guides/troubleshooting/logs).
-
-**Issues** are the layer above. Where a log entry is one request and its response, an issue is a failure Bindbee raised against a connector with a likely cause attached - carrying the evidence, so you and support read the same thing. See [Platform](/get-started/platform).
+- **[Logs](/guides/troubleshooting/logs)** — the per-request record: which endpoint, which status, what came back.
+- **Issues** — the layer above. Where a log entry is one request, an issue is a failure Bindbee raised against a connector with a likely cause attached. See [Platform](/get-started/platform).
 
 <Warning>
-Issues are a Dashboard surface. **There is no issues endpoint in the API**, so anything your own monitoring must act on has to come from sync-status webhooks or the connector's `status` - see [How connections work](/get-started/how-to-connect).
+Both are Dashboard surfaces. **There is no issues endpoint and no connector logs endpoint**, so anything your own monitoring acts on has to come from sync-status webhooks or the connector's `status` - see [How connections work](/get-started/how-to-connect).
 </Warning>
 
 {/* VERIFY: do issues have an explicit lifecycle - are they closed by Bindbee when the underlying failure clears, or dismissed by hand? The Dashboard shows "currently open issues", which implies a state, but the transition is undocumented. */}
-
-## Two rate limits
-
-They protect different things, and only one of them is about you.
-
-**Bindbee's limit** is [200 requests per minute per connector](/api-reference/basics/rate-limits) - counted against the connector token, not the API key - and it is what a `429` from Bindbee refers to. Each end user has an independent budget, so parallelising across customers is fine; hammering one customer's connector is what trips it.
-
-**The source system's limits** are usually far tighter, and they constrain how fast Bindbee can *sync* rather than how fast you can read. Most HR systems permit a small number of requests per minute per tenant.
-
-That second one is **the main reason sync cadence is measured in hours rather than minutes**, and it is not something either of you can configure away.
-
-## Why it works this way
-
-Passing upstream errors through unmodified is a deliberate refusal to be helpful in a way that would hurt.
-
-The tempting alternative is normalisation - map every source system's failure into one Bindbee taxonomy so your code handles a single shape. That works for the coarse cases and destroys the fine ones.
-
-HR systems return errors naming specific fields, permission objects and tenant configuration. Collapsing *"the Workday integration system user lacks Get_Workers permission on this security group"* into `PERMISSION_DENIED` throws away **the one sentence that tells the administrator what to change.**
-
-The trade is that your error handling has to be layered. Handle the envelope generically - retry, log, alert on status. Surface the upstream body to whoever can act on it, which is usually a human at the customer rather than your code.
-
-## What this means for you
-
-- **Branch on status before touching `detail`.** It is a string on most errors and an array on `422`.
-- **Read the upstream response body first** when a failure came from the source system. It usually names the fix.
-- **Route upstream `403`s to the customer's HRIS administrator**, not to your own credentials.
-- **Do not expect source-system failures on your own responses.** They happen during syncs; watch logs and sync-status webhooks.
-- **Never retry a write without an idempotency key.**
-- **Do not build generic user-facing messages for write failures.** The useful detail is source-specific.
-- **A successful response with missing data is not an error case** - it is a scope or permissions question.
 
 ## If this didn't work
 
@@ -219,6 +170,6 @@ The trade is that your error handling has to be layered. Handle the envelope gen
 
 ## Related
 
-- [Rate Limits](/api-reference/basics/rate-limits) - Bindbee's published limits
-- [Partial syncs](/guides/troubleshooting/partial-syncs) - work through a connector's logs
+- [Rate Limits](/api-reference/basics/rate-limits) - Bindbee's published limits, and all four headers
+- [Logs](/guides/troubleshooting/logs) - the per-request record behind a background failure
 - [Scope & permissions](/get-started/scoping) - why data goes missing without an error

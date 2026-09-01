@@ -50,8 +50,8 @@ A complete end-to-end flow when defining a new custom field via the API looks li
     Register the field on the target `(category, model)`.
   </Step>
   <Step title="Create a mapping">
-    Attach the field to either an integration (org-scoped) or a single connector
-    (connector-scoped).
+    Attach the field to either an integration (integration level) or a single
+    connector (connector level).
   </Step>
   <Step title="Verify the effective configuration">
     Inspect the effective per-connector view to confirm which mapping is winning
@@ -90,7 +90,7 @@ GET /api/v1/lookup/integrations?category=HRIS
 ```
 
 <Note>
-  Connector tokens (used for connector-scoped mappings) are **not** returned by
+  Connector tokens (used for connector level mappings) are **not** returned by
   any lookup endpoint. They are issued when a connector is created and surfaced
   through the connector flow.
 </Note>
@@ -188,10 +188,10 @@ POST /api/v1/custom-fields
 
 ## Step 5: Create a mapping
 
-A mapping pairs the custom field with a JMESPath, scoped either to an integration (applies to every connector of that integration) or to a single connector (overrides the org-level mapping for that connector only).
+A mapping pairs the custom field with a JMESPath. What you send decides its type: `integration_slug` for an integration level mapping, `connector_token` for a connector level one. See [Type of mapping](/guides/extending/custom-fields#type-of-mapping).
 
 <Tabs>
-  <Tab title="Organization-scoped">
+  <Tab title="Integration level">
     Applies to every Workday connector in your organization.
 
     ```bash
@@ -207,9 +207,9 @@ A mapping pairs the custom field with a JMESPath, scoped either to an integratio
     ```
 
   </Tab>
-  <Tab title="Connector-scoped">
-    Applies to one specific connector and overrides any org-level mapping
-    for the same field on that connector.
+  <Tab title="Connector level">
+    Applies to one specific connector and overrides any integration level
+    mapping for the same field on that connector.
 
     ```bash
     POST /api/v1/custom-fields/mapping
@@ -235,13 +235,13 @@ A mapping pairs the custom field with a JMESPath, scoped either to an integratio
 
 <Warning>
   Provide **exactly one** of `integration_slug` or `connector_token`. To change
-  the scope of an existing mapping, delete it and create a new one — only
+  the type of an existing mapping, delete it and create a new one — only
   `json_path` is mutable via update.
 </Warning>
 
 ## Step 6: Verify the effective configuration
 
-The configuration endpoint returns every custom field for a given `(connector, category, model)` together with the **effective** mapping in use. Connector-scoped mappings override organization-scoped ones, and unmapped fields are included with `json_path: null` so you can see what's still left to configure.
+The configuration endpoint returns every custom field for a given `(connector, category, model)` together with the **effective** mapping in use. Connector level mappings override integration level ones, and unmapped fields are included with `json_path: null` so you can see what's still left to configure.
 
 ```bash
 GET /api/v1/custom-fields/configuration?connector_token=<CONNECTOR_TOKEN>&category=HRIS&model=employee
@@ -280,8 +280,8 @@ GET /api/v1/custom-fields/configuration?connector_token=<CONNECTOR_TOKEN>&catego
 
 Each entry's `source` indicates which mapping is winning:
 
-- `"connector"` — a connector-scoped mapping is in effect.
-- `"organization"` — no connector override; the org-scoped mapping is being inherited.
+- `"connector"` — a connector level mapping is in effect.
+- `"organization"` — no connector override; the integration level mapping is being inherited. The response still uses the older `organization` wording for this mapping type.
 - `null` — no mapping is configured for this field on this connector.
 
 ## Updating and deleting
@@ -291,7 +291,7 @@ Each entry's `source` indicates which mapping is winning:
 | List custom fields    | `GET /api/v1/custom-fields`                 | Supports `category`, `model`, and `source` filters.       |
 | Get one with mappings | `GET /api/v1/custom-fields/{id}`            | Returns the field plus all its mappings.                  |
 | Delete a field        | `DELETE /api/v1/custom-fields/{id}`         | Cascades — all mappings for the field are removed.        |
-| Update a mapping      | `PATCH /api/v1/custom-fields/mapping/{id}`  | Only `json_path` is mutable. Re-create to change scope.   |
+| Update a mapping      | `PATCH /api/v1/custom-fields/mapping/{id}`  | Only `json_path` is mutable. Re-create to change type.    |
 | Delete a mapping      | `DELETE /api/v1/custom-fields/mapping/{id}` | Removes a single mapping; the field itself is unaffected. |
 
 ## Next steps

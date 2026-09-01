@@ -148,3 +148,237 @@ img,
   -webkit-mask-size: 100% 100%;
   mask-size: 100% 100%;
 }
+
+/* ===========================================================================
+   Mermaid diagrams in Bindbee colours.
+
+   Mermaid's stock theme is lavender - #ECECFF fills behind #9370DB borders,
+   with #333 lines and text - and it ships those colours in a <style> block
+   inside each <svg> it generates, every rule scoped as `#<svg-id> .node rect`.
+   That is specificity (1,1,2), and the erDiagram sheet marks its `.marker` rule
+   !important on top of that, so an override has to carry an id of its own as
+   well as !important before it lands. `#content-area` is that id; every rule
+   below hangs off it, and the three `svg.flowchart` / `svg.erDiagram` /
+   `svg.statediagram` classes mermaid puts on the root <svg> separate the
+   diagram types where they need different treatment.
+
+   The colours themselves are custom properties, declared on :root and declared
+   again under .dark - the class Mintlify puts on <html> for the dark theme.
+   Nothing about the SVG changes when the theme flips: the same markup simply
+   re-reads the variables, so the diagram recolours on the toggle whether or not
+   Mintlify re-renders it.
+   =========================================================================== */
+
+:root {
+  /* A shade deeper than the brand orange: #f57e21 on a near-white ground is
+     thin for a 1px border, and this still reads as the same colour. */
+  --bb-diagram-accent: #e06d10;
+  --bb-diagram-node-fill: rgba(245, 126, 33, 0.08);
+  --bb-diagram-text: #1f1d1b;
+  --bb-diagram-surface: #fcfcfb;
+  --bb-diagram-cluster-fill: rgba(245, 126, 33, 0.04);
+  --bb-diagram-cluster-stroke: rgba(224, 109, 16, 0.35);
+}
+
+.dark {
+  /* The lighter brand orange, for the same reason in reverse. */
+  --bb-diagram-accent: #fa923d;
+  --bb-diagram-node-fill: rgba(250, 146, 61, 0.14);
+  --bb-diagram-text: #ededed;
+  --bb-diagram-surface: #090909;
+  --bb-diagram-cluster-fill: rgba(250, 146, 61, 0.07);
+  --bb-diagram-cluster-stroke: rgba(250, 146, 61, 0.35);
+}
+
+/* Mermaid writes `background-color: white` as an inline style on the <svg>
+   itself. Left alone it punches a white card into the dark theme. */
+#content-area svg.flowchart,
+#content-area svg.erDiagram,
+#content-area svg.statediagram {
+  background-color: transparent !important;
+}
+
+/* --- Shapes: flowchart nodes, ER entities, states ------------------------- */
+
+#content-area svg.flowchart .node rect,
+#content-area svg.flowchart .node circle,
+#content-area svg.flowchart .node ellipse,
+#content-area svg.flowchart .node polygon,
+#content-area svg.flowchart .node > path,
+#content-area svg.erDiagram .node rect,
+#content-area svg.erDiagram .entityBox,
+#content-area svg.statediagram .node rect,
+#content-area svg.statediagram .node polygon,
+#content-area svg.statediagram g.stateGroup rect {
+  fill: var(--bb-diagram-node-fill) !important;
+  stroke: var(--bb-diagram-accent) !important;
+}
+
+/* ER attribute rows alternate, so they need two tones rather than one. */
+#content-area svg.erDiagram .attributeBoxOdd {
+  fill: var(--bb-diagram-surface) !important;
+  stroke: var(--bb-diagram-accent) !important;
+}
+
+#content-area svg.erDiagram .attributeBoxEven {
+  fill: var(--bb-diagram-node-fill) !important;
+  stroke: var(--bb-diagram-accent) !important;
+}
+
+/* 4px corners, the radius the rest of the site rounds to. rx/ry are geometry
+   properties here, not attributes, which is why CSS can set them at all. */
+#content-area svg.flowchart .node rect.label-container,
+#content-area svg.erDiagram .node rect,
+#content-area svg.statediagram .node rect.label-container {
+  rx: 4px;
+  ry: 4px;
+}
+
+/* Subgraphs and composite states. Mermaid's default here is a yellow that has
+   nothing to do with the node palette; a wash of the brand tint reads as a
+   container without competing with the nodes inside it. */
+#content-area svg.flowchart .cluster rect,
+#content-area svg.erDiagram .cluster rect,
+#content-area svg.statediagram .cluster rect,
+#content-area svg.statediagram .statediagram-cluster rect {
+  fill: var(--bb-diagram-cluster-fill) !important;
+  stroke: var(--bb-diagram-cluster-stroke) !important;
+}
+
+#content-area svg.statediagram .statediagram-state .divider {
+  stroke: var(--bb-diagram-accent) !important;
+}
+
+/* --- Connectors ---------------------------------------------------------- */
+
+#content-area svg.flowchart .edgePaths .path,
+#content-area svg.flowchart .flowchart-link,
+#content-area svg.erDiagram .relationshipLine,
+#content-area svg.statediagram .transition,
+#content-area svg.statediagram g.stateGroup line {
+  stroke: var(--bb-diagram-accent) !important;
+}
+
+/* Flowchart and state arrowheads are solid shapes, so they take a fill. The
+   state renderer's marker has no class at all - it is only ever identified by
+   an id ending in -barbEnd. */
+#content-area svg.flowchart .marker,
+#content-area svg.flowchart .arrowheadPath,
+#content-area svg.flowchart .arrowMarkerPath,
+#content-area svg.statediagram .marker,
+#content-area svg.statediagram [id$="-barbEnd"] {
+  fill: var(--bb-diagram-accent) !important;
+  stroke: var(--bb-diagram-accent) !important;
+}
+
+/* ER crow's feet are line drawings, and mermaid leaves them deliberately
+   unfilled - filling them would turn each foot into a blob - so only the
+   stroke moves to the brand colour. */
+#content-area svg.erDiagram .marker {
+  fill: none !important;
+  stroke: var(--bb-diagram-accent) !important;
+}
+
+/* The "zero" circle on a zeroOrOne / zeroOrMore foot carries fill="white" as a
+   presentation attribute, which on the dark theme reads as a white dot. */
+#content-area svg.erDiagram .marker circle {
+  fill: var(--bb-diagram-surface) !important;
+  stroke: var(--bb-diagram-accent) !important;
+}
+
+/* --- Start and end states ------------------------------------------------ */
+
+#content-area svg.statediagram .node circle.state-start,
+#content-area svg.statediagram .node .fork-join {
+  fill: var(--bb-diagram-accent) !important;
+  stroke: var(--bb-diagram-accent) !important;
+}
+
+/* The end state is a ring around a solid dot, drawn as two pairs of sibling
+   paths carrying presentation attributes: within each pair, stroke="none" is
+   the filled half and fill="none" is the outline. The nested pair is the dot. */
+#content-area svg.statediagram .node .outer-path > path[stroke="none"] {
+  fill: var(--bb-diagram-node-fill) !important;
+}
+
+#content-area svg.statediagram .node .outer-path > path[fill="none"] {
+  stroke: var(--bb-diagram-accent) !important;
+}
+
+#content-area svg.statediagram .node .outer-path > g > path[stroke="none"] {
+  fill: var(--bb-diagram-accent) !important;
+}
+
+#content-area svg.statediagram .node .outer-path > g > path[fill="none"] {
+  stroke: var(--bb-diagram-accent) !important;
+}
+
+/* The older state renderer draws the same thing as two circles. */
+#content-area svg.statediagram .node circle.state-end {
+  fill: var(--bb-diagram-accent) !important;
+  stroke: var(--bb-diagram-surface) !important;
+}
+
+#content-area svg.statediagram .end-state-inner {
+  fill: var(--bb-diagram-surface) !important;
+}
+
+/* --- Text ---------------------------------------------------------------- */
+
+/* Labels are HTML inside a <foreignObject>, so they take `color`, not `fill`.
+   `.label div .edgeLabel` is listed as well as `.edgeLabel` because the state
+   diagram's own sheet reaches edge labels through that longer path, and a
+   shorter selector would lose to it on specificity alone. */
+#content-area svg .label,
+#content-area svg foreignObject div,
+#content-area svg .nodeLabel,
+#content-area svg .nodeLabel p,
+#content-area svg .edgeLabel,
+#content-area svg .edgeLabel p,
+#content-area svg .label div .edgeLabel,
+#content-area svg .label div .edgeLabel p,
+#content-area svg .cluster-label,
+#content-area svg .cluster-label p {
+  color: var(--bb-diagram-text) !important;
+}
+
+/* Anything mermaid draws as a real <text> element instead. Mermaid 11 renders
+   almost every label as HTML, so these mostly matter for the parts that still
+   are not - ER attribute rows, diagram titles - and for older render paths. */
+#content-area svg.flowchart text,
+#content-area svg.flowchart tspan,
+#content-area svg.erDiagram text,
+#content-area svg.erDiagram tspan,
+#content-area svg.statediagram text,
+#content-area svg.statediagram tspan,
+#content-area svg .label text,
+#content-area svg .cluster text,
+#content-area svg .cluster-label text,
+#content-area svg .stateLabel text,
+#content-area svg g.stateGroup text,
+#content-area svg g.stateGroup .state-title,
+#content-area svg .entityLabel,
+#content-area svg .flowchartTitleText {
+  fill: var(--bb-diagram-text) !important;
+}
+
+/* The ER sheet colours the relationship label's wrapper <g> lavender, which
+   only shows through if that label is ever drawn as SVG rather than HTML. */
+#content-area svg.erDiagram .edgeLabel .label {
+  fill: var(--bb-diagram-text) !important;
+}
+
+/* Edge labels sit on top of the line they annotate, so they need an opaque
+   plate behind them in the page's own background colour. Mermaid's default is
+   a light grey that only works on white. */
+#content-area svg .edgeLabel,
+#content-area svg .edgeLabel p,
+#content-area svg .labelBkg {
+  background-color: var(--bb-diagram-surface) !important;
+}
+
+#content-area svg .edgeLabel rect,
+#content-area svg .stateLabel .box,
+#content-area svg .relationshipLabelBox {
+  fill: var(--bb-diagram-surface) !important;
+}
