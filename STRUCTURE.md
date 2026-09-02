@@ -1,6 +1,6 @@
 # Bindbee docs — structure (v3)
 
-Generated from `docs.json` on 2026-08-31 at commit `b0fd86e`.
+Generated from `docs.json` on 2026-09-02 at commit `318a2c4`.
 Run `python3 scripts/gen-structure.py` to refresh; hand edits will drift from the nav.
 
 ## Summary
@@ -8,12 +8,13 @@ Run `python3 scripts/gen-structure.py` to refresh; hand edits will drift from th
 | Tab | Pages |
 | --- | ---: |
 | Get Started | 16 |
-| Guide | 29 |
+| Guide | 31 |
 | API Reference | 146 |
-| **Total in nav** | **191** |
+| Help Center | 0 |
+| **Total in nav** | **193** |
 
-**52** are editorial pages written by hand. The other **139** render from `spec.json` via an `openapi:` line — 20 of those also carry a hand-written title, so they read like editorial pages in the sidebar but their body is generated.
-`docs.json` also carries **217** redirects.
+**54** are editorial pages written by hand. The other **139** render from `spec.json` via an `openapi:` line — 20 of those also carry a hand-written title, so they read like editorial pages in the sidebar but their body is generated.
+`docs.json` also carries **218** redirects.
 
 ### Reading the tree
 
@@ -41,7 +42,7 @@ Get Started
 │   └── Model Availability Matrix   (get-started/model-availability)  ·  title: Model availability
 └── Use Cases/
     ├── Sync census data   (get-started/use-cases/sync-census-data)  ·  title: Sync Census Data for Quoting
-    ├── Identify a termination   (get-started/use-cases/identify-a-termination)  ·  title: Cascade a Termination Downstream
+    ├── Identify a termination   (get-started/use-cases/identify-a-termination)  ·  title: Identify a Employee Termination
     ├── Read benefit coverage   (get-started/use-cases/read-benefit-coverage)  ·  title: Read Benefit Coverage
     ├── Write ICHRA deductions   (get-started/use-cases/write-ichra-deductions)  ·  title: Write Payroll Deductions Back to Payroll
     ├── Create an employee   (get-started/use-cases/create-an-employee)  ·  title: Create an Employee
@@ -59,21 +60,25 @@ Guide
 │   ├── Webhooks   (guides/reading-writing/webhooks)
 │   └── Meta APIs   (guides/reading-writing/meta-apis)  ·  title: Meta APIs for Write Operations
 ├── Extending the Model/
-│   ├── Custom Fields/
-│   │   ├── Overview   (guides/extending/custom-fields)  ·  title: Custom Fields
-│   │   ├── Dashboard   (guides/extending/custom-fields/dashboard)  ·  title: Dashboard Configuration
-│   │   └── API   (guides/extending/custom-fields/api-workflow)  ·  title: API Configuration
+│   ├── Custom Fields/  [network]
+│   │   ├── Overview   (guides/extending/custom-fields)
+│   │   ├── Dashboard Config   (guides/extending/custom-fields/dashboard)  ·  title: Dashboard Configuration
+│   │   └── API Config   (guides/extending/custom-fields/api-workflow)  ·  title: API Configuration
 │   └── Passthrough   (guides/extending/passthrough)
 ├── SDK & MCP/
-│   ├── Frontend SDK   (guides/sdk/frontend-sdk)
-│   └── MCP   (guides/sdk/mcp)
+│   ├── Embedded SDK   (guides/sdk/embedded-sdk)
+│   └── MCP Server   (guides/sdk/mcp)  ·  title: Docs MCP Server
 ├── Data Models/
-│   ├── Employee & org data   (guides/data-models/employee-and-org)  ·  title: Employee & Org Data
+│   ├── Employee & org data   (guides/data-models/employee-and-org)
 │   ├── Payroll   (guides/data-models/payroll)
 │   ├── Benefits   (guides/data-models/benefits)
 │   ├── Time & attendance   (guides/data-models/time-and-attendance)  ·  title: Time & Attendance
 │   ├── Recruiting   (guides/data-models/recruiting)
 │   └── Learning   (guides/data-models/learning)  ·  title: LMS models
+├── Workspace & Access/  [shield]
+│   ├── Roles & permissions   (guides/workspace/roles-and-permissions)
+│   ├── Single sign-on (SSO)   (guides/workspace/sso)  ·  title: Set Up Single Sign-On
+│   └── Data deletion   (guides/workspace/data-deletion)  ·  title: Data retention & deletion
 ├── Checklist/
 │   └── Go-Live checklist   (guides/go-live-checklist)
 └── Troubleshooting/
@@ -84,7 +89,6 @@ Guide
     │   └── Connections to relink   (guides/troubleshooting/connections-to-relink)  ·  title: Connection Needing Relink
     ├── Reconciling Data/  [scale]
     │   ├── Missing or extra records   (guides/troubleshooting/missing-or-extra-records)  ·  title: Missing or Unexpected Records
-    │   ├── Partial syncs   (guides/troubleshooting/partial-syncs)  ·  title: Diagnose a Partial Sync
     │   └── Record counts   (guides/troubleshooting/record-counts)  ·  title: Reconcile Record Counts Against the Source
     └── Permission errors   (guides/troubleshooting/permission-errors)  ·  title: Resolve a Source-System Permission Error
 
@@ -105,7 +109,7 @@ API Reference
 │   │   ├── List Webhooks   (api-reference/webhooks/list-webhooks)  ·  renders: GET /api/v1/webhooks
 │   │   ├── List Webhook Logs   (api-reference/webhooks/list-webhook-logs)  ·  renders: GET /api/v1/webhooks/logs
 │   │   └── Get Webhook Log Detail   (api-reference/webhooks/get-webhook-log-detail)  ·  renders: GET /api/v1/webhooks/logs/{log_id}
-│   ├── Frontend SDK/
+│   ├── Embedded SDK/
 │   │   ├── POST /api/embedded/v1/link/create-link-token   (sdk/create-link-token)
 │   │   └── GET /api/embedded/v1/connectors/connector_token/{temporary_token}   (sdk/get-connector-token)
 │   ├── Custom Fields/
@@ -127,7 +131,7 @@ API Reference
 │   │       ├── Preview   (api-reference/custom-fields/preview)  ·  renders: POST /api/v1/custom-fields/preview
 │   │       └── Get Configuration   (api-reference/custom-fields/get-configuration)  ·  renders: GET /api/v1/custom-fields/configuration
 │   └── Passthrough/
-│       └── Make a request   (api-reference/passthrough/make-passthrough-request)  ·  renders: POST /api/v1/passthrough
+│       └── Make Passthrough Request   (api-reference/passthrough/make-passthrough-request)  ·  renders: POST /api/v1/passthrough
 ├── HR & Payroll (HRIS)/  [users]
 │   ├── Overview   (hris/overview)  ·  title: HR & Payroll (HRIS)
 │   ├── Employee Data/  [expanded]
@@ -304,6 +308,8 @@ API Reference
         └── Enrollments/
             ├── GET /api/lms/v1/enrollments   (lms/enrollments/get-enrollments)
             └── GET /api/lms/v1/enrollments/{id}   (lms/enrollments/get-enrollment-by-id)
+
+Help Center
 ```
 
 ## Not in the navigation

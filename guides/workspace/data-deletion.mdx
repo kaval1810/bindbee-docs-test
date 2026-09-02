@@ -1,0 +1,51 @@
+---
+title: "Data retention & deletion"
+sidebarTitle: "Data deletion"
+description: "What deleting a connector removes, the seven-day window to stop it, and which deletions have to go through support."
+icon: "trash-2"
+---
+
+Deletion in Bindbee happens at one level: the connector. There is no field-level or record-level delete, in the Dashboard or the API - and once a connector's deletion completes, none of it comes back.
+
+## Deletion is connector-level
+
+Deleting a connector discards the data synced through it *and the record IDs built from it*. That's the whole of what you can delete yourself - see [Delete Connector](/api-reference/connectors/delete-connector).
+
+Anything narrower - one model, one field, a subset of employees - is a support request. Nothing on your end deletes below the connector.
+
+<Warning>
+  Delete is not the fix for bad or stale data. [Relink](/guides/troubleshooting/connections-to-relink) expired credentials and [resync](/guides/reading-writing/syncing) a bad run instead. Deletion is for connectors that are abandoned, duplicated, or belong to a churned customer.
+</Warning>
+
+## The seven-day window
+
+**A deleted connector's data is recoverable for seven days.** Inside that window, email [support@bindbee.dev](mailto:support@bindbee.dev) with the connector ID and the deletion can be stopped before it completes.
+
+After seven days the data is permanently removed and cannot be retrieved - not by you, and not by support.
+
+## Deleting a subset of data
+
+The common case is a customer who narrows what they're willing to share after the fact. They authorise everything, data syncs, and then they decide only US employees should ever have been sent.
+
+Narrowing your [scope](/get-started/scoping) stops future collection, but **it does not remove what has already synced**. For that, email [support@bindbee.dev](mailto:support@bindbee.dev) with the connector and the filter that describes what should go. Deletions like this run immediately, and only on request.
+
+## Why it works this way
+
+The connector is what your customer agreed to share, so it is also what you delete - anything smaller has to be run by support against live data. **The seven days are there to catch a mistake**, since deleting the wrong connector takes one click and nothing else undoes it. It is also a legal duty: a GDPR erasure request has to be possible to carry out, and the data has to really go - see the [Trust Center](https://trust.bindbee.dev).
+
+{/* VERIFY: whether the DPA commits to a specific erasure timeline. Matters because this line gets read in security reviews. */}
+
+## What this means for you
+
+- **Keep `connector_id` and `origin_id` in your own store.** Asking for a stop, or for a filtered deletion, needs the connector named.
+- **Treat day seven as final** and plan retention on your own copy accordingly - deleting in Bindbee doesn't delete what you've already stored.
+- **Narrow scope first when a customer changes their mind**, then ask support to clear the historical rows.
+- **Delete the connector as part of offboarding**, alongside your own copy of that customer's data.
+- **Keep Production deletes with Admins**, which is where [roles](/guides/workspace/roles-and-permissions) already put them.
+
+## Related
+
+- [Delete Connector](/api-reference/connectors/delete-connector) - the endpoint
+- [Scoping](/get-started/scoping) - stopping collection, which deletion does not do
+- [Roles & permissions](/guides/workspace/roles-and-permissions) - who can delete a Production connector
+- [Go-Live checklist](/guides/go-live-checklist) - offboarding and retention before launch

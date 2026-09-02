@@ -1,0 +1,41 @@
+---
+title: "Roles & permissions"
+description: "The two workspace roles, and what a Member cannot do."
+icon: "shield-check"
+---
+
+Everyone in your Bindbee workspace is either an **Admin** or a **Member**. There are only these two roles, and they aren't configurable.
+
+## What each role can do
+
+| Action | Member | Admin |
+| --- | :---: | :---: |
+| Create a Development connector | ✓ | ✓ |
+| Delete a Development connector | ✓ | ✓ |
+| Regenerate the Development API key | ✓ | ✓ |
+| Create a Production connector | – | ✓ |
+| Delete a Production connector | – | ✓ |
+| Regenerate the Production API key | – | ✓ |
+| View a customer's SFTP credentials | – | ✓ |
+| Add or remove workspace users | – | ✓ |
+
+Anything not listed here is open to both roles. The Dashboard also marks the actions a Member can't take, so check there if you're unsure.
+
+{/* VERIFY: whether a restricted control is hidden from a Member or shown disabled. Matters because it decides whether a Member has to be told about these limits in advance. */}
+
+## Why it works this way
+
+Everything a Member can't do touches a live customer or a real credential, and none of it is easy to undo. Deleting a Production connector throws away the synced data, regenerating the Production key breaks every service still using the old one, and SFTP credentials belong to your customer. Inviting users is on the list because a Member who could invite people could give themselves the rest.
+
+## What this means for you
+
+- **Start people as Members**, and keep more than one Admin.
+- **Do test work in Development**, where a Member has full control.
+- **These roles cover the Dashboard, not your own product** - Bindbee authenticates your service, not your end users.
+
+## Related
+
+- [Environments](/get-started/environments) - what Development and Production keep separate
+- [Authentication](/api-reference/basics/authentication) - where the two API keys live
+- [Single sign-on (SSO)](/guides/workspace/sso) - how people sign in
+- [Data retention & deletion](/guides/workspace/data-deletion) - what a Production delete removes

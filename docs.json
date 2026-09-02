@@ -117,6 +117,15 @@
             ]
           },
           {
+            "group": "Workspace & Access",
+            "icon": "shield",
+            "pages": [
+              "guides/workspace/roles-and-permissions",
+              "guides/workspace/sso",
+              "guides/workspace/data-deletion"
+            ]
+          },
+          {
             "group": "Checklist",
             "pages": [
               "guides/go-live-checklist"
