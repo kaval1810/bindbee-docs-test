@@ -1,77 +1,78 @@
 ---
-title: "Time & Attendance"
-sidebarTitle: "Time & attendance"
-description: "What was worked: time off, balances and timesheet entries, and where they diverge from payroll."
+title: "Time & attendance"
+description: "What was worked: timesheet entries, leave requests and balances, and why they do not reconcile with payroll."
 icon: "clock"
 ---
 
-{/* CONTENT PASS: split out of explanation/payroll-and-time-models, merged with how-to/reading-data/read-time-and-attendance-data. Shares its lead and tail with Payroll - rewrite both so the two pages stand alone. */}
+Time and attendance answers what was *worked*. What was paid is a separate set of models - it doesn't come from this data, and it won't add up to match it either. In many companies it even comes from a different system. See [Payroll](/guides/data-models/payroll) for that half.
 
-Eight models cover payroll and time, and they divide into two groups that are constantly confused: **what was paid, and what was worked.** They are related, neither derives from the other, and in many organisations they come from different systems entirely.
+Three models cover it: hours worked, leave requested, and leave remaining. You read them separately, they answer different questions, and **none of them points at the others.**
 
-## What was worked
+## The models
 
-| Model | Holds | Note |
+| Model | Holds | Endpoint |
 | --- | --- | --- |
-| **Timesheet entry** | `date`, `hours_worked`, `start_time`, `end_time`, `break_duration` | Where normalisation works hardest |
-| **Time off** | `status`, `request_type`, `units`, `amount`, dates | A request with a lifecycle, not an absence |
-| **Time off balance** | `balance`, `used`, `policy_type` | The source system's calculation, not a portable figure |
+| **Timesheet entry** | `date`, `hours_worked`, `start_time`, `end_time`, `break_duration` | [Get Timesheet Entries](/hris/timesheet-entries/get-timesheet-entries-list) |
+| **Time off** | `status`, `request_type`, `units`, `amount`, `approver`, start and end times | [Get Time Off](/hris/time-off/get-time-off-list) |
+| **Time off balance** | `balance`, `used`, `policy_type` | [Get Time Off Balances](/hris/time-off-balance/get-time-off-balances-list) |
+
+A balance is one record per policy, so an employee with vacation and sick policies has two.
+
+## How they link
+
+```mermaid
+erDiagram
+    EMPLOYEE ||--o{ TIMESHEET_ENTRY : "employee"
+    EMPLOYEE ||--o{ TIME_OFF : "employee"
+    EMPLOYEE ||--o{ TIME_OFF_BALANCE : "employee"
+    EMPLOYEE ||--o{ EMPLOYEE_PAYROLL_RUN : "employee"
+```
+
+**The employee is the only thing these models have in common.** A leave request doesn't point at the balance it draws down, a timesheet entry doesn't point at the payroll run that paid it, and the fourth line above is the entire connection between hours and money.
+
+Anything beyond that one link is math your application does itself - the API doesn't hand you a join for it.
+
+## Leave is a request, not an absence
+
+Time off models the approval process, not the result. A record exists from the moment someone asks, and its `status` is `REQUESTED`, `APPROVED`, `DECLINED`, `CANCELLED` or `DELETED`.
 
 <Warning>
-Reading time off without filtering on `status` counts leave that was never taken - `REQUESTED`, `DECLINED`, `CANCELLED` and `DELETED` are all in the data. And `units` is `HOURS` or `DAYS`, so **`amount` means nothing without reading it.**
+Read time off without filtering on `status`, and you'll count leave that was never actually taken - declined and cancelled requests sit in the same list as approved ones. And `units` is `HOURS` or `DAYS`, so **`amount` means nothing until you check it.**
 </Warning>
 
-Balances differ more than they look. How a system treats accrual, carryover and pending requests is its own logic, so two customers on the same policy can report figures meaning subtly different things.
+The unit is whatever the source system uses, so it varies by connector, and sometimes by policy within one connector. Read it on every record - don't assume one.
 
-Timesheets are the harder normalisation. Source systems record time as punches, durations, intervals with nested breaks, or daily totals with no detail - reconstructing one shape from those is lossy, and the original survives in `raw_data`.
+`request_type` is the cleaned-up leave category - `VACATION`, `SICK`, `PERSONAL`, `MATERNITY`, `PATERNITY`, `BEREAVEMENT`, `FMLA` and a dozen others. Values that don't map pass through as-is, so treat it as an open list. See [Enum values](/guides/reading-writing/enum-values).
 
-## The two halves do not join cleanly
+## Balances and timesheets are computed upstream
 
-Hours worked and hours paid diverge routinely and legitimately:
+**A balance is the source system's own calculation, not a figure you can move between systems.** How a platform handles accrual, carryover and pending requests is its own logic, so two customers on what looks like the same policy can end up with numbers that mean subtly different things.
 
-- Overtime is calculated by rules the timesheet does not encode.
-- Salaried employees are paid with no timesheet at all.
-- Corrections apply to a later run than the period they fix.
-- Time off may or may not appear as a payroll line, depending on policy.
+It's also a snapshot from the last sync, not a live number. A request approved since then won't show up yet - which matters if you're showing a remaining balance to someone about to book leave.
 
-**This is the real gap in payroll integrations** - not the code-to-plan link, which the data supplies, but the arithmetic between hours and pay. Any reconciliation is something your application performs with knowledge of the customer's rules.
+**Timesheets are the harder problem.** Source systems record time as punches, durations, intervals with breaks inside them, or plain daily totals with no detail. Turning those into one shape loses information, and the original stays available in `raw_data`.
 
-## Why it works this way
+That's why raw entries can be correct while a customer's own reported totals differ - rounding, break deduction and overtime rules are applied by the source system after the entries are recorded. **Compare raw entries against raw entries, never against a computed report.**
 
-**The run and employee-run split mirrors how payroll executes** - an employer-level event producing per-employee results. Collapsing them would repeat the period and state on every line, with no way to represent a run that exists before its results do.
+## Hours worked and hours paid do not reconcile
 
-**Codes are classified only as far as classification is safe.** Sorting one into earning, deduction or tax is something the source metadata supports; inferring which plan a `RETIREMENT` deduction funds from its name would be guessing. So the association is stated as an identifier on the plan instead, which is why the join is reliable wherever it is populated.
+The two sides drift apart routinely, and for good reason:
 
-**Time off is a request because the source systems model approval, not outcome.** Flattening it to "days absent" would lose the pending state, which is exactly what most applications need to act on.
+- Overtime follows rules the timesheet doesn't capture.
+- Salaried employees get paid with no timesheet at all.
+- Corrections land in a later run than the period they fix.
+- Time off may or may not show up as a payroll line, depending on policy.
+- Approval workflows mean not every logged entry makes it into pay.
 
-## What this means for you
+**This is the real gap in payroll integrations** - not the code-to-plan link, which the data does supply, but the math between hours and pay. Any reconciliation is something your application does itself, using what you know about the customer's rules.
 
-- **Check `run_state` before treating a payroll run as money that moved.** Drafts are in the data.
-- **Read line items as objects.** A deduction already splits employee and company amounts.
-- **Resolve a deduction to a plan through `payroll_code`**, not by interpreting the code string.
-- **Filter time off by `status`**, and read `units` before interpreting `amount`.
-- **Do not expect a cadence on pay group.** Pay frequency is on compensation.
-- **Do not reconcile timesheets against payroll arithmetically** without encoding the customer's overtime and salary rules.
-
-## Reading time and attendance data
-
-Time and attendance is three models: hours worked, leave requested, and leave remaining. They are read separately and answer different questions.
-
-For amounts paid rather than hours worked, see [Reading payroll](/guides/data-models/payroll).
+## Reading time & attendance data
 
 <Info>
   **Before you start**
 
-  - The connector has synced, and the customer's time module is in scope. It is frequently licensed separately from payroll.
+  - The connector has synced, and the customer's time module is in scope. It's often licensed separately from payroll.
 </Info>
-
-### The models
-
-| Model | Represents | Endpoint |
-| --- | --- | --- |
-| Timesheet entry | Hours worked | [Get Timesheet Entries](/hris/timesheet-entries/get-timesheet-entries-list) |
-| Time off | A leave request and its approval state | [Get Time Off](/hris/time-off/get-time-off-list) |
-| Time off balance | How much leave remains, by policy | [Get Time Off Balances](/hris/time-off-balance/get-time-off-balances-list) |
 
 ### Steps
 
@@ -84,7 +85,7 @@ For amounts paid rather than hours worked, see [Reading payroll](/guides/data-mo
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    Entries are bounded by time, not date, and the filter pairs reflect that:
+    Entries are bounded by time, not date, and the filter pairs match that:
 
     | Filter pair | Bounds |
     | --- | --- |
@@ -94,7 +95,7 @@ For amounts paid rather than hours worked, see [Reading payroll](/guides/data-mo
     **Result:** Time entries for the period you asked for.
   </Step>
 
-  <Step title="Read time off requests">
+  <Step title="Read leave requests, filtered by status">
     ```bash
     curl --request GET \
       --url 'https://api.bindbee.dev/api/hris/v1/time-off?employee_id=<EMPLOYEE_ID>&status=APPROVED&page_size=200' \
@@ -102,15 +103,9 @@ For amounts paid rather than hours worked, see [Reading payroll](/guides/data-mo
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    `status` is one of `REQUESTED`, `APPROVED`, `DECLINED`, `CANCELLED`, `DELETED`.
+    Filter on `status` for anything that acts on leave. Read it without one, and declined and cancelled requests show up alongside approved ones - treat the whole set as booked leave and you'll overstate absence.
 
-    <Warning>
-      Filter on `status` for anything that acts on leave. An unfiltered read returns declined and cancelled requests alongside approved ones, and treating the whole set as booked leave overstates absence.
-    </Warning>
-
-    Each record carries `amount` and `units`, where `units` is `HOURS` or `DAYS`. The unit is the source system's choice, so it varies by connector and sometimes by policy within one connector - read it per record rather than assuming.
-
-    `request_type` is the normalised leave category: `VACATION`, `SICK`, `PERSONAL`, `MATERNITY`, `PATERNITY`, `BEREAVEMENT`, `FMLA` and others. Unmapped upstream values pass through verbatim - see [Enum values](/guides/reading-writing/enum-values).
+    There are no date filters on this endpoint. Scope by employee, and filter the `start_time` and `end_time` you get back yourself.
 
     **Result:** Leave requests with their approval state.
   </Step>
@@ -123,48 +118,60 @@ For amounts paid rather than hours worked, see [Reading payroll](/guides/data-mo
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    A balance carries `balance`, `used`, and `policy_type` - one record per policy, so an employee with vacation and sick policies has two.
+    Each record carries `balance`, `used` and `policy_type`. Read `policy_type` - don't assume one balance per person.
 
-    Balances are a snapshot from the last sync, not a live figure. A request approved since then is not reflected, which matters if you are showing a remaining figure to an employee about to book leave.
-
-    **Result:** Remaining leave per policy.
+    **Result:** Remaining leave per policy, as of the last sync.
   </Step>
 </Steps>
-
-### Where totals diverge from the customer's reports
-
-Reported totals are computed by the source system after entries are recorded. Rounding rules, break deduction, and overtime calculation are applied there, so raw entries can be correct while derived totals differ.
-
-Some platforms also model time as discrete punch events rather than intervals, so one shift may span several records and a break can split it. Compare raw entries against raw entries, never against a computed report.
-
-The same caution applies to payroll. Hours worked and hours paid diverge legitimately - overtime follows rules the timesheet doesn't encode, salaried employees are paid without timesheets, and approval workflows mean not every entry reaches pay. Any reconciliation between them is arithmetic your application performs with knowledge of the customer's rules.
 
 ### If this didn't work
 
 <AccordionGroup>
   <Accordion title="Time off or timesheets return nothing">
-    Time and attendance is commonly a separately licensed module with its own permission grant, and an empty result is the usual failure mode rather than an error. See [Permission errors](/guides/troubleshooting/permission-errors).
+    Time and attendance is commonly a separately licensed module with its own permission grant, and an empty result is the usual failure here, not an error. See [Permission errors](/guides/troubleshooting/permission-errors).
   </Accordion>
 
   <Accordion title="Balances don't match what the employee sees">
-    Balances are a point-in-time snapshot from the last sync, and accrual is calculated upstream on the source system's own schedule. A balance that is stale by one sync interval is expected, not a defect - see [How syncing works](/guides/reading-writing/syncing).
+    Balances are a point-in-time snapshot from the last sync, and accrual runs on the source system's own schedule. A balance that's stale by one sync interval is expected, not a bug - see [How syncing works](/guides/reading-writing/syncing).
   </Accordion>
 
   <Accordion title="Leave totals are too high">
-    Almost always an unfiltered `status`. Declined and cancelled requests are returned alongside approved ones.
+    Almost always an unfiltered `status`. Declined and cancelled requests are returned right alongside approved ones.
   </Accordion>
 
   <Accordion title="Hours don't reconcile with the pay run">
-    Timesheet entries and payroll are separate models with separate sync timing. Entries can exist for a period whose run hasn't been processed yet, and approval workflows mean not every entry reaches pay. See [Reading payroll](/guides/data-models/payroll).
+    Expected, and not a bug. Entries can exist for a period whose run hasn't been processed yet, and approval workflows mean not every entry reaches pay. See [Payroll](/guides/data-models/payroll).
   </Accordion>
 
   <Accordion title="units differs between records">
-    Correct, and worth handling. The source system chooses whether leave is counted in hours or days, and some platforms vary it by policy. Normalise on read using the `units` field rather than assuming one.
+    Correct, and worth handling. The source system decides whether leave is counted in hours or days, and some platforms vary it by policy. Read the `units` field on each record rather than assuming one.
+  </Accordion>
+
+  <Accordion title="One shift spans several timesheet records">
+    Some platforms record time as separate punch events rather than one interval, so a break splits a shift into more than one entry. Check `raw_data` to see the original shape before adding them up - see [Inspect raw data](/guides/reading-writing/raw-data).
   </Accordion>
 </AccordionGroup>
 
+## Why it works this way
+
+**Time off is a request because the source systems model approval, not the outcome.** Flattening it to "days absent" would lose the pending state, which is exactly what most applications need to act on - an approval queue is a workflow, and a workflow needs its in-between states.
+
+**Balances are carried, not computed**, because accrual is the part of leave policy that varies most between customers. Rebuilding a balance from requests would mean encoding every customer's carryover, accrual and proration rules - and quietly getting some of them wrong. Reporting what the source system says, with a date on it, is the honest option.
+
+**Timesheet entries keep `raw_data` next to the cleaned-up version** because that cleanup genuinely loses information. Punches, intervals and daily totals don't reduce to one shape without dropping something, so the original stays available for when the difference matters.
+
+## What this means for you
+
+- **Filter time off by `status`.** Declined and cancelled requests show up in an unfiltered read.
+- **Read `units` before you interpret `amount`.** It varies by connector, and sometimes by policy.
+- **Treat balances as a snapshot**, dated to the last sync, not a live number.
+- **Read `policy_type`** rather than assuming one balance per employee.
+- **Compare raw entries against raw entries**, never against the customer's computed totals.
+- **Don't try to reconcile timesheets against payroll by math alone** - you need the customer's overtime and salary rules too.
+
 ## Related
 
-- [Time & Attendance endpoints](/hris/time-off/get-time-off-list) - the API reference
+- [Time & attendance endpoints](/hris/time-off/get-time-off-list) - the API reference
 - [Payroll](/guides/data-models/payroll) - what was paid, as opposed to what was worked
-- [Employee & Org Data](/guides/data-models/employee-and-org) - who the hours belong to
+- [Employee & org data](/guides/data-models/employee-and-org) - who the hours belong to
+- [Enum values](/guides/reading-writing/enum-values) - why `request_type` is an open list

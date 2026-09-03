@@ -1,17 +1,12 @@
 ---
 title: "Payroll"
-sidebarTitle: "Payroll"
 description: "What was paid: payroll runs, payslip lines and the codes that classify them."
 icon: "wallet"
 ---
 
-Payroll answers what was paid. What was *worked* is a separate set of models that neither derives from nor reconciles arithmetically with this one, and in many organisations comes from a different system entirely. See [Time & attendance](/guides/data-models/time-and-attendance) for that half.
+Payroll answers what was paid. What was *worked* is a different set of models - it doesn't come from this data, and it won't add up to match it either. In many companies it even comes from a different system. See [Time & attendance](/guides/data-models/time-and-attendance) for that half.
 
-<Info>
-  **Before you start**
-
-  - The connector has synced, and the customer's payroll module is in scope.
-</Info>
+Five models cover payroll, and **the mistake people make most often is treating a run as proof that money moved.** A run exists before anyone gets paid.
 
 ## The models
 
@@ -19,63 +14,77 @@ Payroll answers what was paid. What was *worked* is a separate set of models tha
 | --- | --- | --- |
 | **Payroll run** | The employer's processing event: period, check date, `run_type`, `run_state` | [Get Payroll Runs](/hris/payroll-runs/get-payroll-runs) |
 | **Employee payroll run** | One person's line: `gross_pay`, `net_pay`, and the itemised earnings, deductions and taxes | [Get Employee Payroll Runs](/hris/employee-payroll-runs/get-employee-payroll-runs) |
-| **Payroll run calendar** | The forward schedule of periods and pay dates | [Get Payroll Run Calendars](/hris/payroll-run-calendar/get-payroll-run-calendars) |
+| **Payroll run calendar** | The upcoming schedule of periods and pay dates | [Get Payroll Run Calendars](/hris/payroll-run-calendar/get-payroll-run-calendars) |
 | **Payroll code** | The customer's earning and deduction codes, classified | [Get Payroll Codes](/hris/payroll-codes/get-payroll-codes) |
 | **Pay group** | `name` and `description` only | [Get Pay Groups](/hris/pay-groups/get-pay-groups) |
 
-Which one you read depends on whether you need the cycle or the amounts. A run exists before it is paid.
+Which one you read depends on whether you need the cycle or the amounts.
 
 <Warning>
-`run_state` is `PAID`, `DRAFT`, `APPROVED`, `FAILED`, `CLOSED` or `NOT_STARTED`. **A payroll run existing does not mean anybody was paid.** Reading runs without checking `run_state` counts drafts as money that moved.
+`run_state` is `PAID`, `DRAFT`, `APPROVED`, `FAILED`, `CLOSED` or `NOT_STARTED`. **A payroll run existing doesn't mean anyone got paid.** Read runs without checking `run_state`, and you'll count drafts as money that moved.
 </Warning>
 
-`run_type` separates `REGULAR` from `OFF_CYCLE`, `CORRECTION`, `TERMINATION`, `BONUS` and `SIGN_ON_BONUS`. Both fields are filters on the runs endpoint, so scope the query rather than reading everything and discarding.
+`run_type` separates `REGULAR` from `OFF_CYCLE`, `CORRECTION`, `TERMINATION`, `BONUS` and `SIGN_ON_BONUS`. Both fields are filters on the runs endpoint, so scope your query with them instead of reading everything and throwing away what you don't need.
 
-**Pay group is a label, not a schedule.** Two things commonly assumed about it are not in the model: it has no cadence and no employee list. The link runs the other way. Employees, compensation and payroll runs reference a pay group, and pay frequency lives on compensation as `pay_frequency`.
+**Pay group is a label, not a schedule.** Two things people usually assume about it aren't true: it has no timing and no employee list. The link runs the other way - employees, compensation and payroll runs each point to a pay group, and pay frequency actually lives on compensation as `pay_frequency`.
 
-**The calendar matters more than it looks.** It is the only model here describing the future, and deduction changes have to land before the customer's processing cut-off. See [Write payroll deductions](/get-started/use-cases/write-payroll-deductions).
+**The calendar matters more than it looks like it should.** It's the only model here that describes the future, and deduction changes need to land before the customer's processing cut-off. See [Write payroll deductions](/get-started/use-cases/write-payroll-deductions).
 
-<Info>
-The calendar names its dates differently from the run. The calendar carries `pay_period_start_date`, `pay_period_end_date` and `pay_date`. The run carries `start_date`, `end_date` and `check_date`. They mean the same three things.
-</Info>
+It also names its dates differently from the run. The calendar uses `pay_period_start_date`, `pay_period_end_date` and `pay_date`; the run uses `start_date`, `end_date` and `check_date`. The two sets mean the same three things.
+
+## How they link
+
+```mermaid
+erDiagram
+    PAY_GROUP ||--o{ PAYROLL_RUN : "pay_group"
+    PAY_GROUP ||--o{ PAYROLL_RUN_CALENDAR : "pay_group"
+    PAYROLL_RUN ||--o{ EMPLOYEE_PAYROLL_RUN : "payroll_run"
+    EMPLOYEE_PAYROLL_RUN ||--o{ DEDUCTION : "deductions"
+    DEDUCTION }o--|| PAYROLL_CODE : "payroll_code"
+    EMPLOYER_BENEFIT ||--o{ PAYROLL_CODE : "payroll_codes"
+```
+
+The two edges at the bottom are the useful ones. **A deduction line and a benefit plan meet at the payroll code**, which is what lets a withholding trace back to the plan that caused it - with no per-customer mapping needed in between.
 
 ## A payslip line is a structured object
 
-`earnings`, `deductions` and `taxes` are not amounts. Each is an array of objects, and each object references the code behind it and carries its own `currency`.
+`earnings`, `deductions` and `taxes` are not plain amounts. Each one is a list of objects, and each object references the code behind it.
 
 | | Fields |
 | --- | --- |
-| **Earning** | `amount`, `name`, `currency`, `payroll_code` |
-| **Deduction** | `name`, `employee_deduction`, `company_deduction`, `currency`, `payroll_code` |
-| **Tax** | `name`, `amount`, `currency`, `payroll_code` |
+| **Earning** | `amount`, `name`, `payroll_code` |
+| **Deduction** | `name`, `employee_deduction`, `company_deduction`, `payroll_code` |
+| **Tax** | `name`, `amount`, `payroll_code` |
 
-**A deduction carries two amounts**, `employee_deduction` and `company_deduction`, so employer and employee shares are already split rather than inferred.
+**A deduction carries two amounts** - `employee_deduction` and `company_deduction` - so the employer's and employee's shares are already split out for you.
 
-`Earning.name` is a fixed enum: `SALARY`, `REIMBURSEMENT`, `OVERTIME`, `BONUS`, `HOURLY`. `Deduction.name` and `Tax.name` are not. They come through as the customer wrote them.
+`Earning.name` is cleaned up into `SALARY`, `REIMBURSEMENT`, `OVERTIME`, `BONUS` or `HOURLY`, and anything that doesn't map passes through as-is - see [Enum values](/guides/reading-writing/enum-values). `Deduction.name` and `Tax.name` are not cleaned up at all. They come through exactly as the customer wrote them.
+
+No line item carries its own currency. Where you need one, get it from the employee's compensation record instead.
 
 ## Payroll codes classify, and connect
 
-Every line references a code, and Bindbee normalises the code itself. `type` is `EARNING`, `DEDUCTION` or `TAX`, and `sub_type` narrows it: `RETIREMENT`, `HEALTH`, `GARNISHMENT`, `SEVERANCE`, `FICA`, `MEDICARE`, `FIT`, `SIT` and so on. Tax subtypes are worth knowing about, because they let you classify withholding without parsing a name string.
+Every line references a code, and Bindbee cleans up the code itself. `type` is `EARNING`, `DEDUCTION` or `TAX`, and `sub_type` narrows it further: `RETIREMENT`, `HEALTH`, `GARNISHMENT`, `SEVERANCE`, `FICA`, `MEDICARE`, `FIT`, `SIT` and more. Tax subtypes are worth knowing, because they let you classify a withholding without parsing a name string.
 
-What is not normalised is the customer's own `code` and `name`, which come from their payroll configuration rather than any standard. A code identifying a specific 401(k) at one customer identifies something else at another.
+What isn't cleaned up is the customer's own `code` and `name`, which come from their payroll setup rather than any standard. A code that identifies a specific 401(k) at one customer means something else at another.
 
-**But you do not have to interpret the code to find the plan.** `payroll_code` on a line is an ID, and the employer benefit carries `payroll_codes` referencing the same records:
-
-```mermaid
-flowchart LR
-    D["Deduction line"] -- "payroll_code" --> C["Payroll code"]
-    B["Employer benefit"] -- "payroll_codes" --> C
-```
-
-So a deduction line resolves to a benefit plan by matching identifiers, with no per-customer mapping in between. See [Benefits](/guides/data-models/benefits).
+**But you don't have to read the code to find the plan.** `payroll_code` on a line is an ID, and the employer benefit carries `payroll_codes` pointing at the same records - so a deduction line matches a benefit plan by ID. See [Benefits](/guides/data-models/benefits).
 
 <Warning>
-Every field in that chain is nullable. Where `payroll_code` on a line or `payroll_codes` on a plan is empty, the mapping falls back to configuration you agree with the customer and store yourself. **Check both ends before relying on the join** for a given connector.
+Every field in that chain can be empty. Where `payroll_code` on a line, or `payroll_codes` on a plan, is missing, fall back to a mapping you agree with the customer and store yourself. **Check both ends before relying on the link** for a given connector.
 </Warning>
 
-The codes endpoint filters on `type` but not `sub_type`, so pull the set once per connector and index it client-side rather than querying per line.
+The codes endpoint filters on `type` but not `sub_type`, so pull the full set once per connector and look things up client-side instead of querying per line.
 
 ## Reading payroll data
+
+<Info>
+  **Before you start**
+
+  - The connector has synced, and the customer's payroll module is in scope.
+</Info>
+
+### Steps
 
 <Steps>
   <Step title="Read per-employee payroll">
@@ -92,7 +101,7 @@ The codes endpoint filters on `type` but not `sub_type`, so pull the set once pe
   </Step>
 
   <Step title="Choose the right date filter">
-    Three independent pairs, on both the run and the employee-run endpoint, and they mean different things.
+    Three separate filter pairs exist on both the run and the employee-run endpoint, and they mean different things.
 
     | Filter pair | Bounds |
     | --- | --- |
@@ -101,64 +110,66 @@ The codes endpoint filters on `type` but not `sub_type`, so pull the set once pe
     | `check_date_from` / `check_date_to` | When payment was actually issued |
 
     <Warning>
-      Check date and pay period are routinely different, and a period ending in December can pay in January. Reconciling by check date attributes that run to the wrong year. Reconciling by period end attributes it to the wrong cash month.
+      Check date and pay period routinely fall in different months, and a period ending in December can pay in January. Filter by check date, and you'll attribute that run to the wrong year. Filter by period end, and you'll attribute it to the wrong cash month.
 
-      Pick deliberately based on whether you are reconciling coverage or cash.
+      Pick on purpose, based on whether you're reconciling coverage or cash.
     </Warning>
 
-    **Result:** Records scoped to the period you mean.
+    **Result:** Records scoped to the period you actually mean.
   </Step>
 
   <Step title="Resolve deductions to plans">
-    Take `payroll_code` from each deduction line and match it against `payroll_codes` on the employer benefit. Where either side is null, fall back to the mapping you hold for that connector.
+    Take `payroll_code` from each deduction line and match it against `payroll_codes` on the employer benefit. Where either side is empty, fall back to the mapping you hold for that connector.
 
-    Do not attempt to infer the plan from the deduction's `name`. It is the customer's own string, and it is the one part of this chain that is not normalised.
+    Don't try to guess the plan from the deduction's `name`. It's the customer's own string, and it's the one part of this chain that isn't cleaned up.
 
-    **Result:** Deduction lines attributed to plans.
+    **Result:** Deduction lines matched to plans.
   </Step>
 </Steps>
 
-## If this didn't work
+### If this didn't work
 
 <AccordionGroup>
   <Accordion title="Payroll returns nothing though the customer runs payroll">
-    Payroll is usually a separately licensed module with its own permission grant, and an empty result is the common failure mode rather than an error. See [Permission errors](/guides/troubleshooting/permission-errors).
+    Payroll is usually a separately licensed module with its own permission grant, and an empty result is the common failure here, not an error. See [Permission errors](/guides/troubleshooting/permission-errors).
   </Accordion>
 
   <Accordion title="Amounts are off by a factor of 100">
-    Some platforms report in minor units. Check `raw_data` for one record against a known figure before scaling anything.
+    Some platforms report in minor units (cents, not dollars). Check `raw_data` for one record against a known figure before scaling anything.
   </Accordion>
 
   <Accordion title="A run is missing from a period you expected">
-    Check `run_type` before assuming a regular cadence. Off-cycle, bonus, termination and correction runs are separate values and may sit outside the schedule you were looking at. Then check `run_state`, since a run that has not reached `PAID` may not be where you expected either.
+    Check `run_type` before assuming a regular schedule. Off-cycle, bonus, termination and correction runs are separate values and may fall outside the schedule you were looking at. Then check `run_state`, since a run that hasn't reached `PAID` may not be where you expected it to be either.
   </Accordion>
 
   <Accordion title="A deduction line has no payroll_code">
-    Expected on some connectors. The field is nullable at both ends of the join. Confirm the mapping with the customer and store it against the connector.
+    Expected on some connectors. The field can be empty at both ends of the link. Confirm the mapping with the customer and store it against the connector.
   </Accordion>
 
   <Accordion title="Payroll doesn't reconcile with hours worked">
-    Expected. Overtime is calculated by rules the timesheet does not encode, salaried employees are paid without timesheets at all, and corrections land in a later run than the period they fix. See [Time & attendance](/guides/data-models/time-and-attendance).
+    Expected. Overtime follows rules the timesheet doesn't capture, salaried employees are paid without timesheets at all, and corrections land in a later run than the period they fix. See [Time & attendance](/guides/data-models/time-and-attendance).
   </Accordion>
 </AccordionGroup>
 
 ## Why it works this way
 
-**The run and employee-run split mirrors how payroll executes**: an employer-level event producing per-employee results. Collapsing them would repeat the period and state on every line, with no way to represent a run that exists before its results do.
+**The run and employee-run split mirrors how payroll actually happens** - one employer-level event that produces a result for each employee. Put them together, and you'd repeat the period and state on every line, with no way to represent a run that exists before its results do.
 
-**Codes are classified only as far as classification is safe.** Sorting one into earning, deduction or tax is something the source metadata supports. Inferring which plan a `RETIREMENT` deduction funds from its name would be guessing. So the association is stated as an identifier on the plan instead, which is why the join is reliable wherever it is populated.
+**Codes are only classified as far as it's safe to.** Sorting one into earning, deduction or tax is something the source data supports. Guessing which plan a `RETIREMENT` deduction funds from its name would just be a guess.
+
+So instead, that link is stored as an ID on the plan - which is why it's reliable wherever it's filled in.
 
 ## What this means for you
 
-- **Check `run_state` before treating a payroll run as money that moved.** Drafts are in the data.
+- **Check `run_state` before treating a payroll run as money that moved.** Drafts are in the data too.
 - **Read line items as objects.** A deduction already splits employee and company amounts.
-- **Resolve a deduction to a plan through `payroll_code`**, not by interpreting the code string.
-- **Pick your date filter deliberately.** Check date and period end answer different questions.
-- **Do not expect a cadence on pay group.** Pay frequency is on compensation.
+- **Match a deduction to a plan through `payroll_code`**, not by reading the code string.
+- **Pick your date filter on purpose.** Check date and period end answer different questions.
+- **Don't expect a schedule on pay group.** Pay frequency lives on compensation.
 
 ## Related
 
 - [Payroll endpoints](/hris/payroll-runs/get-payroll-runs) - the API reference
 - [Time & attendance](/guides/data-models/time-and-attendance) - what was worked, as opposed to what was paid
 - [Benefits](/guides/data-models/benefits) - the payroll code that joins the two
-- [Employee & org data](/guides/data-models/employee-and-org-data) - where `pay_frequency` and pay group references live
+- [Employee & org data](/guides/data-models/employee-and-org) - where `pay_frequency` and pay group references live

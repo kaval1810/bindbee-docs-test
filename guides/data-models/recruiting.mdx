@@ -4,110 +4,99 @@ description: "The candidate, application, job and evaluation models, how they li
 icon: "briefcase"
 ---
 
-{/* CONTENT PASS: merged from explanation/ats-models, how-to/ats/read-candidates-and-applications, how-to/ats/track-an-application-through-stages, how-to/ats/sync-interview-feedback, how-to/ats/exclude-eeoc-data. Candidate-is-not-application is stated in three of the five sources. */}
+Recruiting data describes a process, not a fixed state, and the models reflect that. The one distinction most likely to trip you up is **the difference between a person and their attempt at one particular job.**
 
+## The models
 
-Recruiting data is a process rather than a state, and the models reflect that. The central distinction - and the one most likely to be got wrong - is **between a person and their pursuit of a particular job.**
+| Model | Holds | Endpoint |
+| --- | --- | --- |
+| **Candidate** | The person: names, `email_addresses`, `locations`, `tags`, `is_private`, `can_email` | [Get Candidates](/ats/candidate/get-candidates) |
+| **Application** | One candidate's attempt at one job: `current_stage`, `source`, `applied_at`, `rejected_at` | [Get Applications](/ats/application/get-applications) |
+| **Job** | The opening, with `status`, `departments`, `offices`, `hiring_managers`, `recruiters` | [Get Jobs](/ats/job/get-jobs) |
+| **Job interview stage** | A step in one job's process, with `stage_order` | [Get Job Interview Stages](/ats/job-interview-stage/get-job-interview-stages) |
+| **Offer** | An offer against an application, with `status`, `sent_at`, `start_date` | [Get Offers](/ats/offer/get-offers) |
+| **Scheduled interview** | A specific interview event, with time and participants | [Get Scheduled Interviews](/ats/scheduled-interview/get-scheduled-interviews) |
+| **Scorecard** | Feedback, with `interviewer` and `overall_recommendation` | [Get Scorecards](/ats/scorecard/get-scorecards) |
+| **EEOC** | `race`, `gender`, `veteran_status`, `disability_status` against a candidate | [Get EEOCs](/ats/eeoc/get-eeocs) |
+| **Activity** | The audit trail: notes, emails, status changes | [Get Activities](/ats/activity/get-activities) |
+| **Reject reason** | The customer's own words for why an application ended | [Get Reject Reasons](/ats/reject-reason/get-reject-reasons) |
+| **Remote user** | Staff inside the ATS - recruiter, hiring manager, interviewer | [Get Remote Users](/ats/remote-user/get-remote-users) |
+| **Department**, **Office** | Where the job sits, organisationally and physically | [Get Departments](/ats/department/get-departments), [Get Offices](/ats/office/get-offices) |
+| **Attachment**, **Screening question**, **Tag** | Files, application-form questions, free-form labels | [Get Attachments](/ats/attachment/get-attachments) |
+
+Coverage gets thinner toward the bottom of that list, activity history most of all. **Reject reasons and tags are made up by each customer** and don't carry meaning from one customer to the next - much like payroll codes.
+
+Remote users are staff, not candidates, and they're a different identity from HRIS employees, even when it's the same person.
+
+## How they link
+
+```mermaid
+erDiagram
+    CANDIDATE ||--o{ APPLICATION : "candidate"
+    JOB ||--o{ APPLICATION : "job"
+    JOB ||--o{ JOB_INTERVIEW_STAGE : "job"
+    APPLICATION ||--o{ OFFER : "application"
+    APPLICATION ||--o{ SCHEDULED_INTERVIEW : "application"
+    SCHEDULED_INTERVIEW ||--o{ SCORECARD : "interview"
+```
+
+**Almost everything attaches to the application, not the candidate.** Offers, interviews and stages all belong to one attempt at one job, which is what lets the same person be rejected for one role while still active on another.
+
+EEOC is the one exception: it attaches to the candidate, because demographic data is a fact about a person, not about an application. That's also why it's easy to leave out - see below.
 
 ## Candidate and application are not the same thing
 
-**Candidate** is the person: name, contact details, locations. They exist once, however many roles they pursue, and carry an `applications` array.
+**Candidate** is the person. They exist once, no matter how many roles they go for, and they carry an `applications` array.
 
-**Application** is one candidate's pursuit of one job. It holds `current_stage`, `source`, `applied_at`, `rejected_at` and `reject_reason`.
-
-<Warning>
-Status lives on the application, not the candidate. **There is no such thing as a rejected candidate** - there is a candidate whose application to one job was rejected, who may be active on another. Reading rejection at the person level mis-states your pipeline and can wrongly exclude someone still in process.
-</Warning>
-
-This is also why counting candidates and counting applications give different numbers, and why the ratio between them is itself informative.
-
-## Two candidate flags worth respecting
-
-`is_private` marks a candidate restricted within the customer's ATS - typically a confidential search. `can_email` records whether they may be contacted.
-
-Neither is enforced by the API. **Both are the customer's stated intent, and both are yours to honour** - surfacing a private candidate or emailing someone flagged otherwise is a problem your product creates, not one Bindbee prevents.
-
-## The job side
-
-**Job** is the opening, with `status` of `OPEN`, `CLOSED`, `DRAFT`, `ARCHIVED`, `PENDING` or `-`, plus `departments`, `offices`, `hiring_managers` and `recruiters`. Note `confidential` here too.
-
-**Job interview stage** is a step in a job's process. Stages belong to jobs rather than being global, because different roles run different processes - an engineering pipeline with a technical screen is not a sales pipeline.
-
-**Department** and **office** are the job's organisational and physical placements. These are ATS-side records and **do not automatically correspond to the HRIS group and location models**, even for the same company. The two systems are configured independently.
-
-## The offer
-
-**Offer** attaches to the **application**, not to the candidate - the same principle again. Someone can hold an offer for one role while still in process on another.
-
-Its `status` runs `DRAFT`, `APPROVAL-SENT`, `APPROVED`, `SENT`, `SENT-MANUALLY`, `OPENED`, `DENIED`, `SIGNED` and `DEPRECATED`, alongside `sent_at`, `closed_at` and `start_date`.
+**Application** is one candidate's attempt at one job. It holds `current_stage`, `source`, `applied_at`, `rejected_at` and `reject_reason`.
 
 <Warning>
-`SENT` is not acceptance and `SIGNED` is not a start. Only `start_date` says when the person actually begins, and it is set well before they do - so an offer pipeline keyed on status alone will report starts that have not happened.
+Status lives on the application, not the candidate. **There's no such thing as a rejected candidate** - only a candidate whose application to one job was rejected, who might still be active on another. Read rejection at the person level, and you'll get the pipeline wrong, possibly excluding someone who's still in the running.
 </Warning>
 
-## The process side
+This is also why counting candidates and counting applications gives you different numbers - and why the ratio between the two is useful on its own.
 
-| Model | Holds |
-| --- | --- |
-| **Scheduled interview** | A specific interview event, with time and participants |
-| **Scorecard** | Feedback on an application, with `interviewer` and `overall_recommendation` |
-| **Activity** | The audit trail: notes, emails, status changes. Coverage varies widely |
-| **Reject reason** | The customer's own vocabulary for why an application ended |
-| **Remote user** | Staff inside the ATS - recruiter, hiring manager, interviewer |
-| **Attachment** | A file, usually a resume or cover letter |
-| **Screening question** | Application-form questions and answers |
-| **Tag** | A free-form label, highly customer-specific |
+Two candidate flags are worth respecting. `is_private` marks a candidate restricted inside the customer's ATS, usually a confidential search, and `can_email` records whether they can be contacted. **Neither is enforced by the API - both are on you to honour.** Showing a private candidate, or emailing someone flagged otherwise, is a mistake your product makes, not one Bindbee prevents.
 
-Like payroll codes, **reject reasons are locally defined** and carry no portable meaning across customers.
+## Jobs, stages and offers
 
-Remote users are staff, not candidates, and are distinct from HRIS employees even when they are the same human.
+**Job** is the opening, with `status` of `OPEN`, `CLOSED`, `DRAFT`, `ARCHIVED`, `PENDING` or `-`. Note `confidential` here too.
 
-## EEOC is separated deliberately
+**Job interview stage** is one step in a job's process. Stages belong to jobs, not to the company as a whole, because different roles run different processes - an engineering pipeline with a technical screen isn't a sales pipeline. `stage_order` is the number that sets the sequence; names are just the customer's own words.
 
-**EEOC** holds `race`, `gender`, `veteran_status` and `disability_status` against a candidate, collected for compliance reporting. It is a separate model because the data is sensitive, legally restricted in how it may be used, and in most jurisdictions must not influence hiring decisions.
+**Department** and **office** describe where the job sits, organisationally and physically. These are ATS-side records, and **they don't automatically match the HRIS group and location models**, even at the same company. The two systems are set up independently.
 
-Keeping it separate makes excluding it from your scope a single decision. **Most applications should exclude it.**
+**Offer** attaches to the application, not the candidate - same idea as before. Someone can hold an offer for one role while still in process on another. Its `status` runs `DRAFT`, `APPROVAL-SENT`, `APPROVED`, `SENT`, `SENT-MANUALLY`, `OPENED`, `DENIED`, `SIGNED` and `DEPRECATED`.
 
-## ATS is the write-heavy category
+<Warning>
+`SENT` doesn't mean accepted, and `SIGNED` doesn't mean started. Only `start_date` says when the person actually begins, and it's usually set well before that date arrives - so an offer pipeline built on status alone will report starts that haven't happened yet.
+</Warning>
 
-Seventeen ATS endpoints accept creates, against four on HRIS - more than four times the write surface.
+## EEOC is separated on purpose
 
-Recruiting systems are built to receive data from job boards, sourcing tools and assessment platforms, so their write APIs are correspondingly open. If you are pushing candidates or applications into a customer's ATS, the surface is likely to support it. See [Write support](/guides/reading-writing/meta-apis) for the caveats.
+**EEOC** holds `race`, `gender`, `veteran_status` and `disability_status` against a candidate, collected for compliance reporting. It's a separate model because the data is sensitive, tightly restricted in how it can be used, and in most places must not influence hiring decisions.
 
-## Why it works this way
+Keeping it separate makes leaving it out a single decision instead of a field-by-field argument. **Most applications should leave it out.**
 
-**Separating candidate from application is what makes recruiting data queryable at all.**
+<Warning>
+If you sync this data, you're responsible for it. Holding demographic data you have no use for adds to your compliance work, your breach risk, and what you have to answer for in a security review - with nothing gained in return.
+</Warning>
 
-Folding them together would mean a person record per application, so a candidate applying to three roles becomes three people.
+To exclude it, go to **Configure → Scoping** in the Dashboard and leave the EEOC model unselected - see [Scoping](/get-started/scoping) for the full walkthrough. A model outside scope is never synced or stored, so it's a decision made once, not something to verify per customer.
 
-Deduplicating afterwards is guesswork, and the questions recruiting teams actually ask - has this person applied before, how many roles are they in, what happened last time - become unanswerable.
+Some products genuinely need demographic reporting - diversity analytics built for the customer's own compliance team is the usual case. If that's you: read it only through the EEOC model, keep it in your own storage with its own access controls, and confirm with each customer that you have a lawful basis to use it. Your configuration doesn't satisfy their obligations for them.
 
-Interview stages belonging to jobs rather than being global is the same principle applied to process. A global stage list would force every role through one pipeline, which no ATS does.
-
-**Isolating EEOC reflects a legal reality rather than a modelling preference.** A model that mixed demographic data into the candidate record would make it arrive by default in every read. Separation makes not receiving it the easy choice.
-
-## What this means for you
-
-- **Read status from applications, never from candidates.**
-- **Expect multiple applications per candidate.** Deduplicate on the candidate, aggregate on applications.
-- **Honour `is_private` and `can_email`.** The API will not enforce them for you.
-- **Do not map ATS departments and offices to HRIS groups and locations** without confirming the customer maintains them consistently.
-- **Exclude EEOC from scope** unless you have a specific, lawful reason to hold it.
-- **Treat reject reasons as customer-local vocabulary**, not a standard set.
-
-## Candidates & applications
-
-A candidate is a person. An application is that person's pursuit of one job. Conflating them is the single most common ATS integration error, and it produces counts that look plausible and are wrong.
-
-The general techniques are the same as HRIS - see [Pagination](/api-reference/basics/pagination) and [Filtering](/guides/reading-writing/querying-data). This page covers what's specific to ATS.
+## Reading recruiting data
 
 <Info>
   **Before you start**
 
-  - The connector is an ATS connector. A connector token is category-scoped, so an HRIS token on `/api/ats/v1/*` returns `403` - see [Authentication](/api-reference/basics/authentication).
+  - The connector is an ATS connector. A connector token only works for one API category, so an HRIS token on `/api/ats/v1/*` returns `403` - see [Authentication](/api-reference/basics/authentication).
 </Info>
 
-### Steps
+The general techniques are the same as HRIS - see [Pagination](/api-reference/basics/pagination) and [Querying data](/guides/reading-writing/querying-data). What follows is specific to ATS.
+
+### Candidates & applications
 
 <Steps>
   <Step title="Read candidates">
@@ -118,18 +107,9 @@ The general techniques are the same as HRIS - see [Pagination](/api-reference/ba
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    | Filter | Matches |
-    | --- | --- |
-    | `ids` | Bindbee record IDs, comma-separated |
-    | `remote_id` | The ATS's own identifier |
-    | `email_addresses` | Candidate email |
-    | `first_name`, `last_name` | Name |
-    | `company` | The company on the candidate record |
-    | `tag` | A tag applied in the ATS |
+    Filters: `ids`, `remote_id`, `email_addresses`, `first_name`, `last_name`, `company` and `tag`. A candidate exists once no matter how many roles they go for, and `email_addresses`, `phone_numbers`, `locations`, `urls` and `tags` are all lists.
 
-    A candidate exists once, however many roles they pursue. `email_addresses`, `phone_numbers`, `locations`, `urls` and `tags` are all arrays.
-
-    **Result:** People, deduplicated by the ATS.
+    **Result:** People, with duplicates already removed by the ATS.
   </Step>
 
   <Step title="Read applications">
@@ -149,14 +129,10 @@ The general techniques are the same as HRIS - see [Pagination](/api-reference/ba
     | `credited_to` | The recruiter credited |
     | `reject_reason` | Applications closed for a given reason |
 
-    Each application carries `candidate`, `job`, `applied_at`, `rejected_at`, `source`, `current_stage` and `reject_reason`.
-
-    **Result:** Pursuits, one per candidate-job pair.
+    **Result:** One record per candidate-job pair.
   </Step>
 
   <Step title="Count the right model for the question">
-    The two models answer different questions, and picking the wrong one is the error this page exists to prevent.
-
     | Question | Read |
     | --- | --- |
     | How many people are in the pipeline? | Candidates |
@@ -164,56 +140,26 @@ The general techniques are the same as HRIS - see [Pagination](/api-reference/ba
     | How many people applied to this role? | Applications filtered by `job` |
     | Has this person applied before? | Applications filtered by `candidate` |
 
-    A candidate who applies to three roles is one candidate and three applications. Counting applications to report pipeline headcount overstates it by however many people applied more than once - which, for a company hiring across several similar roles, is a large share.
+    A candidate who applies to three roles is one candidate and three applications. Count applications to report pipeline headcount, and you'll overcount by however many people applied more than once - which, if a company is hiring across several similar roles, can be a lot.
 
-    **Result:** Numbers that mean what you think they mean.
+    **Result:** Numbers that actually mean what you think they mean.
   </Step>
 
   <Step title="Expand rather than fetching in a loop">
-    `expand` returns related records inline. Comma-separate with no spaces.
+    `expand` returns related records inline. List them with commas, no spaces.
 
     ```
     ?expand=candidate
     ?expand=job,candidate
     ```
 
-    One expanded request beats N follow-up calls, which is what exhausts the per-connector rate limit on a large pipeline - see [Errors & issues](/guides/troubleshooting/errors-and-issues).
+    One expanded request beats many follow-up calls, which is what burns through the per-connector rate limit on a large pipeline - see [Errors & issues](/guides/troubleshooting/errors-and-issues).
 
-    **Result:** Related records inline, at the cost of a larger response.
+    **Result:** Related records inline, at the cost of a bigger response.
   </Step>
 </Steps>
 
-### If this didn't work
-
-<AccordionGroup>
-  <Accordion title="Every request returns 403">
-    A connector token is scoped to one API category. An HRIS connector called on `/api/ats/v1/*` returns `403` even though the credentials are valid.
-  </Accordion>
-
-  <Accordion title="The same person appears more than once">
-    Some ATS platforms create a second candidate record rather than a second application when someone applies again, particularly across a long gap or through a different source. Match on `email_addresses` to detect it, and see [Record identity](/guides/reading-writing/record-identity).
-  </Accordion>
-
-  <Accordion title="A candidate has no applications">
-    Expected. Sourced and imported candidates exist before they apply to anything, and the `applications` array is empty until they do.
-  </Accordion>
-
-  <Accordion title="Tags don't match the customer's vocabulary">
-    Tags are free-form and highly customer-specific - see [ATS models](/guides/data-models/recruiting). Map them per connector rather than assuming a standard set.
-  </Accordion>
-</AccordionGroup>
-
-## Application stages
-
-An application's `current_stage` points at a job interview stage. Stages belong to jobs, not to the organisation - two openings at the same company can run entirely different processes.
-
-<Info>
-  **Before you start**
-
-  - You can read applications - see [Candidates & applications](/guides/data-models/recruiting).
-</Info>
-
-### Steps
+### Application stages
 
 <Steps>
   <Step title="Read the stages for a job">
@@ -224,22 +170,20 @@ An application's `current_stage` points at a job interview stage. Stages belong 
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    Each stage carries `name`, `job`, and `stage_order`. Filter by `job` - reading them unfiltered returns every stage of every job, which is not a pipeline.
+    Each stage carries `name`, `job` and `stage_order`. Filter by `job` - read them without one and you get every stage of every job, which isn't a pipeline.
 
     **Result:** One job's process, in order.
   </Step>
 
   <Step title="Order by stage_order, never by name">
-    `stage_order` is the integer that defines sequence. Stage names are the customer's own vocabulary - "Phone Screen", "Screen", "HM Screen" and "Recruiter Call" may all be the same step at different customers.
-
     ```python
     stages = sorted(job_stages, key=lambda s: s["stage_order"])
     positions = {s["id"]: i for i, s in enumerate(stages)}
     ```
 
-    Sorting on name, or matching names against a hardcoded list, breaks on the first customer who renames a stage.
+    Stage names are just the customer's own words - "Phone Screen", "Screen", "HM Screen" and "Recruiter Call" might all be the same step at different customers. Sort by name, or match names against a fixed list, and it breaks the moment a customer renames a stage.
 
-    **Result:** A sequence you can compare positions in.
+    **Result:** A sequence you can actually compare positions in.
   </Step>
 
   <Step title="Resolve each application's position">
@@ -250,71 +194,36 @@ An application's `current_stage` points at a job interview stage. Stages belong 
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    Expanding `current_stage` avoids a lookup per application. Join to the ordered list from the previous step to get a position rather than a label.
+    Expanding `current_stage` skips a lookup per application. Join it against the ordered list from the last step to get a position instead of just a label.
 
-    **Result:** Where each application sits, comparably.
+    **Result:** Where each application sits, in a way you can compare.
   </Step>
 
   <Step title="Treat rejection as separate from stage">
-    An application that ended carries `rejected_at` and a `reject_reason`, and its `current_stage` is wherever it stopped - not a terminal stage.
+    An application that's ended carries `rejected_at` and a `reject_reason`, and its `current_stage` shows wherever it stopped - not a "rejected" stage.
 
     ```python
     if app["rejected_at"]:
         outcome = "rejected"          # current_stage says where, not whether
     ```
 
-    Counting applications by stage without excluding rejected ones inflates every stage with people who are no longer in the process.
+    Count applications by stage without excluding rejected ones, and every stage looks more full than it really is.
 
-    `reject_reason` is the customer's own vocabulary, like payroll codes - locally defined, not portable across customers.
-
-    **Result:** Active pipeline separated from closed applications.
+    **Result:** Active pipeline kept separate from closed applications.
   </Step>
 
-  <Step title="Detect movement rather than polling it">
-    Subscribe to `connector_data_modified` and re-read the changed applications - see [Choose Webhook Events](/guides/reading-writing/webhooks).
+  <Step title="Detect movement rather than polling for it">
+    Subscribe to `connector_data_modified` and re-read the applications that changed - see [Choose Webhook Events](/guides/reading-writing/webhooks).
 
-    Change events carry IDs, not records, and they tell you something changed without saying what. To know an application *moved*, compare `current_stage` against your stored copy - see [Created vs modified](/guides/reading-writing/webhooks).
+    Change events carry IDs, not records - they tell you something changed, not what. To know an application *moved*, compare `current_stage` against your last stored copy.
 
-    **Result:** Stage transitions, not just change notifications.
+    **Result:** Real stage transitions, not just "something changed."
   </Step>
 </Steps>
 
-### If this didn't work
+### Interview feedback
 
-<AccordionGroup>
-  <Accordion title="Stages from different jobs are mixed together">
-    `job-interview-stages` was read without the `job` filter. Stages are per-job, so the unfiltered collection is every process at once.
-  </Accordion>
-
-  <Accordion title="stage_order is null">
-    Not every ATS exposes an explicit order. Where it's absent you cannot derive sequence from the API - agree the ordering with the customer and store it against the connector, the same way you would a payroll code mapping.
-  </Accordion>
-
-  <Accordion title="Stage counts are higher than the number of live candidates">
-    Rejected applications are being counted. `current_stage` records where an application stopped, not whether it is still moving - filter on `rejected_at`.
-  </Accordion>
-
-  <Accordion title="A customer renamed a stage and reporting broke">
-    Names were used as identifiers. Key on the stage `id` and order by `stage_order`; treat `name` as display text only.
-  </Accordion>
-
-  <Accordion title="An application's stage never changes">
-    Some platforms record movement as activities rather than by updating the application. Check [Get Activities](/ats/activity/get-activities) for that connector, and confirm the coverage - activity history varies considerably by vendor.
-  </Accordion>
-</AccordionGroup>
-
-## Interview feedback
-
-An interview is an event. A scorecard is the feedback from it. They are separate models, and the gap between them - interviews held with no feedback submitted - is usually the thing a hiring team wants surfaced.
-
-<Info>
-  **Before you start**
-
-  - You can read applications - see [Candidates & applications](/guides/data-models/recruiting).
-  - The customer's ATS exposes scorecards. Coverage varies more than for candidates and applications.
-</Info>
-
-### Steps
+An interview is an event. A scorecard is the feedback from it. The gap between them - interviews held with no feedback ever submitted - is usually the thing a hiring team actually wants to see.
 
 <Steps>
   <Step title="Read the interviews">
@@ -325,7 +234,7 @@ An interview is an event. A scorecard is the feedback from it. They are separate
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    Filter by `application`, `organizer`, or `job_interview_stage`. Each record carries `start_at`, `end_at`, `location`, `organizer`, `interviewers`, and a `status`.
+    Filter by `application`, `organizer` or `job_interview_stage`. Each record carries `start_at`, `end_at`, `location`, `organizer`, `interviewers` and a `status`.
 
     | `status` | Meaning |
     | --- | --- |
@@ -344,13 +253,13 @@ An interview is an event. A scorecard is the feedback from it. They are separate
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    Filter by `application`, `interview`, or `interviewer`. Each carries `interview`, `interviewer`, `submitted_at`, and `overall_recommendation`.
+    Filter by `application`, `interview` or `interviewer`. Each carries `application`, `interview`, `interviewer`, `submitted_at` and `overall_recommendation`.
 
-    **Result:** The feedback that exists.
+    **Result:** Whatever feedback exists.
   </Step>
 
   <Step title="Join on the interview, not the application">
-    A scorecard's `interview` field points at the scheduled interview it belongs to. Joining on `application` alone collapses several rounds into one and makes per-round reporting impossible.
+    A scorecard's `interview` field points at the scheduled interview it belongs to. Join on `application` alone, and you'll collapse several rounds into one, making it impossible to report per round.
 
     ```python
     by_interview = {s["interview"]: s for s in scorecards}
@@ -358,11 +267,11 @@ An interview is an event. A scorecard is the feedback from it. They are separate
         feedback = by_interview.get(iv["id"])          # may be absent
     ```
 
-    **Result:** Feedback attributed to the round it came from.
+    **Result:** Feedback matched to the round it actually came from.
   </Step>
 
   <Step title="Surface the missing feedback">
-    The gap is the useful output. An interview with `AWAITING_FEEDBACK` and no scorecard is a real, actionable state - it is what stalls a pipeline.
+    The gap is the useful part. An interview marked `AWAITING_FEEDBACK` with no scorecard is a real, actionable state - it's what stalls a pipeline.
 
     ```python
     outstanding = [
@@ -371,112 +280,66 @@ An interview is an event. A scorecard is the feedback from it. They are separate
     ]
     ```
 
-    Report on it by interviewer and by age. Treat a missing scorecard as pending rather than as a negative signal - absence is not an evaluation.
+    Report it by interviewer and by age. Treat a missing scorecard as pending, not as a bad sign - absence isn't an evaluation.
 
-    **Result:** A list of chases, rather than a silent gap.
+    **Result:** A list of people to chase, not a silent gap.
   </Step>
 </Steps>
 
 ### If this didn't work
 
 <AccordionGroup>
+  <Accordion title="Every request returns 403">
+    A connector token only works for one API category. An HRIS connector called on `/api/ats/v1/*` returns `403` even with valid credentials.
+  </Accordion>
+
+  <Accordion title="The same person appears more than once">
+    Some ATS platforms create a second candidate record instead of a second application when someone applies again, especially after a long gap or through a different source. Match on `email_addresses` to catch it - see [Record identity](/guides/reading-writing/record-identity).
+  </Accordion>
+
+  <Accordion title="Tags or reject reasons don't match the customer's words">
+    Both are free-form and specific to each customer. Map them per connector rather than assuming a standard set.
+  </Accordion>
+
+  <Accordion title="Stages from different jobs are mixed together">
+    `job-interview-stages` was read without the `job` filter. Stages belong to one job each, so an unfiltered read is every process at once.
+  </Accordion>
+
+  <Accordion title="Stage counts are higher than the number of live candidates">
+    Rejected applications are being counted. `current_stage` shows where an application stopped, not whether it's still moving - filter on `rejected_at`.
+  </Accordion>
+
   <Accordion title="Scorecards return nothing though interviews happened">
     Either feedback genuinely hasn't been submitted, or this integration doesn't expose scorecards. Check `raw_data` on an interview you know was scored - see [Inspect raw data](/guides/reading-writing/raw-data).
   </Accordion>
 
-  <Accordion title="overall_recommendation values don't match between customers">
-    Recommendation vocabularies are platform- and customer-specific, like reject reasons. Map them per connector rather than assuming a standard scale, and see [Enum values](/guides/reading-writing/enum-values) for why unmapped values pass through verbatim.
-  </Accordion>
-
-  <Accordion title="A scorecard has no matching interview">
-    Some platforms allow feedback recorded against an application without a scheduled interview - ad-hoc notes, or an interview arranged outside the ATS. Fall back to the application when `interview` is null rather than dropping the record.
-  </Accordion>
-
-  <Accordion title="Interview counts don't match the recruiter's">
-    Cancelled and rescheduled interviews are modelled inconsistently across platforms - some leave the original record, some replace it. Compare against `raw_data` for one application before trusting a count.
+  <Accordion title="EEOC records still return after you scoped it out">
+    Scope only applies going forward - see [Restrict what syncs](/get-started/scoping). Resync the connector and check again. If values show up on the candidate record instead, some platforms carry demographic fields on their own candidate object, and those pass through in `raw_data`.
   </Accordion>
 </AccordionGroup>
 
-## EEOC data
+## Why it works this way
 
-The EEOC model holds `race`, `gender`, `veteran_status` and `disability_status` - demographic data collected for compliance reporting. It is legally restricted in how it may be used, and in most jurisdictions must not influence hiring decisions.
+**Splitting candidate from application is what makes this data usable at all.** Put them together, and you'd get one person record per application, so a candidate applying to three roles becomes three people.
 
-Bindbee keeps it in a separate model precisely so that excluding it is one decision rather than a field-by-field argument. Most applications should exclude it.
+Removing the duplicates afterward is guesswork, and the questions recruiting teams actually ask - has this person applied before, how many roles are they in, what happened last time - become impossible to answer.
 
-<Warning>
-  If you sync this data you are responsible for it. Holding demographic data you have no use for expands your compliance obligations, your breach exposure, and what you have to answer for in a customer's security review - with no offsetting benefit.
-</Warning>
+**Interview stages belonging to jobs instead of being shared across the company is the same idea, applied to process.** A single shared stage list would force every role through one pipeline, which no ATS actually does.
 
-<Info>
-  **Before you start**
+**Keeping EEOC separate reflects a legal reality, not a modelling choice.** Mix demographic data into the candidate record, and it shows up by default in every read. Keeping it apart makes leaving it out the easy option.
 
-  - You know whether any part of your product genuinely requires demographic reporting. If nothing does, this is a five-minute decision made once.
-</Info>
+## What this means for you
 
-### Steps
-
-<Steps>
-  <Step title="Decide before you connect anyone">
-    Scope is set once for your organization and applies to every connector, in both environments - see [Restrict what syncs](/get-started/scoping). Deciding after customers are live means a configuration change and a resync.
-
-    **Result:** A decision made at design time rather than during a security review.
-  </Step>
-
-  <Step title="Exclude the model">
-    In the Dashboard, go to **Configure → Scoping** and leave the EEOC model unselected. See [Scoping](/get-started/platform).
-
-    A model outside scope is never requested, so it is never synced and never stored - it appears in neither the unified response nor `raw_data`.
-
-    **Result:** The data is not collected at all, rather than collected and hidden.
-  </Step>
-
-  <Step title="Verify nothing is returned">
-    ```bash
-    curl --request GET \
-      --url 'https://api.bindbee.dev/api/ats/v1/eeocs?page_size=200' \
-      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
-      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
-    ```
-
-    Confirm on a connector that has synced since the change - scope is not retroactive, so previously synced data persists until a fresh sync replaces it. See [Force a resync](/guides/reading-writing/syncing).
-
-    **Result:** An empty collection, verified rather than assumed.
-  </Step>
-
-  <Step title="Say so in your security answers">
-    "We do not collect it" is a stronger answer than "we collect it and control access to it", and it is the one scoping lets you give truthfully.
-
-    Where a customer asks for a hard guarantee, the stronger control is upstream - an integration user without permission to that data cannot expose it regardless of configuration. Offer both.
-
-    **Result:** A defensible answer, backed by configuration.
-  </Step>
-</Steps>
-
-### If you do need it
-
-Some products genuinely require demographic reporting - diversity analytics built for the customer's own compliance team is the usual case. If that's you:
-
-- Read it only through the EEOC model, never by inferring demographics from other fields.
-- Keep it separated in your own storage too, with its own access controls, rather than denormalising it onto the candidate.
-- Confirm with each customer that your use is one they have a legal basis for. Their obligations are not satisfied by your configuration.
-
-### If this didn't work
-
-<AccordionGroup>
-  <Accordion title="EEOC records still return after scoping it out">
-    Scope isn't retroactive - see [Restrict what syncs](/get-started/scoping). Resync the connector and check again.
-  </Accordion>
-
-  <Accordion title="You need it for one customer but not others">
-    Not expressible. Scope is organisation-level, so it cannot be narrowed per connector - see [Restrict what syncs](/get-started/scoping). Where one customer requires exclusion the others don't, enforce it upstream on that customer's integration user.
-  </Accordion>
-
-  <Accordion title="Demographic values appear on the candidate record instead">
-    Some platforms carry demographic fields on their own candidate object. Those would surface in `raw_data` rather than the unified model - check before assuming excluding the EEOC model covers everything, and see [Inspect raw data](/guides/reading-writing/raw-data).
-  </Accordion>
-</AccordionGroup>
+- **Read status from applications, never from candidates.**
+- **Expect several applications per candidate.** Remove duplicates on the candidate, add up on applications.
+- **Honour `is_private` and `can_email`.** The API won't enforce them for you.
+- **Order stages by `stage_order`**, and treat stage names as display text only.
+- **Don't map ATS departments and offices to HRIS groups and locations** without checking the customer keeps them in sync.
+- **Leave EEOC out of scope** unless you have a specific, lawful reason to hold it.
 
 ## Related
 
 - [ATS endpoints](/ats/candidate/get-candidates) - the API reference
+- [Write support](/guides/reading-writing/meta-apis) - what ATS lets you create
 - [Scoping](/get-started/scoping) - excluding a model such as EEOC
+- [Record identity](/guides/reading-writing/record-identity) - detecting duplicate candidates
