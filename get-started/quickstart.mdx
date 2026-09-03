@@ -43,7 +43,7 @@ icon: "rocket"
 
 
 <Accordion icon="circle-question-mark" title="Need a third-party account?">
-  What the flow asks for depends on the integration. Some complete against a demo tenant; others want credentials for a real account — for BambooHR, a free [trial account](https://www.bamboohr.com/signup/h2) works. Provisioning one can take a while, so start it before the rest of this page if your integration needs it.
+  It depends on the integration you pick. Some work with a demo account. Others need a real one — for BambooHR, a free [trial account](https://www.bamboohr.com/signup/h2) works. If yours needs a real account, set it up first, since that can take some time.
 
   {/* VERIFY - decides whether this page is minutes or days. Does "+ Test Connector" have a first-party fixture mode returning data with no third-party account at all? Kombo ships exactly that, deterministic so it works in CI; Finch opens Connect in sandbox mode with good_user / good_pass. Bindbee has the primitive - the button is called Test Connector, and spec.json carries is_test_connector and for_test_connector ("scoped to a demo/test connector") - but whether it removes the dependency is unconfirmed. */}
 </Accordion>
@@ -66,10 +66,8 @@ Open the connector and watch the **Sync** panel. Wait until the run's **Status**
   <img src="/images/quickstart/sync-panel.jpg" alt="The Sync panel on a connector, listing sync #1 with trigger Automatic, status Synced, and the time it completed, alongside a Force Sync button" />
 </Frame>
 
-A run can finish and still leave the connector holding nothing — if the source system had no records in scope, or the credentials could not reach them.
-
 <Note>
-  **In Development, only the first sync runs on its own.** After that, press **Force Sync** or call [Force sync a connector](/api-reference/connectors/resync-connector) whenever you want fresh data. Production connectors sync [on a schedule](/api-reference/basics/sync-frequency).
+  **In Development, only the first sync runs on its own.** After that, press **Force Sync** or call [Force sync a connector](/api-reference/connectors/resync-connector) to get fresh data. Production connectors sync [on a schedule](/api-reference/basics/sync-frequency).
 </Note>
 
 </Step>

@@ -14,21 +14,11 @@ icon: "layers"
 | API keys | Separate | Separate |
 | Webhook deliveries | Separate | Separate |
 | Automatic sync | Initial sync only - no recurring schedule | Every 24 hours by default |
-| Connectors | Limited | As per plan |
-| Key sharing | Safe to share within the team | Treat as a production secret |
+| Connectors | Unlimited | As per plan |
 | Logs | **Shared** | **Shared** |
 | Scope configuration | **Shared** | **Shared** |
 | Custom field definitions | **Shared** | **Shared** |
 
-The boundary is enforced by the API key, not by anything on the request:
-
-- **A Development key reaches Development connectors only.** The wrong key returns `401` - indistinguishable from a malformed one, so it reads as a credentials bug rather than an environment mistake.
-- **Webhook deliveries follow the connector.** A webhook must cover an environment to receive anything from it.
-- **Records, logs and sync history stay put.** Nothing crosses.
-
-<Warning>
-Scope and custom fields are not separate. **Change them while testing and you change them for your live customers too**, straight away.
-</Warning>
 
 
 ## Choosing one
@@ -39,10 +29,6 @@ Scope and custom fields are not separate. **Change them while testing and you ch
 | A sandbox or demo tenant of an HRIS | Data feeds anything customer-facing |
 | Internal test accounts, however realistic | You need syncs to run unattended |
 | Validating field mappings | |
-
-The deciding question is whether anything downstream depends on the data being current without someone triggering it.
-
-Then use the matching key. Copy it from **Settings → API Key**, where Production and Development have separate blocks - see [Authentication](/api-reference/basics/authentication).
 
 
 ## What behaves differently
@@ -58,16 +44,6 @@ Then use the matching key. Copy it from **Settings → API Key**, where Producti
 <Warning>
 **Regenerate the key and the old one stops working immediately**, everywhere at once.
 </Warning>
-
-
-## What this means for you
-
-- **Decide the environment before creating the connection**, since it is settled at creation.
-- **Trigger a sync before trusting Development data.**
-- **Settle scope before testing.** It reaches live Production connectors as you change it.
-- **Filter to active connectors before counting**, or incomplete ones inflate the number.
-- **Treat a wrong environment as recoverable** - a connector can be moved without the end user reconnecting.
-- **Plan a key rotation as a deploy.** Every service on the old key breaks the moment you regenerate.
 
 
 ## Related

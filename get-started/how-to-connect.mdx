@@ -8,22 +8,11 @@ icon: "link"
 
 ## Authorisation belongs to the customer
 
-Your customer connects their own HR system, not you. Only an admin at their company can grant access, and they can't hand that job over - so you start the connection, they approve it in their own system, and Bindbee holds the credentials. **They never pass through your servers.**
+Your customer connects their own HR system. Only an admin at their company can grant access - so you start the connection, they approve it in their own system, and Bindbee holds the credentials.
 
-That's also why a broken connection isn't yours to fix. Expired credentials, missing permissions and revoked access are all resolved on the customer's side - your job is to spot it and prompt the right person. See [Connection Needing Relink](/guides/troubleshooting/connections-to-relink).
+## Two ways to connect
 
-## Three ways to connect
-
-All three create a connector and put your customer's admin in control. **None lets them pick which system to connect** - you choose the integration up front.
-
-| | Magic Link | Embedded Link | Programmatically |
-| --- | --- | --- | --- |
-| Front-end code | None | React hook or CDN script | None |
-| Created by | Dashboard, or `create-link-token` | `create-link-token` | `create-link-token` |
-| Completion signal | Webhook, or fetch by `origin_id` | `onSuccess` in the browser | Webhook |
-| Getting the token | Read `connector_token` from the connector | Exchange the `temporary_token` | Read `connector_token` from the connector |
-
-Two rules apply whichever route you take.
+Both create a connector and put your customer's admin in control. **None lets them pick which system to connect** - you choose the integration up front.
 
 **The environment is fixed at creation.** A link made in Development creates a Development connector; a link token uses the environment of the API key behind it. Changing it later means asking support - see [Environments](/get-started/environments).
 
@@ -36,89 +25,23 @@ A hosted page your customer opens to authorise their own system. You never handl
 <Steps>
   <Step title="Create the link">
     Check you're in the right environment, then go to **New connector**, fill in the customer's details - including **Unique Customer ID** (`origin_id`) and pick the integration.
-
-    **Result:** A link on the `link.bindbee.dev` domain.
   </Step>
 
   <Step title="Send it to the customer">
-    Send it to whoever administers their HR system - they need admin rights there, so it may not be your usual contact. Include the setup guide from [help.bindbee.dev](https://help.bindbee.dev).
-
-    **Result:** The customer has the link and instructions.
+    Send it to whoever administers their HR system. Include the setup guide from [help.bindbee.dev](https://help.bindbee.dev).
   </Step>
 
   <Step title="Wait for them to finish">
-    Some systems take seconds over for succeed. The connector then appears under **Connectors**, with its `connector_token` in **Connector Details**.
-
-    **Result:** An active connector, and the token you pass as `X-Connector-Token`.
+    The connector then appears under **Connectors**, with its `connector_token` in **Connector Details**.
   </Step>
 </Steps>
 
 {/* VERIFY: link lifetime and expiry behaviour. Confirm how long a generated Magic Link remains valid, what an end user sees after expiry, and whether a link is single-use or reusable. */}
 
-## Embedded Link
+## Embedded Link/Programmatically
 
-The same flow inside your product, in your own branding, handing your backend the `connector_token` directly.
+The same flow inside your product, in your own branding, handing your backend the `connector_token` directly. See [Embedded SDK](/guides/sdk/embedded-sdk) for the full walkthrough.
 
-<Steps>
-  <Step title="Generate a link token">
-    Call [Create Link Token](/sdk/create-link-token) from your backend - never the browser, since it uses your API key. One token per customer, with the payload shown under [Programmatically](#programmatically).
-
-    **Result:** A `link_token` to hand to your frontend.
-  </Step>
-
-  <Step title="Mount the flow in your frontend">
-    Use the React hook or the CDN script - see [Embedded SDK](/guides/sdk/embedded-sdk) for both, with every callback.
-
-    **Result:** The customer connects without leaving your product, and `onSuccess` returns a `temporary_token`.
-  </Step>
-
-  <Step title="Exchange the temporary token">
-    The `temporary_token` is short-lived and can't read data. Exchange it from your backend with [Get Connector Token](/sdk/get-connector-token), which returns `connector_token` and `connector_id`. Store both: the token authenticates every later call, the ID identifies the connector for support.
-
-    **Result:** A `connector_token`, stored against your customer record.
-  </Step>
-</Steps>
-
-<Note>
-Set your **logo**, **favicon** and **brand colour** in **Settings → Branding** - the embedded flow picks them up.
-</Note>
-
-## Programmatically
-
-The same link, created from your backend instead of the dashboard - for when connecting is part of your own signup flow.
-
-<Steps>
-  <Step title="Create the link token">
-    Post this to `create-link-token` with your API key. `email` is optional; everything else is required. Full schema in [Create Link Token](/sdk/create-link-token).
-
-    ```json
-    {
-      "end_user_data": {
-        "org_name": "Acme Corp.",
-        "origin_id": "064e1cd7-49ad-4e6d-8005-7e4c92fe9675"
-      },
-      "category": "HRIS",
-      "integration": "bamboohr"
-    }
-    ```
-
-    **Result:** A `link_token` to redirect the customer to.
-  </Step>
-
-  <Step title="Confirm it with a webhook">
-    Subscribe to sync events once, and the webhook tells you when the customer has authorised - match the incoming `origin_id` (Unique Customer ID) to your customer record. No polling, and nothing to wait for if they've already finished. See [Webhook](/guides/reading-writing/webhooks).
-
-    **Result:** You hear about the connection when it's actually usable.
-  </Step>
-
-  <Step title="Store the connector token">
-    Fetch the connector by `origin_id` with [Get Connectors](/api-reference/connectors/get-connectors) and read `connector_token` from it. There's no `temporary_token` here - that belongs to the embedded route.
-
-    **Result:** You can read and write for that customer.
-  </Step>
-</Steps>
-
-**`integration`** is required, so you pick the system before the link exists. If your customers use different ones, ask in your own UI first and build the matching link - list the options from the lookup endpoint, which only returns what you can actually connect. See [Integration & Coverage](/get-started/integrations).
 
 ## If this didn't work
 

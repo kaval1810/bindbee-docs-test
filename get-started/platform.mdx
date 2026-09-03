@@ -121,20 +121,18 @@ What has changed in the Bindbee platform - new integrations, new models and fiel
 
 ---
 
-**Most of an integration is configuration you do once.**
-| | What it is | How often |
-| --- | --- | --- |
-| <Icon icon="sliders-horizontal" /> **[Scope](/get-started/scoping)** | A setting: which models and fields Bindbee is allowed to fetch. Turn on what you need, leave the rest off. | Set once, change whenever |
-| <Icon icon="link" /> **[Connect](/get-started/how-to-connect)** | Your customer authorises their HR system, which creates a connector. | Once per customer |
-| <Icon icon="refresh-cw" /> **[Sync](/guides/reading-writing/syncing)** | Bindbee pulls the scoped data from the source and normalizes it. Every 24 hours by default; [other cadences](/api-reference/basics/sync-frequency) are available on request. | Runs on its own |
-| <Icon icon="search" /> **[Read and check](/guides/reading-writing/querying-data)** | Once a sync finishes, the data is there to read. You can watch [sync health](/guides/troubleshooting/sync-status) from the dashboard or through the API. | Whenever you need it |
-| <Icon icon="webhook" /> **[Webhooks](/guides/reading-writing/webhooks)** | Optional. Give Bindbee a URL and it tells you when a sync finishes or a connection breaks, instead of you checking. | Set once |
-| <Icon icon="scroll-text" /> **[Logs](/guides/troubleshooting/logs)** | Every request and response behind a sync, with the source system's own error preserved. | When something looks wrong |
+## Where to next
 
-<Info>
-  Ready to build instead? The [Quickstart](/get-started/quickstart) takes you from an empty environment to employee data in your own code.
-</Info>
+<CardGroup cols={2}>
+  <Card title="How to connect" icon="link" href="/get-started/how-to-connect">
+    The three ways a connector gets created - Magic Link, Embedded SDK, or your own backend.
+  </Card>
+  <Card title="API basics" icon="square-terminal" href="/api-reference/basics/authentication">
+    Authentication, pagination, rate limits and sync frequency.
+  </Card>
+</CardGroup>
 
+---
 
 {/* VERIFY: three things before this section is finished.
      1. Does the Changelog have a direct URL? If so it belongs in navbar.links beside Setup and Status, not only here.

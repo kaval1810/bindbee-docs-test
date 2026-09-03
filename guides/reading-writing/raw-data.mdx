@@ -56,67 +56,6 @@ Reading it against the normalized fields shows exactly what happened: `Active` b
   Raw data is available on the **88 data endpoints** across HRIS, ATS and LMS. It is not returned by the connector, integration, webhook, custom field or meta endpoints, since those describe Bindbee's own resources rather than synced third-party records.
 </Note>
 
----
-
-## What it contains
-
-`raw_data` is an untyped JSON object. Bindbee makes no promises about its contents beyond it being what the provider returned.
-
-* **Field names follow the provider, not Bindbee.** Expect `firstName`, `first_name`, `EmpFirstName`, or whatever that system uses.
-* **The structure differs per connector.** A key that exists on one integration will not exist on another, and nesting depth varies.
-* **It can change without notice.** Providers add, rename and remove fields on their own schedule.
-* **It can be `null`.** Some records have no raw payload retained.
-
----
-
-## Inspecting structure before you have a record
-
-To see the shape of a provider's payload without pulling records, use the raw data endpoint. It is the fastest way to find the path to a field you want to map.
-
-```bash
-curl -G https://api.bindbee.dev/api/v1/custom-fields/raw-data \
-  -H "Authorization: Bearer <BINDBEE_API_KEY>" \
-  -d category=HRIS \
-  -d model=employee \
-  -d connector_token=<CONNECTOR_TOKEN>
-```
-
-| Parameter | Required | Notes |
-| --- | --- | --- |
-| `category` | Yes | `HRIS`, `ATS` or `LMS` |
-| `model` | Yes | The model slug, for example `employee` |
-| `connector_token` | One of the two | Returns the latest synced row for that connector |
-| `integration_slug` | One of the two | Returns the integration's canned sample payload |
-
-Pass exactly one of `connector_token` or `integration_slug`. Providing both, or neither, returns a `422`.
-
-With `connector_token` you get that connector's most recently synced row. **If the connector has never synced, the response falls back to the integration's canned sample** — enough to write a mapping against, but confirm the shape once real data lands. With `integration_slug` you get the sample directly, which is useful when building against an integration before any customer has connected it.
-
----
-
-## Using raw data safely
-
-The rule is straightforward: **read raw data, do not build on it.**
-
-Code that reaches into `raw_data` for a value works for the one connector you tested against and silently breaks for every other one, because the key it depends on does not exist there. It also breaks when that provider renames the field.
-
-When you find a value your product genuinely needs, promote it to a [custom field](/guides/extending/custom-fields). You map it once with a JMESPath expression, per integration or per connector, and it then arrives on a stable key in the `custom_fields` object on every record.
-
-| | Raw data | Custom fields |
-| --- | --- | --- |
-| Purpose | Inspection and discovery | Consuming provider-specific values in production |
-| Key names | The provider's | Yours, chosen once and stable |
-| Behaviour across connectors | Different everywhere | The same key on every connector you map |
-| Safe to depend on | No | Yes |
-
-Use raw data to find the value; use custom fields to consume it.
-
-<Warning>
-  `include_raw_data` increases response size, sometimes considerably, since it returns the full provider payload for every record in the page. Leave it off in production paths and turn it on when you are investigating something.
-</Warning>
-
----
-
 ## Related
 
 <CardGroup cols={2}>

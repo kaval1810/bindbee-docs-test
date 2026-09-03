@@ -7,13 +7,6 @@ icon: "book-open-text"
 
 A unified model has a fixed schema. An `employee` always exposes `first_name`, `email`, and so on. Custom Fields let you add your own attributes, such as `guardian_mobile`, and tell Bindbee where to read them from in the third party's raw response.
 
-```mermaid
-flowchart LR
-    A["Raw upstream payload<br/>from the HRIS"] --> B["JMESPath:<br/>data.employee.guardian_mobile"]
-    B --> C["Custom field:<br/>guardian_mobile"]
-    C --> D["Unified response:<br/>include_custom_fields=true"]
-```
-
 ## Building blocks
 
 | Term | What it is |
@@ -43,10 +36,6 @@ flowchart TD
     B --> E["Workday connector B<br/>uses integration mapping"]
     C --> F["Connector abc123<br/>connector mapping wins"]
 ```
-
-<Note>
-  One naming quirk to know about: the [configuration endpoint](/guides/extending/custom-fields/api-workflow#step-6-verify-the-effective-configuration) reports an integration level mapping as `"source": "organization"`. It is the same mapping type under an older name.
-</Note>
 
 ## Choose how to configure
 
@@ -97,7 +86,7 @@ GET https://api.bindbee.dev/api/hris/v1/employees?include_custom_fields=true
 1. **Naming Conventions**
 
    - Use clear, descriptive names.
-   - Follow snake_case formatting.
+   - Follow **snake_case** formatting.
    - Avoid generic names like `custom1`, `custom2`.
 
 2. **JMESPath Expressions**

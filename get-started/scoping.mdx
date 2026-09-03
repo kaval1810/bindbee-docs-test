@@ -9,7 +9,7 @@ icon: "sliders-horizontal"
 ## Configure scoping
 
 <Warning>
-Scope applies to your **whole organisation, in both environments**. There's no per-connector scope, and changing it while testing changes it for live customers too.
+Scope applies to your **whole organisation, in both environments**.
 </Warning>
 
 In the dashboard, go to **Configure → Scoping**, pick the category, and switch on the models you need. Each one expands so you can keep or drop individual fields. Do this before you connect real customers.
@@ -21,8 +21,6 @@ In the dashboard, go to **Configure → Scoping**, pick the category, and switch
 A scope change only affects the next sync - data already synced stays as it is. Trigger a run - see [Syncing](/guides/reading-writing/syncing) - then read a record and confirm.
 
 ## What scope actually does
-
-**Anything outside your scope is never fetched or stored** - it's in neither the unified response nor `raw_data`. Narrowing it stops collection rather than hiding a copy; widening it shows nothing until the next sync. A custom field mapped to an out-of-scope value resolves to nothing, even though it previews fine against a sample - see [Custom fields](/guides/extending/custom-fields).
 
 Scope is not permissions. Credentials govern what Bindbee *can* read, scope what it *does* read - for a hard guarantee, restrict the integration user upstream.
 

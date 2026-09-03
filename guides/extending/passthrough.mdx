@@ -5,18 +5,7 @@ description: "Call any endpoint on your end user's connected system directly, us
 icon: "arrow-right-left"
 ---
 
-Unified APIs cover the data most products need. Passthrough covers the edge cases. It forwards a raw HTTP request to the 3rd-party system a connector is linked to and returns that system's response untouched.
-
-You supply the method, path and body. Bindbee attaches the connector's stored credentials and routes the call, so you never handle vendor credentials yourself.
-
-```mermaid
-flowchart LR
-    A["Your app<br/>method, path, body"] --> B["Bindbee<br/>attaches auth,<br/>resolves base URL"]
-    B --> C["Vendor API<br/>Workday, BambooHR, ..."]
-    C -.->|raw vendor response, unchanged| A
-```
-
-Everything past that first hop belongs to the vendor: the path, the body, the response shape, the errors.
+**Unified APIs cover the data most products need. Passthrough covers the edge cases.** It forwards a raw HTTP request to the 3rd-party system a connector is linked to and returns that system's response untouched.
 
 ## When to use it
 
@@ -28,24 +17,6 @@ Reach for Passthrough when an endpoint you need isn't unified yet, a vendor-spec
   If the value you want is already in `raw_data`, Use [custom fields](/guides/extending/custom-fields).
 </Warning>
 
-## What you give up
-
-| | Unified endpoints | Passthrough |
-| --- | --- | --- |
-| Rate limit | Bindbee's, 200/min/connector | **The vendor's**, often far tighter |
-| Latency | Served from Bindbee's store | A live vendor call |
-| Vendor outage | Unaffected | Fails |
-| Response shape | Normalised, identical everywhere | Vendor-specific |
-| Errors | Consistent status codes | Whatever the vendor does |
-| Pagination | `cursor` / `page_size` | The vendor's scheme |
-| Scope and custom fields | Applied | Not applied |
-| Storage | Synced and available on later reads | Not stored, live only |
-| API changes | Versioned and communicated | Break when the vendor decides |
-
-
-<Warning>
-  Passthrough calls count against the **source system's** rate limits and Bindbee's rate limit does not protect you here.
-</Warning>
 
 ## Anatomy of a request
 
@@ -189,44 +160,10 @@ Change the envelope, not the approach. Each row below shows only what differs fr
 
 A `200` returns the third party's response as is, parsed according to `response_format`. Bindbee does not reshape the payload, rename fields, or apply the unified schema to it. There is no unified envelope, no `cursor`, no `items`. The shape is entirely the vendor's.
 
-<Warning>
-  A `200` from this endpoint means Bindbee reached the vendor. It does **not** mean the vendor succeeded. Many APIs return `200` with an error object in the body, so inspect the payload rather than trusting the status code.
-</Warning>
-
-## Errors
-
-| Status | Meaning | Fix |
-| --- | --- | --- |
-| `401` | API key missing or invalid. | Check the `Authorization` header, regenerate the key in Settings. |
-| `403` | Valid credentials, no access. Wrong API category for the token, or writes disabled on the model. | Confirm the connector and operation are permitted. |
-| `422` | Validation failed on the Passthrough request itself, before Bindbee called the vendor. | Check `method`, `path` and `headers`, all three are required. |
-| `429` | Bindbee rate limit exceeded. | Retry after `Retry-After`. See [Rate limits](/api-reference/basics/rate-limits). |
-
 <Note>
-  Errors from the third-party system come back in that system's own format, inside a **successful** Passthrough call. Handle upstream status codes and error bodies per integration.
+  A `200` from this endpoint confirms Bindbee reached the vendor. Many APIs also return `200` alongside an error object in the body, in that system's own format - so inspect the payload, and handle status codes and error bodies per integration.
 </Note>
 
-## Best practices
-
-<CardGroup cols={3}>
-  <Card title="Prefer unified endpoints" icon="layers">
-    Passthrough couples your code to one vendor's API. Use it for gaps, not as the default path.
-  </Card>
-
-  <Card title="Isolate the code" icon="sliders-horizontal">
-    Put it behind an interface so replacing it with unified support later stays contained, and avoid hardcoding vendor paths deep in your logic.
-  </Card>
-
-  <Card title="Tell us what is missing" icon="mail">
-    A second integration-specific implementation is a signal. Email support@bindbee.dev so the gap can be modelled.
-  </Card>
-</CardGroup>
-
-<Accordion title="Why Passthrough is deliberately unnormalised" icon="circle-question">
-  The escape hatch exists because the alternative is worse. Without one, a team with a legitimate one-off need either drops the requirement or builds a second integration alongside Bindbee, with their own credential handling and OAuth refresh. Passthrough keeps that case inside the platform.
-
-  Leaving the response unnormalised is deliberate. A passthrough call visibly returns one system's shape, so the cost is obvious as you write it.
-</Accordion>
 
 ## Related
 

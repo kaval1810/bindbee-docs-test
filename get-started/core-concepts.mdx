@@ -18,7 +18,7 @@ Every term the docs use with a specific meaning. This table is the single defini
 | --- | --- |
 | **Category** | The kind of system - `hris`, `ats` or `lms`. Decides which models exist, and appears in every endpoint path |
 | **[Integration](/get-started/integrations)** | A vendor system, named by a slug such as `bamboohr` |
-| **[Connector](/get-started/how-to-connect)** | One customer's connection to one integration. Holds their credentials and sync schedule |
+| **[Connector](/get-started/how-to-connect)** | Your customer's connection to one integration. Holds their credentials and sync schedule |
 | **[Model](/get-started/model-availability)** | A unified object type - employee, benefit, candidate. The same across every integration in its category |
 | **[Record](/guides/reading-writing/record-identity)** | One instance of a model, synced from one connector |
 | **Organisation** | Your Bindbee account |
@@ -35,44 +35,6 @@ Every term the docs use with a specific meaning. This table is the single defini
 | **[`id` vs `remote_id`](/guides/reading-writing/record-identity)** | `id` is Bindbee's identifier - stable, the one to store. `remote_id` is the source system's own |
 
 To reach one customer's data you send both: the API key says who you are, the connector token says which customer. [Authentication](/api-reference/basics/authentication) lists which endpoints need which.
-
-## Where settings live
-
-Some settings apply to all your customers, some to just one. **Where you set it decides who it affects.**
-
-| Set at | What you set there | Who it affects |
-| --- | --- | --- |
-| **Organisation** | Scope, custom field definitions | All your customers, in both environments |
-| **Integration** | Custom field mappings | All customers using that system |
-| **Connector** | Credentials, sync schedule, mapping changes | Just that one customer |
-
-If the same mapping is set in two places, the one on the connector is used - see [Custom fields](/guides/extending/custom-fields).
-
-Development and Production are not another level. They keep your connectors, keys and data apart, but these settings are shared - so if you change your scope while testing, it changes in production too. See [Environments](/get-started/environments).
-
-## One shape for every system
-
-Bindbee maps every system into one shape, so you get the same employee whether your customer uses Workday or BambooHR. Where two systems disagree, Bindbee picks one - **so some details get left out.** Nothing is thrown away, though. The original payload is kept as `raw_data`, so a value can reach you three ways:
-
-| Route | What you get | Sent by default | Ask for it with |
-| --- | --- | --- | --- |
-| **Unified field** | The standard value, same everywhere | Yes | — |
-| **Custom field** | A value you named and mapped | No | `include_custom_fields=true` |
-| **Raw data** | The vendor's own payload, in their shape | No | `include_raw_data=true` |
-
-<Warning>
-Both are **off** by default. A custom field won't show up until you ask for it - the usual reason a mapping looks like it failed silently. See [Raw data](/guides/reading-writing/raw-data).
-</Warning>
-
-Need a field the unified model doesn't have? Find it in the raw data, then **turn it into a [custom field](/guides/extending/custom-fields).** It arrives named on every record after that. Raw data follows the vendor's own shape, so it's for checking, not for building on.
-
-## Coverage varies by integration
-
-**Not every integration supports every model** - check [Model availability](/get-started/model-availability), then confirm against a real connector.
-
-**A model marked BETA works, but its fields can still change.** Pin what you depend on.
-
-{/* VERIFY: does Beta carry a stated notice period or deprecation policy before a contract change? Four data-model pages send readers here for the definition of BETA, so this page owns the answer. */}
 
 ## Related
 
