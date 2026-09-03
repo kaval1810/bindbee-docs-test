@@ -16,11 +16,8 @@ All three work alongside `cursor` and `page_size`, and can be combined in a sing
 
 The examples here use [Get Employees](/hris/employee/get-employees), but the same behaviour applies across HRIS, Payroll, ATS and LMS endpoints. The exact filter set differs per model, so check the reference page for the endpoint you are calling.
 
-<Note>
-Queries run against Bindbee's synced copy of the data, not against the third-party API in real time. Results reflect the last successful sync for that connector — see [Sync frequency](/api-reference/basics/sync-frequency).
-</Note>
 
-Every request needs your API key and the connector token for the end customer whose data you are reading:
+Every request needs your [API key](/api-reference/basics/authentication#where-to-find-them) and the [connector token](/api-reference/basics/authentication#where-to-find-them) for the end customer whose data you are reading:
 
 ```bash
 curl -X GET "https://api.bindbee.dev/api/hris/v1/employees" \

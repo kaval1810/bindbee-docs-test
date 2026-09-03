@@ -4,29 +4,29 @@ description: "Bindbee provides a Unified API for HR, payroll, ATS, and LMS data 
 icon: "info"
 ---
 
-Your customers keep their people data in different system they already bought BambooHR, ADP, Workday, Paycom, or a smaller payroll provider. Your product needs the same employee record out of all of them.
+Your customers keep their employee data in different system they already bought BambooHR, ADP, Workday, Paycom, or a smaller payroll provider. Your product needs the same employee record out of all of them.
 
 Bindbee sits between those systems and yours. You integrate once, against one API and one data model. Whichever system a customer connects, their data is normalized to a single schema before it reaches your code.
 
 ## Bindbee features
 
 <CardGroup cols={2}>
-  <Card title="Self-serve setup, a few clicks" icon="unplug">
-    They authorize through a [magic link](/get-started/how-to-connect) or an
-    [Embedded SDK](/guides/sdk/embedded-sdk) in your product.
+  <Card title="Self-serve Setup" icon="unplug">
+    Your customers authorize through a [`magic link`](/get-started/how-to-connect) or an
+    [`Embedded SDK`](/guides/sdk/embedded-sdk) in your product.
   </Card>
 
   <Card title="One API, four categories" icon="git-fork">
-    [HRIS, payroll, ATS, LMS](/get-started/integrations) — whether an employee record comes from Workday or an [SFTP file](/get-started/connection-methods), it reaches you with the same fields and types.
+    [`HRIS, Payroll, ATS, LMS`](/get-started/integrations) — whether an employee record comes from Workday or as a [`File`](/get-started/connection-methods), it reaches you with the same fields and types.
   </Card>
 
-  <Card title="Nothing is hidden from you" icon="eye-off">
-    The full source payload stays available as [`raw_data`](/guides/reading-writing/raw-data).
-    Whatever the unified model doesn't carry, you can map as a [custom field](/guides/extending/custom-fields).
+  <Card title="Nothing is hidden" icon="eye-off">
+    The full upstream payload stays available as [`raw_data`](/guides/reading-writing/raw-data).
+    Whatever the unified model doesn't carry, you can map as a [`custom field`](/guides/extending/custom-fields).
   </Card>
 
-  <Card title="You can write back too" icon="pencil">
-    Create an employee, push a deduction, the same API [sends changes back](/guides/reading-writing/overview)
+  <Card title="Write back capability" icon="pencil">
+    Create an employee, push a deduction, the same API [`sends changes back`](/guides/reading-writing/overview)
     to the customer's system.
   </Card>
 </CardGroup>
@@ -47,7 +47,7 @@ account before you point anything at a real customer.
 
 ## What Bindbee is not
 
-- **Not a system of record.** Bindbee reads from and writes to your customer's HR system. It does not replace it, and it does not run payroll.
+- **Not a system of record.** Bindbee reads from and writes to your customer's system. It does not replace it, and it does not run payroll.
 - **Bounded by the source.** If a field doesn't exist in the source system, or the customer's admin didn't grant access to it, it won't appear in the unified model and it's absent rather than an error.
 
 ## Where to go from here
