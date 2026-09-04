@@ -1,0 +1,82 @@
+---
+title: "modified_after"
+description: "Read only the records that changed since you last looked, and keep your own store in step."
+icon: "history"
+---
+
+`modified_after` takes an ISO 8601 datetime and returns only objects whose `modified_at` value is later than it.
+
+```
+modified_after=2024-02-21T21:22:12.993Z
+```
+
+If you do not supply a timezone offset, the value is interpreted as UTC.
+
+<Note>
+`modified_at` is the datetime Bindbee last updated its copy of the record. It is not the third party's own "last updated" field. `modified_after` therefore answers "what has changed in Bindbee since I last looked", which is what you want for keeping your database in step.
+</Note>
+
+```bash
+curl -X GET "https://api.bindbee.dev/api/hris/v1/employees?modified_after=2024-02-21T21:22:12.993Z" \
+  -H "Authorization: Bearer <BINDBEE_API_KEY>" \
+  -H "X-Connector-Token: <CONNECTOR_TOKEN>"
+```
+
+## The delta sync pattern
+
+1. On first run, pull everything with no `modified_after`, paging through with `cursor`.
+2. Record the highest `modified_at` you saw across all pages, in UTC.
+3. On the next run, pass that value as `modified_after`.
+4. Upsert the returned records into your store, keyed on `id`.
+5. Update your stored watermark and repeat.
+
+```python
+params = {"page_size": 200}
+if last_synced_at:
+    params["modified_after"] = last_synced_at
+
+while True:
+    response = requests.get(
+        "https://api.bindbee.dev/api/hris/v1/employees",
+        params=params,
+        headers=headers,
+    ).json()
+
+    for employee in response["items"]:
+        upsert(employee)  # key on employee["id"]
+
+    if not response["cursor"]:
+        break
+    params["cursor"] = response["cursor"]
+```
+
+## Things to watch
+
+- **Match your polling to the sync frequency.** Bindbee syncs connectors once every 24 hours by default, and this is configurable. Polling far more often than the connector syncs mostly returns empty pages. For near real-time updates, use [webhooks](/guides/reading-writing/webhooks) instead of tight polling.
+- **A resync makes everything look new.** Records re-synced during a full resync get a fresh `modified_at` even when nothing changed upstream, so an incremental read can return the entire dataset. Expected behaviour, not a bug.
+- **Always upsert, never insert blindly.** The same record can appear in more than one window. Keying on `id` keeps this safe.
+- **Store the watermark in UTC** and subtract a small buffer, for example one minute, before using it. That avoids dropping a record that landed between two pages of a long paginated run.
+- **`modified_after` is per model.** An employee changing does not mark their employment or benefit records as modified, so filtering those separately misses related changes. Read them without the filter, or subscribe to data-change events for the model.
+- **Combine it with filters.** `modified_after` plus `employment_status=ACTIVE` gives you only the active employees that changed, which is usually a much smaller set to process.
+
+---
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Reading data" icon="search" href="/guides/reading-writing/reading-data">
+    How `modified_after` combines with filters, `expand` and pagination.
+  </Card>
+
+  <Card title="Syncing" icon="refresh-cw" href="/guides/reading-writing/syncing">
+    How often Bindbee pulls fresh data from each connector.
+  </Card>
+
+  <Card title="Webhooks" icon="webhook" href="/guides/reading-writing/webhooks">
+    Get notified when data changes instead of polling.
+  </Card>
+
+  <Card title="Filters" icon="funnel" href="/guides/reading-writing/reading-data/filters">
+    Narrow an incremental read down further.
+  </Card>
+</CardGroup>

@@ -24,7 +24,7 @@ The round trip behind most benefits products: read the enrolment, work out the a
 
 <Steps>
   <Step title="Confirm the integration supports payroll writes">
-    Write support varies by integration - see [Check write support](/guides/reading-writing/meta-apis). Where writes aren't supported, [Passthrough](/guides/extending/passthrough) is the fallback, at the cost of a provider-specific shape.
+    Write support varies by integration - see [Check write support](/guides/reading-writing/writing-data/meta-apis). Where writes aren't supported, [Passthrough](/guides/extending/passthrough) is the fallback, at the cost of a provider-specific shape.
 
     **Result:** Confirmation this round trip is possible here.
   </Step>
@@ -86,7 +86,7 @@ The round trip behind most benefits products: read the enrolment, work out the a
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    Build the body from this rather than hardcoding it. Read the `required` array on every nested object, and use `enumInformation` instead of guessing from value names - see [Fetch a schema](/guides/reading-writing/meta-apis).
+    Build the body from this rather than hardcoding it. Read the `required` array on every nested object, and use `enumInformation` instead of guessing from value names - see [Fetch a schema](/guides/reading-writing/writing-data/meta-apis).
 
     **Result:** The exact body this integration accepts.
   </Step>
@@ -127,11 +127,11 @@ The round trip behind most benefits products: read the enrolment, work out the a
   Sync latency sits between the election and your write, so the usable window before cut-off is shorter than it looks. Where timing is tight, [force a resync](/guides/reading-writing/syncing) rather than waiting for the schedule.
 </Note>
 
-## If this didn't work
+## Frequently Asked Questions
 
 <AccordionGroup>
   <Accordion title="The write returned 501">
-    The Meta schema isn't published for this integration and model. That isn't the same as the write being unsupported - see [Meta APIs](/guides/reading-writing/meta-apis#which-operations-have-a-schema).
+    The Meta schema isn't published for this integration and model. That isn't the same as the write being unsupported - see [Meta APIs](/guides/reading-writing/writing-data/meta-apis#which-operations-have-a-schema).
   </Accordion>
 
   <Accordion title="The write returned 422 though the body matches the schema">

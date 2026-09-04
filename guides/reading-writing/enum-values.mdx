@@ -137,7 +137,7 @@ curl -G https://api.bindbee.dev/api/hris/v1/employees \
   Filter values are matched as returned, so `ACTIVE` and `Active` are not interchangeable. Use the exact string from the response payload. An unrecognized value returns an empty page rather than a validation error, so an empty result is not proof the customer has no matching data — check the spelling first.
 </Note>
 
-See [Querying Data](/guides/reading-writing/querying-data) for how enum filters combine with `expand`, `modified_after` and pagination.
+See [Reading data](/guides/reading-writing/reading-data) for how enum filters combine with `expand`, `modified_after` and pagination.
 
 ---
 
@@ -231,7 +231,7 @@ A value that passes through verbatim today may become a mapped enum value later 
     Surface provider-specific values that the unified schema does not represent.
   </Card>
 
-  <Card title="Querying Data" icon="funnel" href="/guides/reading-writing/querying-data">
+  <Card title="Reading data" icon="funnel" href="/guides/reading-writing/reading-data">
     How enum filters combine with `expand`, `modified_after` and pagination.
   </Card>
 

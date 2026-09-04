@@ -98,7 +98,7 @@ Unlike the connector list above, [this endpoint](/api-reference/connectors/resyn
 
 Reading on a timer instead goes wrong in four ways: a paginated walk shifts under you mid-sync, counts come back short, a census extract is quietly incomplete, and a stalled connector looks identical to a quiet one.
 
-Gate the work on `connector_synced` rather than a clock. The event names the connector and the sync job, so a handler can process exactly what finished — and pair it with `modified_after` to read only what that run touched, as in [Querying Data](/guides/reading-writing/querying-data).
+Gate the work on `connector_synced` rather than a clock. The event names the connector and the sync job, so a handler can process exactly what finished — and pair it with `modified_after` to read only what that run touched, as in [modified_after](/guides/reading-writing/reading-data/modified-after).
 
 For creating the subscription, the payload shape and delivery guarantees, see [Webhooks](/guides/reading-writing/webhooks).
 

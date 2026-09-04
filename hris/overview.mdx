@@ -33,7 +33,7 @@ Four models. Everything else is read-only through the unified API.
 | Time Off | `POST /api/hris/v1/time-off` |
 | Timesheet Entry | `POST /api/hris/v1/timesheet-entry` |
 
-Each has a Meta endpoint returning the request schema for that connector's integration - build the body from it rather than hardcoding one, since required fields differ per integration. See [Fetch a schema](/guides/reading-writing/meta-apis).
+Each has a Meta endpoint returning the request schema for that connector's integration - build the body from it rather than hardcoding one, since required fields differ per integration. See [Fetch a schema](/guides/reading-writing/writing-data/meta-apis).
 
 There is no update or delete on unified models. Where a correction is possible at all, it goes through [Passthrough](/guides/extending/passthrough).
 

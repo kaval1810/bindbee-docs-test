@@ -117,7 +117,7 @@ async function fetchAll(path, params, apiKey, connectorToken) {
 
 On a `429`, wait and retry the **same** cursor rather than advancing. Limits are per connector token, so paging several customers in parallel is fine; paging one customer harder is not.
 
-The cheapest way to page less is to fetch less: filter server-side instead of discarding client-side, and on scheduled runs use `modified_after` to fetch only what changed. See [Querying the data](/guides/reading-writing/querying-data).
+The cheapest way to page less is to fetch less: filter server-side instead of discarding client-side, and on scheduled runs use `modified_after` to fetch only what changed. See [modified_after](/guides/reading-writing/reading-data/modified-after).
 
 ## What pagination does not give you
 
@@ -130,7 +130,7 @@ There is **no total count and no page number**, so a progress bar cannot be driv
     checkpoint a cursor between scheduled jobs need to know whether resuming from it
     is safe. */}
 
-## If this didn't work
+## Frequently Asked Questions
 
 <AccordionGroup>
   <Accordion title="Records are missing or repeated across pages">
@@ -152,6 +152,6 @@ There is **no total count and no page number**, so a progress bar cannot be driv
 
 ## Related
 
-- [Querying the data](/guides/reading-writing/querying-data) - filters that must stay constant across a walk
+- [Filters](/guides/reading-writing/reading-data/filters) - filters that must stay constant across a walk
 - [Rate Limits](/api-reference/basics/rate-limits) - what bounds how fast you can page
 - [Record Counts](/guides/troubleshooting/record-counts) - counting a collection

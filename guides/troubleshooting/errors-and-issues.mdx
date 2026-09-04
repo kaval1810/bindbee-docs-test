@@ -73,7 +73,7 @@ On `422` it is an array, one entry per rejected field — here, a `page_size` ab
 A `403` means the credentials are valid but don't permit this resource. Two very different situations produce it:
 
 - **A connector token used against the wrong API category** — an HRIS connector called on `/api/ats/v1/*`. That's a bug in your code.
-- **A model whose writes are disabled for that integration** — see [Check write support](/guides/reading-writing/meta-apis).
+- **A model whose writes are disabled for that integration** — see [Check write support](/guides/reading-writing/writing-data/meta-apis).
 
 Neither is retryable, and neither is a source-system permission problem — those surface as sync failures or empty results rather than `403`. See [Permission errors](/guides/troubleshooting/permission-errors).
 
@@ -146,7 +146,7 @@ Both are Dashboard surfaces. **There is no issues endpoint and no connector logs
 
 {/* VERIFY: do issues have an explicit lifecycle - are they closed by Bindbee when the underlying failure clears, or dismissed by hand? The Dashboard shows "currently open issues", which implies a state, but the transition is undocumented. */}
 
-## If this didn't work
+## Frequently Asked Questions
 
 <AccordionGroup>
   <Accordion title="401 with a key you're sure is correct">
@@ -164,7 +164,7 @@ Both are Dashboard surfaces. **There is no issues endpoint and no connector logs
   </Accordion>
 
   <Accordion title="422 on a write that matches the schema">
-    The schema is the structural contract; the source system enforces rules beyond it - codes that must exist in their configuration, closed periods, approval states. See [Fetch a schema](/guides/reading-writing/meta-apis).
+    The schema is the structural contract; the source system enforces rules beyond it - codes that must exist in their configuration, closed periods, approval states. See [Fetch a schema](/guides/reading-writing/writing-data/meta-apis).
   </Accordion>
 </AccordionGroup>
 

@@ -10,7 +10,7 @@ Creating an employee writes a person into the customer's system of record. It's 
 <Info>
   **Before you start**
 
-  - You've confirmed the integration supports this write - see [Check write support](/guides/reading-writing/meta-apis#supported-operations).
+  - You've confirmed the integration supports this write - see [Check write support](/guides/reading-writing/writing-data/meta-apis#supported-operations).
   - You can generate a stable idempotency key per person.
 </Info>
 
@@ -91,7 +91,7 @@ Creating an employee writes a person into the customer's system of record. It's 
   An employee is a person; an employment is a job. Rehires and transfers are not new employees - creating one duplicates the person instead of adding an employment. Check for an existing record by a stable upstream identifier first.
 </Note>
 
-## If this didn't work
+## Frequently Asked Questions
 
 <AccordionGroup>
   <Accordion title="Validation fails on a field the schema marks optional">

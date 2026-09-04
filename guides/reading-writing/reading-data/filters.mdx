@@ -1,0 +1,97 @@
+---
+title: "Filters"
+description: "Narrow a list endpoint's result set to the records you care about using query parameters."
+icon: "funnel"
+---
+
+Filters are query parameters on a list endpoint. They narrow the result set to the records you care about, and combine with [`expand`](/guides/reading-writing/reading-data/expand), [`modified_after`](/guides/reading-writing/reading-data/modified-after), `cursor` and `page_size` in a single request.
+
+The examples here use [Get Employees](/hris/employee/get-employees), but the same behaviour applies across HRIS, Payroll, ATS and LMS endpoints. The exact filter set differs per model, so check the reference page for the endpoint you are calling.
+
+## How filters work
+
+A few rules apply everywhere:
+
+- **Multiple filters combine with AND.** `employment_status=ACTIVE&company_id=<id>` returns active employees at that company only.
+- **ID parameters accept comma-separated lists**, which behave as OR within that parameter. Do not put spaces after the commas.
+- **Name and email filters are case-insensitive.**
+- **Filters are inclusive only.** Nothing excludes — fetch the values you want rather than the ones you don't.
+- **Filtering happens before pagination.** Page through a filtered result set with `cursor` exactly as you would an unfiltered one.
+
+## The filters worth knowing about
+
+[Get Employees](/hris/employee/get-employees) lists every supported filter, generated from the API spec. These are the ones with behaviour worth explaining:
+
+| Parameter | Description | Example |
+|---|---|---|
+| `ids` | One or more Bindbee employee IDs | `01931edf-04b6-7391-8a5c-93ac4b395316` |
+| `company_id` | Employees at one or more companies | `01931edf-04c8-7649-a470-d85f6161bd1a` |
+| `groups` | Employees belonging to one or more groups | `01931edf-04b6-7391-8a5c-93ac4b395316` |
+| `employment_status` | `ACTIVE`, `PENDING`, `INACTIVE`, `ACTIVE_EXTERNAL`, `INACTIVE_EXTERNAL`, `LEAVE`, `DECEASED`, `RETIRED` or `-` | `ACTIVE` |
+| `remote_id` | The third-party API ID of the matching object | `3235005483341316245` |
+| `employee_number` | The employee number shown in the third-party UI | `000000168` |
+
+The rest — `manager_id`, `work_locations`, `pay_group_id`, and the name and email filters — behave exactly as the rules above describe.
+
+Two more parameters shape the payload rather than the result set. Both default to `false`:
+
+| Parameter | Type | Description |
+|---|---|---|
+| `include_raw_data` | boolean | Include the original third-party payload Bindbee used to build the unified record |
+| `include_custom_fields` | boolean | Include any [custom fields](/guides/extending/custom-fields) configured for the model |
+
+<Note>
+Custom fields are returned, never filtered on.
+</Note>
+
+`employment_status` is not a closed set — a connector's own status values are filterable too, and `-` marks a record the source gave no status for, so filtering for any specific status excludes those records. See [Enum values](/guides/reading-writing/enum-values).
+
+## Examples
+
+Active employees at one company:
+
+```bash
+curl -X GET "https://api.bindbee.dev/api/hris/v1/employees?employment_status=ACTIVE&company_id=018af1fe-1250-772d-87c5-6f725a579e8a" \
+  -H "Authorization: Bearer <BINDBEE_API_KEY>" \
+  -H "X-Connector-Token: <CONNECTOR_TOKEN>"
+```
+
+Fetch a specific set of employees by ID in one call:
+
+```bash
+curl -X GET "https://api.bindbee.dev/api/hris/v1/employees?ids=01931edf-04b6-7391-8a5c-93ac4b395316,01931edf-04c8-7649-a470-d85f6161bd1a" \
+  -H "Authorization: Bearer <BINDBEE_API_KEY>" \
+  -H "X-Connector-Token: <CONNECTOR_TOKEN>"
+```
+
+Look up an employee you only know by their identifier in the source system:
+
+```bash
+curl -X GET "https://api.bindbee.dev/api/hris/v1/employees?remote_id=3235005483341316245" \
+  -H "Authorization: Bearer <BINDBEE_API_KEY>" \
+  -H "X-Connector-Token: <CONNECTOR_TOKEN>"
+```
+
+If that last one returns nothing, check the value against `raw_data` before assuming the filter is broken — what the HRIS displays on screen is often not the identifier its API returns. For which identifier to store, see [id vs remote_id](/guides/reading-writing/record-identity).
+
+---
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Reading data" icon="search" href="/guides/reading-writing/reading-data">
+    How filters combine with `expand`, `modified_after` and pagination.
+  </Card>
+
+  <Card title="Expand" icon="expand" href="/guides/reading-writing/reading-data/expand">
+    Return related objects inline instead of just their IDs.
+  </Card>
+
+  <Card title="Enum values" icon="list" href="/guides/reading-writing/enum-values">
+    Why `employment_status` and other enums are not a closed set.
+  </Card>
+
+  <Card title="Record identity" icon="fingerprint" href="/guides/reading-writing/record-identity">
+    When to filter on `id` versus `remote_id`.
+  </Card>
+</CardGroup>

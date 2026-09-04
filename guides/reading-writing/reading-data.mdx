@@ -1,0 +1,94 @@
+---
+title: "Reading data"
+sidebarTitle: "Overview"
+description: "Where a read is served from, and how **filters**, **expand** and **modified_after** narrow, enrich and incrementally sync it."
+icon: "search"
+---
+
+Every list endpoint returns data Bindbee has already synced from the connected system. **A read is served from that copy, not from a live call to the source system** — which is the single fact that explains most of what follows.
+
+## How a read works
+
+```mermaid
+flowchart LR
+    SRC["Source system"] -->|sync| BB["Bindbee's copy"]
+    BB -->|"GET with filters"| YOU["Your application"]
+    BB -.->|"webhook: it changed"| YOU
+```
+
+**Freshness is set by the sync, not by your request.** A record edited an hour ago is invisible until the next sync runs. Reading more often does not help - see [Syncing](/guides/reading-writing/syncing).
+
+**Reads succeed even when syncing is broken.** A connector that stopped syncing weeks ago still returns `200` with stale data. Nothing in the response says so, so health has to be watched separately - see [Sync Status](/guides/troubleshooting/sync-status).
+
+**A webhook is a signal, not a delivery.** Change events tell you something happened and give you enough to go and read it - see [Webhook](/guides/reading-writing/webhooks).
+
+Every request needs your [API key](/api-reference/basics/authentication#where-to-find-them) and the [connector token](/api-reference/basics/authentication#where-to-find-them) for the end customer whose data you are reading:
+
+```bash
+curl -X GET "https://api.bindbee.dev/api/hris/v1/employees" \
+  -H "Authorization: Bearer <BINDBEE_API_KEY>" \
+  -H "X-Connector-Token: <CONNECTOR_TOKEN>"
+```
+
+---
+
+## The three parameters
+
+Three sets of query parameters control what comes back. All three work alongside `cursor` and `page_size`, and can be combined in a single request.
+
+<CardGroup cols={3}>
+  <Card title="Filters" icon="funnel" href="/guides/reading-writing/reading-data/filters">
+    Narrow the result set to the records you care about.
+  </Card>
+
+  <Card title="Expand" icon="expand" href="/guides/reading-writing/reading-data/expand">
+    Return related objects inline instead of just their IDs.
+  </Card>
+
+  <Card title="modified_after" icon="history" href="/guides/reading-writing/reading-data/modified-after">
+    Return only records updated since a point in time.
+  </Card>
+</CardGroup>
+
+The examples across these pages use [Get Employees](/hris/employee/get-employees), but the same behaviour applies across HRIS, Payroll, ATS and LMS endpoints. The exact parameter set differs per model, so check the reference page for the endpoint you are calling.
+
+---
+
+## Putting it together
+
+Filters, `expand`, `modified_after` and pagination all compose in a single request:
+
+```bash
+curl -X GET "https://api.bindbee.dev/api/hris/v1/employees?\
+employment_status=ACTIVE&\
+modified_after=2024-02-21T21:22:12.993Z&\
+expand=manager[first_name,last_name],work_locations&\
+include_custom_fields=true&\
+page_size=200" \
+  -H "Authorization: Bearer <BINDBEE_API_KEY>" \
+  -H "X-Connector-Token: <CONNECTOR_TOKEN>"
+```
+
+That request returns active employees changed since the given timestamp, with each manager's name and work locations resolved inline and any configured custom fields attached, 200 records per page.
+
+---
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Pagination" icon="list" href="/api-reference/basics/pagination">
+    Page through large result sets with `cursor` and `page_size`.
+  </Card>
+
+  <Card title="Syncing" icon="refresh-cw" href="/guides/reading-writing/syncing">
+    How often Bindbee pulls fresh data from each connector.
+  </Card>
+
+  <Card title="Webhooks" icon="webhook" href="/guides/reading-writing/webhooks">
+    Get notified when data is created or modified instead of polling.
+  </Card>
+
+  <Card title="Custom fields" icon="table" href="/guides/extending/custom-fields">
+    Extend unified models with fields specific to your use case.
+  </Card>
+</CardGroup>

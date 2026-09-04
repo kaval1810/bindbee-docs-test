@@ -1,0 +1,87 @@
+---
+title: "Expand"
+description: "Return related objects inline instead of just their IDs, and choose which of their fields come back."
+icon: "expand"
+---
+
+Relation fields on a unified model return as Bindbee IDs by default. On the Employee model that includes `manager`, `company`, `groups`, `work_locations`, `pay_group` and `payroll_run_calendar`. Getting a manager's name would normally mean a second call to [Get Employee By Id](/hris/employee/get-employee-by-id).
+
+`expand` removes that round trip by returning the related object inline.
+
+## How expand works
+
+- Pass one or more relation names, comma separated, with **no spaces anywhere** in the value.
+- Optionally restrict which fields come back for a relation by listing them in square brackets.
+
+```
+expand=manager
+expand=manager[first_name,last_name]
+expand=manager[first_name,last_name],company,pay_group
+```
+
+## Example
+
+Default response, relations as IDs:
+
+```json
+{
+  "id": "018b18ef-c487-703c-afd9-0ca478ccd9d6",
+  "first_name": "Kunal",
+  "last_name": "Tyagi",
+  "manager": "018aeaff-cc7c-7837-988a-965762bd63c1",
+  "company": "018af1fe-1250-772d-87c5-6f725a579e8a"
+}
+```
+
+The same request with `expand=manager[first_name,last_name],company`:
+
+```bash
+curl -X GET "https://api.bindbee.dev/api/hris/v1/employees?expand=manager[first_name,last_name],company" \
+  -H "Authorization: Bearer <BINDBEE_API_KEY>" \
+  -H "X-Connector-Token: <CONNECTOR_TOKEN>"
+```
+
+```json
+{
+  "id": "018b18ef-c487-703c-afd9-0ca478ccd9d6",
+  "first_name": "Kunal",
+  "last_name": "Tyagi",
+  "manager": {
+    "first_name": "Jane",
+    "last_name": "Doe"
+  },
+  "company": {
+    "id": "018af1fe-1250-772d-87c5-6f725a579e8a",
+    "name": "Acme Inc"
+  }
+}
+```
+
+## Things to watch
+
+- Field selection is the difference between a manageable payload and a very large one. If you only need a manager's name to render a row, ask for the name, not the whole employee record.
+- If you still need the related record's identifier after selecting fields, include `id` in the bracket list.
+- Expanding several relations at `page_size=200` produces large responses. Lower the page size if you see slow responses or timeouts.
+- A relation that is null on the record stays null when expanded.
+
+---
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Reading data" icon="search" href="/guides/reading-writing/reading-data">
+    How `expand` combines with filters, `modified_after` and pagination.
+  </Card>
+
+  <Card title="Filters" icon="funnel" href="/guides/reading-writing/reading-data/filters">
+    Narrow the result set before you expand it.
+  </Card>
+
+  <Card title="Pagination" icon="list" href="/api-reference/basics/pagination">
+    Why expanded responses want a smaller `page_size`.
+  </Card>
+
+  <Card title="Record identity" icon="fingerprint" href="/guides/reading-writing/record-identity">
+    Relations resolve through Bindbee IDs, not `remote_id`.
+  </Card>
+</CardGroup>

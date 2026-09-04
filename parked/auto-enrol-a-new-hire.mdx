@@ -120,11 +120,11 @@ Handle the initial sync as a bulk import that establishes baseline state without
 
 **The window is short and sync latency eats it.** Enrolment windows typically run 30 days from hire, and a 24-hour cadence plus your own processing interval consumes a meaningful share before you begin. Measure the gap between hire date and first contact for a real customer before assuming the schedule is adequate.
 
-## If this didn't work
+## Frequently Asked Questions
 
 <AccordionGroup>
   <Accordion title="Every employee arrived as a new hire">
-    A first sync or a resync. Both re-sync the whole population, so every record looks changed - see [Filter with modified_after](/guides/reading-writing/querying-data) for why. This is what the baseline guard in step 2 exists to prevent.
+    A first sync or a resync. Both re-sync the whole population, so every record looks changed - see [modified_after](/guides/reading-writing/reading-data/modified-after) for why. This is what the baseline guard in step 2 exists to prevent.
   </Accordion>
 
   <Accordion title="No event fired though a hire was entered">

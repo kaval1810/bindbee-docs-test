@@ -7,7 +7,7 @@ description: "Submit a time off request into the customer's HRIS, with the leave
 <Info>
   **Before you start**
 
-  - You've confirmed the integration supports this write - see [Check write support](/guides/reading-writing/meta-apis).
+  - You've confirmed the integration supports this write - see [Check write support](/guides/reading-writing/writing-data/meta-apis).
   - You have the Bindbee `id` of the employee the request is for.
 </Info>
 
@@ -22,13 +22,13 @@ description: "Submit a time off request into the customer's HRIS, with the leave
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    Pay attention to the leave-type enum and to any required `integration_params`. Both vary by platform - see [Fetch a schema](/guides/reading-writing/meta-apis).
+    Pay attention to the leave-type enum and to any required `integration_params`. Both vary by platform - see [Fetch a schema](/guides/reading-writing/writing-data/meta-apis).
 
     **Result:** The exact contract for this integration.
   </Step>
 
   <Step title="Resolve the employee">
-    Use the Bindbee employee `id`, not the employee number or the source system's identifier. If you're starting from an upstream identifier, resolve it first with `remote_id` - see [Filtering](/guides/reading-writing/querying-data).
+    Use the Bindbee employee `id`, not the employee number or the source system's identifier. If you're starting from an upstream identifier, resolve it first with `remote_id` - see [Filtering](/guides/reading-writing/reading-data/filters).
 
     **Result:** A valid employee reference.
   </Step>
@@ -77,7 +77,7 @@ A created request enters the source system's own workflow. It is not automatical
 
 Balances are also the source system's. Bindbee submits the request; whether it's permitted against the employee's accrued balance is enforced upstream, and a request exceeding the balance is typically rejected there rather than by Bindbee.
 
-## If this didn't work
+## Frequently Asked Questions
 
 <AccordionGroup>
   <Accordion title="The leave type is rejected">

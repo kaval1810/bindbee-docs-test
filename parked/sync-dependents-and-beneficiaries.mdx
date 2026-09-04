@@ -83,7 +83,7 @@ description: "Build an accurate picture of who is covered under each employee, n
   <Step title="Subscribe to changes on both models">
     Subscribe to `connector_data_modified`, not just `employee_data_changed` - dependent changes may surface under either.
 
-    Re-read dependents and dependent benefits whenever the employee changes. `modified_after` is per model, so an employee changing does not mark their dependents as changed - see [Filter with modified_after](/guides/reading-writing/querying-data).
+    Re-read dependents and dependent benefits whenever the employee changes. `modified_after` is per model, so an employee changing does not mark their dependents as changed - see [modified_after](/guides/reading-writing/reading-data/modified-after).
 
     **Result:** Coverage that stays current as families change.
   </Step>
@@ -99,9 +99,9 @@ description: "Build an accurate picture of who is covered under each employee, n
 
 **Relationship vocabularies are customer-specific.** Spouse, domestic partner, child, stepchild, and legal ward vary in naming and availability across platforms and customer configurations. Map them per connector rather than assuming a standard set.
 
-**Dependent changes fire under the parent employee.** A dependent added or removed may surface as a change on the employee rather than on the dependent model. Subscribe to data model change rather than employee model change alone, and re-read dependents whenever the employee changes - see [Filter with modified_after](/guides/reading-writing/querying-data) for why the filter alone won't catch related-model changes.
+**Dependent changes fire under the parent employee.** A dependent added or removed may surface as a change on the employee rather than on the dependent model. Subscribe to data model change rather than employee model change alone, and re-read dependents whenever the employee changes - see [modified_after](/guides/reading-writing/reading-data/modified-after) for why the filter alone won't catch related-model changes.
 
-## If this didn't work
+## Frequently Asked Questions
 
 <AccordionGroup>
   <Accordion title="The eligibility file has too many lives on it">

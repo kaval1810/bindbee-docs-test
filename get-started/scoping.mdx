@@ -9,7 +9,7 @@ icon: "sliders-horizontal"
 ## Configure scoping
 
 <Warning>
-Scope applies to your **whole organisation, in both environments**.
+Scoping is applied across all connectors, integrations, and environments.
 </Warning>
 
 In the dashboard, go to **Configure → Scoping**, pick the category, and switch on the models you need. Each one expands so you can keep or drop individual fields. Do this before you connect real customers.
@@ -18,7 +18,9 @@ In the dashboard, go to **Configure → Scoping**, pick the category, and switch
   <img src="/images/get-started/scoping.png" alt="The Scoping screen with HRIS, ATS and LMS tabs. Bank Info is switched off; Benefit is switched on and expanded, listing fields such as effective_date, employee_contribution, plan_name and coverage_tier, each with a Read checkbox" />
 </Frame>
 
-A scope change only affects the next sync - data already synced stays as it is. Trigger a run - see [Syncing](/guides/reading-writing/syncing) - then read a record and confirm.
+<Note>
+If you change the scoping, you must resync the connector to see the effects.
+</Note>
 
 ## What scope actually does
 
@@ -58,7 +60,7 @@ Permission failures are silent - the source system leaves the data out instead o
 The connector's logs carry the failing request and response - see [Permission errors](/guides/troubleshooting/permission-errors).
 
 
-## If this didn't work
+## Frequently Asked Questions
 
 <AccordionGroup>
   <Accordion title="Excluded fields still appear">

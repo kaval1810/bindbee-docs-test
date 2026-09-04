@@ -68,19 +68,35 @@
             "group": "Reading & Writing Data",
             "pages": [
               "guides/reading-writing/overview",
-              "guides/reading-writing/querying-data",
               {
-                "group": "Data Basics",
-                "icon": "table-2",
+                "group": "Reading data",
+                "icon": "arrow-down-to-line",
                 "pages": [
-                  "guides/reading-writing/record-identity",
-                  "guides/reading-writing/enum-values"
+                  "guides/reading-writing/reading-data",
+                  "guides/reading-writing/reading-data/filters",
+                  "guides/reading-writing/reading-data/expand",
+                  "guides/reading-writing/reading-data/modified-after"
+                ]
+              },
+              {
+                "group": "Writing data",
+                "icon": "arrow-up-to-line",
+                "pages": [
+                  "guides/reading-writing/writing-data",
+                  "guides/reading-writing/writing-data/meta-apis"
                 ]
               },
               "guides/reading-writing/syncing",
               "guides/reading-writing/raw-data",
               "guides/reading-writing/webhooks",
-              "guides/reading-writing/meta-apis"
+              {
+                "group": "Others",
+                "icon": "scroll-text",
+                "pages": [
+                  "guides/reading-writing/record-identity",
+                  "guides/reading-writing/enum-values"
+                ]
+              }
             ]
           },
           {
@@ -824,7 +840,7 @@
     },
     {
       "source": "/explanation/meta-api-schema-discovery",
-      "destination": "/guides/reading-writing/meta-apis"
+      "destination": "/guides/reading-writing/writing-data/meta-apis"
     },
     {
       "source": "/explanation/passthrough-when-and-why",
@@ -868,7 +884,7 @@
     },
     {
       "source": "/concepts/meta-api-schema-discovery",
-      "destination": "/guides/reading-writing/meta-apis"
+      "destination": "/guides/reading-writing/writing-data/meta-apis"
     },
     {
       "source": "/concepts/passthrough-when-and-why",
@@ -948,7 +964,7 @@
     },
     {
       "source": "/concepts/how-meta-apis-work",
-      "destination": "/guides/reading-writing/meta-apis"
+      "destination": "/guides/reading-writing/writing-data/meta-apis"
     },
     {
       "source": "/concepts/how-syncing-works",
@@ -1008,7 +1024,7 @@
     },
     {
       "source": "/concepts/write-support",
-      "destination": "/guides/reading-writing/meta-apis"
+      "destination": "/guides/reading-writing/writing-data/meta-apis"
     },
     {
       "source": "/explanation/environments/overview",
@@ -1136,7 +1152,7 @@
     },
     {
       "source": "/meta-apis-for-write-operations",
-      "destination": "/guides/reading-writing/meta-apis"
+      "destination": "/guides/reading-writing/writing-data/meta-apis"
     },
     {
       "source": "/explanation/integration-variants",
@@ -1180,7 +1196,7 @@
     },
     {
       "source": "/how-to/reading-data/filter-with-modified-after",
-      "destination": "/guides/reading-writing/querying-data"
+      "destination": "/guides/reading-writing/reading-data/modified-after"
     },
     {
       "source": "/how-to/sync-control/change-sync-frequency",
@@ -1216,15 +1232,15 @@
     },
     {
       "source": "/explanation/write-support",
-      "destination": "/guides/reading-writing/meta-apis"
+      "destination": "/guides/reading-writing/writing-data/meta-apis"
     },
     {
       "source": "/how-to/writing-data-back/check-write-support",
-      "destination": "/guides/reading-writing/meta-apis"
+      "destination": "/guides/reading-writing/writing-data/meta-apis"
     },
     {
       "source": "/how-to/writing-data-back/fetch-a-write-schema",
-      "destination": "/guides/reading-writing/meta-apis"
+      "destination": "/guides/reading-writing/writing-data/meta-apis"
     },
     {
       "source": "/how-to/data-model/map-a-custom-field-from-the-dashboard",
@@ -1367,8 +1383,16 @@
       "destination": "/guides/reading-writing/overview"
     },
     {
+      "source": "/guides/reading-writing/querying-data",
+      "destination": "/guides/reading-writing/reading-data"
+    },
+    {
+      "source": "/guides/reading-writing/meta-apis",
+      "destination": "/guides/reading-writing/writing-data/meta-apis"
+    },
+    {
       "source": "/how-to/reading-data/filter-and-narrow-a-collection",
-      "destination": "/guides/reading-writing/querying-data"
+      "destination": "/guides/reading-writing/reading-data/filters"
     },
     {
       "source": "/explanation/record-identity",
@@ -1392,7 +1416,7 @@
     },
     {
       "source": "/explanation/how-meta-apis-work",
-      "destination": "/guides/reading-writing/meta-apis"
+      "destination": "/guides/reading-writing/writing-data/meta-apis"
     },
     {
       "source": "/explanation/how-custom-fields-work",

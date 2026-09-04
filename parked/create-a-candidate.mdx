@@ -9,7 +9,7 @@ ATS is the write-heavy category - most integrations that touch it push candidate
 <Info>
   **Before you start**
 
-  - You have confirmed the integration supports candidate writes - see [Check write support](/guides/reading-writing/meta-apis). Probe `GET /api/ats/v1/candidates/create/meta`.
+  - You have confirmed the integration supports candidate writes - see [Check write support](/guides/reading-writing/writing-data/meta-apis). Probe `GET /api/ats/v1/candidates/create/meta`.
   - You can generate a stable idempotency key per candidate.
 </Info>
 
@@ -24,7 +24,7 @@ ATS is the write-heavy category - most integrations that touch it push candidate
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    Build the body from this rather than hardcoding it - required fields differ per integration, and a required `integration_params` block means the write needs platform-specific values you must source first. See [Fetch a schema](/guides/reading-writing/meta-apis).
+    Build the body from this rather than hardcoding it - required fields differ per integration, and a required `integration_params` block means the write needs platform-specific values you must source first. See [Fetch a schema](/guides/reading-writing/writing-data/meta-apis).
 
     **Result:** The body this integration accepts.
   </Step>
@@ -108,11 +108,11 @@ ATS is the write-heavy category - most integrations that touch it push candidate
   </Step>
 </Steps>
 
-## If this didn't work
+## Frequently Asked Questions
 
 <AccordionGroup>
   <Accordion title="The write returned 501">
-    The Meta schema isn't published for this integration. That is not the same as the write being unsupported - see [Meta APIs](/guides/reading-writing/meta-apis#which-operations-have-a-schema).
+    The Meta schema isn't published for this integration. That is not the same as the write being unsupported - see [Meta APIs](/guides/reading-writing/writing-data/meta-apis#which-operations-have-a-schema).
   </Accordion>
 
   <Accordion title="The write returned 422 though the body matches the schema">
@@ -134,6 +134,6 @@ ATS is the write-heavy category - most integrations that touch it push candidate
 
 ## Related
 
-- [Check write support](/guides/reading-writing/meta-apis)
+- [Check write support](/guides/reading-writing/writing-data/meta-apis)
 - [Create Candidate](/ats/candidate/create-candidate) · [Write Attachment for Existing Candidate](/ats/candidate/write-attachment-for-existing-candidate)
 - [Candidates & applications](/guides/data-models/recruiting)

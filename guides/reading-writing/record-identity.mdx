@@ -36,7 +36,7 @@ The short version: **store both, key on `id`, index `remote_id` for lookups and 
 - **Get-by-id endpoints:** `GET /api/hris/v1/employees/{id}` takes the Bindbee`id`.
 - **The `ids` filter:** Pass one or more, comma separated with no spaces, to fetch a specific set in a single call.
 - **Relation fields:** `manager`, `company`, `groups`, `work_locations`, `pay_group` and `payroll_run_calendar` all return Bindbee IDs, not third-party ones. An employee's `manager` value resolves against the Employees endpoint by `id`.
-- **`expand`:** Expanding a relation resolves it through Bindbee IDs — see [Querying Data](/guides/reading-writing/querying-data).
+- **`expand`:** Expanding a relation resolves it through Bindbee IDs — see [Expand](/guides/reading-writing/reading-data/expand).
 
 **Properties**
 
@@ -122,7 +122,7 @@ A workable shape for the employees table on your side:
 | `connector_token` or an internal connector reference | your own | Scopes everything below it |
 | `remote_id` | `remote_id` | Indexed, nullable, unique only in combination with the connector |
 | `employee_number` | `employee_number` | Display and support only |
-| `modified_at` | `modified_at` | Drives your [delta syncs](/guides/reading-writing/querying-data) |
+| `modified_at` | `modified_at` | Drives your [delta syncs](/guides/reading-writing/reading-data/modified-after) |
 
 If you need a uniqueness constraint on the third-party identifier, make it composite: `(connector, remote_id)`. A unique index on `remote_id` alone will start throwing collisions as soon as you onboard a second customer.
 
@@ -157,7 +157,7 @@ Do not use `remote_id` as a primary key in a multi-tenant database. It is unique
 ## Related
 
 <CardGroup cols={2}>
-  <Card title="Querying Data" icon="funnel" href="/guides/reading-writing/querying-data">
+  <Card title="Reading data" icon="funnel" href="/guides/reading-writing/reading-data">
     Filters, `expand` and `modified_after` on list endpoints.
   </Card>
 

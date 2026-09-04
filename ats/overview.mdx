@@ -29,12 +29,12 @@ A connector token is category-scoped: an HRIS token used on an ATS path returns 
 
 Fifteen of the sixteen models accept creates - candidates, applications, jobs, interviews, scorecards, offers and the rest. That is a far larger write surface than HRIS, where four models accept writes.
 
-Only Create Candidate has a Meta endpoint (`GET /api/ats/v1/candidates/create/meta`). For the others the request shape comes from the reference page, and the per-integration variation a schema would have told you has to be found by attempting the write - see [Check write support](/guides/reading-writing/meta-apis).
+Only Create Candidate has a Meta endpoint (`GET /api/ats/v1/candidates/create/meta`). For the others the request shape comes from the reference page, and the per-integration variation a schema would have told you has to be found by attempting the write - see [Check write support](/guides/reading-writing/writing-data/meta-apis).
 
 ## Where to start
 
 <CardGroup cols={2}>
-  <Card title="Writing to an ATS" icon="user-plus" href="/guides/reading-writing/meta-apis">
+  <Card title="Writing to an ATS" icon="user-plus" href="/guides/reading-writing/writing-data/meta-apis">
     Fetch the request schema before you write - it varies by connector.
   </Card>
   <Card title="ATS models" icon="network" href="/guides/data-models/recruiting">

@@ -4,22 +4,19 @@ description: "What Development and Production keep separate, what they share des
 icon: "layers"
 ---
 
-{/* CONTENT PASS: merged from explanation/environments + how-to/setup/choose-an-environment. The two behaviour tables overlap - collapse to one in the content pass. */}
-
 ## Separate data, shared configuration
 
 | | Development | Production |
 | --- | --- | --- |
-| Connectors | Separate | Separate |
+| Connectors | Separate, unlimited | Separate, as per plan |
 | API keys | Separate | Separate |
 | Webhook deliveries | Separate | Separate |
-| Automatic sync | Initial sync only - no recurring schedule | Every 24 hours by default |
-| Connectors | Unlimited | As per plan |
+| Automatic sync | Initial sync only | Every 24 hours |
 | Logs | **Shared** | **Shared** |
 | Scope configuration | **Shared** | **Shared** |
 | Custom field definitions | **Shared** | **Shared** |
 
-
+**A key only unlocks its own environment.** A development key can't read, write, or create a Production connector, and a Production key can't touch a Development one - either way, that's a 401.
 
 ## Choosing one
 
@@ -35,7 +32,7 @@ icon: "layers"
 
 ### Development
 
-**The first sync runs at creation; after that, only when you trigger one.** Reads still work, so stale data looks like a bug - see [Syncing](/guides/reading-writing/syncing). Connectors are limited but not billed, and the key reaches sandbox systems only, so it's safe to share.
+**The first sync runs at creation; after that, only when you trigger one.** Reads still work, so stale data looks like a bug - see [Syncing](/guides/reading-writing/syncing). Connectors are unlimited and unbilled, and the key reaches sandbox systems only, so it's safe to share.
 
 ### Production
 
@@ -51,3 +48,4 @@ icon: "layers"
 - [Core concepts](/get-started/core-concepts) - where environments sit in the hierarchy
 - [Authentication](/api-reference/basics/authentication) - how keys are supplied
 - [Syncing](/guides/reading-writing/syncing) - why Development needs a manual trigger
+- [Embedded SDK](/guides/sdk/embedded-sdk) - how the key you sign with picks the connector's environment

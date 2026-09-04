@@ -1,0 +1,55 @@
+---
+title: "Writing data"
+sidebarTitle: "Overview"
+description: "How a write reaches the source system, why its shape varies by connector, and what to expect when one fails."
+icon: "pencil"
+---
+
+Writing does not go through Bindbee's copy. **A write is submitted to the source system and reports what came back** — which makes it asymmetric with reading in four ways.
+
+## How a write works
+
+```mermaid
+flowchart LR
+    YOU["Your application"] -->|"GET meta"| BB["Bindbee"]
+    BB -.->|"connector schema"| YOU
+    YOU -->|POST| BB
+    BB -->|write| SRC["Source system"]
+    SRC -.->|"write result"| BB
+    BB -.->|"write result"| YOU
+    SRC -->|"next sync"| COPY["Bindbee's copy"]
+```
+
+**The request shape is not fixed.** What a system requires to create an employee differs by system, and by tenant within a system. You ask the connector for the schema first - see [Meta APIs](/guides/reading-writing/writing-data/meta-apis).
+
+**Not every model accepts writes**, and support varies by integration - see [Model availability](/get-started/model-availability).
+
+**Failures are business failures.** Insufficient leave balance, a closed payroll period, a mandatory custom field - none are conditions Bindbee can evaluate in advance, and the useful message is the source system's own.
+
+**Your own write is not readable back straight away.** It lands in the source system, but reads still serve the copy - so it appears in a `GET` only once the next sync has picked it up. Force a resync if you need to confirm sooner - see [Syncing](/guides/reading-writing/syncing).
+
+<Warning>
+  Retrying a write without `X-Idempotency-Key` can create a duplicate in the customer's HRIS. A `5xx` may be returned *after* the record was created - see [Errors & Issues](/guides/troubleshooting/errors-and-issues).
+</Warning>
+
+---
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Meta APIs" icon="code" href="/guides/reading-writing/writing-data/meta-apis">
+    Fetch the exact request schema a connector expects before you write to it.
+  </Card>
+
+  <Card title="Create an employee" icon="user-plus" href="/get-started/use-cases/create-an-employee">
+    A write worked end to end, from schema lookup to confirmation.
+  </Card>
+
+  <Card title="Errors & Issues" icon="triangle-alert" href="/guides/troubleshooting/errors-and-issues">
+    What a failed write means, and which failures are worth retrying.
+  </Card>
+
+  <Card title="Passthrough" icon="arrow-right-left" href="/guides/extending/passthrough">
+    Reach an endpoint the unified write models do not cover.
+  </Card>
+</CardGroup>
