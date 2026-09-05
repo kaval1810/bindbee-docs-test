@@ -43,7 +43,7 @@ icon: "rocket"
 
 
 <Accordion icon="circle-question-mark" title="Need a third-party account?">
-  It depends on the integration you pick. Some work with a demo account. Others need a real one — for BambooHR, a free [trial account](https://www.bamboohr.com/signup/h2) works. If yours needs a real account, set it up first, since that can take some time.
+  It depends on the integration you pick. Some work with a demo account. Others need a real one — for BambooHR, a free [trial account](https://www.bamboohr.com/signup/h2) works.
 
   {/* VERIFY - decides whether this page is minutes or days. Does "+ Test Connector" have a first-party fixture mode returning data with no third-party account at all? Kombo ships exactly that, deterministic so it works in CI; Finch opens Connect in sandbox mode with good_user / good_pass. Bindbee has the primitive - the button is called Test Connector, and spec.json carries is_test_connector and for_test_connector ("scoped to a demo/test connector") - but whether it removes the dependency is unconfirmed. */}
 </Accordion>
@@ -55,10 +55,6 @@ icon: "rocket"
 <Step title="Wait for the first sync">
 
 The connector starts its initial sync the moment authorisation completes — a full read of every model in scope. It usually finishes in a couple of minutes.
-
-<Warning>
-  **Reads before it finishes return `200` with partial or empty results.** There is no error and nothing on the response to distinguish them.
-</Warning>
 
 Open the connector and watch the **Sync** panel. Wait until the run's **Status** reads **Synced**.
 
@@ -96,7 +92,7 @@ Every field the response can carry, with a sample payload, is on [Get Employees]
 2. You **synced** it, pulling that system's data into Bindbee.
 3. You called the **Unified API** with your API key and the connector token, and got normalised data.
 
-That is the core of every Bindbee integration. In production two things change: connectors sync on a schedule rather than on manual trigger, and your end users create them through Magic Link or Embedded SDK rather than you entering credentials. Checkout [How to connect](/get-started/how-to-connect).
+In production two things change: connectors sync on a schedule rather than on manual trigger, and your end users create them through Magic Link or Embedded SDK rather than you entering credentials. See [How to connect](/get-started/how-to-connect).
 
 ---
 

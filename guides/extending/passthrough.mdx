@@ -105,9 +105,7 @@ What comes back is BambooHR's payload with no unified envelope around it:
 
 On a Workday connector, the same requirement would mean a different path, parameter style and response shape.
 
-<Tip>
-  Note the path uses `remote_id`, not Bindbee's `id`. Vendor APIs know nothing about Bindbee's UUIDs. See [id vs remote\_id](/guides/reading-writing/record-identity).
-</Tip>
+The path uses `remote_id`, not Bindbee's `id` — vendor APIs know nothing about Bindbee's UUIDs. See [id vs remote\_id](/guides/reading-writing/record-identity).
 
 ## Variations
 
@@ -158,10 +156,10 @@ Change the envelope, not the approach. Each row below shows only what differs fr
 
 ## Response
 
-A `200` returns the third party's response as is, parsed according to `response_format`. Bindbee does not reshape the payload, rename fields, or apply the unified schema to it. There is no unified envelope, no `cursor`, no `items`. The shape is entirely the vendor's.
+A `200` returns the third party's response as is, parsed according to `response_format`. The shape is entirely the vendor's — their field names, their envelope, their pagination.
 
 <Note>
-  A `200` from this endpoint confirms Bindbee reached the vendor. Many APIs also return `200` alongside an error object in the body, in that system's own format - so inspect the payload, and handle status codes and error bodies per integration.
+  A `200` confirms Bindbee reached the vendor. Many APIs return `200` alongside an error object in the body, so read the payload to confirm the call did what you wanted.
 </Note>
 
 

@@ -1,10 +1,8 @@
 ---
 title: "How to connect"
-description: "Who authorises a connection, and the three ways one gets created - hosted Magic Link, Embedded SDK, or programmatically from your backend."
+description: "Who authorises a connection, and the two ways one gets created - a hosted Magic Link, or the Embedded SDK inside your product."
 icon: "link"
 ---
-
-{/* CONTENT PASS: merged from explanation/connector-lifecycle (connection half), explanation/magic-link, how-to/connections/embed-the-connection-flow (walkthrough only), how-to/connections/create-a-connector-programmatically. All three routes restated origin_id and the environment rule - both are now stated once, above the routes. */}
 
 ## Authorisation belongs to the customer
 
@@ -17,6 +15,8 @@ Both create a connector and put your customer's admin in control. **None lets th
 **The environment is fixed at creation.** A link made in Development creates a Development connector; a link token uses the environment of the API key behind it. Changing it later means asking support - see [Environments](/get-started/environments).
 
 **Set `origin_id` (Unique Customer ID) to an ID from your own system.** It comes back on every webhook, so events map to your customer with no lookup table. It can't be added later, so use an ID that won't change - not an email or company name.
+
+Renaming a connector changes its display name only, so match on `origin_id` and never on the name. Renames go through [support@bindbee.dev](mailto:support@bindbee.dev).
 
 ## Magic Link
 
@@ -38,7 +38,7 @@ A hosted page your customer opens to authorise their own system. You never handl
 
 {/* VERIFY: link lifetime and expiry behaviour. Confirm how long a generated Magic Link remains valid, what an end user sees after expiry, and whether a link is single-use or reusable. */}
 
-## Embedded Link/Programmatically
+## Embedded SDK
 
 The same flow inside your product, in your own branding, handing your backend the `connector_token` directly. See [Embedded SDK](/guides/sdk/embedded-sdk) for the full walkthrough.
 
@@ -46,16 +46,8 @@ The same flow inside your product, in your own branding, handing your backend th
 ## Frequently Asked Questions
 
 <AccordionGroup>
-  <Accordion title="The connector shows as incomplete">
-    The customer opened the link but didn't finish authorising. Incomplete connectors persist and appear alongside active ones, which skews counts - filter to **Active Connectors** when reviewing.
-  </Accordion>
-
   <Accordion title="The connector was created in the wrong environment">
     The environment follows the API key that created the link token, not anything in the frontend. It can be switched without the customer reconnecting, but not from the dashboard.
-  </Accordion>
-
-  <Accordion title="The integration slug is rejected">
-    Check hyphens versus underscores, and that the slug matches the category. Use the lookup endpoint rather than a hard-coded list - see [Integration & Coverage](/get-started/integrations).
   </Accordion>
 
   <Accordion title="onSuccess fired but API calls still return 403">
@@ -68,10 +60,6 @@ The same flow inside your product, in your own branding, handing your backend th
 
   <Accordion title="The customer's credentials were wrong, or have since changed">
     Don't issue a new link. Relink the existing connector, which preserves its ID and history - see [Connection Needing Relink](/guides/troubleshooting/connector-relink).
-  </Accordion>
-
-  <Accordion title="The integration needs credentials the customer has to generate first">
-    Some platforms require an API key, certificate, or private key created in their system before the link can be completed. The setup instructions for that platform list what's needed.
   </Accordion>
 </AccordionGroup>
 

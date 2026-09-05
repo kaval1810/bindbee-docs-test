@@ -8,9 +8,7 @@ Every HR, payroll, ATS and LMS system describes the same concept in its own word
 
 An **enum value** is Bindbee's answer to that. For a set of fields on the unified models, Bindbee defines a fixed vocabulary and maps each provider's value into it during sync. Your application reads `FULL_TIME` regardless of which connector is behind the request.
 
-<Tip>
-  Enum fields are the normalized layer. If you need the provider's own value, it is always available through `include_raw_data=true` or through [custom fields](/guides/extending/custom-fields).
-</Tip>
+Enum fields are the normalized layer. The provider's own value stays available through `include_raw_data=true` or through [custom fields](/guides/extending/custom-fields).
 
 ---
 
@@ -91,9 +89,7 @@ function labelForEmploymentType(value) {
 
 A reasonable pattern is to store the raw string, render documented values through your own label map, and log unrecognized values so you can decide whether they need product handling.
 
-<Info>
-A high proportion of unmapped values on one integration is worth investigating rather than accepting. It usually means a mapping gap affecting every customer on that system, not just the one who reported it.
-</Info>
+A high proportion of unmapped values on one integration usually means a mapping gap affecting every customer on that system, not just the one who reported it. Worth raising.
 
 ### Inspecting the original value
 

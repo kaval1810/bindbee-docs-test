@@ -105,29 +105,6 @@ When someone leaves, you need to revoke access, end coverage, and tell downstrea
   </Step>
 </Steps>
 
-## Frequently Asked Questions
-
-<AccordionGroup>
-  <Accordion title="Access was revoked while someone was on leave">
-    `LEAVE` was matched as terminal. It isn't a departure, and this is the most expensive false positive in the workflow.
-  </Accordion>
-
-  <Accordion title="Access ended before the person's last day">
-    You acted on the status change instead of the termination date. Schedule on the date.
-  </Accordion>
-
-  <Accordion title="Contractors ended without notice, or not at all">
-    `INACTIVE_EXTERNAL` was treated as an ordinary termination, or skipped. Decide deliberately which downstream actions apply to contractors.
-  </Accordion>
-
-  <Accordion title="An employee disappeared instead of going inactive">
-    Some platforms stop returning terminated records. That looks identical to a scope or permission change - check [Missing records](/guides/troubleshooting/missing-records) before treating absence as a departure.
-  </Accordion>
-
-  <Accordion title="Coverage was ended too early">
-    Employment status was used as the coverage signal. Read the benefit's end date instead.
-  </Accordion>
-</AccordionGroup>
 
 ## Related
 

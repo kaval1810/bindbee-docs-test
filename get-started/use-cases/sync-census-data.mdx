@@ -25,20 +25,10 @@ Pull the employee list a carrier needs to quote: who is eligible, their date of 
 <Steps>
   <Step title="Scope to what a census needs">
     Under **Configure → Scoping**, exclude national ID and bank info - a quote never needs them. Keep date of birth, home postcode and location, because carriers rate on those.
-
-    <Warning>
-      Scope is organisation-level and shared across environments - see [Restrict what syncs](/get-started/scoping). It is not per-customer.
-    </Warning>
-
-    **Result:** A field set matched to the carrier's requirement.
   </Step>
 
   <Step title="Read only after a completed sync">
     Gate the extract on `connector_synced`, not a timer - see [Trigger a job on completion](/guides/reading-writing/syncing). A census read mid-sync is quietly short.
-
-    Save the sync timestamp with the extract. A quote is always as of a date.
-
-    **Result:** A stable dataset with an as-of date.
   </Step>
 
   <Step title="Fetch the population">
@@ -49,73 +39,29 @@ Pull the employee list a carrier needs to quote: who is eligible, their date of 
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    Filters are inclusive only, so fetch each agreed status separately. `ACTIVE_EXTERNAL` (contractors) is usually out; `LEAVE` is usually in, because those employees keep their eligibility.
-
-    `expand=work_locations` returns the rating geography inline instead of N follow-up calls. Location is **BETA**, so pin the fields you use and re-check them later.
-
-    **Result:** The quoted population.
+    Filters as per data you required.
   </Step>
 
   <Step title="Page to the end">
     Follow the cursor until it runs out - see [Pagination](/api-reference/basics/pagination). A census that stops at page one looks like a success.
 
-    **Result:** Every employee in the population.
   </Step>
 
   <Step title="Add dependents">
     Read dependent benefits for who is actually covered, and dependents for their dates of birth. Counting dependent records instead of coverage inflates the census - see [Benefits](/guides/data-models/benefits).
-
-    **Result:** Household composition, priced correctly.
   </Step>
 
-  <Step title="Check the rating fields are filled">
-    Rating fields return `null` rather than erroring, so an incomplete census looks complete. Check before you deliver.
-
-    ```python
-    REQUIRED = ["date_of_birth", "employment_status"]
-    gaps = {f: sum(1 for e in census if not e.get(f)) for f in REQUIRED}
-    # postal_code is nested inside home_location, not a top-level field
-    gaps["postal_code"] = sum(1 for e in census if not (e.get("home_location") or {}).get("postal_code"))
-    if any(gaps.values()):
-        raise CensusIncomplete(gaps)   # a permission gap, not an empty workforce
-    ```
-
-    A field null on every record is a permission problem - see [Origin-system errors](/guides/troubleshooting/errors#origin-system-errors).
-
-    **Result:** A census you can hand to a carrier.
-  </Step>
-
-  <Step title="Break the count down by entity">
-    ```bash
-    curl --request GET \
-      --url 'https://api.bindbee.dev/api/hris/v1/companies?page_size=200' \
-      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
-      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
-    ```
-
-    Group employees by `company_id` and confirm which legal entities belong in the quote. The credentials may cover more or fewer entities than the customer assumes - see [Record counts](/guides/troubleshooting/record-counts).
-
-    **Result:** A count the customer recognises, per entity.
-  </Step>
 </Steps>
 
 ## Frequently Asked Questions
 
 <AccordionGroup>
   <Accordion title="The headcount doesn't match the customer's">
-    Almost always the population definition - contractors included, leavers retained, or one person holding several employments. See [Record counts](/guides/troubleshooting/record-counts).
+    Check that your [filters](/guides/reading-writing/reading-data/filters) are the right ones for the population you want, that you paged to the end so the full set loaded - see [Pagination](/api-reference/basics/pagination) - and that the sync had finished before you read.
   </Accordion>
 
-  <Accordion title="date_of_birth or postcode is null across the board">
-    A sensitive-data permission. The census will look complete and price wrong.
-  </Accordion>
-
-  <Accordion title="The census is short by a few hundred">
-    Pagination stopped early, or it was read mid-sync. Gate on `connector_synced` and follow the cursor to the end.
-  </Accordion>
-
-  <Accordion title="A field you need was scoped out">
-    Bring it back into scope and resync. The data was never collected, so you can't recover it retroactively.
+  <Accordion title="Missing fields or data?">
+    Verify whether [scoping](/get-started/scoping) is enabled. If it is, then check the permissions for the customer integration.
   </Accordion>
 </AccordionGroup>
 

@@ -40,9 +40,7 @@ You land on the field's page, which prompts you to create the first mapping. The
 | **for Specific Connector** | Selected connectors only |
 | **for Integration** | Every connector using that integration |
 
-<Info>
-  Where both exist for the same field, the connector mapping wins on that connector. See [Type of mapping](/guides/extending/custom-fields#type-of-mapping).
-</Info>
+Where both exist for the same field, the connector mapping wins on that connector — see [Type of mapping](/guides/extending/custom-fields#type-of-mapping).
 
 ## Step 3: Pick the source
 
@@ -66,7 +64,7 @@ Search a real employee, then choose a value from their raw payload. Because you 
 </Frame>
 
 <Warning>
-  **Live data is only available for the Employee model on connector-level custom fields.** We'll be adding support for other models soon. For any other model, or for an integration-level mapping, use the JSON Path tab.
+  **Live data is only available for the Employee model on connector-level custom fields.** For any other model, or for an integration-level mapping, use the JSON Path tab.
 </Warning>
 
 ### JSON Path
@@ -92,11 +90,7 @@ Select the field, then press **Map field**. Save the mapping row with the tick.
 
 **The field is populated on the connector's next sync**, not immediately. To see it sooner, [force a resync](/guides/reading-writing/syncing#forcing-a-resync).
 
-Once it resolves, request it with `include_custom_fields=true` — see [Retrieve custom fields](/guides/extending/custom-fields#retrieve-custom-fields).
-
-<Warning>
-  An incorrect path does not raise an error. The API returns `"INVALID_JSON_PATH"` in place of the value, so confirm the mapping resolves before relying on it.
-</Warning>
+Once it resolves, request it with `include_custom_fields=true` — see [Retrieve custom fields](/guides/extending/custom-fields#retrieve-custom-fields). Confirm the mapping resolves before relying on it: an incorrect path [returns `INVALID_JSON_PATH`](/guides/extending/custom-fields) rather than an error.
 
 ## Next steps
 

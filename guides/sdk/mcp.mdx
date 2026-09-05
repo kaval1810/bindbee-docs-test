@@ -120,9 +120,7 @@ head -200 /custom-fields/api-workflow.mdx   # read a page
  
 The server also exposes a skill resource. MCP gives an agent access to the docs; the skill tells it how to use them, covering auth headers, base URLs, pagination, rate limits, and the common endpoints per category. Clients that support MCP resources load it automatically, and the file is readable at [`/skill.md`](https://docs.bindbee.dev/skill.md) for tools that do not.
  
-<Note>
-  The skill is generated from these docs and regenerates as they change, so it tracks published content rather than being maintained alongside it.
-</Note>
+The skill is generated from these docs and regenerates as they change, so it always tracks published content.
 
 ## Try it
 
@@ -134,9 +132,7 @@ Once connected, ask in your own words:
 * Set up a custom field that pulls a badge number out of raw_data.
 * What is the difference between id and remote_id in a passthrough call?
 
-<Tip>
-  In an agentic coding tool this pairs with your own codebase. The assistant reads your integration code and the Bindbee reference in the same turn, so it writes against the real schema rather than a remembered one.
-</Tip>
+In an agentic coding tool this pairs with your own codebase. The assistant reads your integration code and the Bindbee reference in the same turn, so it writes against the real schema rather than a remembered one.
 
 
 ## Related
