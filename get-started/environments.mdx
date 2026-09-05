@@ -18,6 +18,8 @@ icon: "layers"
 
 **A key only unlocks its own environment.** A development key can't read, write, or create a Production connector, and a Production key can't touch a Development one - either way, that's a 401.
 
+**A connector can still be moved between the two.** It keeps its authorisation and every ID you have stored, so nobody reconnects - switch your calls to the target environment's API key. Email [support@bindbee.dev](mailto:support@bindbee.dev); it can't be done from the dashboard.
+
 ## Choosing one
 
 | Use Development when | Use Production when |
@@ -27,16 +29,6 @@ icon: "layers"
 | Internal test accounts, however realistic | You need syncs to run unattended |
 | Validating field mappings | |
 
-
-## What behaves differently
-
-### Development
-
-**The first sync runs at creation; after that, only when you trigger one.** Reads still work, so stale data looks like a bug - see [Syncing](/guides/reading-writing/syncing). Connectors are unlimited and unbilled, and the key reaches sandbox systems only, so it's safe to share.
-
-### Production
-
-**Syncs run on their own, every 24 hours by default** - adjustable, but not from the dashboard. So a change can take a day to show up; webhooks tell you when a sync finishes, they don't make it happen sooner. Connectors are counted and billed, test ones included.
 
 <Warning>
 **Regenerate the key and the old one stops working immediately**, everywhere at once.

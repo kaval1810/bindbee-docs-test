@@ -5,9 +5,9 @@ description: "How the pieces fit together, what each term means, and what a bind
 icon: "lightbulb"
 ---
 
-Bindbee has five building blocks: **an integration is the vendor's system, like BambooHR. A connector is link between to your customer and vendor system.**
+Two terms carry most of the weight: **an integration is the vendor's system, like BambooHR. A connector is one customer's link to that system.**
 
-Change something on the integration and every customer on same integration affects it. Change it on the connector and only that one customer does.
+Change something at the integration level and it affects every customer on that integration. Change it on the connector and only that one customer is affected.
 
 
 ## Glossary
@@ -24,9 +24,9 @@ Every term the docs use with a specific meaning. This table is the single defini
 | **Organisation** | Your Bindbee account |
 | **[Environment](/get-started/environments)** | Development or Production. Separate connectors, keys and logs; **shared** scope and custom fields |
 | **[API key](/api-reference/basics/authentication)** | Authenticates your organisation. Sent as `Authorization: Bearer`, on every request |
-| **[Connector token](/api-reference/basics/authentication)** | Tells Bindbee whose data you want. Sent as `X-Connector-Token` on any request that reads or writes specific connector |
+| **[Connector token](/api-reference/basics/authentication)** | Tells Bindbee whose data you want. Sent as `X-Connector-Token` on any request that reads or writes a specific connector |
 | **[Scope](/get-started/scoping)** | The models and fields Bindbee is allowed to fetch. A field outside scope is absent from responses, not `null` |
-| **[Sync](/guides/reading-writing/syncing)** | The job that fetches the data from the source system and puts it in Bindbee's shape. Runs on a automatic in Production; and manual in Development connector |
+| **[Sync](/guides/reading-writing/syncing)** | The job that fetches the data from the source system and puts it in Bindbee's shape. Automatic in Production, manual in Development |
 | **[Custom field](/guides/extending/custom-fields)** | A value the unified model doesn't carry, pulled out of the [raw payload](/guides/reading-writing/raw-data) with a [JMESPath](https://jmespath.org/) expression |
 | **[Magic Link](/get-started/how-to-connect)** | A hosted page where your customer authorises their own system, with no front-end code on your side |
 | **[Passthrough](/guides/extending/passthrough)** | A request forwarded to the source system's own API, using the credentials already on a connector |
@@ -39,6 +39,6 @@ To reach one customer's data you send both: the API key says who you are, the co
 ## Related
 
 - [Environments](/get-started/environments) - what the two environments separate, and what they share
-- [How to connect](/get-started/how-to-connect) - the three ways a connector is created
+- [How to connect](/get-started/how-to-connect) - the two ways a connector is created
 - [Scoping](/get-started/scoping) - what organisation-level scope controls
 - [Authentication](/api-reference/basics/authentication) - how the two tokens are supplied

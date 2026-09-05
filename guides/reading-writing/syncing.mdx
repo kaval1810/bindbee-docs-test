@@ -4,9 +4,7 @@ description: "The initial sync, the recurring schedule, what Development connect
 icon: "refresh-cw"
 ---
 
-Bindbee does not proxy your requests to the third-party system in real time. It syncs data from each connected system on a schedule, normalizes it into the unified models, and stores it. **Your API calls read from that stored copy.**
-
-That is what makes reads fast and predictable: they are not subject to the provider's rate limits or downtime, and every response arrives in the same shape whichever system is behind it. The trade is that data is only as current as the last completed sync.
+Bindbee syncs data from each connected system on a schedule, normalizes it into the unified models, and stores it. **Your API calls read from that stored copy**, so data is as current as the last completed sync.
 
 ## The initial sync
 
@@ -20,7 +18,7 @@ flowchart LR
 
 The initial sync starts the moment your end user completes authentication, however the connection was created — see [How to connect](/get-started/how-to-connect). Until it finishes, reads return `200` with partial data and nothing on the response says so.
 
-You can watch its progress on the connector. Note that this endpoint scopes by a **query parameter**, not the usual header:
+You can watch its progress on the connector. This endpoint scopes by a **query parameter**, not the usual header:
 
 ```bash
 curl -G https://api.bindbee.dev/api/hris/v1/connectors \
@@ -49,9 +47,7 @@ Two status fields appear here and they answer different questions:
 
 A connector can be `COMPLETE` and still hold no data, because the two are independent.
 
-<Tip>
-  Rather than polling the connector, subscribe to the `connector_synced` [webhook](/guides/reading-writing/webhooks). It fires when a sync job finishes successfully, which is the cleanest signal that a newly connected account is ready to use in your product.
-</Tip>
+Rather than polling, subscribe to the `connector_synced` [webhook](/guides/reading-writing/webhooks). It fires when a sync job finishes successfully — the cleanest signal that a newly connected account is ready to use.
 
 ## The recurring schedule
 
@@ -62,14 +58,14 @@ After the initial sync, a Production connector syncs again automatically, **once
 Every webhook payload carries a `sync` object identifying the job behind it, and `sync_type` is `AUTOMATED` for a scheduled run or `MANUAL` for one you triggered. That distinction is worth using: if you force a sync in response to a user action, you can match the resulting webhook back to that action rather than treating it as routine traffic. See [Events & payloads](/guides/reading-writing/webhooks).
 
 <Note>
-  Frequency bounds when data *changes*, not how often you can read. Call the API as often as you like within your [rate limits](/api-reference/basics/rate-limits) — the data simply will not differ between syncs.
+  Frequency bounds when data *changes*, not how often you can read. Call the API as often as you like within your [rate limits](/api-reference/basics/rate-limits) — the data will not differ between syncs.
 </Note>
 
 ## Development connectors
 
 Development connectors run the same initial sync as Production ones: it starts on authorisation and needs nothing from you. What they do not have is the **recurring** schedule that follows it. After that first run the data is frozen until you trigger a sync yourself.
 
-This is the single most common source of "the data looks stale" during development. See [Environments](/get-started/environments) for everything else the two differ on.
+See [Environments](/get-started/environments) for everything else the two differ on.
 
 ## Forcing a resync
 
@@ -96,7 +92,12 @@ Unlike the connector list above, [this endpoint](/api-reference/connectors/resyn
 
 ## Triggering a job on completion
 
-Reading on a timer instead goes wrong in four ways: a paginated walk shifts under you mid-sync, counts come back short, a census extract is quietly incomplete, and a stalled connector looks identical to a quiet one.
+Reading on a timer instead goes wrong in four ways:
+
+* A paginated walk shifts under you mid-sync.
+* Counts come back short.
+* A census extract is quietly incomplete.
+* A stalled connector looks identical to a quiet one.
 
 Gate the work on `connector_synced` rather than a clock. The event names the connector and the sync job, so a handler can process exactly what finished — and pair it with `modified_after` to read only what that run touched, as in [modified_after](/guides/reading-writing/reading-data/modified-after).
 

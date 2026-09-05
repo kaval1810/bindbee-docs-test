@@ -4,18 +4,9 @@ description: "Every supported system, its slug and connection type, and how to c
 icon: "plug"
 ---
 
-{/* CONTENT PASS: merged from integrations, how-to/setup/look-up-an-integration-slug. Slug guidance now appears twice - the primary has a short "Using a slug" section the appended page covers in full. */}
-
-
 Use your browser's find (`Ctrl`/`⌘` + `F`) to search this page for a system name or slug.
 
-<Info>
-  **Slugs** are the identifiers you pass as `integration` when creating a
-  `link_token`. **Model and field support varies by connector** - and, on SFTP
-  connectors, by the individual customer's export template. To determine exactly
-  what a *specific* connector returns, see
-  [Check a connector's actual coverage](#check-a-connectors-actual-coverage).
-</Info>
+**Slugs** are the identifiers you pass as `integration` when creating a `link_token`. Model and field support varies by connector - and, on SFTP connectors, by the individual customer's export template. To see exactly what a *specific* connector returns, see [Check a connector's actual coverage](#check-a-connectors-actual-coverage).
 
 ## Connection types
 
@@ -209,12 +200,7 @@ Pass `category` and `integration` together when creating a `link_token`:
 
 Full flow: Connect Your First Customer.
 
-<Tip>
-  Rather than hardcoding this list in your product, build your integration picker
-  from the live `/api/{category}/v1/integrations` endpoint below. It stays
-  correct as connectors are added and reflects what is actually enabled for your
-  organization.
-</Tip>
+Rather than hardcoding this list, build your integration picker from the live `/api/{category}/v1/integrations` endpoint below. It stays correct as connectors are added, and reflects what is actually enabled for your organization.
 
 ---
 
@@ -307,12 +293,7 @@ Contact `support@bindbee.dev` with:
 - Whether you need read, write, or both
 - How many customers this affects
 
-<Tip>
-  If you find yourself using [passthrough](/guides/extending/passthrough) for the same
-  concept across several connectors, that is a strong signal the concept belongs
-  in the unified model. Raising it removes the per-vendor code for you and for
-  everyone else.
-</Tip>
+If you find yourself using [passthrough](/guides/extending/passthrough) for the same concept across several connectors, raise it with us — that concept probably belongs in the unified model.
 
 ## Finding and using a slug
 
@@ -336,9 +317,7 @@ Integrations are identified by a slug - `bamboohr`, `adp`, `sap-success-factors`
 
 **The slug - not the vendor's brand name - identifies the system a connector talks to.** It appears in webhook payloads, in custom field configuration, and on the connector itself. When a customer reports a problem, the slug is the first thing to establish: behaviour attributed to "Rippling" may be true of one Rippling integration and not the other.
 
-<Info>
-This is also why a custom field mapping that works for one customer fails for another on what looks like the same system. An organisation-scoped mapping attaches to a slug, so two customers on different variants of the same vendor are on different integrations - and each needs its own mapping.
-</Info>
+An organisation-scoped custom field mapping attaches to a slug, so two customers on different variants of the same vendor need separate mappings — which is why a mapping can work for one customer and fail for another on what looks like the same system.
 
 ### Steps
 
@@ -360,13 +339,7 @@ This is also why a custom field mapping that works for one customer fails for an
 
     This is filtered to what your organization actually has enabled, which makes it more useful than the published reference list - it won't return something you can't connect. The full schema is on [List Integrations](/api-reference/custom-fields/list-integrations).
 
-    <Note>
-      [Get Integrations](/api-reference/integrations/get-integrations) is a
-      different endpoint with a different shape - it is paginated, scoped to one
-      category by its path, and names the slug field `integration_slug` inside
-      an `items` array rather than `slug` inside `integrations`. It carries no
-      `display_name` or `categories`. Don't treat the two as interchangeable.
-    </Note>
+    [Get Integrations](/api-reference/integrations/get-integrations) is a different endpoint, not an alias for this one. It is paginated, scoped to one category by its path, and names the slug field `integration_slug` inside an `items` array rather than `slug` inside `integrations`. It carries no `display_name` or `categories`.
 
     **Result:** Valid slugs for your account.
   </Step>
@@ -378,11 +351,7 @@ This is also why a custom field mapping that works for one customer fails for an
 
     Others change slug per category. SAP SuccessFactors is `sap-success-factors` for HRIS and ATS but `sap_sf_lms` for LMS.
 
-    <Warning>
-      Don't derive one category's slug from another's. A vendor's HRIS slug sent
-      with `"category": "LMS"` is rejected as invalid whenever the LMS connector
-      has a slug of its own.
-    </Warning>
+    So don't derive one category's slug from another's. A vendor's HRIS slug sent with `"category": "LMS"` is rejected as invalid whenever the LMS connector has a slug of its own.
 
     Read both values from the same row of the lookup response - the `categories` array on each item is what the org has enabled for that specific slug.
 

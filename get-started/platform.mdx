@@ -4,7 +4,7 @@ description: "A tour of the Bindbee Dashboard - what each area does, and where t
 icon: "layout-dashboard"
 ---
 
-{/* CONTENT PASS: absorbed how-to/setup/move-a-connector-between-environments and how-to/connections/rename-or-delete-a-connector as labels under Connectors, per the finalised structure. Scoping and Issues sections removed - they are owned by Scoping and Errors & Issues. Screenshots still needed for Custom Fields and Webhooks. */}
+{/* TODO: screenshots still needed for the Custom Fields and Webhooks sections - the page is text-only there while every other section has a Frame. */}
 
 ## Dashboard
 
@@ -47,14 +47,6 @@ A connector is one customer's authorised link to one third-party system - **one 
   className="block"
 />
 </Frame>
-
-### Moving, renaming and deleting
-
-| Action | What happens | How |
-| --- | --- | --- |
-| **Move between environments** | Keeps the authorisation and every ID you have stored - nobody reconnects. Switch those calls to the target environment's API key. | Ask support |
-| **Rename** | Changes the display name only. Match connectors on `origin_id`, never on the name. | Ask support |
-| **Delete** | Discards the synced data *and the record IDs built from it*. Fine for an abandoned, duplicate or churned connector; [relink](/guides/troubleshooting/connections-to-relink) expired credentials and [resync](/guides/reading-writing/syncing) bad data instead. | [Delete Connector](/api-reference/connectors/delete-connector) |
 
 ---
 
@@ -125,7 +117,7 @@ What has changed in the Bindbee platform - new integrations, new models and fiel
 
 <CardGroup cols={2}>
   <Card title="How to connect" icon="link" href="/get-started/how-to-connect">
-    The three ways a connector gets created - Magic Link, Embedded SDK, or your own backend.
+    The two ways a connector gets created - a hosted Magic Link, or the Embedded SDK.
   </Card>
   <Card title="API basics" icon="square-terminal" href="/api-reference/basics/authentication">
     Authentication, pagination, rate limits and sync frequency.

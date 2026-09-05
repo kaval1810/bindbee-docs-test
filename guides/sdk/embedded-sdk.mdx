@@ -117,9 +117,7 @@ Pass the token to the SDK. Opening the flow mounts a full-screen overlay on top 
 
     `initialize()` throws if `linkToken` is missing, and `open()` throws if called before `initialize()`. Call `window.BindbeeEmbed.destroy()` to remove the overlay and its message listener.
 
-    <Note>
-      `integrity` verifies the script has not been tampered with, and `crossorigin="anonymous"` is required for that check to run. An unminified build is at `https://cdn.bindbee.dev/initialize.js`, with integrity `sha512-2Rzjv7TfBrXNCgB1wLTnpZupTZh6/JS0tQkKTGRu9fC7IAK4ahbPzcu29VUGHOmRPquLNU6RkLyt6yVuKR60DQ==`.
-    </Note>
+    `integrity` verifies the script has not been tampered with, and `crossorigin="anonymous"` is required for that check to run. An unminified build is at `https://cdn.bindbee.dev/initialize.js`, with integrity `sha512-2Rzjv7TfBrXNCgB1wLTnpZupTZh6/JS0tQkKTGRu9fC7IAK4ahbPzcu29VUGHOmRPquLNU6RkLyt6yVuKR60DQ==`.
   </Tab>
 </Tabs>
 
@@ -154,9 +152,7 @@ Authorization: Bearer YOUR_BINDBEE_API_KEY
 
 Store the `connector_token` against the customer record you identified with `origin_id`. It is the credential every later call uses, as the `X-Connector-Token` header on unified endpoints, [Passthrough](/guides/extending/passthrough), and [custom fields](/guides/extending/custom-fields).
 
-<Warning>
-  This exchange also uses your API key, so it belongs on your server. Treat the returned `connector_token` as a secret: it grants access to that customer's HR data.
-</Warning>
+This exchange uses your API key, so it belongs on your server too. Treat the returned `connector_token` as a secret: it grants access to that customer's HR data.
 
 ## Behaviour worth knowing
 
