@@ -1,0 +1,106 @@
+---
+title: "Find a Missing Record"
+sidebarTitle: "Missing records"
+description: "Find why a record you expected never arrived."
+icon: "file-search"
+---
+
+A record the customer can see in their HRIS is absent from Bindbee. The steps run cheapest first.
+
+<Info>
+  **Before you start**
+
+  - You have something identifying the record: a name, work email, employee number, or the source system's own ID.
+</Info>
+
+## Steps
+
+<Steps>
+  <Step title="Rule out your own filters">
+    Fetch without filters and search the result before anything else.
+
+    The usual culprits: an `employment_status` filter excluding a status you didn't expect, a `modified_after` watermark from a run that already consumed the record, or a page walk that terminated early. See [Pagination](/api-reference/basics/pagination).
+
+    **Result:** You know whether the record is absent or filtered out.
+  </Step>
+
+  <Step title="Check the sync ran after the record was created">
+    A record created upstream after the last sync doesn't exist in Bindbee yet - see [Sync status](/guides/troubleshooting/sync-status).
+
+    On a Development connector nothing syncs until you trigger it.
+
+    **Result:** You know whether the data has had a chance to arrive.
+  </Step>
+
+  <Step title="Read the model's status on the last run">
+    Read the run's per-model breakdown. The status on the model you're missing is the answer.
+
+    | Model status | Why the record is absent |
+    | --- | --- |
+    | Skipped | The model is switched off in [scoping](/get-started/scoping) |
+    | Not Supported | Bindbee doesn't unify this model for this integration yet |
+    | Pending | The run hasn't reached this model yet |
+    | Failed | The model errored - see [Errors](/guides/troubleshooting/errors) |
+    | Synced | A related model failed on the same run |
+
+    **Result:** You know whether the model was loaded. The first two rows settle it here.
+  </Step>
+
+  <Step title="Check permission">
+    Many platforms answer a credentials gap with a filtered set, so a whole category of records goes silently absent.
+
+    The signature is a model returning consistently fewer records than expected - see [Origin-system errors](/guides/troubleshooting/errors#origin-system-errors).
+
+    **Result:** You know whether the source system is withholding the record.
+  </Step>
+
+  <Step title="Check whether it's excluded upstream">
+    The record may not be returned by the source system's API at all: outside the scope of the report the integration reads, in a status the source excludes, or in a legal entity the credentials don't cover.
+
+    Query the source system directly through [Passthrough](/guides/extending/passthrough) to confirm whether their API returns it.
+
+    **Result:** A definitive answer about where the record stops.
+  </Step>
+
+  <Step title="Check the logs">
+    For a record that should have synced, the logs hold the request Bindbee made for that model and whatever the source system returned. See [Logs](/guides/troubleshooting/logs).
+
+    **Result:** Either the upstream response explaining the absence, or confirmation that Bindbee never requested it.
+  </Step>
+</Steps>
+
+## Records that were there and disappeared
+
+**Terminated employees** stay in the response with a terminal status on most platforms. Where they vanish entirely, the source excludes terminated records from its API.
+
+**Identifier changes.** If the source reissued the record's identifier, it may now be present under a different Bindbee `id` - see [Duplicate records](/guides/troubleshooting/duplicate-records).
+
+**File-based connectors.** Each delivery is a point-in-time snapshot. A record absent from the latest file may mean it was removed upstream, or that the file was generated differently.
+
+{/* VERIFY: confirm whether snapshot-based disappearance handling is specific to certain file-based integrations or general to all of them. */}
+
+## Frequently Asked Questions
+
+<AccordionGroup>
+  <Accordion title="The record appears in raw_data but not the unified response">
+    It synced but didn't map to a unified record: a required field the unified model needs is absent upstream. Report it with the connector ID and the raw payload.
+  </Accordion>
+
+  <Accordion title="It appears for one connector and not another at the same company">
+    Connectors are independent, and credentials differ in the populations they cover.
+  </Accordion>
+
+  <Accordion title="It's missing from a related model only">
+    Models sync independently. An employee can exist while their employment or benefit records don't.
+  </Accordion>
+
+  <Accordion title="Counts are close but not exact">
+    That's reconciliation rather than a missing record - see [Record counts](/guides/troubleshooting/record-counts).
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Sync status](/guides/troubleshooting/sync-status) - the per-model breakdown that answers most of these
+- [Duplicate records](/guides/troubleshooting/duplicate-records) - when a record appears twice instead of not at all
+- [Scoping](/get-started/scoping) - the reasons data is absent with no error

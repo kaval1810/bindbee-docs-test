@@ -14,3 +14,5 @@ This guide demonstrates how to use the Resync API to force a sync of a connector
   a resync in specific cases, such as when a user manually initiates a sync from
   your application (e.g., by clicking a “Sync” button).
 </Warning>
+
+To work out whether a resync is the right fix, read the connector's per-model breakdown first - see [Sync status](/guides/troubleshooting/sync-status). Resyncing clears transient and size-related failures; a permission gap needs [fixing upstream](/guides/troubleshooting/errors#origin-system-errors) before the next run will help.

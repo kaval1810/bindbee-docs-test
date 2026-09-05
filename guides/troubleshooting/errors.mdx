@@ -1,0 +1,203 @@
+---
+title: "Find the Source of an Error"
+sidebarTitle: "Errors"
+description: "Differentiate a Bindbee failure from an origin-system one."
+icon: "bug"
+---
+
+A model reports `Failed` on the [sync status](/guides/troubleshooting/sync-status) screen. The error names its source. That source decides who fixes it.
+
+Expand the failed model on the run's **Sync info** screen. Its **Issue** field names the source:
+
+- **Integration Partner**: The source system refused the request. The fix sits with the customer's HRIS administrator.
+- **Bindbee**: The failure is in Bindbee's sync or mapping. Report it to Bindbee.
+
+The **Message** field beside it carries the upstream response verbatim, and Bindbee flags a recognised cause above the detail - a permission refusal surfaces as **Permission issue found!**
+
+Where the whole run failed rather than one model, the error banner sits at the top of the run instead:
+
+<Frame>
+  <img src="/images/platform/sync-run-failed.png" alt="The Sync info screen for a failed run, showing a red banner reading Received error response when validating the connection, expanded to a JSON body with status_code 401 and message No error message in headers" />
+</Frame>
+
+The `401` above is an origin-system error: the credentials Bindbee holds were refused. Read the message before anything else - it is the source system's own answer, not Bindbee's summary of it.
+
+{/* VERIFY: what does Issue read when the failure is Bindbee's rather than the source system's? "Integration Partner" is confirmed from a dashboard screenshot; the Bindbee-side value has not been seen rendered. */}
+
+## Bindbee errors
+
+These are failures in our sync process. Report it and Bindbee resolves it.
+
+Include the connector ID, the failing model, and the timestamp of the run. That triple locates the run; an error message on its own rarely does.
+
+## Origin-system errors
+
+The source system refused the request. Most are permission or credential settings: an integration user provisioned below the minimum permissions the sync needs, or API credentials scoped more narrowly than the models you've enabled.
+
+Bindbee reads what the connected credentials expose. Many HRIS platforms answer a permission gap with an empty result rather than an error, so these surface as missing data as readily as failures.
+
+<Info>
+  **Before you start**
+
+  - You have the connector ID and the name of the affected model or field.
+  - You can reach the customer's HRIS administrator. Every fix in this section happens in their system.
+</Info>
+
+### Steps
+
+<Steps>
+  <Step title="Confirm the symptom is permission-shaped">
+    Match what you're seeing against these signatures.
+
+    | Symptom | Permission-related? |
+    | --- | --- |
+    | An access-denied message in the sync error | Yes |
+    | One model family fails while others succeed | Usually |
+    | A model returns zero records but the source system shows data | Usually |
+    | A field is null for every record but populated in the HRIS UI | Often, at field level |
+    | Every model fails at once | No - credential expiry, see [Connector relink](/guides/troubleshooting/connector-relink) |
+
+    **Result:** You've separated a permission failure from an expired credential.
+  </Step>
+
+  <Step title="Read the source system's own response">
+    Go to **Logs** for the connector and find the failing request. Bindbee keeps the source system's answer verbatim: the upstream status, the endpoint called, and the response body.
+
+    That body arrives in whatever format the HR system uses. Bindbee leaves it unnormalised on purpose: *"the Workday integration system user lacks Get_Workers permission on this security group"* is the sentence that tells an administrator what to change, and `PERMISSION_DENIED` would lose it.
+
+    **Result:** You know which upstream resource was refused.
+
+    {/* VERIFY: the field names carrying the upstream envelope. integration_status_code, integration_endpoint and integration_response do not appear in spec.json; the only documented error schemas are ErrorResponse and HTTPValidationError. The upstream detail is visible in connector logs, but the field names are unconfirmed. */}
+  </Step>
+
+  <Step title="Determine the permission from the failing model">
+    Translate the failing model into the access the source system needs to expose.
+
+    | Failing model | Access required |
+    | --- | --- |
+    | `employee`, `employment` | Read access to worker or personnel records |
+    | Date of birth, national ID, `bank_info` | Sensitive personal data access, a separate grant on most platforms |
+    | `compensation`, `payroll_run` | Payroll module access, licensed separately on most platforms |
+    | `benefit`, `dependent`, `benefit_coverage` | Benefits module access |
+    | `time_off`, `timesheet_entry` | Time and attendance module access |
+    | Cost centre, department | Access to the specific field group or report definition |
+
+    **Result:** A concrete ask for the administrator.
+
+    <Note>
+      Sensitive fields are the single biggest cause. Date of birth and cost centre sit behind
+      a grant that general employee read excludes, so the connector authenticates cleanly and
+      returns those fields null.
+    </Note>
+  </Step>
+
+  <Step title="Send the customer the setup instructions">
+    Per-system click paths live in the [setup instructions](https://help.bindbee.dev). They're white-labelled, so forward the guide for their platform straight to the administrator.
+
+    **Result:** The administrator has instructions specific to their HRIS.
+  </Step>
+
+  <Step title="Resync after the permission is granted">
+    Permission changes apply from the next run onwards. Trigger a fresh one to pull the newly readable fields.
+
+    **Result:** The next sync includes the previously refused models or fields.
+  </Step>
+</Steps>
+
+### When the error doesn't make sense
+
+Origin systems return their own error text, and some of it is opaque even to people who administer those systems daily. Send Bindbee the connector ID and the failing model and ask what it means.
+
+<Warning>
+  An upstream `403` means the authorising credentials lack a permission, rather than Bindbee
+  being unauthorised. The fix sits with your customer's HRIS administrator, not with your API keys.
+</Warning>
+
+## Errors on your own API requests
+
+Separate from sync failures: these are the responses Bindbee returns to *your* calls. Bindbee serves your read from its synced copy, so a source-system failure surfaces on the sync rather than here.
+
+| Status | Meaning | Retry? |
+| --- | --- | --- |
+| `401` | Missing, malformed, or wrong-environment API key | No |
+| `403` | Valid credentials without access to this resource | No |
+| `404` | Resource doesn't exist for this connector | No |
+| `422` | Validation failed on a query parameter or write body | No |
+| `429` | Rate limit exceeded | Yes, after `Retry-After` |
+| `5xx` | Server-side | Yes, with backoff |
+
+Retrying a `4xx` other than `429` never succeeds, and consumes the connector's rate limit while failing.
+
+### Read the response body
+
+Every error carries a `detail` field, and its type depends on the status. On `401`, `403`, `404` and `429` it is a string. On `422` it is an array, one entry per rejected field:
+
+```json
+{
+  "detail": [
+    {
+      "loc": ["query", "page_size"],
+      "msg": "Input should be less than or equal to 200",
+      "type": "less_than_equal"
+    }
+  ]
+}
+```
+
+<Warning>
+  The same key holds two types. Code that treats `detail` as a string works against every
+  other status and throws on the first `422`. Branch on the status before touching `detail`.
+</Warning>
+
+### Retry safely
+
+On `429`, wait `Retry-After` seconds. The limit is [200 requests per minute per connector](/api-reference/basics/rate-limits), counted against the connector token, so parallelising across customers is fine.
+
+On `5xx`, retry with exponential backoff and jitter, capped at a few attempts.
+
+<Warning>
+  Retrying a write is only safe with an idempotency key. A `5xx` can be returned after the
+  record was created upstream, so a retry without `X-Idempotency-Key` creates a duplicate in
+  the customer's HRIS.
+</Warning>
+
+## Alerting
+
+Subscribe to the **Connector Sync Error** webhook event (`connector_sync_error`) and a failed model reaches you as it happens - see [Monitoring this programmatically](/guides/troubleshooting/sync-status#monitoring-this-programmatically).
+
+## Frequently Asked Questions
+
+<AccordionGroup>
+  <Accordion title="The administrator says the permission is already granted">
+    Check the permission sits on the account the connector authenticated as, rather than the administrator's own. Integration users get provisioned with a narrower role than the person configuring them.
+
+    Some platforms require the integration user to be reactivated, or a token reissued, before a change takes effect.
+  </Accordion>
+
+  <Accordion title="The failure appears on some runs but not others">
+    Intermittent permission errors indicate token scope changing between refreshes, or a source system applying limits under load. Capture the timestamps of both a succeeding and a failing run before escalating.
+  </Accordion>
+
+  <Accordion title="Records return but a specific field is still null">
+    Fetch the raw payload to see whether the value arrived at all - see [Inspect raw data](/guides/reading-writing/raw-data). A value present in `raw_data` and absent from the unified response is a mapping question, and you can surface it as a [custom field](/guides/extending/custom-fields).
+  </Accordion>
+
+  <Accordion title="The source system uses IP allow-listing">
+    Some platforms restrict API access by source IP in addition to credentials, which presents as an authorization failure with correct credentials. Ask support for the current egress ranges.
+  </Accordion>
+
+  <Accordion title="The integration connects over SFTP rather than an API">
+    File-based connectors fail differently: SFTP credentials and the files the source system drops govern access, in place of API scopes. A missing field points at the file layout.
+  </Accordion>
+
+  <Accordion title="401 with a key you're sure is correct">
+    Environment mismatch. A Development key against a Production connector returns `401` - see [Authentication](/api-reference/basics/authentication).
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Sync status](/guides/troubleshooting/sync-status) - the step before this one
+- [Logs](/guides/troubleshooting/logs) - the last resort, when no error explains what you're seeing
+- [Connector relink](/guides/troubleshooting/connector-relink) - when every model fails at once
+- [Rate Limits](/api-reference/basics/rate-limits) - the published limits and their headers

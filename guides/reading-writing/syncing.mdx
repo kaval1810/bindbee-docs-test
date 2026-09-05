@@ -108,7 +108,7 @@ A failed job sets `sync_status` to `Failed` and fires the `connector_sync_error`
 
 **Previously synced data stays readable throughout.** A failure means your copy is stale, not missing — which is also why a broken connector does not announce itself on your reads, and has to be watched separately. See [Monitor sync status](/guides/troubleshooting/sync-status) for what to alert on and how to diagnose a specific failure.
 
-If `status` has become `RELINK_NEEDED`, the credentials themselves stopped working and your end user must reconnect before syncing resumes — see [Connections to relink](/guides/troubleshooting/connections-to-relink).
+If `status` has become `RELINK_NEEDED`, the credentials themselves stopped working and your end user must reconnect before syncing resumes — see [Connections to relink](/guides/troubleshooting/connector-relink).
 
 ## Related
 

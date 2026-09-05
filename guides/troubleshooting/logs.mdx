@@ -1,14 +1,21 @@
 ---
 title: "Logs"
-description: "The per-request record behind every sync and every write, where to find it, and what it can and cannot tell you."
+description: "Trace which API Bindbee called and what came back."
 icon: "scroll-text"
 ---
 
-Every request between Bindbee and a source system is recorded. **When something is wrong but nothing in your own application errored, look here** — a sync fails in the background and never reaches your response.
+Every request between Bindbee and a source system is recorded here: which API was called, when, and what it returned.
+
+Come to this page once [sync status](/guides/troubleshooting/sync-status) and the [error's source](/guides/troubleshooting/errors) have left the question open.
+
+<Note>
+  A model reported `Skipped` or `Not Supported` was never requested, so the logs hold no
+  entry for it. [Sync status](/guides/troubleshooting/sync-status) settles both.
+</Note>
 
 ## Where to find them
 
-Open **Logs** in the dashboard for the whole account, or open a single connector for just that customer. The second is almost always faster.
+Open **Logs** in the dashboard for the whole account, or open a single connector to scope it to that customer. Scoping to the connector is faster.
 
 <Frame>
 <img
@@ -22,43 +29,45 @@ Open **Logs** in the dashboard for the whole account, or open a single connector
 
 | Field | Holds |
 | --- | --- |
-| **Direction** | `READ` or `WRITE` |
-| **Connector** | Which customer's connection the request belongs to |
-| **Endpoint** | The path called, on Bindbee or on the source system |
-| **Status** | The response code, and the error code where there is one |
-| **Request & response** | The full bodies. Open an entry to expand them |
+| Direction | `READ` or `WRITE` |
+| Connector | Which customer's connection the request belongs to |
+| Endpoint | The path called, on Bindbee or on the source system |
+| Status | The response code, and the error code where there is one |
+| Request & response | The full bodies. Open an entry to expand them |
 
-<Warning>
-  **Read the upstream response body first.** When Bindbee's request to the HRIS fails, the log keeps the source system's own answer rather than a Bindbee summary of it. That body usually names the exact permission or field at fault. See [Errors & issues](/guides/troubleshooting/errors-and-issues).
-</Warning>
+<Tip>
+  Read the upstream response body first. Bindbee keeps the source system's own answer
+  verbatim, and that body names the permission or field at fault - see
+  [Origin-system errors](/guides/troubleshooting/errors#origin-system-errors).
+</Tip>
 
 ## Find an answer
 
 | Question | Where to look |
 | --- | --- |
-| Why is this connector not returning benefits? | `READ` entries for the benefits endpoint. A `403` means permissions; no entry at all means scope |
-| Why did my write fail? | The `WRITE` entry, then the source system's response body. Writes fail for business reasons |
+| Why is this connector not returning benefits? | `READ` entries for the benefits endpoint. A `403` means permissions; no entry means scope |
+| Why did my write fail? | The `WRITE` entry, then the source system's response body |
 | Did the sync run at all? | No entries in the window, checked against [Sync status](/guides/troubleshooting/sync-status) |
-| Which model broke a partial sync? | The first upstream error in the run. See [Partial syncs](/guides/troubleshooting/sync-status#diagnose-a-partial-sync) |
+| Why is a record I expected missing? | The `READ` entries for that model - see [Missing records](/guides/troubleshooting/missing-records) |
 
 ## Connector logs are dashboard-only
 
-There is no API for them. Anything your own monitoring acts on has to come from sync webhooks or the connector's `status` and `sync_status` fields — the same constraint that applies to Issues.
+There is no API for them. Anything your own monitoring acts on has to come from sync webhooks or the connector's `status` and `sync_status` fields.
 
-**Webhook delivery logs are a different thing.** They record Bindbee's attempts to reach *your* endpoint, so they answer why your handler did not fire, not why data is wrong. Unlike connector logs, they do have an API: [List Webhook Logs](/api-reference/webhooks/list-webhook-logs) and [Get Webhook Log Detail](/api-reference/webhooks/get-webhook-log-detail).
+**Webhook delivery logs are a separate surface.** They record Bindbee's attempts to reach *your* endpoint, so they answer why your handler stayed quiet. They do have an API: [List Webhook Logs](/api-reference/webhooks/list-webhook-logs).
 
-{/* VERIFY: is a connector logs endpoint planned? Without one, a customer cannot build alerting on upstream failures, only on the coarser sync-status signal. Worth knowing whether to document a workaround or wait. */}
+{/* VERIFY: is a connector logs endpoint planned? Without one, a customer cannot build alerting on upstream failures, only on the coarser sync-status signal. */}
 
-## What logs cannot tell you
+## Limits
 
-- **Why a field is empty.** A `200` with the field absent leaves no error to find. That is scope, permissions, or the unified model not carrying it — see [Scoping](/get-started/scoping).
-- **That a record was deleted upstream.** A disappearance produces no request, so no entry.
-- **How far back they go.** The retention window is not published, so treat logs as a tool for recent debugging rather than an audit trail.
+- **An empty field.** A `200` with the field absent leaves no error to find. That's scope, permissions, or the unified model - see [Scoping](/get-started/scoping).
+- **An upstream deletion.** A record disappearing produces no request, so no entry.
+- **Retention.** The window is unpublished, so treat logs as a recent-debugging tool rather than an audit trail.
 
-{/* VERIFY: the log retention window. Not stated anywhere, and it decides whether logs are usable for anything beyond immediate debugging. */}
+{/* VERIFY: the log retention window. Not stated anywhere, and it decides whether logs are usable beyond immediate debugging. */}
 
 ## Related
 
-- [Errors & issues](/guides/troubleshooting/errors-and-issues) - which failures surface where, and how to read them
-- [Sync status](/guides/troubleshooting/sync-status) - whether the run happened at all, and diagnosing a partial run
-- [Permission errors](/guides/troubleshooting/permission-errors) - the most common upstream failure
+- [Troubleshooting overview](/guides/troubleshooting/overview) - where this page sits in the flow
+- [Sync status](/guides/troubleshooting/sync-status) - the first check, and the one that resolves most cases
+- [Errors](/guides/troubleshooting/errors) - differentiating a Bindbee failure from an origin-system one

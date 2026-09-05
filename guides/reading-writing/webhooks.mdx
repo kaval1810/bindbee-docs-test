@@ -460,6 +460,14 @@ Retries are triggered only for request or network-layer failures, including:
 | Protocol errors | Local protocol error, remote protocol error, unsupported protocol error |
 | Other request errors | Proxy error, response decoding error, too many redirects |
 
+### Acknowledge first, process after
+
+A handler that does its work before responding will exceed the 10-second timeout under load, and every timeout spends part of the retry budget. **Return `200` as soon as you have the payload, then process asynchronously.** Deliveries that exhaust all four retries are not redelivered later.
+
+### Keeping a cron schedule
+
+Subscribing to webhooks doesn't mean moving your processing onto them. Subscribe to `connector_sync_error` alone, purely as a signal to skip or defer that customer's run - your cron keeps its schedule, and stops processing a connection whose data hasn't updated.
+
 ---
  
 ## Monitoring deliveries

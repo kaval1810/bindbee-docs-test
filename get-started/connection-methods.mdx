@@ -27,7 +27,7 @@ Data reaches Bindbee one of two ways. An **API connector** means Bindbee calls t
 
 Bindbee calls the vendor's API on its own schedule. **How the customer authorises depends on the integration** - most offer OAuth, where they sign in and approve access; others need an API key, token or certificate they generate first; some offer both.
 
-**The choice changes nothing about the data** - only what breaks later. A token expires on its own, a key breaks when it's rotated, and either way the fix is a [relink](/guides/troubleshooting/connections-to-relink).
+**The choice changes nothing about the data** - only what breaks later. A token expires on its own, a key breaks when it's rotated, and either way the fix is a [relink](/guides/troubleshooting/connector-relink).
 
 ---
 
@@ -75,5 +75,5 @@ The file also carries only the columns the export was set up to produce. Anythin
 ## Related
 
 - [Integrations](/get-started/integrations) - connection type per integration, and which slugs are file-based
-- [Connection needing relink](/guides/troubleshooting/connections-to-relink) - when OAuth tokens expire or keys are rotated
+- [Connection needing relink](/guides/troubleshooting/connector-relink) - when OAuth tokens expire or keys are rotated
 - [Status & terminations](/guides/data-models/employee-and-org) - how inferred inactivity appears on records

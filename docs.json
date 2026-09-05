@@ -150,25 +150,20 @@
           {
             "group": "Troubleshooting",
             "pages": [
-              "guides/troubleshooting/errors-and-issues",
+              "guides/troubleshooting/overview",
+              "guides/troubleshooting/sync-status",
+              "guides/troubleshooting/errors",
               "guides/troubleshooting/logs",
-              {
-                "group": "Monitoring",
-                "icon": "gauge",
-                "pages": [
-                  "guides/troubleshooting/sync-status",
-                  "guides/troubleshooting/connections-to-relink"
-                ]
-              },
+              "guides/troubleshooting/connector-relink",
               {
                 "group": "Reconciling Data",
                 "icon": "scale",
                 "pages": [
-                  "guides/troubleshooting/missing-or-extra-records",
+                  "guides/troubleshooting/missing-records",
+                  "guides/troubleshooting/duplicate-records",
                   "guides/troubleshooting/record-counts"
                 ]
-              },
-              "guides/troubleshooting/permission-errors"
+              }
             ]
           }
         ]
@@ -956,7 +951,7 @@
     },
     {
       "source": "/concepts/errors-issues-and-limits",
-      "destination": "/guides/troubleshooting/errors-and-issues"
+      "destination": "/guides/troubleshooting/errors"
     },
     {
       "source": "/concepts/how-custom-fields-work",
@@ -1160,7 +1155,7 @@
     },
     {
       "source": "/how-to/setup/handle-api-errors",
-      "destination": "/guides/troubleshooting/errors-and-issues"
+      "destination": "/guides/troubleshooting/errors"
     },
     {
       "source": "/how-to/sync-control/set-a-sync-start-time",
@@ -1304,11 +1299,11 @@
     },
     {
       "source": "/how-to/connections/update-credentials",
-      "destination": "/guides/troubleshooting/connections-to-relink"
+      "destination": "/guides/troubleshooting/connector-relink"
     },
     {
       "source": "/how-to/troubleshooting/trace-an-unexpected-record",
-      "destination": "/guides/troubleshooting/missing-or-extra-records"
+      "destination": "/guides/troubleshooting/missing-records"
     },
     {
       "source": "/how-to/reading-data/paginate-through-results",
@@ -1472,7 +1467,7 @@
     },
     {
       "source": "/explanation/errors-issues-and-limits",
-      "destination": "/guides/troubleshooting/errors-and-issues"
+      "destination": "/guides/troubleshooting/errors"
     },
     {
       "source": "/how-to/troubleshooting/logs",
@@ -1484,11 +1479,11 @@
     },
     {
       "source": "/how-to/reliability/detect-a-connection-that-needs-relinking",
-      "destination": "/guides/troubleshooting/connections-to-relink"
+      "destination": "/guides/troubleshooting/connector-relink"
     },
     {
       "source": "/how-to/troubleshooting/trace-a-missing-record",
-      "destination": "/guides/troubleshooting/missing-or-extra-records"
+      "destination": "/guides/troubleshooting/missing-records"
     },
     {
       "source": "/how-to/troubleshooting/diagnose-a-partial-sync",
@@ -1500,7 +1495,7 @@
     },
     {
       "source": "/how-to/troubleshooting/resolve-a-permission-error",
-      "destination": "/guides/troubleshooting/permission-errors"
+      "destination": "/guides/troubleshooting/errors#origin-system-errors"
     },
     {
       "source": "/custom-fields/lookup/list-models",
@@ -1589,6 +1584,54 @@
     {
       "source": "/guides/troubleshooting/partial-syncs",
       "destination": "/guides/troubleshooting/sync-status#diagnose-a-partial-sync"
+    },
+    {
+      "source": "/guides/troubleshooting/permission-errors",
+      "destination": "/guides/troubleshooting/errors#origin-system-errors"
+    },
+    {
+      "source": "/guides/troubleshooting/errors-and-issues",
+      "destination": "/guides/troubleshooting/errors"
+    },
+    {
+      "source": "/guides/troubleshooting/connections-to-relink",
+      "destination": "/guides/troubleshooting/connector-relink"
+    },
+    {
+      "source": "/guides/troubleshooting/missing-or-extra-records",
+      "destination": "/guides/troubleshooting/missing-records"
+    },
+    {
+      "source": "/guides/troubleshooting-v2/overview",
+      "destination": "/guides/troubleshooting/overview"
+    },
+    {
+      "source": "/guides/troubleshooting-v2/sync-status",
+      "destination": "/guides/troubleshooting/sync-status"
+    },
+    {
+      "source": "/guides/troubleshooting-v2/errors",
+      "destination": "/guides/troubleshooting/errors"
+    },
+    {
+      "source": "/guides/troubleshooting-v2/logs",
+      "destination": "/guides/troubleshooting/logs"
+    },
+    {
+      "source": "/guides/troubleshooting-v2/connector-relink",
+      "destination": "/guides/troubleshooting/connector-relink"
+    },
+    {
+      "source": "/guides/troubleshooting-v2/missing-records",
+      "destination": "/guides/troubleshooting/missing-records"
+    },
+    {
+      "source": "/guides/troubleshooting-v2/duplicate-records",
+      "destination": "/guides/troubleshooting/duplicate-records"
+    },
+    {
+      "source": "/guides/troubleshooting-v2/record-counts",
+      "destination": "/guides/troubleshooting/record-counts"
     }
   ],
   "api": {

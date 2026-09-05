@@ -29,7 +29,7 @@ flowchart LR
 **Your own write is not readable back straight away.** It lands in the source system, but reads still serve the copy - so it appears in a `GET` only once the next sync has picked it up. Force a resync if you need to confirm sooner - see [Syncing](/guides/reading-writing/syncing).
 
 <Warning>
-  Retrying a write without `X-Idempotency-Key` can create a duplicate in the customer's HRIS. A `5xx` may be returned *after* the record was created - see [Errors & Issues](/guides/troubleshooting/errors-and-issues).
+  Retrying a write without `X-Idempotency-Key` can create a duplicate in the customer's HRIS. A `5xx` may be returned *after* the record was created - see [Errors & Issues](/guides/troubleshooting/errors).
 </Warning>
 
 ---
@@ -45,7 +45,7 @@ flowchart LR
     A write worked end to end, from schema lookup to confirmation.
   </Card>
 
-  <Card title="Errors & Issues" icon="triangle-alert" href="/guides/troubleshooting/errors-and-issues">
+  <Card title="Errors & Issues" icon="triangle-alert" href="/guides/troubleshooting/errors">
     What a failed write means, and which failures are worth retrying.
   </Card>
 

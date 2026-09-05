@@ -56,7 +56,7 @@ Because relations are expressed in Bindbee IDs, `id` is the only identifier that
 
 - **Format varies by system.** A numeric string in one HRIS, a UUID in another, an alphanumeric code in a third. Never parse it, pad it, cast it to an integer, or assume a length.
 - **Nullable.** Some systems do not expose a stable API identifier for every object type. When that happens, `remote_id` is `null`. Any logic that depends on it needs a fallback.
-- **Unique only within a connector.** Two customers on two different HRIS instances can easily both have an employee with `remote_id` of `1`. It is not safe as a global key, and the same person under two connectors is legitimately two records — see [Trace a duplicate record](/guides/troubleshooting/missing-or-extra-records).
+- **Unique only within a connector.** Two customers on two different HRIS instances can easily both have an employee with `remote_id` of `1`. It is not safe as a global key, and the same person under two connectors is legitimately two records — see [Trace a duplicate record](/guides/troubleshooting/missing-records).
 
 {/* VERIFY: does identity key composition vary by model? Checked: every synced model schema in spec.json carries remote_id (44 of 44; only HrisConnectorResponse lacks it, and it is not a synced model), so the field is universal. What is still unconfirmed is the keying logic - whether connector + remote_id is the key for every model, or whether models with composite or derived source identifiers resolve differently. */}
 
@@ -148,7 +148,7 @@ Do not use `remote_id` as a primary key in a multi-tenant database. It is unique
   <Accordion title="Do IDs change when a connector is relinked?">
     **No.** Relinking keeps the connector and its record history, so every `id` you have stored stays valid. That is exactly why relinking is the correct recovery from `RELINK_NEEDED`.
 
-    Deleting the connector and issuing a fresh link is a different operation: it mints a new connector with new record identities, and every Bindbee ID you stored for that customer breaks. If that has already happened, `remote_id` is what lets you match old rows to new ones — see [Update credentials](/guides/troubleshooting/connections-to-relink).
+    Deleting the connector and issuing a fresh link is a different operation: it mints a new connector with new record identities, and every Bindbee ID you stored for that customer breaks. If that has already happened, `remote_id` is what lets you match old rows to new ones — see [Update credentials](/guides/troubleshooting/connector-relink).
   </Accordion>
 </AccordionGroup>
 
@@ -165,7 +165,7 @@ Do not use `remote_id` as a primary key in a multi-tenant database. It is unique
     The full Employee schema and every supported filter.
   </Card>
 
-  <Card title="Trace a duplicate record" icon="list" href="/guides/troubleshooting/missing-or-extra-records">
+  <Card title="Trace a duplicate record" icon="list" href="/guides/troubleshooting/missing-records">
     Diagnosing a specific pair that should have been one record.
   </Card>
 
