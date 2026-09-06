@@ -1,6 +1,6 @@
 # Bindbee docs — structure (v3)
 
-Generated from `docs.json` on 2026-09-02 at commit `318a2c4`.
+Generated from `docs.json` on 2026-09-07 at commit `a9f5730`.
 Run `python3 scripts/gen-structure.py` to refresh; hand edits will drift from the nav.
 
 ## Summary
@@ -8,13 +8,13 @@ Run `python3 scripts/gen-structure.py` to refresh; hand edits will drift from th
 | Tab | Pages |
 | --- | ---: |
 | Get Started | 16 |
-| Guide | 31 |
+| Guide | 38 |
 | API Reference | 146 |
 | Help Center | 0 |
-| **Total in nav** | **193** |
+| **Total in nav** | **200** |
 
-**54** are editorial pages written by hand. The other **139** render from `spec.json` via an `openapi:` line — 20 of those also carry a hand-written title, so they read like editorial pages in the sidebar but their body is generated.
-`docs.json` also carries **218** redirects.
+**61** are editorial pages written by hand. The other **139** render from `spec.json` via an `openapi:` line — 20 of those also carry a hand-written title, so they read like editorial pages in the sidebar but their body is generated.
+`docs.json` also carries **233** redirects.
 
 ### Reading the tree
 
@@ -29,8 +29,8 @@ Run `python3 scripts/gen-structure.py` to refresh; hand edits will drift from th
 Get Started
 ├── Introduction/
 │   ├── What is Bindbee?   (get-started/what-is-bindbee)
-│   ├── Quickstart   (get-started/quickstart)
-│   └── Platform   (get-started/platform)
+│   ├── Platform   (get-started/platform)
+│   └── Quickstart   (get-started/quickstart)
 ├── Core Concepts/
 │   ├── Overview   (get-started/core-concepts)  ·  title: Core concepts
 │   ├── Environments   (get-started/environments)
@@ -39,7 +39,7 @@ Get Started
 │   └── Connection methods   (get-started/connection-methods)
 ├── Integrations/
 │   ├── Integration & Coverage   (get-started/integrations)
-│   └── Model Availability Matrix   (get-started/model-availability)  ·  title: Model availability
+│   └── Model Availability Matrix   (get-started/model-availability)
 └── Use Cases/
     ├── Sync census data   (get-started/use-cases/sync-census-data)  ·  title: Sync Census Data for Quoting
     ├── Identify a termination   (get-started/use-cases/identify-a-termination)  ·  title: Identify a Employee Termination
@@ -51,14 +51,20 @@ Get Started
 Guide
 ├── Reading & Writing Data/
 │   ├── Overview   (guides/reading-writing/overview)  ·  title: Reading & Writing Data
-│   ├── Querying Data   (guides/reading-writing/querying-data)
-│   ├── Data Basics/  [table-2]
-│   │   ├── id vs remote_id   (guides/reading-writing/record-identity)  ·  title: Record identity
-│   │   └── Enum values   (guides/reading-writing/enum-values)
+│   ├── Reading data/  [arrow-down-to-line]
+│   │   ├── Overview   (guides/reading-writing/reading-data)  ·  title: Reading data
+│   │   ├── Filters   (guides/reading-writing/reading-data/filters)
+│   │   ├── Expand   (guides/reading-writing/reading-data/expand)
+│   │   └── modified_after   (guides/reading-writing/reading-data/modified-after)
+│   ├── Writing data/  [arrow-up-to-line]
+│   │   ├── Overview   (guides/reading-writing/writing-data)  ·  title: Writing data
+│   │   └── Meta APIs   (guides/reading-writing/writing-data/meta-apis)  ·  title: Meta APIs for Write Operations
 │   ├── Syncing   (guides/reading-writing/syncing)
 │   ├── Raw data   (guides/reading-writing/raw-data)  ·  title: Raw Data
 │   ├── Webhooks   (guides/reading-writing/webhooks)
-│   └── Meta APIs   (guides/reading-writing/meta-apis)  ·  title: Meta APIs for Write Operations
+│   └── Others/  [scroll-text]
+│       ├── id vs remote_id   (guides/reading-writing/record-identity)  ·  title: Record identity
+│       └── Enum values   (guides/reading-writing/enum-values)
 ├── Extending the Model/
 │   ├── Custom Fields/  [network]
 │   │   ├── Overview   (guides/extending/custom-fields)
@@ -67,30 +73,32 @@ Guide
 │   └── Passthrough   (guides/extending/passthrough)
 ├── SDK & MCP/
 │   ├── Embedded SDK   (guides/sdk/embedded-sdk)
-│   └── MCP Server   (guides/sdk/mcp)  ·  title: Docs MCP Server
+│   └── Docs MCP   (guides/sdk/mcp)
 ├── Data Models/
-│   ├── Employee & org data   (guides/data-models/employee-and-org)
+│   ├── Employee data   (guides/data-models/employee-data)
+│   ├── Organization   (guides/data-models/organization)
 │   ├── Payroll   (guides/data-models/payroll)
 │   ├── Benefits   (guides/data-models/benefits)
-│   ├── Time & attendance   (guides/data-models/time-and-attendance)  ·  title: Time & Attendance
+│   ├── Time & attendance   (guides/data-models/time-and-attendance)
 │   ├── Recruiting   (guides/data-models/recruiting)
-│   └── Learning   (guides/data-models/learning)  ·  title: LMS models
+│   └── Learning   (guides/data-models/learning)
 ├── Workspace & Access/  [shield]
 │   ├── Roles & permissions   (guides/workspace/roles-and-permissions)
 │   ├── Single sign-on (SSO)   (guides/workspace/sso)  ·  title: Set Up Single Sign-On
 │   └── Data deletion   (guides/workspace/data-deletion)  ·  title: Data retention & deletion
-├── Checklist/
+├── Going Live/  [rocket]
+│   ├── Ideal workflow   (guides/ideal-workflow)  ·  title: Set Up an Integration
 │   └── Go-Live checklist   (guides/go-live-checklist)
 └── Troubleshooting/
-    ├── Errors & issues   (guides/troubleshooting/errors-and-issues)
+    ├── Overview   (guides/troubleshooting/overview)  ·  title: Troubleshooting Overview
+    ├── Sync status   (guides/troubleshooting/sync-status)  ·  title: Check Sync Status
+    ├── Errors   (guides/troubleshooting/errors)  ·  title: Find the Source of an Error
     ├── Logs   (guides/troubleshooting/logs)
-    ├── Monitoring/  [gauge]
-    │   ├── Sync status   (guides/troubleshooting/sync-status)  ·  title: Monitor Sync Status
-    │   └── Connections to relink   (guides/troubleshooting/connections-to-relink)  ·  title: Connection Needing Relink
-    ├── Reconciling Data/  [scale]
-    │   ├── Missing or extra records   (guides/troubleshooting/missing-or-extra-records)  ·  title: Missing or Unexpected Records
-    │   └── Record counts   (guides/troubleshooting/record-counts)  ·  title: Reconcile Record Counts Against the Source
-    └── Permission errors   (guides/troubleshooting/permission-errors)  ·  title: Resolve a Source-System Permission Error
+    ├── Connector relink   (guides/troubleshooting/connector-relink)  ·  title: Relink a Connector
+    └── Reconciling Data/  [scale]
+        ├── Missing records   (guides/troubleshooting/missing-records)  ·  title: Find a Missing Record
+        ├── Duplicate records   (guides/troubleshooting/duplicate-records)  ·  title: Resolve Duplicate Records
+        └── Record counts   (guides/troubleshooting/record-counts)  ·  title: Reconcile Record Counts
 
 API Reference
 ├── API Basics/  [braces]

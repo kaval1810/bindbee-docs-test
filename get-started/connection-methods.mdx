@@ -1,79 +1,49 @@
 ---
 title: "Connection methods"
-sidebarTitle: "Connection methods"
-description: "The two ways data reaches Bindbee - an API connector Bindbee calls, or an SFTP connector the customer exports a file."
+description: "Choose between an API connector and an SFTP connector."
 icon: "route"
 ---
 
-{/* VERIFY - BLOCKING. The disappearance-detection behaviour described below is confirmed for Paylocity SFTP. Confirm with engineering whether it is the general rule for all file-based connectors or specific to that integration before this page publishes. The page's central claim depends on the answer. */}
-
-Data reaches Bindbee one of two ways. An **API connector** means Bindbee calls the vendor's API. An **SFTP connector** means the customer's system exports a file on a schedule and drop on Bindbee dropper to reads it - used where the vendor has no usable API, charges for one, or leaves out the models your customer needs.
+Data reaches Bindbee through an **API connector** or an **SFTP connector**. You meet the second where the vendor has no usable API or leaves out the models you need.
 
 ## The two connection types
 
 | | API connector | SFTP connector |
 | --- | --- | --- |
 | How data arrives | Bindbee calls the vendor's API | The customer's system exports a file |
-| Forcing a resync | Fetches fresh data | Re-reads the same file until new file upload |
-| A record that stops appearing | Nothing happens | Marked no longer active |
+| Freshness | Bindbee's sync schedule | The customer's export schedule |
 | Coverage | What the vendor's API exposes | What the export was set up to include |
 | Writes | Often supported | Generally not |
 
-[Integrations](/get-started/integrations) lists the type per integration. Slugs ending in `_sftp` are file-based, but **the suffix is not a reliable test on its own** - variants like `workday_raas` and `paychex_flock` carry no marker.
-
----
+[Integrations](/get-started/integrations) lists the connection type per integration.
 
 ## API connectors
 
-Bindbee calls the vendor's API on its own schedule. **How the customer authorises depends on the integration** - most offer OAuth, where they sign in and approve access; others need an API key, token or certificate they generate first; some offer both.
+How the customer authorises depends on the integration: most offer OAuth, where they sign in and approve access; others need an API key, token or certificate they generate first; some offer both.
 
-**The choice changes nothing about the data** - only what breaks later. A token expires on its own, a key breaks when it's rotated, and either way the fix is a [relink](/guides/troubleshooting/connector-relink).
-
----
+The choice changes nothing about the data. It only changes what breaks later, and when. A token expires on its own. A key breaks when someone rotates it.
+Either way, the fix is the same: [relink the connector](/guides/troubleshooting/connector-relink).
 
 ## SFTP connectors
 
-The customer's system exports a file and Bindbee reads it. Your customer sets the delivery up themselves, following [Set up an SFTP connection](https://help.bindbee.dev/set-up-an-sftp-connection). **Everything below applies only to these connectors.**
+Your customer sets up the file export themselves, following [Set up an SFTP connection](https://help.bindbee.dev/set-up-an-sftp-connection).
 
-### Each file is a full snapshot
+### Freshness follows their export
 
-An API can be asked "what changed since Tuesday". A file cannot be asked anything - it arrives, and it contains whatever it contains. So Bindbee reads each delivery as the complete picture at that moment, compares it with what it already holds, and updates.
+Data is as fresh as the last received file. Forcing a resync re-reads the last received file already there.
 
-**There are no change events and no deltas.**
+<Note>
+A delivery that quietly stops looks like frozen data. There is no error or failed sync. Use `modified_at`in response to check the last sync date.
+</Note>
 
-### A missing record is treated as a leaver
+### The file is the ceiling on coverage
 
-**If someone is missing from the file, Bindbee reads that as "they should not be here"** and marks them no longer active. The record is not deleted.
+Anything outside that export cannot be fetched at all, and widening coverage means the customer changing it.
 
-That rule exists because most HR exports list current employees and drop leavers - there is no termination row to read. Without it, **terminations would never come through at all**, and former employees would look active indefinitely, keeping benefits or access they should have lost.
-
-<Warning>
-A file that is cut short, filtered, or only half-written marks a lot of employees inactive at once. If the customer changes their export, limits it to one division, or sends a file that failed partway through, **it looks exactly like a mass termination.**
-</Warning>
-
-That is the cost of the trade, and **it favours the loud, recoverable failure over the silent one** - a wave of inactive employees is noticed within hours, while a leaver who never became inactive may never be noticed at all.
-
-These files also rarely give a termination date for someone who has simply stopped being listed, so the end date is a guess, not a reported value.
-
-{/* VERIFY: exact end_date behaviour on disappearance - is it set to the sync date, the file date, or left null? */}
-
-### The customer controls the schedule and the columns
-
-Data is only as fresh as the last file, and **Bindbee cannot ask for a new one** - forcing a resync just re-reads the file already there. A delivery that quietly stops looks like frozen data: no error, no failed sync, just records that stop moving.
-
-The file also carries only the columns the export was set up to produce. Anything outside it is not merely empty - **it cannot be fetched at all**, and widening coverage means the customer changing their export.
-
----
-
-## Summary
-
-- **Watch how recent the last file is**, not whether the sync succeeded. An SFTP connector can look healthy and be weeks stale.
-- **Treat a large simultaneous status change as suspect.** Real terminations rarely happen at once; broken exports always do.
-- **Don't use an inferred end date** where a legally accurate termination date is required.
-- **On an API connector, broken credentials mean a relink**, not a new connector - the auth method never changes the data you get.
+That also makes coverage vary between two customers on the same slug. To confirm what one connector returns, read its per-model breakdown - see [Sync status](/guides/troubleshooting/sync-status).
 
 ## Related
 
-- [Integrations](/get-started/integrations) - connection type per integration, and which slugs are file-based
-- [Connection needing relink](/guides/troubleshooting/connector-relink) - when OAuth tokens expire or keys are rotated
-- [Status & terminations](/guides/data-models/employee-and-org) - how inferred inactivity appears on records
+- [Integrations](/get-started/integrations) - the connection type for every integration
+- [Connector relink](/guides/troubleshooting/connector-relink) - when OAuth tokens expire or keys are rotated
+- [Sync status](/guides/troubleshooting/sync-status) - what a specific connector actually returned

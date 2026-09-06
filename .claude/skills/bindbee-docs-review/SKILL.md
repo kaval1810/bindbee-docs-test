@@ -98,6 +98,36 @@ It asserts:
 
 A red line means the pass you just ran regressed something an earlier pass established. Fix it before moving on; do not proceed with a failing check.
 
+### A green script is not a finished page
+
+`bindbee-docs-checks.sh` only checks what grep can see. **Negative definition, dramatic framing, forced triplets and restatement are invisible to it**, and they are the usual reason a page passes every check and still reads as machine-written.
+
+So the definition of done has two halves, and the second is not optional:
+
+| | |
+| --- | --- |
+| **Mechanical** | `bindbee-docs-checks.sh <section>` exits green |
+| **Reading** | The four passes below, walked per page |
+
+```bash
+.claude/skills/bindbee-docs-checks.sh --read <file.mdx>
+```
+
+That prints the material for each pass; the judgement is yours.
+
+1. **Bold clauses, in order.** Do they read as the argument? On a How-To, are they UI labels only?
+2. **First sentence of each section.** Verb first, or clearing its throat?
+3. **Every negation.** Does the wrong belief cost the reader anything? If not, state it positively.
+4. **Paragraph-final sentences.** Does any restate the one before it?
+
+Then read the page start to finish and ask whether a support engineer would write these sentences in a ticket reply.
+
+<Warning>
+  Reporting a page as done on a green script alone is the failure this gate exists to prevent.
+  It has happened: a page passed every mechanical check while opening both of its sibling
+  pages with a negative definition, which is fingerprint 1 in `bindbee-docs-humaniser`.
+</Warning>
+
 ### Mirrored blocks
 
 Some rules are duplicated across skills on purpose, so each works standalone. Duplication is allowed; **drift is not.** Wrap both copies in markers and the checker enforces they stay identical:

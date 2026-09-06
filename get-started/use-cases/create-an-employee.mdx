@@ -81,7 +81,7 @@ Creating an employee writes a person into the customer's system of record. It's 
   <Step title="Store the returned identity">
     Persist the returned Bindbee `id` against your own record.
 
-    Don't key on the employee number or `remote_id` - some systems assign these asynchronously, so they can be missing right after creation, and some reissue them later. See [Reading employees](/guides/data-models/employee-and-org).
+    Don't key on the employee number or `remote_id` - some systems assign these asynchronously, so they can be missing right after creation, and some reissue them later. See [Reading employees](/guides/data-models/employee-data).
 
     **Result:** A stable reference for later operations.
   </Step>

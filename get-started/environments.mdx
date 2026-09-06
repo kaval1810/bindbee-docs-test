@@ -1,6 +1,6 @@
 ---
 title: "Environments"
-description: "What Development and Production keep separate, what they share despite being separate."
+description: "Compare what Development and Production separate and share."
 icon: "layers"
 ---
 
@@ -18,7 +18,15 @@ icon: "layers"
 
 **A key only unlocks its own environment.** A development key can't read, write, or create a Production connector, and a Production key can't touch a Development one - either way, that's a 401.
 
-**A connector can still be moved between the two.** It keeps its authorisation and every ID you have stored, so nobody reconnects - switch your calls to the target environment's API key. Email [support@bindbee.dev](mailto:support@bindbee.dev); it can't be done from the dashboard.
+<Warning>
+**Regenerate the key and the old one stops working immediately**, everywhere at once.
+</Warning>
+
+## Move a connector between environments
+
+A connector can still be moved between the two. It keeps its authorisation and every ID you have stored, so nobody reconnects. Switch your calls to the target environment's API key.
+
+This can't be done from the dashboard. Email [support@bindbee.dev](mailto:support@bindbee.dev) to have the connector moved.
 
 ## Choosing one
 
@@ -28,11 +36,6 @@ icon: "layers"
 | A sandbox or demo tenant of an HRIS | Data feeds anything customer-facing |
 | Internal test accounts, however realistic | You need syncs to run unattended |
 | Validating field mappings | |
-
-
-<Warning>
-**Regenerate the key and the old one stops working immediately**, everywhere at once.
-</Warning>
 
 
 ## Related

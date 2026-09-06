@@ -1,70 +1,11 @@
 ---
 title: "Go-Live checklist"
 sidebarTitle: "Go-Live checklist"
-description: "The recommended order to set Bindbee up, from scoping to your first delta sync, and the short list of things to verify before production traffic."
+description: "Verify an integration before production traffic reaches it."
 icon: "rocket"
 ---
 
-This is the path a successful Bindbee setup follows. Work through it in order, then check the short list at the end before your first real customer connects.
-
----
-
-## The workflow
-
-<Steps>
-  <Step title="Set up scoping for your use case">
-    Turn on only the models and fields you actually need. Scoping decides what
-    syncs, so it is easier to get right now than to change later. See
-    [Scoping](/get-started/scoping).
-  </Step>
-
-  <Step title="Create the connector">
-    Pick one path — a Magic Link you send to the customer, or the Embedded SDK
-    inside your own product. See
-    [Connection methods](/get-started/connection-methods).
-  </Step>
-
-  <Step title="Subscribe to connector_sync_started (optional)">
-    Tells you the moment a sync begins, which is useful if you want to show
-    "importing your data…" in your UI. See
-    [Webhooks](/guides/reading-writing/webhooks).
-  </Step>
-
-  <Step title="Poll the Connectors API (optional)">
-    Reads `status` and `sync_status` for a connector when you need to check
-    where a connection stands. See
-    [Get Connectors](/api-reference/connectors/get-connectors).
-  </Step>
-
-  <Step title="Fetch attached custom fields (optional)">
-    If you have mapped custom fields, read the mappings so you know what extra
-    data arrives with each record. See
-    [Custom fields via API](/guides/extending/custom-fields/api-workflow).
-  </Step>
-
-  <Step title="Subscribe to connector_synced (recommended)">
-    This is the signal that the first sync has finished and the data is ready to
-    read. Verify the signature on every request and reply within 10 seconds. See
-    [Webhooks](/guides/reading-writing/webhooks).
-  </Step>
-
-  <Step title="Start reading once the webhook arrives">
-    Pull the models you scoped, paging until `cursor` is `null`. The limit is
-    200 requests per minute per connector, so set your own concurrency below
-    that. See [Rate limits](/api-reference/basics/rate-limits).
-  </Step>
-</Steps>
-
-## After the first sync
-
-The first full read gives you the complete census. From then on you only need the delta, and there are two ways to get it:
-
-- Subscribe to `connector_data_modified` and read the record IDs it hands you.
-- Pass [`modified_after`](/guides/reading-writing/reading-data/modified-after) with the highest `modified_at` you saw on the previous run.
-
-Either way, **upsert on `id`** — you will receive the same record more than once.
-
----
+Run this once the [ideal workflow](/guides/ideal-workflow) is built and before your first real customer connects.
 
 ## Before you go live
 
@@ -83,7 +24,7 @@ Either way, **upsert on `id`** — you will receive the same record more than on
 **Reading and writing**
 
 - Pagination stops on `cursor == null`, not on a short page.
-- Every field is treated as nullable, and no `switch` over an enum runs without a default — unmapped vendor values pass through verbatim. See [Enum values](/guides/reading-writing/enum-values).
+- Every field is treated as nullable, and no `switch` over an enum runs without a default - unmapped vendor values pass through verbatim. See [Enum values](/guides/reading-writing/enum-values).
 - Writes carry `X-Idempotency-Key`, derived from your own record. Passthrough writes take no key, so check before retrying.
 - Request bodies come from the Meta schema, not hardcoded.
 
@@ -96,7 +37,7 @@ Either way, **upsert on `id`** — you will receive the same record more than on
 
 **Your customers**
 
-- Data age is shown — "Last synced 4 hours ago". This is the biggest single reduction in support volume.
+- Data age is shown - "Last synced 4 hours ago". This is the biggest single reduction in support volume.
 - First-sync state looks different from an empty account.
 - Manual resync is throttled, and nothing resyncs on a timer.
 
@@ -104,6 +45,7 @@ Either way, **upsert on `id`** — you will receive the same record more than on
 
 ## Related
 
+- [Ideal workflow](/guides/ideal-workflow) - the build order this checklist verifies.
 - [Troubleshooting](/guides/troubleshooting/overview) - the order to debug a connector in, once you are live.
 - [Sync status](/guides/troubleshooting/sync-status) - building the health surface your support team reads.
 - [Syncing](/guides/reading-writing/syncing) - how and when Bindbee refreshes data.

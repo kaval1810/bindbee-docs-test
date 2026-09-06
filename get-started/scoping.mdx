@@ -1,81 +1,54 @@
 ---
 title: "Scoping"
-description: "What Bindbee requests from a connected system, how to set it, and the three reasons a field can be missing."
+description: "Choose which models and fields Bindbee requests from a connected system."
 icon: "sliders-horizontal"
 ---
 
+Scoping is an important initial step while configuring your organisation dashboard. It decides what Bindbee asks from a connected system. You should definitely set it before connecting real customers.
+
 ## Configure scoping
 
-<Warning>
-Scoping applies across all connectors, integrations, and environments. Change it and you must resync a connector to see the effect.
-</Warning>
 
-In the dashboard, go to **Configure → Scoping**, pick the category, and switch on the models you need. Each one expands so you can keep or drop individual fields. Do this before you connect real customers.
 
-<Frame caption="Configure → Scoping. Each model is switched on or off, and expands to keep or drop individual fields.">
+In the dashboard, go to **Configure → Scoping**, pick the category, and switch on the models you need. Each one expands so you can keep or drop individual fields.
+
+<Frame caption="Each model is switched on or off and expands to keep or drop individual fields.">
   <img src="/images/get-started/scoping.png" alt="The Scoping screen with HRIS, ATS and LMS tabs. Bank Info is switched off; Benefit is switched on and expanded, listing fields such as effective_date, employee_contribution, plan_name and coverage_tier, each with a Read checkbox" />
 </Frame>
 
-## What scope actually does
+<Note>
+Scoping applies across all connectors, integrations and environments. There is no per-connector override.
+</Note>
 
-Scope is not permissions. Credentials govern what Bindbee *can* read, scope what it *does* read - for a hard guarantee, restrict the integration user upstream.
+## What decides whether data arrives
 
-{/* VERIFY: both this page and restrict-models-and-fields state that widening scope waits for the next scheduled sync rather than triggering a backfill. The two are docs-side and could be wrong together - needs engineering confirmation. Merge triggers a full sync on scope expansion. */}
 
-You called an endpoint, got a `200`, and the field came back empty - or the whole model came back as an empty list. Nothing failed, and there's no error to look up. **Data has to get past three checks, and only one of them is yours.**
+A `200` with an empty field, or a model that comes back as an empty list, isn't always a failure. Data has to clear three checks before it reaches you, and only one of them is yours.
 
-## Three checks
+| Check | Decided by |
+| --- | --- |
+| **Integration coverage** | What the vendor's API exposes. If their system has no pay groups, that model doesn't exist here |
+| **Scope** | You. Anything you haven't enabled is never fetched |
+| **Source-system permissions** | The admin who authorised the connection. A restricted role returns less and you can ask them to widen it |
 
-```mermaid
-flowchart LR
-    A["Source system<br/>holds the data"] --> B["Integration<br/>exposes it"]
-    B --> C["Your scope<br/>includes it"]
-    C --> D["Credentials<br/>permit it"]
-    D --> E["It reaches you"]
-```
+Where a whole model comes back empty rather than a single field, work down these three in order.
 
-| Filter | Decided by | Yours to change |
-| --- | --- | --- |
-| **Integration coverage** | What the vendor's API exposes. If their system has no pay groups, that model doesn't exist here | No |
-| **Scope** | You, for your whole organisation. Anything you haven't enabled is never fetched | **Yes** |
-| **Source-system permissions** | The admin who authorised the connection. A restricted role returns less | No - but you can ask |
+## How to double check permission failures
 
-## Why data is missing
-
-Permission failures are silent - the source system leaves the data out instead of erroring, so a missing permission and an empty field look the same. One request with `include_raw_data=true` tells you which:
+Permission failures are silent. The source system leaves the data out instead of erroring, so a missing permission and an empty field look the same. One request with `include_raw_data=true` tells them apart.
 
 | What you see | What it usually means |
 | --- | --- |
-| In `raw_data`, missing from the unified field | A mapping gap, not a permission problem |
+| Present in `raw_data`, missing from the unified field | A mapping gap rather than a permission problem |
 | Missing from both | Scope excluded it, or the credentials couldn't read it |
-| A whole model returning an empty list | Coverage, scope, or permission - check in that order |
 | A sync error naming an authorisation failure | Permission, reported outright |
 
 The connector's logs carry the failing request and response - see [Origin-system errors](/guides/troubleshooting/errors#origin-system-errors).
 
 
-## Frequently Asked Questions
-
-<AccordionGroup>
-  <Accordion title="Excluded fields still appear">
-    A scope change only affects the next sync. Data already synced stays until a fresh sync replaces it - resync and check again.
-  </Accordion>
-
-  <Accordion title="A model you need stopped returning data">
-    It's probably out of scope. Scope and permission failures both show up as absence, so check the scope before investigating permissions.
-  </Accordion>
-
-  <Accordion title="A custom field stopped resolving">
-    Its source path is likely out of scope, so the raw payload no longer contains it. Either bring the field back into scope or drop the mapping.
-  </Accordion>
-
-  <Accordion title="Sync times didn't improve">
-    Sync duration is driven mostly by how many records there are and how many upstream calls each one costs. Excluding fields inside a model you still sync saves less than excluding whole models.
-  </Accordion>
-</AccordionGroup>
-
 ## Related
 
 - [Core concepts](/get-started/core-concepts) - where scope sits among the levels
 - [Model availability](/get-started/model-availability) - which models an integration returns at all
+- [Missing records](/guides/troubleshooting/missing-records) - the full procedure when one record never arrived
 - [Raw Data](/guides/reading-writing/raw-data) - reaching a value the unified model drops

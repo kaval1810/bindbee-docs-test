@@ -46,6 +46,20 @@ Custom fields are returned, never filtered on.
 
 `employment_status` is not a closed set — a connector's own status values are filterable too, and `-` marks a record the source gave no status for, so filtering for any specific status excludes those records. See [Enum values](/guides/reading-writing/enum-values).
 
+## Filters on the other HRIS endpoints
+
+`ids`, `remote_id`, `modified_after`, `page_size` and `cursor` work everywhere. These are the ones specific to each endpoint:
+
+| Endpoint | Also filters on |
+| --- | --- |
+| Employments | `employee_id`, `employment_type` |
+| Compensations | `employee_id`, `pay_group_id`, `start_date_from`, `start_date_to` |
+| Dependents | `employee_id` |
+| Bank info | `employee_id`, `account_type` |
+| Groups | `type`, `parent_group_id` |
+
+Employment and compensation records belong to an employee rather than the other way round, so you read them from their own endpoint and filter on `employee_id`. Reading the whole collection once and grouping by employee costs far fewer calls than looping per person - see [Rate limits](/api-reference/basics/rate-limits).
+
 ## Examples
 
 Active employees at one company:

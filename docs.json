@@ -26,7 +26,7 @@
             "group": "Introduction",
             "pages": [
               "get-started/what-is-bindbee",
-              "get-started/platform"              ,
+              "get-started/platform",
               "get-started/quickstart"
             ]
           },
@@ -53,7 +53,6 @@
               "get-started/use-cases/sync-census-data",
               "get-started/use-cases/identify-a-termination",
               "get-started/use-cases/read-benefit-coverage",
-              "get-started/use-cases/write-ichra-deductions",
               "get-started/use-cases/create-an-employee",
               "get-started/use-cases/write-payroll-deductions"
             ]
@@ -124,7 +123,8 @@
           {
             "group": "Data Models",
             "pages": [
-              "guides/data-models/employee-and-org",
+              "guides/data-models/employee-data",
+              "guides/data-models/organization",
               "guides/data-models/payroll",
               "guides/data-models/benefits",
               "guides/data-models/time-and-attendance",
@@ -142,8 +142,10 @@
             ]
           },
           {
-            "group": "Checklist",
+            "group": "Going Live",
+            "icon": "rocket",
             "pages": [
+              "guides/ideal-workflow",
               "guides/go-live-checklist"
             ]
           },
@@ -1363,7 +1365,7 @@
     },
     {
       "source": "/how-to/guides/write-payroll-deductions-back",
-      "destination": "/get-started/use-cases/write-ichra-deductions"
+      "destination": "/get-started/use-cases/write-payroll-deductions"
     },
     {
       "source": "/how-to/writing-data-back/create-an-employee",
@@ -1632,6 +1634,14 @@
     {
       "source": "/guides/troubleshooting-v2/record-counts",
       "destination": "/guides/troubleshooting/record-counts"
+    },
+    {
+      "source": "/guides/data-models/employee-and-org",
+      "destination": "/guides/data-models/employee-data"
+    },
+    {
+      "source": "/get-started/use-cases/write-ichra-deductions",
+      "destination": "/get-started/use-cases/write-payroll-deductions"
     }
   ],
   "api": {

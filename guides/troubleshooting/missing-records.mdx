@@ -75,9 +75,7 @@ A record the customer can see in their HRIS is absent from Bindbee. The steps ru
 
 **Identifier changes.** If the source reissued the record's identifier, it may now be present under a different Bindbee `id` - see [Duplicate records](/guides/troubleshooting/duplicate-records).
 
-**File-based connectors.** Each delivery is a point-in-time snapshot. A record absent from the latest file may mean it was removed upstream, or that the file was generated differently.
-
-{/* VERIFY: confirm whether snapshot-based disappearance handling is specific to certain file-based integrations or general to all of them. */}
+**File-based connectors.** The file carries only what the customer's export was set up to include, so a record you expect may never have been in it. Check the export's scope with them before treating it as a sync problem.
 
 ## Frequently Asked Questions
 

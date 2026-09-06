@@ -10,6 +10,30 @@
 # Exit 0 = all invariants hold. Exit 1 = at least one regressed.
 
 set -uo pipefail
+
+# --read <file>: dump the material each reading pass needs. The script cannot judge
+# these - it only puts the text in front of you so the pass is cheap to actually do.
+if [ "${1:-}" = "--read" ]; then
+  F="${2:?usage: bindbee-docs-checks.sh --read <file.mdx>}"
+  b() { printf '\n\033[1m%s\033[0m\n' "$1"; }
+
+  b "1. Bold clauses, in order - do they read as the argument?"
+  grep -o '\*\*[^*]\{1,70\}\*\*' "$F" | sed 's/^/    /'
+
+  b "2. First sentence of each section - verb first, or throat-clearing?"
+  awk '/^## /{h=substr($0,4); getline; while($0=="")getline; if($0 !~ /^[<`|\-]/) printf "    [%s] %s\n", h, substr($0,1,100)}' "$F"
+
+  b "3. Negations - does the wrong belief cost the reader anything?"
+  grep -n "not \|n.t \|rather than\|instead of" "$F" | grep -v '^[0-9]*:|' | cut -c1-115 | sed 's/^/    /'
+
+  b "4. Paragraph-final sentences - does any restate the one before?"
+  awk 'BEGIN{RS=""} !/^[#<`|]/ {n=split($0,a,". "); if(n>1) printf "    %s\n", substr(a[n],1,105)}' "$F"
+
+  b "Then read it start to finish."
+  printf '    Would a support engineer write these sentences in a ticket reply?\n\n'
+  exit 0
+fi
+
 SECTION="${1:-guides/troubleshooting}"
 SKILLS=".claude/skills"
 fail=0
@@ -170,6 +194,26 @@ broken=$(grep -rhoE '\]\(/[a-zA-Z0-9/_-]+(#[a-zA-Z0-9-]+)?\)' --include='*.mdx' 
   | while IFS= read -r l; do [ -f ".$l.mdx" ] || echo "$l"; done)
 [ -n "$broken" ] && red "unresolved link target(s): $(echo "$broken" | tr '\n' ' ')" || ok "all internal links resolve"
 
+# ------------------------------------------- reading passes (manual)
+head_ "reading passes - NOT CHECKED HERE"
+cat <<'EOF'
+  These four catch what grep cannot, and a page is not done until they are walked.
+  Run them per page:   bindbee-docs-checks.sh --read <file.mdx>
+
+    1. Bold clauses in order      - do they read as the argument? UI labels only on How-To?
+    2. First sentence per section - verb first, or clearing its throat?
+    3. Every negation             - does the wrong belief cost the reader anything?
+    4. Last sentence per paragraph- does it restate the one before?
+
+  Then read the page start to finish: would a support engineer write these sentences
+  in a ticket reply? Negative definition, dramatic framing and forced triplets are
+  invisible to this script and are the usual reason a page still reads AI-written.
+EOF
+
 printf '\n'
-[ $fail = 0 ] && printf '\033[32mAll invariants hold.\033[0m\n' || printf '\033[31mAt least one invariant regressed.\033[0m\n'
+if [ $fail = 0 ]; then
+  printf '\033[32mMechanical invariants hold.\033[0m Reading passes above are still outstanding.\n'
+else
+  printf '\033[31mAt least one mechanical invariant regressed.\033[0m\n'
+fi
 exit $fail

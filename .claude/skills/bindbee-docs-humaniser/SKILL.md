@@ -266,12 +266,22 @@ Count screens, not pages: a procedure walking four dashboard screens needs four 
 
 ## The pass
 
-1. `grep -n '—' <file>` - em dashes to ` - `.
-2. Measure every `description` (script above). Anything over 110 chars gets rewritten to one clause.
-3. Read every **bold** clause in order. Does it read as the argument? Is it more than a quarter of the paragraphs?
-4. Search `not`, `n't`, `rather than`, `instead of`. For each: does the wrong belief cost the reader anything? If not, rewrite positively.
-5. Search `usually|often|typically|almost always|commonly|generally`. Keep one.
-5a. Read the first sentence of every section and every `<Step>`. Does it start with a verb, or clear its throat first?
-6. Read the last sentence of each paragraph. If it restates the one before, delete it.
-7. Grep your repeated claims across the section.
-8. Read the page start to finish. **Would a support engineer write this sentence in a ticket reply?**
+### Mechanical - the script enforces these
+
+`bindbee-docs-checks.sh <section>` fails on all four.
+
+1. Em dashes. House separator is ` - `.
+2. Every `description`: within the cap, verb-first, one clause.
+3. Hedges: one per page.
+4. Lexical tells, throat-clearing and back-reference lead-ins.
+
+### Judgement - nothing enforces these but you
+
+A green script says nothing about any of these, and they are the usual reason a page still reads AI-written. Run `bindbee-docs-checks.sh --read <file>` to put the material in front of you.
+
+5. **Bold clauses, in order.** Do they read as the argument? On a How-To, are they UI labels only, and under a quarter of paragraphs?
+6. **First sentence of each section.** Verb first, or clearing its throat?
+7. **Every negation.** Does the wrong belief cost the reader anything? If not, state it positively.
+8. **Paragraph-final sentences.** Does any restate the one before it?
+9. **Repeated claims across the section.** Grep the ones you wrote twice.
+10. **Read it start to finish.** Would a support engineer write these sentences in a ticket reply?

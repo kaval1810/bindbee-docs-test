@@ -1,31 +1,22 @@
 ---
-title: "Core concepts"
+title: "Overview"
 sidebarTitle: "Overview"
-description: "How the pieces fit together, what each term means, and what a bindbee's unified model decides for you."
+description: "Look up any term the docs use with a specific meaning."
 icon: "lightbulb"
 ---
 
-Two terms carry most of the weight: **an integration is the vendor's system, like BambooHR. A connector is one customer's link to that system.**
-
-Change something at the integration level and it affects every customer on that integration. Change it on the connector and only that one customer is affected.
-
-
-## Glossary
-
-Every term the docs use with a specific meaning. This table is the single definition of each.
-
 | Term | Means |
 | --- | --- |
-| **Category** | The kind of system - `hris`, `ats` or `lms`. Decides which models exist, and appears in every endpoint path |
+| **Category** | The kind of system - `hris`, `ats` or `lms`. Decides which models exist and appears in every endpoint path |
 | **[Integration](/get-started/integrations)** | A vendor system, named by a slug such as `bamboohr` |
 | **[Connector](/get-started/how-to-connect)** | Your customer's connection to one integration. Holds their credentials and sync schedule |
 | **[Model](/get-started/model-availability)** | A unified object type - employee, benefit, candidate. The same across every integration in its category |
 | **[Record](/guides/reading-writing/record-identity)** | One instance of a model, synced from one connector |
 | **Organisation** | Your Bindbee account |
-| **[Environment](/get-started/environments)** | Development or Production. Separate connectors, keys and logs; **shared** scope and custom fields |
+| **[Environment](/get-started/environments)** | Development or Production. Separate connectors and keys; shared logs, scope and custom fields |
 | **[API key](/api-reference/basics/authentication)** | Authenticates your organisation. Sent as `Authorization: Bearer`, on every request |
 | **[Connector token](/api-reference/basics/authentication)** | Tells Bindbee whose data you want. Sent as `X-Connector-Token` on any request that reads or writes a specific connector |
-| **[Scope](/get-started/scoping)** | The models and fields Bindbee is allowed to fetch. A field outside scope is absent from responses, not `null` |
+| **[Scope](/get-started/scoping)** | The models and fields Bindbee is allowed to fetch. A field outside scope is absent from responses |
 | **[Sync](/guides/reading-writing/syncing)** | The job that fetches the data from the source system and puts it in Bindbee's shape. Automatic in Production, manual in Development |
 | **[Custom field](/guides/extending/custom-fields)** | A value the unified model doesn't carry, pulled out of the [raw payload](/guides/reading-writing/raw-data) with a [JMESPath](https://jmespath.org/) expression |
 | **[Magic Link](/get-started/how-to-connect)** | A hosted page where your customer authorises their own system, with no front-end code on your side |
@@ -38,6 +29,7 @@ To reach one customer's data you send both: the API key says who you are, the co
 
 ## Related
 
+- [Quickstart](/get-started/quickstart) - these terms in action, on a test connector
 - [Environments](/get-started/environments) - what the two environments separate, and what they share
 - [How to connect](/get-started/how-to-connect) - the two ways a connector is created
 - [Scoping](/get-started/scoping) - what organisation-level scope controls

@@ -1,51 +1,48 @@
 ---
 title: "What is Bindbee?"
-description: "Bindbee provides a Unified API for HR, payroll, ATS, and LMS data across 65+ platforms so you can read and write across every system your customers already use, through a single integration."
+description: "Integrate once and reach every HR system your customers already use."
 icon: "info"
 ---
 
-Your customers keep their employee data in whichever system they already bought — BambooHR, ADP, Workday, Paycom, or a smaller payroll provider. Your product needs the same employee record out of all of them.
+Your customers keep their employee data in whichever system they already bought - BambooHR, ADP, Workday, Paycom, or a smaller payroll provider. Your product needs the same employee record out of all of them.
 
-Bindbee sits between those systems and yours. You integrate once, against one API and one data model. Whichever system a customer connects, their data is normalized to a single schema before it reaches your code.
+Bindbee sits between those systems and yours. You integrate once, against one API and one data model. Whichever system a customer connects, their data is normalised to a single schema before it reaches your code.
 
 ## Bindbee features
 
 <CardGroup cols={2}>
-  <Card title="One API, four categories" icon="git-fork">
-    [`HRIS, Payroll, ATS, LMS`](/get-started/integrations) — whether an employee record comes from Workday or as a [`File`](/get-started/connection-methods), it reaches you with the same fields and types.
+  <Card title="One API, three categories" icon="git-fork" href="/get-started/integrations">
+    `HRIS, ATS, LMS` - whether an employee record comes from Workday or as a [`File`](/get-started/connection-methods), it reaches you with the same fields and types.
   </Card>
 
-  <Card title="Nothing is hidden" icon="eye-off">
-    The full upstream payload stays available as [`raw_data`](/guides/reading-writing/raw-data).
+  <Card title="Nothing is hidden" icon="eye-off" href="/guides/reading-writing/raw-data">
+    The full upstream payload stays available as `raw_data`.
     Whatever the unified model doesn't carry, you can map as a [`custom field`](/guides/extending/custom-fields).
   </Card>
 
-  <Card title="Self-serve Setup" icon="unplug">
-    Your customers authorize through a [`magic link`](/get-started/how-to-connect) or an
+  <Card title="Self-serve Setup" icon="unplug" href="/get-started/how-to-connect">
+    Your customers authorise through a `magic link` or an
     [`Embedded SDK`](/guides/sdk/embedded-sdk) in your product.
   </Card>
 
-  <Card title="Write back capability" icon="pencil">
-    Create an employee, push a deduction, the same API [`sends changes back`](/guides/reading-writing/overview)
-    to the customer's system.
+  <Card title="Write back capability" icon="pencil" href="/guides/reading-writing/writing-data">
+    Create an employee or push a deduction through the same API.
   </Card>
 </CardGroup>
 
 
 ## Reading and writing data
 
-Most integrations start by reading: Bindbee pulls from the source system,
-normalizes it, and serves it through the unified API.
+Most integrations start by reading: Bindbee pulls from the source system, normalises it, and serves it through the unified API. See [Reading data](/guides/reading-writing/reading-data).
 
-Bindbee writes back too — creating an employee, pushing a deduction. The API
-reference lists which models a given integration supports.
+Bindbee writes back too, through the same API and the same models. See [Writing data](/guides/reading-writing/writing-data), or [Reading & Writing Data](/guides/reading-writing/overview) for how the two fit together.
 
-## What Bindbee is not
+<Note>
+  **Your customer's system stays the system of record.** Bindbee reads from it and writes
+  back to it; it doesn't replace it, and it doesn't run payroll.
+</Note>
 
-- **Not a system of record.** Bindbee reads from and writes to your customer's system. It does not replace it, and it does not run payroll.
-- **Bounded by the source.** If a field doesn't exist in the source system, or the customer's admin didn't grant access to it, it won't appear in the unified model and it's absent rather than an error.
-
-## Where to go from here
+## Where to next
 
 <CardGroup cols={2}>
   <Card title="Quickstart" icon="rocket" href="/get-started/quickstart">
@@ -53,11 +50,11 @@ reference lists which models a given integration supports.
   </Card>
 
   <Card title="Platform Overview" icon="layout-dashboard" href="/get-started/platform">
-    Environments, connectors, syncs and scoping — the vocabulary the rest of the docs assumes.
+    A tour of the Dashboard - connectors, logs, scoping and webhooks, and where each lives.
   </Card>
 
   <Card title="Core concepts" icon="lightbulb" href="/get-started/core-concepts">
-    Environments, scoping, connector and connection — the terms the docs use with a specific meaning.
+    Environments, scoping, connector and connection - the terms the docs use with a specific meaning.
   </Card>
 
   <Card title="API reference" icon="terminal" href="/api-reference/basics/authentication">

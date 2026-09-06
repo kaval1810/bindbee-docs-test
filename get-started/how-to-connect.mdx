@@ -1,71 +1,52 @@
 ---
 title: "How to connect"
-description: "Who authorises a connection, and the two ways one gets created - a hosted Magic Link, or the Embedded SDK inside your product."
+description: "Connect a customer's HR system through a Magic Link or the Embedded SDK."
 icon: "link"
 ---
 
-## Authorisation belongs to the customer
-
-Your customer connects their own HR system. Only an admin at their company can grant access - so you start the connection, they approve it in their own system, and Bindbee holds the credentials.
-
-## Two ways to connect
-
-Both create a connector and put your customer's admin in control. **None lets them pick which system to connect** - you choose the integration up front.
-
-**The environment is fixed at creation.** A link made in Development creates a Development connector; a link token uses the environment of the API key behind it. Changing it later means asking support - see [Environments](/get-started/environments).
-
-**Set `origin_id` (Unique Customer ID) to an ID from your own system.** It comes back on every webhook, so events map to your customer with no lookup table. It can't be added later, so use an ID that won't change - not an email or company name.
-
-Renaming a connector changes its display name only, so match on `origin_id` and never on the name. Renames go through [support@bindbee.dev](mailto:support@bindbee.dev).
+Your customer connects their own HR system. Mostly an admin at their company can grant access. You start the connection, they approve it in their own system and Bindbee holds the credentials.
 
 ## Magic Link
 
-A hosted page your customer opens to authorise their own system. You never handle their credentials.
+A unique link your customer opens to authorise access from their system.
 
 <Steps>
   <Step title="Create the link">
-    Check you're in the right environment, then go to **New connector**, fill in the customer's details - including **Unique Customer ID** (`origin_id`) and pick the integration.
+    Check you're in the right environment, then go to **New connector**, fill in the customer's details - including the **Unique Customer ID**, and pick the integration.
+
+    <Frame caption="Magic Link form">
+      <img src="/images/get-started/magic-link-form.png" alt="The Bindbee Magic Link dialog with Organisation Name set to Acme, a Categories dropdown reading HRIS under the label 'Select type of integration you want', and a Unique Customer ID field reading prod_acme_ifb1of, described as uniquely identifying a connector for a given integration" style={{ maxWidth: "420px", width: "100%", display: "block", margin: "0 auto" }} />
+    </Frame>
   </Step>
 
   <Step title="Send it to the customer">
     Send it to whoever administers their HR system. Include the setup guide from [help.bindbee.dev](https://help.bindbee.dev).
+
+    **The link expires 7 days after it is created.**
+
+    <Frame caption="Copy Link hands you the URL to send">
+      <img src="/images/get-started/magic-link-url.png" alt="The Bindbee Magic Link dialog showing the generated URL for your customer on link.bindbee.dev, a note reading 'Link will expire in 7 days', and Open Link and Copy Link buttons" style={{ maxWidth: "420px", width: "100%", display: "block", margin: "0 auto" }} />
+    </Frame>
   </Step>
 
   <Step title="Wait for them to finish">
-    The connector then appears under **Connectors**, with its `connector_token` in **Connector Details**.
+    The connector then appears under **Connectors** as linked, with its `connector_token` in **Connector Details**.
   </Step>
 </Steps>
 
-{/* VERIFY: link lifetime and expiry behaviour. Confirm how long a generated Magic Link remains valid, what an end user sees after expiry, and whether a link is single-use or reusable. */}
+{/* VERIFY: expiry behaviour. Lifetime is confirmed at 7 days (stated in the Magic Link dialog). Still open: what an end user sees after expiry, and whether a link is single-use or reusable. */}
 
-## Embedded SDK
+### Embedded SDK
 
-The same flow inside your product, in your own branding, handing your backend the `connector_token` directly. See [Embedded SDK](/guides/sdk/embedded-sdk) for the full walkthrough.
+Runs the same connection flow inside your product, in your own branding.
+Your backend receives the `connector_token` directly.
 
+See [Embedded SDK](/guides/sdk/embedded-sdk) for the full walkthrough.
 
-## Frequently Asked Questions
-
-<AccordionGroup>
-  <Accordion title="The connector was created in the wrong environment">
-    The environment follows the API key that created the link token, not anything in the frontend. It can be switched without the customer reconnecting, but not from the dashboard.
-  </Accordion>
-
-  <Accordion title="onSuccess fired but API calls still return 403">
-    A `temporary_token` is not a `connector_token`. Requests for customer data need the exchanged token in `X-Connector-Token`.
-  </Accordion>
-
-  <Accordion title="You generated two links for the same customer">
-    Two completed links produce two connectors, both billed in Production. Check for an existing connector by `origin_id` (Unique Customer ID) before generating, and relink rather than reissuing.
-  </Accordion>
-
-  <Accordion title="The customer's credentials were wrong, or have since changed">
-    Don't issue a new link. Relink the existing connector, which preserves its ID and history - see [Connection Needing Relink](/guides/troubleshooting/connector-relink).
-  </Accordion>
-</AccordionGroup>
 
 ## Related
 
-- [Embedded SDK](/guides/sdk/embedded-sdk) - the React hook and CDN global in full
-- [Create Link Token](/sdk/create-link-token) - the endpoint the embedded and programmatic routes call
+- [Quickstart](/get-started/quickstart) - create a test connector yourself before wiring either route in
+- [Create Link Token](/sdk/create-link-token) - the endpoint your backend calls to configure an embedded link
 - [Environments](/get-started/environments) - which environment a connector lands in
 - [Connection Needing Relink](/guides/troubleshooting/connector-relink) - when credentials stop working

@@ -18,7 +18,7 @@ Every request carries an API key. Requests that touch one customer's data carry 
 **Connector token** - it exists once the end user has authorised the connection. Where you read it depends on how they connected - see [How to connect](/get-started/how-to-connect).
 
 - **Embedded Link** - `onSuccess` hands your frontend a short-lived `temporary_token`, which cannot read data. Swap it from your backend with the [token exchange](/sdk/get-connector-token).
-- **Magic Link or programmatic link** - there is no temporary token. Look the connector up by the `origin_id` you set, with [Get Connectors](/api-reference/connectors/get-connectors).
+- **Magic Link** - there is no temporary token. Look the connector up by the `origin_id` you set, with [Get Connectors](/api-reference/connectors/get-connectors).
 - **Any route** - the connector's **Connector Details** panel in the dashboard, for a one-off lookup.
 
 <Warning>
