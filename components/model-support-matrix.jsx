@@ -862,7 +862,7 @@ export const ModelSupportMatrix = () => {
         <div className="bb-mm-bar-group">
         {dropdown({
           id: "provider",
-          label: "Provider",
+          label: "Integration",
           icon: "git-fork",
           open,
           setOpen,
@@ -872,10 +872,10 @@ export const ModelSupportMatrix = () => {
               {searchBox({
                 value: search,
                 setValue: setSearch,
-                placeholder: "Search providers",
+                placeholder: "Search integrations",
               })}
               {providerOptions.length === 0 ? (
-                <div className="bb-mm-opt-empty">No providers match “{search}”.</div>
+                <div className="bb-mm-opt-empty">No integrations match “{search}”.</div>
               ) : null}
               {providerOptions.map((p) => (
                 <label className="bb-mm-opt" key={p.slug}>
