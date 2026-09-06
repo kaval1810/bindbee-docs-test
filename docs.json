@@ -26,8 +26,8 @@
             "group": "Introduction",
             "pages": [
               "get-started/what-is-bindbee",
-              "get-started/quickstart",
-              "get-started/platform"
+              "get-started/platform"              ,
+              "get-started/quickstart"
             ]
           },
           {
