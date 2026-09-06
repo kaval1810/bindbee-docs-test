@@ -194,6 +194,21 @@ broken=$(grep -rhoE '\]\(/[a-zA-Z0-9/_-]+(#[a-zA-Z0-9-]+)?\)' --include='*.mdx' 
   | while IFS= read -r l; do [ -f ".$l.mdx" ] || echo "$l"; done)
 [ -n "$broken" ] && red "unresolved link target(s): $(echo "$broken" | tr '\n' ' ')" || ok "all internal links resolve"
 
+# ------------------------------------------- code-sample placeholders (persona: developer D6)
+head_ "code samples - placeholder convention"
+# all-caps placeholder tokens only: f-string interpolation and prose are not placeholders
+bad_key=$(grep -rhoE 'Bearer <?[A-Z][A-Z_]*>?' --include='*.mdx' . 2>/dev/null | grep -v 'Bearer <BINDBEE_API_KEY>' | sort -u)
+bad_tok=$(grep -rhoE 'X-Connector-Token: <?[A-Z][A-Z_]*>?' --include='*.mdx' . 2>/dev/null | grep -v 'X-Connector-Token: <CONNECTOR_TOKEN>' | sort -u)
+# a table cell or ParamField carries the token with no header prefix - catch the literals too
+bad_lit=$(grep -rhoE '(<API_KEY>|YOUR_[A-Z_]*API_KEY|END_USER_CONNECTOR_TOKEN|YOUR_CONNECTOR_TOKEN)' --include='*.mdx' . 2>/dev/null | sort -u)
+if [ -n "$bad_key$bad_tok$bad_lit" ]; then
+  printf '%s\n' "$bad_key" "$bad_tok" "$bad_lit" | grep . | sort -u | while read -r v; do
+    red "non-canonical placeholder: $v  (use <BINDBEE_API_KEY> / <CONNECTOR_TOKEN>)"
+  done
+else
+  ok "placeholders: every sample uses <BINDBEE_API_KEY> and <CONNECTOR_TOKEN>"
+fi
+
 # ------------------------------------------- reading passes (manual)
 head_ "reading passes - NOT CHECKED HERE"
 cat <<'EOF'
@@ -208,6 +223,11 @@ cat <<'EOF'
   Then read the page start to finish: would a support engineer write these sentences
   in a ticket reply? Negative definition, dramatic framing and forced triplets are
   invisible to this script and are the usual reason a page still reads AI-written.
+
+  SEPARATELY, and not checked here either: bindbee-docs-persona. This script proves
+  a page is well-formed. It cannot tell you the page is CORRECT. Any page carrying
+  endpoints, parameters, enums or a worked procedure needs the persona pass against
+  spec.json before it ships.
 EOF
 
 printf '\n'

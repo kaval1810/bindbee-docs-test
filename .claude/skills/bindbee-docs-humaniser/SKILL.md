@@ -3,7 +3,7 @@ name: bindbee-docs-humaniser
 description: Strip AI-generated texture from Bindbee docs prose. Use after drafting or restructuring any .mdx page, and whenever a page reads as machine-written - stacked hedges, negative definitions, restated points, mechanical bolding, rule-of-three lists. Also defines the SCREENSHOT NEEDED tag. Runs after bindbee-docs-style, which owns structure; this skill owns the sentences.
 ---
 
-> **Position in the chain: 5 of 5.** Runs last, after `bindbee-docs-linking`. Sequenced by `bindbee-docs-review`, which explains why.
+> **Position in the chain: 6 of 6.** Runs last, after `bindbee-docs-linking`. Sequenced by `bindbee-docs-review`, which explains why.
 >
 > **This skill owns:** Sentences: wording, hedges, bolding, punctuation.
 > **It must not change:** page anatomy (style), callout type (affordances), which page owns a fact (consistency). Flag those and hand them to the owner.

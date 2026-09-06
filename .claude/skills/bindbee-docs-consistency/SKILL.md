@@ -3,7 +3,7 @@ name: bindbee-docs-consistency
 description: Audit a docs section for duplicated procedures, terminology drift, and contradictory instructions - the defects that are invisible page-by-page and only appear when you read a section end to end. Use after restructuring a section, after merging pages, when adding an overview or index page, or whenever two pages might both claim to be the authority on the same thing.
 ---
 
-> **Position in the chain: 2 of 5.** Sequenced by `bindbee-docs-review`, which explains why.
+> **Position in the chain: 3 of 6.** Sequenced by `bindbee-docs-review`, which explains why.
 >
 > **This skill owns:** Which page owns which fact, and canonical terminology across a section.
 > **It must not change:** page anatomy (style), callout type (affordances), sentence wording (humaniser). Flag those and hand them to the owner.

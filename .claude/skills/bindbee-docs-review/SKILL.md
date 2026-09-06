@@ -5,7 +5,7 @@ description: Run the Bindbee docs skills in the right order without them undoing
 
 # Bindbee docs review
 
-Six skills act on the same files. Run in the wrong order they rewrite each other's output; run without boundaries they fight over the same sentence. This skill is the entry point that sequences them.
+Seven skills act on the same files. Run in the wrong order they rewrite each other's output; run without boundaries they fight over the same sentence. This skill is the entry point that sequences them.
 
 **If only one skill applies, invoke it directly.** This is for when two or more do.
 
@@ -19,16 +19,24 @@ Six skills act on the same files. Run in the wrong order they rewrite each other
 | --- | --- | --- | --- |
 | 0 | `bindbee-docs-intake` | The facts a new page needs, and where it lands in the nav | Only for pages that don't exist yet. Skip for edits to existing pages |
 | 1 | `bindbee-docs-style` | Page shape: quadrant, anatomy, headings, frontmatter keys | Everything downstream assumes the page is the right *kind* of page |
-| 2 | `bindbee-docs-consistency` | Which page owns which fact; terminology across the section | Moves and deletes whole blocks. Cheapest to do before anyone words them carefully |
-| 3 | `bindbee-docs-affordances` | Callout type, screenshots, diagrams; lifts lines out of prose | Changes what is prose and what is a box, and can add new prose |
-| 4 | `bindbee-docs-linking` | Cross-links between pages | Can only link content that already exists, and it adds prose the next pass must polish |
-| 5 | `bindbee-docs-humaniser` | Sentences | **Last.** It is the only pass whose output nothing else rewrites |
+| 2 | `bindbee-docs-persona` | Whether the content is **true**, and whether it serves the reader it is written for | The only pass that may delete a step or invert a warning. Deciding who owns a fact is pointless before the fact is known to be right |
+| 3 | `bindbee-docs-consistency` | Which page owns which fact; terminology across the section | Moves and deletes whole blocks. Cheapest to do before anyone words them carefully |
+| 4 | `bindbee-docs-affordances` | Callout type, screenshots, diagrams; lifts lines out of prose | Changes what is prose and what is a box, and can add new prose |
+| 5 | `bindbee-docs-linking` | Cross-links between pages | Can only link content that already exists, and it adds prose the next pass must polish |
+| 6 | `bindbee-docs-humaniser` | Sentences | **Last.** It is the only pass whose output nothing else rewrites |
 
 <Note>
 The failure this ordering fixes is real and was observed: the humaniser ran second,
 then consistency reworded its sentences and affordances rewrote them again. One
 sentence in `errors-and-issues.mdx` was written three times by three passes.
 </Note>
+
+<Warning>
+**Five of these passes check form. Only `persona` checks truth.** A page reached
+zero mechanical failures, clean reading passes and resolving links while telling a
+benefits platform to expand the wrong relation, filter out customers it needed, and
+read a model for a field that does not do its job. Form passing is not correctness.
+</Warning>
 
 ### Skipping
 
@@ -38,12 +46,12 @@ Skipping forward is fine; going back is not. If a late pass turns up a structura
 
 ## Two layers
 
-The six skills are not peers. They split by **when** they act, and that is what keeps `bindbee-docs-style` from being redundant now that four passes exist.
+The seven skills are not peers. They split by **when** they act, and that is what keeps `bindbee-docs-style` from being redundant now that five passes exist.
 
 | Layer | Skills | Answers |
 | --- | --- | --- |
 | **Write-time** | `intake`, `style` | What should this page contain, and what does correct look like? |
-| **Review-time** | `consistency`, `affordances`, `linking`, `humaniser` | Where does what's on the page fall short? |
+| **Review-time** | `persona`, `consistency`, `affordances`, `linking`, `humaniser` | Is what's on the page true, and where does it fall short? |
 
 `style` is the **specification** - the vocabulary, anatomy, naming and quadrant rules a page is measured against. Each pass is **detection and repair** for one defect class. They quote `style`; they don't replace it:
 
@@ -67,6 +75,8 @@ Each skill edits one surface. A skill that finds a defect outside its surface **
 | Whether a page should exist, and its nav placement | intake | flag |
 | Quadrant, page anatomy, heading structure | style | flag |
 | `description` and other frontmatter | style | flag |
+| Whether a claim is factually true, checked against `spec.json` | persona | flag |
+| Whether the content serves its reader, and the reader it addresses | persona | flag |
 | Which page holds a fact; canonical terms | consistency | flag |
 | Callout type (`Note`/`Warning`/`Info`/`Tip`) | affordances | flag |
 | Whether a diagram is needed | affordances | flag |

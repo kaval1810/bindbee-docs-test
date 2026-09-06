@@ -5,7 +5,7 @@ description: Collect the facts a new page needs before writing a word of it, and
 
 # Bindbee docs intake
 
-> **Position in the chain: 0 of 5.** Runs before `bindbee-docs-style`. Sequenced by `bindbee-docs-review`.
+> **Position in the chain: 0 of 6.** Runs before `bindbee-docs-style`. Sequenced by `bindbee-docs-review`.
 >
 > **This skill owns:** the questions asked before a page exists, and where the page lands in the nav.
 > **It must not change:** existing pages. Its output is a brief, not prose.

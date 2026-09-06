@@ -5,7 +5,7 @@ description: Find where a reader is stuck on one page while the answer sits on a
 
 # Bindbee docs linking
 
-> **Position in the chain: 4 of 5.** Runs after `bindbee-docs-affordances`, before `bindbee-docs-humaniser`. Sequenced by `bindbee-docs-review`.
+> **Position in the chain: 5 of 6.** Runs after `bindbee-docs-affordances`, before `bindbee-docs-humaniser`. Sequenced by `bindbee-docs-review`.
 >
 > **This skill owns:** where a cross-link belongs, and its anchor text.
 > **It must not change:** page structure (style), which page owns a fact (consistency), callouts or images (affordances). Flag those and hand them to the owner.

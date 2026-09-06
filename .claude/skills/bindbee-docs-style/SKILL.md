@@ -3,7 +3,7 @@ name: bindbee-docs-style
 description: House style for the Bindbee Mintlify docs. Use when writing, reviewing, or restructuring any .mdx page in this repo - Get Started tutorials, How-To guides, Explanation pages, or API Reference. Covers per-section page anatomy, title casing, which visual devices belong where, prose density rules, and the spec.json verification requirement.
 ---
 
-> **Position in the chain: 1 of 5.** Sequenced by `bindbee-docs-review`, which explains why.
+> **Position in the chain: 1 of 6.** Sequenced by `bindbee-docs-review`, which explains why.
 >
 > **This skill owns:** Page shape: quadrant, anatomy, headings, frontmatter.
 > **It must not change:** sentence wording (humaniser), callout type (affordances), which page owns a fact (consistency). Flag those and hand them to the owner.

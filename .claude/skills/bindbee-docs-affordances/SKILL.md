@@ -3,7 +3,7 @@ name: bindbee-docs-affordances
 description: Decide where a page needs a screenshot, and which lines belong in a Note, Warning, Info or Tip rather than plain prose. Use after a page's content is settled but before it ships - when prose is carrying something the reader will skim past, when a step describes a dashboard screen in words, or when callouts have been sprinkled by feel rather than by rule.
 ---
 
-> **Position in the chain: 3 of 5.** Sequenced by `bindbee-docs-review`, which explains why.
+> **Position in the chain: 4 of 6.** Sequenced by `bindbee-docs-review`, which explains why.
 >
 > **This skill owns:** Callout type, and where screenshots belong.
 > **It must not change:** page anatomy (style), sentence wording (humaniser), which page owns a fact (consistency). Flag those and hand them to the owner.
