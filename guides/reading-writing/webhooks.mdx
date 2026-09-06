@@ -484,7 +484,7 @@ Three endpoints cover the same ground programmatically, which is useful for aler
  
 ```bash
 curl -G https://api.bindbee.dev/api/v1/webhooks \
-  -H "Authorization: Bearer <YOUR_API_KEY>" \
+  -H "Authorization: Bearer <BINDBEE_API_KEY>" \
   -d is_active=true
 ```
  
@@ -492,7 +492,7 @@ curl -G https://api.bindbee.dev/api/v1/webhooks \
  
 ```bash
 curl -G https://api.bindbee.dev/api/v1/webhooks/logs \
-  -H "Authorization: Bearer <YOUR_API_KEY>" \
+  -H "Authorization: Bearer <BINDBEE_API_KEY>" \
   -d errors_only=true \
   -d created_at_from=2026-08-01T00:00:00Z
 ```
@@ -510,7 +510,7 @@ curl -G https://api.bindbee.dev/api/v1/webhooks/logs \
  
 ```bash
 curl https://api.bindbee.dev/api/v1/webhooks/logs/<LOG_ID> \
-  -H "Authorization: Bearer <YOUR_API_KEY>"
+  -H "Authorization: Bearer <BINDBEE_API_KEY>"
 ```
  
 ---

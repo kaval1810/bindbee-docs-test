@@ -19,7 +19,7 @@ A link token authorises one linking session for one end user. Full reference: [C
 
 ```bash
 POST /api/embedded/v1/link/create-link-token
-Authorization: Bearer YOUR_BINDBEE_API_KEY
+Authorization: Bearer <BINDBEE_API_KEY>
 ```
 
 <CodeGroup>
@@ -140,7 +140,7 @@ The temporary token from `onSuccess` is not an API credential. Send it to your b
 
 ```bash
 GET /api/embedded/v1/connectors/connector_token/{temporary_token}
-Authorization: Bearer YOUR_BINDBEE_API_KEY
+Authorization: Bearer <BINDBEE_API_KEY>
 ```
 
 ```json Response

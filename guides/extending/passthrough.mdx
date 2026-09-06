@@ -35,7 +35,7 @@ Every call is the same envelope: describe the request you want made upstream, an
 }
 ```
 
-Authenticate as you would any Bindbee call: `Authorization: Bearer <API_KEY>` plus the `X-Connector-Token` of the end user whose system you are calling. The connector token selects the target system **and** the customer whose credentials get used. Full schema and response codes are in the [Passthrough Request](/api-reference/passthrough/make-passthrough-request).
+Authenticate as you would any Bindbee call: `Authorization: Bearer <BINDBEE_API_KEY>` plus the `X-Connector-Token` of the end user whose system you are calling. The connector token selects the target system **and** the customer whose credentials get used. Full schema and response codes are in the [Passthrough Request](/api-reference/passthrough/make-passthrough-request).
 
 ## A worked example
 
@@ -45,8 +45,8 @@ An end user is on BambooHR, and you need a field Bindbee does not model. The uni
 ```bash cURL
 curl --request POST \
   --url https://api.bindbee.dev/api/v1/passthrough \
-  --header 'Authorization: Bearer YOUR_BINDBEE_API_KEY' \
-  --header 'X-Connector-Token: END_USER_CONNECTOR_TOKEN' \
+  --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+  --header 'X-Connector-Token: <CONNECTOR_TOKEN>' \
   --header 'Content-Type: application/json' \
   --data '{
     "method": "GET",

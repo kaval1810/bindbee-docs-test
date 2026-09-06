@@ -35,7 +35,7 @@ A write operation can be live for an integration before its Meta schema exists. 
 ## Authentication
 
 <ParamField header="Authorization" type="string" required>
-  `Bearer YOUR_BINDBEE_API_KEY`
+  `Bearer <BINDBEE_API_KEY>`
 </ParamField>
 
 <ParamField header="X-Connector-Token" type="string" required>
@@ -48,8 +48,8 @@ Base URLs: `https://api.bindbee.dev` (US), `https://api-eu.bindbee.dev` (EU).
 ```bash cURL
 curl --request GET \
   --url https://api.bindbee.dev/api/hris/v1/employees/meta/post \
-  --header 'Authorization: Bearer YOUR_BINDBEE_API_KEY' \
-  --header 'X-Connector-Token: END_USER_CONNECTOR_TOKEN'
+  --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+  --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
 ```
 
 ```javascript Node
