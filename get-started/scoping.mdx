@@ -10,7 +10,7 @@ Scoping is an important initial step while configuring your organization dashboa
 
 
 
-In the dashboard, go to **Configure → Scoping**, pick the category, and switch on the models you need. Each one expands so you can keep or drop individual fields.
+In the dashboard, open [**Scoping**](https://app.bindbee.dev/scoping?category=hris), pick the category, and switch on the models you need. Each model expands so you can keep or drop individual fields, and **Enable All** turns on everything in a category at once.
 
 <Frame caption="Each model is switched on or off and expands to keep or drop individual fields.">
   <img src="/images/get-started/scoping.png" alt="The Scoping screen with HRIS, ATS and LMS tabs. Bank Info is switched off; Benefit is switched on and expanded, listing fields such as effective_date, employee_contribution, plan_name and coverage_tier, each with a Read checkbox" />
@@ -19,6 +19,20 @@ In the dashboard, go to **Configure → Scoping**, pick the category, and switch
 <Note>
 Scoping applies across all connectors, integrations and environments. There is no per-connector override.
 </Note>
+
+A scope change takes effect on the next sync rather than immediately. **Resync a connector to see the change on it** - see [Syncing](/guides/reading-writing/syncing).
+
+{/* VERIFY: what a fresh organization starts with - every model enabled, or none. The dashboard offers Enable All, which suggests not everything is on by default, but that is inference rather than fact. */}
+
+## What your customer sees
+
+Scope is not only an internal setting. It becomes the consent screen your customer's admin reads and approves when they authorize the connection, model by model, and each model expands to the individual fields you kept.
+
+<Frame caption="The consent screen your customer approves. Company is expanded to the fields scoping kept.">
+  <img src="/images/get-started/end-user-scope-consent.png" alt="A consent panel reading 'Bindbee is requesting access to BambooHR - allow read access to these data models', listing Benefit, Company, Compensation, Dependent, Employee and Employment each with a green Read tick. Company is expanded to show eins, legal_name and display_name. An Allow and Continue button sits below, above a line agreeing to the End User Terms" style={{ maxWidth: "300px", width: "100%", display: "block", margin: "0 auto" }} />
+</Frame>
+
+Narrowing scope narrows what you ask them to grant, so a model or field you switch off never appears on this screen. For where the screen sits in the flow, see [How to connect](/get-started/how-to-connect).
 
 ## How to double check permission failures
 
