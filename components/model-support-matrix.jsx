@@ -1046,6 +1046,12 @@ export const ModelSupportMatrix = () => {
           </span>
         </div>
 
+        {/*
+          Category picker, hidden for now - ATS and LMS have no real data in the
+          sheet yet, so there is nothing worth switching to. The matrix still
+          defaults to AVAILABLE[0] (HRIS) and ?category=ATS still works, so
+          restoring this is only a matter of uncommenting.
+
         {dropdown({
           id: "category",
           label: (CATEGORIES.find((c) => c.key === category) || CATEGORIES[0]).label,
@@ -1077,6 +1083,7 @@ export const ModelSupportMatrix = () => {
             </>
           ),
         })}
+        */}
 
         {dropdown({
           id: "provider",

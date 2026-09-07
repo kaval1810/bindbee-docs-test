@@ -42,11 +42,11 @@ SAFE_LOGO = re.compile(r"^https://[A-Za-z0-9._~:/?#\[\]@!$&'()*+,;=%-]+$")
 # (adp vs adp_sftp), so a combined "Both" would not say which one a reader wants.
 TYPES = {"API": "API", "SFTP": "SFTP"}
 
-# Heading and base path per category, and the order they appear on the page.
+# Heading per category, and the order they appear on the page.
 SECTIONS = [
-    ("HRIS", "HRIS, Payroll & Directory", "/api/hris/v1/"),
-    ("ATS", "Recruiting (ATS)", "/api/ats/v1/"),
-    ("LMS", "Learning (LMS)", "/api/lms/v1/"),
+    ("HRIS", "HRIS, Payroll & Directory"),
+    ("ATS", "Recruiting (ATS)"),
+    ("LMS", "Learning (LMS)"),
 ]
 
 START = "{/* GENERATED:integrations START - edit the sheet, then run scripts/gen-integrations.py */}"
@@ -128,7 +128,7 @@ def build(rows):
     sections and individual rows without the content ever leaving the HTML.
     """
     out = [START, ""]
-    for key, heading, base in SECTIONS:
+    for key, heading in SECTIONS:
         got = [r for r in rows if r["category"].strip().upper() == key]
         if not got:
             continue
@@ -137,8 +137,6 @@ def build(rows):
             '<div className="bb-int-section" data-category="%s">' % key,
             "",
             "## %s" % heading,
-            "",
-            "Base path `%s` · category `%s`" % (base, key),
             "",
             "| System | Slug | Type |",
             "| --- | --- | --- |",
@@ -212,7 +210,7 @@ def main():
     PAGE.write_text(updated)
     counts = ", ".join(
         "%s %d" % (k, sum(1 for r in rows if r["category"].strip().upper() == k))
-        for k, _, _ in SECTIONS
+        for k, _ in SECTIONS
     )
     print("wrote %s - %d integrations (%s) from gid %s" % (PAGE.name, len(rows), counts, gid))
     return 0

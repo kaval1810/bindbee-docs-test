@@ -49,27 +49,32 @@ export const IntegrationFilter = () => {
 
   .bb-if-bar {
     display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .bb-if-chips {
+    display: flex;
     flex-wrap: wrap;
-    align-items: center;
     gap: 8px;
   }
 
-  .bb-if-search { position: relative; flex: 1 1 240px; max-width: 340px; }
+  .bb-if-search { position: relative; display: block; width: 100%; }
   .bb-if-search input {
     box-sizing: border-box;
     width: 100%;
-    height: 34px;
-    padding: 0 30px 0 32px;
+    height: 46px;
+    padding: 0 40px 0 42px;
     border: 1px solid var(--bb-border-strong);
-    border-radius: 4px;
+    border-radius: 6px;
     background: var(--bb-bg);
     color: var(--bb-text);
-    font-size: 13px;
+    font-size: 15px;
   }
   .bb-if-search input:focus { outline: none; border-color: var(--bb-accent); }
   .bb-if-search-icon {
     position: absolute;
-    left: 9px;
+    left: 15px;
     top: 50%;
     transform: translateY(-50%);
     display: inline-flex;
@@ -78,14 +83,14 @@ export const IntegrationFilter = () => {
   }
   .bb-if-search-clear {
     position: absolute;
-    right: 6px;
+    right: 10px;
     top: 50%;
     transform: translateY(-50%);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     padding: 0;
     border: none;
     border-radius: 3px;
@@ -115,8 +120,6 @@ export const IntegrationFilter = () => {
     color: var(--bb-accent);
     font-weight: 500;
   }
-  .bb-if-chip span { color: var(--bb-text-dim); font-weight: 400; }
-  .bb-if-chip[data-active="true"] span { color: var(--bb-accent); }
 
   /* Row logos live in the generated tables, not in this component, but the
      tables are plain MDX with nowhere to carry styles - so their one rule
@@ -143,14 +146,13 @@ export const IntegrationFilter = () => {
   .bb-if-status a:hover { text-decoration: underline; }
 
   @media (max-width: 640px) {
-    .bb-if-search { max-width: none; }
+    .bb-if-search input { height: 42px; font-size: 14px; }
     .bb-if-chip { height: 32px; padding: 0 10px; font-size: 12px; }
   }
   `;
 
   const [query, setQuery] = useState("");
   const [cat, setCat] = useState("ALL");
-  const [counts, setCounts] = useState(null);
   const [shown, setShown] = useState(null);
 
   /* Row text is read once - the tables never change after render, and reading
@@ -172,11 +174,6 @@ export const IntegrationFilter = () => {
   useEffect(() => {
     const found = readRows();
     setRows(found);
-    const c = {};
-    found.forEach((r) => {
-      c[r.key] = (c[r.key] || 0) + 1;
-    });
-    setCounts(c);
     return () => {
       /* Leave the page as we found it on navigate-away. */
       found.forEach((r) => {
@@ -214,7 +211,7 @@ export const IntegrationFilter = () => {
       <div className="bb-if-bar">
         <span className="bb-if-search">
           <span className="bb-if-search-icon">
-            <Icon icon="search" size={14} />
+            <Icon icon="search" size={17} />
           </span>
           <input
             type="text"
@@ -230,30 +227,32 @@ export const IntegrationFilter = () => {
               aria-label="Clear search"
               onClick={() => setQuery("")}
             >
-              <Icon icon="x" size={13} />
+              <Icon icon="x" size={15} />
             </button>
           ) : null}
         </span>
 
-        <button
-          type="button"
-          className="bb-if-chip"
-          data-active={cat === "ALL"}
-          onClick={() => setCat("ALL")}
-        >
-          All {total ? <span>{total}</span> : null}
-        </button>
-        {CATEGORIES.map((c) => (
+        <div className="bb-if-chips">
           <button
             type="button"
             className="bb-if-chip"
-            key={c.key}
-            data-active={cat === c.key}
-            onClick={() => setCat(c.key)}
+            data-active={cat === "ALL"}
+            onClick={() => setCat("ALL")}
           >
-            {c.label} {counts && counts[c.key] ? <span>{counts[c.key]}</span> : null}
+            All
           </button>
-        ))}
+          {CATEGORIES.map((c) => (
+            <button
+              type="button"
+              className="bb-if-chip"
+              key={c.key}
+              data-active={cat === c.key}
+              onClick={() => setCat(c.key)}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {shown === 0 ? (
