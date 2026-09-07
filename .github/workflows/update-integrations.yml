@@ -1,0 +1,52 @@
+# Refreshes the integration tables on /get-started/integrations from the
+# "Bindbee Docs - Models Matrix" sheet.
+#
+# Manual on purpose. The tables are generated rather than fetched at runtime so
+# the page stays fast and its 80-odd vendor names stay in the indexable HTML -
+# the trade is that a sheet edit needs a run. Integrations change a few times a
+# month, so a button beats a schedule.
+#
+# To run: Actions tab -> Update integration tables -> Run workflow -> pick the
+# branch. It commits to that same branch, and Mintlify redeploys from the commit.
+#
+# To make it automatic instead, uncomment the schedule below.
+name: Update integration tables
+
+on:
+  workflow_dispatch:
+  # schedule:
+  #   - cron: "0 * * * *"   # hourly
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Fails the run if the sheet is mid-edit (see SHRINK_GUARD) or a Type is
+      # outside API/SFTP. A visible failure is the point - the alternative is
+      # publishing a gutted or wrong table.
+      - name: Regenerate from the sheet
+        run: python3 scripts/gen-integrations.py | tee /tmp/gen.log
+
+      - name: Commit if the page changed
+        run: |
+          if git diff --quiet -- get-started/integrations.mdx; then
+            echo "No change - the page already matches the sheet." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add get-started/integrations.mdx
+          git commit -m "docs: refresh integration tables from the sheet"
+          git push
+          {
+            echo "Updated \`get-started/integrations.mdx\`:"
+            echo ""
+            echo '```'
+            cat /tmp/gen.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
