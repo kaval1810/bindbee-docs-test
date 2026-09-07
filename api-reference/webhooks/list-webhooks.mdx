@@ -1,10 +1,10 @@
 ---
 title: "List Webhooks"
-description: "List the webhooks configured for your organisation, with their URLs, subscribed state and when each last fired."
+description: "List the webhooks configured for your organization, with their URLs, subscribed state and when each last fired."
 openapi: get /api/v1/webhooks
 ---
 
-Returns every webhook on the organisation, including `is_enabled` and `last_triggered_at` — the pair to watch if deliveries have quietly stopped arriving.
+Returns every webhook on the organization, including `is_enabled` and `last_triggered_at` — the pair to watch if deliveries have quietly stopped arriving.
 
 Pass `is_active=true` to return only enabled webhooks. `for_test_connector` distinguishes a Development webhook from a Production one.
 

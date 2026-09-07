@@ -1,8 +1,11 @@
 ---
 title: "Create a Time Off Request"
-sidebarTitle: "Time off request"
-description: "Submit a time off request into the customer's HRIS, with the leave type and approval semantics that platform expects."
+sidebarTitle: "Create time off request"
+icon: "calendar-clock"
+description: "Submit a time off request into the customer's HRIS."
 ---
+
+Submitting a leave request writes a real record into the customer's HRIS. What happens next is the platform's decision rather than yours: which leave types it accepts, whether a manager has to approve it, and whether the employee has the balance for it.
 
 <Info>
   **Before you start**
@@ -54,9 +57,7 @@ description: "Submit a time off request into the customer's HRIS, with the leave
     Use field names and enum values from the schema rather than the example above.
 
     <Warning>
-      Always send `X-Idempotency-Key`. Writes create real records in the customer's HRIS, and a retried request without a key creates a duplicate leave request - which someone then has to find and cancel manually.
-
-      Derive the key from your own request identity, not a random value, so a retry of the same logical request reuses the same key.
+      Always send `X-Idempotency-Key`. A retried request without one creates a duplicate leave request that someone has to find and cancel by hand - see [Idempotency](/guides/reading-writing/writing-data/idempotency).
     </Warning>
 
     **Result:** The request is created in the source system.
@@ -67,21 +68,17 @@ description: "Submit a time off request into the customer's HRIS, with the leave
 
     The record won't appear in Bindbee's synced data until the next sync. To confirm sooner, [force a resync](/guides/reading-writing/syncing).
 
+    A new request lands as `REQUESTED`, not approved. The source system runs its own workflow, and `status` moves to `APPROVED`, `DECLINED` or `CANCELLED` there rather than through Bindbee.
+
     **Result:** Verified in the customer's system.
   </Step>
 </Steps>
-
-## What the write does and doesn't decide
-
-A created request enters the source system's own workflow. It is not automatically approved - most platforms place it in a pending state for a manager, and the approval status is theirs to set, not yours.
-
-Balances are also the source system's. Bindbee submits the request; whether it's permitted against the employee's accrued balance is enforced upstream, and a request exceeding the balance is typically rejected there rather than by Bindbee.
 
 ## Frequently Asked Questions
 
 <AccordionGroup>
   <Accordion title="The leave type is rejected">
-    Leave types are platform-specific and often customer-specific - a customer can define their own categories. Use a value from the schema's `enum`, and read `enumInformation` for what each means rather than matching on the name.
+    Leave types are platform-specific, and a customer can define their own categories. Use a value from the schema's `enum`, and read `enumInformation` for what each means rather than matching on the name.
 
     If the customer's own category isn't in the enum, it may need supplying through `integration_params` or `additional_attributes`.
   </Accordion>
@@ -98,11 +95,18 @@ Balances are also the source system's. Bindbee submits the request; whether it's
     An idempotency key prevents this. To clean up, cancel the duplicates in the source system - Bindbee doesn't own the record once created.
   </Accordion>
 
+  <Accordion title="The request exceeds the employee's balance">
+    Balances belong to the source system. Bindbee submits the request and the platform enforces the balance, so an over-balance request is rejected upstream rather than by Bindbee.
+  </Accordion>
+
   <Accordion title="The employee reference is rejected">
-    Confirm you're sending the Bindbee `id`, and that the employee belongs to this connector. IDs are per connector; an ID from another customer's connector won't resolve.
+    Confirm you're sending the Bindbee `id`, and that the employee belongs to this connector. IDs are per connector, so an ID from another customer's connector won't resolve.
   </Accordion>
 </AccordionGroup>
 
 ## Related
 
-- [Create Time Off](/hris/time-off/create-time-off) · [Get Create Time Off Meta](/hris/time-off/get-create-time-off-meta)
+- [Time & attendance](/guides/data-models/time-and-attendance) - the time-off models and how they link
+- [Meta APIs](/guides/reading-writing/writing-data/meta-apis) - fetching the write schema for an integration
+- [Create Time Off](/hris/time-off/create-time-off) - the endpoint
+- [Writing data](/guides/reading-writing/writing-data) - how a write reaches the source system

@@ -152,13 +152,19 @@ On How-To pages the heading names the task, starting with a verb: `Recover faile
 
 ### Spelling
 
-British spelling throughout prose (`authorise`, `organisation`, `normalise`). Field names, enum values and code keep whatever the API uses.
+American spelling throughout prose (`authorize`, `organization`, `normalize`, `enrollment`). The product sells into the US, so the docs read as US English.
 
-`behaviour`/`behavior` remain mixed - 16 British to 8 American at last count. British wins by usage and by the rule above; normalise the 8 when you next touch those pages.
+**Three things keep their own spelling regardless.**
 
-```bash
-grep -rn '\bbehavior\b' --include='*.mdx' .
-```
+| Keep verbatim | Why | Example |
+| --- | --- | --- |
+| Enum values and field names | They are what the API returns, and a reader types them | `CANCELLED`, not `canceled` |
+| Text quoted from the dashboard | An `alt` or a bold UI label describes what is on screen | **Organisation Name** on the Magic Link form |
+| `spec.json` descriptions | Read-only and maintained upstream | "normalised document type" |
+
+The dashboard currently labels the field **Organisation Name** while the docs say organization in prose. That mismatch is the product's, not the docs' - describe the screen as it reads and leave prose American.
+
+`bindbee-docs-checks.sh` fails on British spellings in prose, with those three cases excluded.
 
 ---
 
@@ -340,10 +346,20 @@ Plain mermaid, no custom `classDef` or colours - the default theme matches the s
 
 | Showing | Type |
 | --- | --- |
-| Model relations | `erDiagram` |
+| Model relations | `flowchart BT` |
 | A lifecycle with states | `stateDiagram-v2` |
 | A before/after or a branching outcome | `flowchart TB` with `subgraph` |
 | An exchange between parties | `sequenceDiagram` |
+
+**For model relations, the arrow runs from the model that holds the foreign key to the model it points at, labelled with the field name.** `flowchart BT` puts the referenced model above, so the hub sits at the top of the picture.
+
+```
+flowchart BT
+    EMPLOYMENT[Employment] -->|employee| EMPLOYEE[Employee]
+    BANK_INFO[Bank info] -->|employee| EMPLOYEE
+```
+
+Label every node on first mention - `EMPLOYMENT[Employment]` - and reuse the bare id afterwards. Cardinality belongs in the page's `## How many per …` table, not in the diagram.
 
 **Label `erDiagram` edges with the actual foreign-key field name.** It turns a shape into something checkable, and makes structural asymmetries legible without prose:
 

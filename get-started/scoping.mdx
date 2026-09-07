@@ -4,7 +4,7 @@ description: "Choose which models and fields Bindbee requests from a connected s
 icon: "sliders-horizontal"
 ---
 
-Scoping is an important initial step while configuring your organisation dashboard. It decides what Bindbee asks from a connected system. You should definitely set it before connecting real customers.
+Scoping is an important initial step while configuring your organization dashboard. It decides what Bindbee asks from a connected system. You should definitely set it before connecting real customers.
 
 ## Configure scoping
 
@@ -20,19 +20,6 @@ In the dashboard, go to **Configure → Scoping**, pick the category, and switch
 Scoping applies across all connectors, integrations and environments. There is no per-connector override.
 </Note>
 
-## What decides whether data arrives
-
-
-A `200` with an empty field, or a model that comes back as an empty list, isn't always a failure. Data has to clear three checks before it reaches you, and only one of them is yours.
-
-| Check | Decided by |
-| --- | --- |
-| **Integration coverage** | What the vendor's API exposes. If their system has no pay groups, that model doesn't exist here |
-| **Scope** | You. Anything you haven't enabled is never fetched |
-| **Source-system permissions** | The admin who authorised the connection. A restricted role returns less and you can ask them to widen it |
-
-Where a whole model comes back empty rather than a single field, work down these three in order.
-
 ## How to double check permission failures
 
 Permission failures are silent. The source system leaves the data out instead of erroring, so a missing permission and an empty field look the same. One request with `include_raw_data=true` tells them apart.
@@ -41,7 +28,7 @@ Permission failures are silent. The source system leaves the data out instead of
 | --- | --- |
 | Present in `raw_data`, missing from the unified field | A mapping gap rather than a permission problem |
 | Missing from both | Scope excluded it, or the credentials couldn't read it |
-| A sync error naming an authorisation failure | Permission, reported outright |
+| A sync error naming an authorization failure | Permission, reported outright |
 
 The connector's logs carry the failing request and response - see [Origin-system errors](/guides/troubleshooting/errors#origin-system-errors).
 

@@ -25,7 +25,7 @@ Run this once the [ideal workflow](/guides/ideal-workflow) is built and before y
 
 - Pagination stops on `cursor == null`, not on a short page.
 - Every field is treated as nullable, and no `switch` over an enum runs without a default - unmapped vendor values pass through verbatim. See [Enum values](/guides/reading-writing/enum-values).
-- Writes carry `X-Idempotency-Key`, derived from your own record. Passthrough writes take no key, so check before retrying.
+- Writes carry `X-Idempotency-Key` - see [Idempotency](/guides/reading-writing/writing-data/idempotency). Passthrough takes no key, so check before retrying.
 - Request bodies come from the Meta schema, not hardcoded.
 
 **Reliability**

@@ -37,7 +37,7 @@ So the grouping is not absent from the platform - **you supply the key, and Bind
 
 ## What stays your job
 
-Each connector authorises separately, syncs on its own schedule, holds its own credentials, and can break on its own. Sharing an `origin_id` changes none of that.
+Each connector authorizes separately, syncs on its own schedule, holds its own credentials, and can break on its own. Sharing an `origin_id` changes none of that.
 
 **Health is per connector.** One broken connector means partial data, and your monitoring has to express that. A customer with three connectors, one broken for a month, looks fine at a glance and is missing a third of their people.
 
@@ -61,7 +61,7 @@ Headcount and any billing derived from record counts must deduplicate across con
 
 Whether two tenants are one customer or two depends on your contract, your billing, and how you model the relationship - and different products in the same position answer it differently. A group with three subsidiaries might be one account or three. `origin_id` lets you assert the answer; inferring it would mean guessing.
 
-Keeping connectors independent underneath that also keeps failure isolated. One entity's credentials expiring does not affect the others, and the customer re-authorises just that one rather than everything.
+Keeping connectors independent underneath that also keeps failure isolated. One entity's credentials expiring does not affect the others, and the customer re-authorizes just that one rather than everything.
 
 The cost is that you own the fan-out - aggregating health, intersecting coverage, deduplicating people. That work follows from the grouping being yours to define; what the platform can do is make each connector behave predictably in isolation, and give you one identifier to gather them by.
 

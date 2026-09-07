@@ -12,14 +12,14 @@ icon: "lightbulb"
 | **[Connector](/get-started/how-to-connect)** | Your customer's connection to one integration. Holds their credentials and sync schedule |
 | **[Model](/get-started/model-availability)** | A unified object type - employee, benefit, candidate. The same across every integration in its category |
 | **[Record](/guides/reading-writing/record-identity)** | One instance of a model, synced from one connector |
-| **Organisation** | Your Bindbee account |
+| **Organization** | Your Bindbee account |
 | **[Environment](/get-started/environments)** | Development or Production. Separate connectors and keys; shared logs, scope and custom fields |
-| **[API key](/api-reference/basics/authentication)** | Authenticates your organisation. Sent as `Authorization: Bearer`, on every request |
+| **[API key](/api-reference/basics/authentication)** | Authenticates your organization. Sent as `Authorization: Bearer`, on every request |
 | **[Connector token](/api-reference/basics/authentication)** | Tells Bindbee whose data you want. Sent as `X-Connector-Token` on any request that reads or writes a specific connector |
 | **[Scope](/get-started/scoping)** | The models and fields Bindbee is allowed to fetch. A field outside scope is absent from responses |
 | **[Sync](/guides/reading-writing/syncing)** | The job that fetches the data from the source system and puts it in Bindbee's shape. Automatic in Production, manual in Development |
 | **[Custom field](/guides/extending/custom-fields)** | A value the unified model doesn't carry, pulled out of the [raw payload](/guides/reading-writing/raw-data) with a [JMESPath](https://jmespath.org/) expression |
-| **[Magic Link](/get-started/how-to-connect)** | A hosted page where your customer authorises their own system, with no front-end code on your side |
+| **[Magic Link](/get-started/how-to-connect)** | A hosted page where your customer authorizes their own system, with no front-end code on your side |
 | **[Passthrough](/guides/extending/passthrough)** | A request forwarded to the source system's own API, using the credentials already on a connector |
 | **[Issue](/guides/troubleshooting/errors)** | A failure raised automatically against a connector, carrying the request and response behind it |
 | **[Meta API](/guides/reading-writing/writing-data/meta-apis)** | Returns the request shape a write endpoint expects for a given connector, since required fields differ by system |
@@ -32,5 +32,5 @@ To reach one customer's data you send both: the API key says who you are, the co
 - [Quickstart](/get-started/quickstart) - these terms in action, on a test connector
 - [Environments](/get-started/environments) - what the two environments separate, and what they share
 - [How to connect](/get-started/how-to-connect) - the two ways a connector is created
-- [Scoping](/get-started/scoping) - what organisation-level scope controls
+- [Scoping](/get-started/scoping) - what organization-level scope controls
 - [Authentication](/api-reference/basics/authentication) - how the two tokens are supplied

@@ -67,7 +67,7 @@ description: "Build an accurate picture of who is covered under each employee, n
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    Compare `coverage_tier` on the enrolment against the number of covered dependents you found. Report the mismatch rather than reconciling it silently - the discrepancy is usually real and belongs with the customer.
+    Compare `coverage_tier` on the enrollment against the number of covered dependents you found. Report the mismatch rather than reconciling it silently - the discrepancy is usually real and belongs with the customer.
 
     **Result:** Disagreements surfaced instead of averaged away.
   </Step>
@@ -91,7 +91,7 @@ description: "Build an accurate picture of who is covered under each employee, n
 
 ## Constraints specific to this combination
 
-**Existence is not coverage.** A dependent record means the employee has recorded that person. A dependent benefit means they're enrolled in a specific plan. Employees commonly record dependents who are covered under a spouse's plan, or who were dropped at a prior enrolment. Build coverage from dependent benefits and use dependents only for demographics - counting dependents as covered lives is the standard cause of an eligibility file with too many people on it.
+**Existence is not coverage.** A dependent record means the employee has recorded that person. A dependent benefit means they're enrolled in a specific plan. Employees commonly record dependents who are covered under a spouse's plan, or who were dropped at a prior enrollment. Build coverage from dependent benefits and use dependents only for demographics - counting dependents as covered lives is the standard cause of an eligibility file with too many people on it.
 
 **Dependents and beneficiaries are different concepts.** A dependent is covered under a health plan; a beneficiary receives a life or retirement benefit and is often neither covered nor a dependent. Most HRIS platforms model them separately or conflate them inconsistently. Check `raw_data` to see how the specific platform distinguishes them before assuming the dependent model covers both.
 

@@ -17,7 +17,7 @@ Open the connector and read what its last sync did, model by model. Most data qu
         Open **Connectors**. The list shows every connection with its integration, type, and when it last linked. Check the counters to identify **Active**, **Incomplete** and **Relink Needed**.
 
         <Frame>
-          <img src="/images/platform/connectors-list.png" alt="The Connectors list in the Bindbee Dashboard, with counters for Active, Incomplete and Relink Needed connectors above a table of organisations, integrations and link status" />
+          <img src="/images/platform/connectors-list.png" alt="The Connectors list in the Bindbee Dashboard, with counters for Active, Incomplete and Relink Needed connectors above a table of organizations, integrations and link status" />
         </Frame>
       </Tab>
 
@@ -75,7 +75,7 @@ Open the connector and read what its last sync did, model by model. Most data qu
     **Result:** Either an explanation, or a confirmed failure with a next step.
 
     <Frame>
-      <img src="/images/platform/sync-run-models.png" alt="The Sync info screen for a run marked Partial, listing Employee and Company as Synced, Employment as Skipped with no records, Dependant as Failed with an expanded Issue and Message showing User not authorized and a Permission issue found banner, and three models still Pending" />
+      <img src="/images/platform/sync-run-models.png" alt="The Sync info screen for a run marked Partial, listing Employee and Company as Synced, Employment as Skipped with no records, Dependent as Failed with an expanded Issue and Message showing User not authorized and a Permission issue found banner, and three models still Pending" />
     </Frame>
 
   </Step>
@@ -88,11 +88,11 @@ Open the connector and read what its last sync did, model by model. Most data qu
     | Issue | Where the failure came from. `Integration Partner` means the source system refused |
     | Message | The upstream response, verbatim |
 
-    Bindbee also flags a recognised cause above the detail - a permission refusal surfaces as **Permission issue found!**
+    Bindbee also flags a recognized cause above the detail - a permission refusal surfaces as **Permission issue found!**
 
     **Result:** You know whether to report it to Bindbee or take a permission back to the customer.
 
-    In the run above, `Dependant` failed with `User not authorized.` against an Integration Partner - a permission gap on the customer's side. See [Origin-system errors](/guides/troubleshooting/errors#origin-system-errors).
+    In the run above, `Dependent` failed with `User not authorized.` against an Integration Partner - a permission gap on the customer's side. See [Origin-system errors](/guides/troubleshooting/errors#origin-system-errors).
 
     {/* VERIFY: what does Issue read when the failure is Bindbee's rather than the source system's? "Integration Partner" is confirmed for an origin-system failure; the Bindbee-side value has not been seen. This decides how the page's two-source split maps onto the field. */}
   </Step>
@@ -138,7 +138,7 @@ A partial sync loaded some models and failed others. The connector is authentica
 
     <Tabs>
       <Tab title="Dashboard">
-        Click **Force Sync** on the connector's Overview tab. It greys out while a run is in progress, and on a connector needing re-authorisation.
+        Click **Force Sync** on the connector's Overview tab. It grays out while a run is in progress, and on a connector needing re-authorization.
       </Tab>
 
       <Tab title="API">
@@ -164,7 +164,7 @@ A partial sync loaded some models and failed others. The connector is authentica
 
 ## Monitoring this programmatically
 
-For continuous monitoring, subscribe to webhook events instead of polling. `connector_sync_started`, `connector_synced` and `connector_sync_error` cover the states above. See [Choose Webhook Events](/guides/reading-writing/webhooks) for the catalogue.
+For continuous monitoring, subscribe to webhook events instead of polling. `connector_sync_started`, `connector_synced` and `connector_sync_error` cover the states above. See [Choose Webhook Events](/guides/reading-writing/webhooks) for the catalog.
 
 <Note>
   The per-model breakdown is dashboard-only. The connector endpoint returns a single
@@ -181,7 +181,7 @@ Each payload carries a `sync` object with `sync_id`, `sync_name`, and `sync_type
   </Accordion>
 
   <Accordion title="A model says Not Supported">
-    Bindbee doesn't unify that model for this integration yet. Where it's in beta, ask Bindbee to prioritise it.
+    Bindbee doesn't unify that model for this integration yet. Where it's in beta, ask Bindbee to prioritize it.
   </Accordion>
 
   <Accordion title="The last sync is older than the configured cadence">

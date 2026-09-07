@@ -52,9 +52,13 @@
             "pages": [
               "get-started/use-cases/sync-census-data",
               "get-started/use-cases/identify-a-termination",
+              "get-started/use-cases/read-benefit-enrollments",
               "get-started/use-cases/read-benefit-coverage",
               "get-started/use-cases/create-an-employee",
-              "get-started/use-cases/write-payroll-deductions"
+              "get-started/use-cases/write-payroll-deductions",
+              "get-started/use-cases/read-time-and-attendance",
+              "get-started/use-cases/create-a-time-off-request",
+              "get-started/use-cases/read-payroll-data"
             ]
           }
         ]
@@ -82,7 +86,8 @@
                 "icon": "arrow-up-to-line",
                 "pages": [
                   "guides/reading-writing/writing-data",
-                  "guides/reading-writing/writing-data/meta-apis"
+                  "guides/reading-writing/writing-data/meta-apis",
+                  "guides/reading-writing/writing-data/idempotency"
                 ]
               },
               "guides/reading-writing/syncing",
@@ -1573,7 +1578,7 @@
     },
     {
       "source": "/how-to/writing-data-back/create-a-time-off-request",
-      "destination": "/parked/create-a-time-off-request"
+      "destination": "/get-started/use-cases/create-a-time-off-request"
     },
     {
       "source": "/how-to/writing-data-back/create-a-timesheet-entry",
@@ -1642,6 +1647,10 @@
     {
       "source": "/get-started/use-cases/write-ichra-deductions",
       "destination": "/get-started/use-cases/write-payroll-deductions"
+    },
+    {
+      "source": "/parked/create-a-time-off-request",
+      "destination": "/get-started/use-cases/create-a-time-off-request"
     }
   ],
   "api": {

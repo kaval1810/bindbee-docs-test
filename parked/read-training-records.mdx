@@ -1,0 +1,127 @@
+---
+title: "Read Training Records"
+sidebarTitle: "Read training records"
+description: "Read who was assigned training and who actually finished it."
+icon: "graduation-cap"
+---
+
+A compliance report is the gap between assigned and finished, not a count of either. Reading enrollments as training records reports someone as trained when the data only says they were told to be.
+
+## What you'll use
+
+**Models** - [course](/lms/courses/get-courses), [enrollment](/lms/enrollments/get-enrollments), [completion](/lms/completions/get-completions), [user](/lms/users/get-users)
+
+<Info>
+  **Before you start**
+
+  - The connector is an LMS connector. A connector token works for one API category, so an HRIS token on `/api/lms/v1/*` returns `403` - see [Authentication](/api-reference/basics/authentication).
+</Info>
+
+## Steps
+
+<Steps>
+  <Step title="Read the catalog, filtered by status">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/lms/v1/courses?status=ACTIVE&page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    <Warning>
+      Course, content, category, skill and user all carry a `status` of `ACTIVE`, `PENDING` or `INACTIVE`. **Read the catalog without filtering, and you'll get retired and unpublished courses too** - and an unfiltered user read includes deactivated learners. A compliance count built on top of that includes people and courses that aren't live anymore.
+    </Warning>
+
+    Narrow further with `categories`, `skills` or `languages`.
+
+    **Result:** The courses that are actually live.
+  </Step>
+
+  <Step title="Read enrollments">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/lms/v1/enrollments?course=<COURSE_ID>&page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    Filter by `user` for one learner, or `course` for everyone assigned a given course. `start_date_from` and `start_date_to` scope the assignment period.
+
+    **Result:** Who was assigned what, and when.
+  </Step>
+
+  <Step title="Find outstanding training with a null check">
+    An enrollment with an empty `completion` is training that's been assigned but not finished. No join needed.
+
+    ```python
+    outstanding = [e for e in enrollments if not e["completion"]]
+    ```
+
+    This is the compliance report. Counting enrollments instead just reports the assignment, which everyone out of compliance also has.
+
+    **Result:** The people who still owe the training.
+  </Step>
+
+  <Step title="Read completions for what was actually finished">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/lms/v1/completions?user=<USER_ID>&page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    Filter by `user`, `course`, `content` or `grade`. Scope by date with `completed_at_from` and `completed_at_to`.
+
+    Check whether `course` or `content` is set before you count anything. A completion against a `content` is one module finished, not one whole course.
+
+    **Result:** Achievements, dated, with scores where the platform tracks them.
+  </Step>
+
+  <Step title="Match learners to employees on email">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/lms/v1/users?email_address=<EMAIL>&status=ACTIVE' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    LMS user IDs and HRIS employee IDs don't correspond. Match on `email_address`, and keep a separate bucket for learners with no employee record instead of dropping them.
+
+    **Result:** Learning data tied to real people, with the unmatched ones called out.
+  </Step>
+</Steps>
+
+## Frequently Asked Questions
+
+<AccordionGroup>
+  <Accordion title="Every request returns 403">
+    A connector token only works for one API category. An HRIS connector called on `/api/lms/v1/*` returns `403` even with valid credentials.
+  </Accordion>
+
+  <Accordion title="Skills or contents return nothing">
+    Expected on many integrations. A large share of LMS platforms have no concept of skills, and some don't separate content from courses. Check `raw_data` before treating it as a sync problem - see [Inspect raw data](/guides/reading-writing/raw-data).
+  </Accordion>
+
+  <Accordion title="Completion counts are higher than course counts">
+    Completions reference either a `course` or a `content`. Module-level completions are being counted as course completions - check which field is set.
+  </Accordion>
+
+  <Accordion title="Learners don't match any employee">
+    Expected for contractors, former employees and outside participants. They hold LMS accounts with no HRIS record, and `email_address` is the only field you can reliably join on - see [Record identity](/guides/reading-writing/record-identity).
+  </Accordion>
+
+  <Accordion title="A compliance count looks too large">
+    Almost always an unfiltered `status`. Retired courses and deactivated learners are returned right alongside live ones.
+  </Accordion>
+
+  <Accordion title="You need to write an enrollment">
+    Not supported by any LMS model. [Passthrough](/guides/extending/passthrough) is the only route, and it's specific to each integration - see [Write support](/guides/reading-writing/writing-data/meta-apis).
+  </Accordion>
+</AccordionGroup>
+
+
+## Related
+
+- [Learning](/guides/data-models/learning) - the seven models and how they connect
+- [Record identity](/guides/reading-writing/record-identity) - matching learners to employees
+- [Passthrough](/guides/extending/passthrough) - the only write route for LMS

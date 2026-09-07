@@ -53,7 +53,7 @@ while True:
 ## Things to watch
 
 - **Match your polling to the sync frequency.** Bindbee syncs connectors once every 24 hours by default, and this is configurable. Polling far more often than the connector syncs mostly returns empty pages. For near real-time updates, use [webhooks](/guides/reading-writing/webhooks) instead of tight polling.
-- **A resync makes everything look new.** Records re-synced during a full resync get a fresh `modified_at` even when nothing changed upstream, so an incremental read can return the entire dataset. Expected behaviour, not a bug.
+- **A resync makes everything look new.** Records re-synced during a full resync get a fresh `modified_at` even when nothing changed upstream, so an incremental read can return the entire dataset. Expected behavior, not a bug.
 - **Always upsert, never insert blindly.** The same record can appear in more than one window. Keying on `id` keeps this safe.
 - **Store the watermark in UTC** and subtract a small buffer, for example one minute, before using it. That avoids dropping a record that landed between two pages of a long paginated run.
 - **`modified_after` is per model.** An employee changing does not mark their employment or benefit records as modified, so filtering those separately misses related changes. Read them without the filter, or subscribe to data-change events for the model.

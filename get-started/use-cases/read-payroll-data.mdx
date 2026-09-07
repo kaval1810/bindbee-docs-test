@@ -1,0 +1,90 @@
+---
+title: "Read Payroll and Match Deductions to Plans"
+sidebarTitle: "Read payroll data"
+description: "Read a payslip line by line and trace each deduction to the plan behind it."
+icon: "receipt"
+---
+
+A payslip arrives as coded lines, and the codes are the customer's own strings. Without resolving them you have amounts you cannot attribute. Filter on the wrong date and a whole run lands in the wrong month.
+
+## What you'll use
+
+**Models** - [employee payroll run](/hris/employee-payroll-runs/get-employee-payroll-runs), [payroll run](/hris/payroll-runs/get-payroll-runs), [payroll code](/hris/payroll-codes/get-payroll-codes), [employer benefit](/hris/employer-benefits/get-employer-benefits)
+
+<Info>
+  **Before you start**
+
+  - The connector has synced, and the customer's payroll module is in scope.
+  - You know whether you are reconciling coverage or cash, because that decides the date filter.
+</Info>
+
+## Steps
+
+<Steps>
+  <Step title="Read per-employee payroll">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/employee-payroll-runs?employee_id=<EMPLOYEE_ID>&page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    Filter by `employee_id` for one person, or `payroll_run_id` for everyone in a cycle.
+
+    **Result:** Earnings, deductions and taxes per employee.
+  </Step>
+
+  <Step title="Choose the right date filter">
+    Three filter pairs exist on both the run and the employee-run endpoint, and they bound different things.
+
+    | Filter pair | Bounds |
+    | --- | --- |
+    | `start_date_from` / `start_date_to` | Start of the pay period |
+    | `end_date_from` / `end_date_to` | End of the pay period |
+    | `check_date_from` / `check_date_to` | When payment was issued |
+
+    <Warning>
+      Check date and pay period routinely fall in different months, and a period ending in December can pay in January. Filtering by check date puts that run in the wrong year. Filtering by period end puts it in the wrong cash month.
+    </Warning>
+
+    **Result:** Records scoped to the period you mean.
+  </Step>
+
+  <Step title="Resolve deductions to plans">
+    Take `payroll_code` from each deduction line and match it against `payroll_codes` on the employer benefit. Where either side is empty, fall back to the mapping you hold for that connector.
+
+    Don't guess the plan from the deduction's `name`. That is the customer's own string, and the one part of this chain Bindbee does not normalize.
+
+    **Result:** Deduction lines matched to plans.
+  </Step>
+</Steps>
+
+## Frequently Asked Questions
+
+<AccordionGroup>
+  <Accordion title="Payroll returns nothing though the customer runs payroll">
+    Payroll is usually a separately licensed module with its own permission grant, and an empty result is the common failure here rather than an error. See [Origin-system errors](/guides/troubleshooting/errors#origin-system-errors).
+  </Accordion>
+
+  <Accordion title="Amounts are off by a factor of 100">
+    Some platforms report in minor units. Check `raw_data` for one record against a known figure before scaling anything.
+  </Accordion>
+
+  <Accordion title="A run is missing from a period you expected">
+    Check `run_type` before assuming a regular schedule, since off-cycle, bonus, termination and correction runs are separate values. Then check `run_state`, because a run that has not reached `PAID` may not be where you expected either.
+  </Accordion>
+
+  <Accordion title="A deduction line has no payroll_code">
+    Expected on some connectors, and the field can be empty at both ends of the link. Confirm the mapping with the customer and store it against the connector.
+  </Accordion>
+
+  <Accordion title="Payroll doesn't reconcile with hours worked">
+    Expected. Overtime follows rules the timesheet does not capture, salaried employees are paid without timesheets at all, and corrections land in a later run than the period they fix. See [Time & attendance](/guides/data-models/time-and-attendance).
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Payroll](/guides/data-models/payroll) - the five models and how they link
+- [Benefits](/guides/data-models/benefits) - the plan a payroll code points at
+- [Write payroll deductions](/get-started/use-cases/write-payroll-deductions) - the write in the other direction

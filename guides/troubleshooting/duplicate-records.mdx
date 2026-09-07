@@ -63,7 +63,7 @@ Three checks come first, since they account for most reports.
 
 **Key on the Bindbee `id`.** Source systems reissue `remote_id` and `employee_number` on rehire, transfer, or record merge, so keying on either creates duplicates in *your* system the moment the upstream ID changes.
 
-**Send idempotency keys on writes**, derived from your own record identity rather than randomly.
+**Send `X-Idempotency-Key` on writes** - see [Idempotency](/guides/reading-writing/writing-data/idempotency).
 
 **Keep the connector.** Deleting and recreating discards record identities and returns the whole dataset under new IDs, which reads as every record duplicating - see [Relinking versus deleting](/guides/troubleshooting/connector-relink#relinking-versus-deleting).
 

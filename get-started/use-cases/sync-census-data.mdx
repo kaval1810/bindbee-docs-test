@@ -34,7 +34,7 @@ You assemble the census a carrier quotes from: who is eligible, how old they are
   </Step>
 
   <Step title="Fetch the population">
-    Expand `home_location`. Carriers rate on where an employee lives; work location sets your customer's situs, not the individual rate.
+    Expand `home_location`. Carriers rate on where an employee lives. Work location sets your customer's situs, not the individual rate.
 
     ```bash
     curl --request GET \
@@ -62,7 +62,7 @@ You assemble the census a carrier quotes from: who is eligible, how old they are
 
     `relationship` is what builds the tier - employee only, employee plus spouse, employee plus children, or family. Date of birth alone cannot tell a 24-year-old spouse from a 24-year-old child. `is_student` keeps a child eligible past the plan's age limit.
 
-    Send the eligible roster rather than current enrolment, or the population comes out short. `DOMESTIC_PARTNER`, `SIBLING` and `PARENT` are all valid values, and not every carrier accepts them as dependents - confirm before mapping them into a tier.
+    Send the eligible roster rather than current enrollment, or the population comes out short. `DOMESTIC_PARTNER`, `SIBLING` and `PARENT` are all valid values, and not every carrier accepts them as dependents - confirm before mapping them into a tier.
   </Step>
 </Steps>
 

@@ -59,7 +59,7 @@ Enum mapping happens during sync, before the data reaches your API call.
 
 ### Unmapped values
 
-Step 3 is the single most important behaviour on this page. Bindbee never drops or guesses a value it cannot classify, so an enum field can legitimately return a string that is not in the documented list. **Forty-eight field descriptions in the API spec say so explicitly**, in the same sentence: *"If the value is not one of the defined enum values, the original value passed through will be returned."*
+Step 3 is the single most important behavior on this page. Bindbee never drops or guesses a value it cannot classify, so an enum field can legitimately return a string that is not in the documented list. **Forty-eight field descriptions in the API spec say so explicitly**, in the same sentence: *"If the value is not one of the defined enum values, the original value passed through will be returned."*
 
 <Warning>
   Do not treat enum fields as a closed set. Every enum field is typed as a string in the schema precisely because unmapped values are expected. Code that throws on an unrecognized value will break the first time a connector returns a provider-specific term.
@@ -213,7 +213,7 @@ A value that passes through verbatim today may become a mapped enum value later 
 ## Best practices
 
 * **Treat every enum field as an open string.** Match on documented values, fall back to the raw string, and never throw on an unrecognized value.
-* **Distinguish `null`, `-`, and an unmapped value.** They mean "not provided", "provided but not classifiable", and "provider specific" respectively, and they often warrant different behaviour in your UI.
+* **Distinguish `null`, `-`, and an unmapped value.** They mean "not provided", "provided but not classifiable", and "provider specific" respectively, and they often warrant different behavior in your UI.
 * **Log unrecognized values.** They tell you which connectors are surfacing terms your product does not handle yet, and they are a good input for a custom field or a mapping request.
 * **Use `include_raw_data=true` while building.** It is the fastest way to confirm how a specific connector's values are being normalized.
 * **Do not assume shared vocabularies.** Fields that look alike, such as `pay_period` and `pay_frequency`, use different value sets.

@@ -1,0 +1,120 @@
+---
+title: "Read Benefit Enrollments"
+sidebarTitle: "Read benefit enrollments"
+description: "Read which plans an employer offers and who is enrolled in them."
+icon: "clipboard-list"
+---
+
+Three models stand between the plan catalog and who actually holds a plan: employer benefit, benefit, and dependent benefit. Reading the wrong one is quiet rather than loud - an enrollment count passes for a plan count, and a dependent list passes for a covered list.
+
+## What you'll use
+
+**Models** - [employer benefit](/hris/employer-benefits/get-employer-benefits), [benefit](/hris/benefits/get-benefits), [dependent](/hris/dependents/get-dependents), [dependent benefit](/hris/dependent-benefits/get-dependent-benefits)
+
+<Info>
+  **Before you start**
+
+  - The connector has synced, and the customer's benefits module is in scope.
+</Info>
+
+## Steps
+
+<Steps>
+  <Step title="Read the plans the employer offers">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/employer-benefits?page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    Filter with `benefit_plan_category` to narrow to medical, dental and so on.
+
+    **Result:** The plan catalog for this customer.
+  </Step>
+
+  <Step title="Read enrollments">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/benefits?employee_id=<EMPLOYEE_ID>&page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    Filter on `employee_id`, `employer_benefit_id`, `benefit_plan_category` or `coverage_tier`.
+
+    Counting these to find how many plans a customer offers gives you an enrollment count, not a plan count. Read employer benefits for that.
+
+    **Result:** Enrollment records linking employees to plans.
+  </Step>
+
+  <Step title="Scope the period with the right date filter">
+    Three date pairs exist on the benefits endpoint, and they bound different things.
+
+    | Filter pair | Bounds |
+    | --- | --- |
+    | `start_date_from` / `start_date_to` | When the enrollment record starts |
+    | `end_date_from` / `end_date_to` | When it ends |
+    | `effective_date_from` / `effective_date_to` | When coverage takes effect |
+
+    Start date and effective date are not the same day. A plan elected during open enrollment starts on election and becomes effective at the plan year boundary, so filtering on the wrong one returns a different set.
+
+    Enrollments also accumulate rather than update, so an unfiltered read returns history rather than what is true now.
+
+    **Result:** Records scoped to the period you mean.
+  </Step>
+
+  <Step title="Read dependents and their coverage separately">
+    ```bash
+    # who is a dependent
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/dependents?employee_id=<EMPLOYEE_ID>&page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+
+    # what they are covered under
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/dependent-benefits?dependent_id=<DEPENDENT_ID>&page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    A dependent existing does not mean they are covered. Build coverage from dependent benefits and use dependents for details like `date_of_birth` and `relationship`. Reading dependents alone and assuming coverage is the usual cause of an eligibility list with too many people on it.
+
+    **Result:** Who is covered, rather than who exists.
+  </Step>
+</Steps>
+
+<Note>
+  Enrollment tells you the plan and the contribution, not the sum insured. For amounts, and for which people a plan covers, read benefit coverage - see [Read benefit coverage](/get-started/use-cases/read-benefit-coverage).
+</Note>
+
+## Frequently Asked Questions
+
+<AccordionGroup>
+  <Accordion title="Benefits return nothing though the customer has enrollments">
+    Benefits are frequently a separately licensed module with its own access grant, and several platforms return an empty set rather than an error. See [Origin-system errors](/guides/troubleshooting/errors#origin-system-errors), then confirm the model is in scope for this connector.
+  </Accordion>
+
+  <Accordion title="Dependents exist but no dependent benefits">
+    Either they are not enrolled, or dependent coverage is not exposed on this integration. Check `raw_data` on a dependent you know is covered - see [Inspect raw data](/guides/reading-writing/raw-data).
+  </Accordion>
+
+  <Accordion title="Terminated employees still show active benefits">
+    Benefit records don't end when employment does. The source system ends coverage as a separate action, sometimes weeks later, so check the benefit's `end_date` rather than inferring from employment status.
+  </Accordion>
+
+  <Accordion title="Coverage tiers don't match the customer's naming">
+    Tier names are platform- and customer-specific. Map their values to yours per connector rather than assuming a standard set.
+  </Accordion>
+
+  <Accordion title="A plan attribute isn't in the model">
+    Contribution amounts, plan codes and carrier identifiers sit in `raw_data` on many integrations without being unified. Map them as [custom fields](/guides/extending/custom-fields).
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Benefits](/guides/data-models/benefits) - the four models and how they link
+- [Read benefit coverage](/get-started/use-cases/read-benefit-coverage) - the amounts behind an enrollment
+- [Employee data](/guides/data-models/employee-data) - where dependents live

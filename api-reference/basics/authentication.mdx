@@ -7,7 +7,7 @@ Every request carries an API key. Requests that touch one customer's data carry 
 
 | Header | Value | Identifies |
 | --- | --- | --- |
-| `Authorization` | `Bearer <BINDBEE_API_KEY>` | Your organisation |
+| `Authorization` | `Bearer <BINDBEE_API_KEY>` | Your organization |
 | `X-Connector-Token` | `<CONNECTOR_TOKEN>` | One customer's connection |
 
 
@@ -15,7 +15,7 @@ Every request carries an API key. Requests that touch one customer's data carry 
 
 **API key** - Settings → [API Key](https://app.bindbee.dev/settings/keys). Each environment has its own, and a development key does not work against production data - see [Environments](/get-started/environments). Regenerating a key invalidates the old value immediately.
 
-**Connector token** - it exists once the end user has authorised the connection. Where you read it depends on how they connected - see [How to connect](/get-started/how-to-connect).
+**Connector token** - it exists once the end user has authorized the connection. Where you read it depends on how they connected - see [How to connect](/get-started/how-to-connect).
 
 - **Embedded Link** - `onSuccess` hands your frontend a short-lived `temporary_token`, which cannot read data. Swap it from your backend with the [token exchange](/sdk/get-connector-token).
 - **Magic Link** - there is no temporary token. Look the connector up by the `origin_id` you set, with [Get Connectors](/api-reference/connectors/get-connectors).
@@ -39,13 +39,13 @@ The API key is required everywhere. The connector token is required only where t
 
 ## A third header on writes
 
-Four HRIS write endpoints also take `X-Idempotency-Key` - `POST /employees`, `/employee-payroll-runs`, `/time-off` and `/timesheet-entry`. It stops a retried request creating a duplicate record.
+Four HRIS write endpoints also take `X-Idempotency-Key` - `POST /employees`, `/employee-payroll-runs`, `/time-off` and `/timesheet-entry`.
 
 ```
-X-Idempotency-Key: YOUR_STABLE_KEY
+X-Idempotency-Key: <UNIQUE_KEY>
 ```
 
-Derive it from your own record for the thing being created, not from a random value or a timestamp, and reuse the same key on every retry. Passthrough does not accept it - a retried passthrough write reaches the provider as a second write.
+Passthrough does not accept it. For how to choose a key, what a replay returns and how to handle a `409`, see [Idempotency](/guides/reading-writing/writing-data/idempotency).
 
 {/* VERIFY: spec.json declares x-idempotency-key on only these four HRIS operations, yet
     how-to/ats/create-a-candidate.mdx instructs readers to send it. Either the spec is

@@ -26,7 +26,7 @@ This is the path a successful Bindbee setup follows. Three steps are optional; t
   <Step title="Create the connector">
     Pick one path - a Magic Link you send to the customer, or the Embedded SDK inside your own product.
 
-    **Result:** The customer authorises, and the connector moves to `COMPLETE`. See [Connection methods](/get-started/connection-methods).
+    **Result:** The customer authorizes, and the connector moves to `COMPLETE`. See [Connection methods](/get-started/connection-methods).
   </Step>
 
   <Step title="(Optional) Subscribe to connector_sync_started">
@@ -83,7 +83,7 @@ Either way, **upsert on `id`** - you will receive the same record more than once
 ## Frequently Asked Questions
 
 <AccordionGroup>
-  <Accordion title="Nothing arrives after the customer authorises">
+  <Accordion title="Nothing arrives after the customer authorizes">
     The first sync runs on connection, and a large population takes time. Check the run in [Sync status](/guides/troubleshooting/sync-status) before assuming the webhook failed.
   </Accordion>
 
@@ -100,5 +100,5 @@ Either way, **upsert on `id`** - you will receive the same record more than once
 
 - [Go-Live checklist](/guides/go-live-checklist) - what to verify once this workflow is built
 - [Scoping](/get-started/scoping) - the decision that shapes every later step
-- [Webhooks](/guides/reading-writing/webhooks) - the event catalogue behind steps 3 and 6
+- [Webhooks](/guides/reading-writing/webhooks) - the event catalog behind steps 3 and 6
 - [Troubleshooting](/guides/troubleshooting/overview) - the order to debug a connector in, once you are live

@@ -1,0 +1,169 @@
+---
+title: "Read a Recruiting Pipeline"
+sidebarTitle: "Read recruiting pipeline"
+description: "Read candidates, their applications and where each one sits in a job's process."
+icon: "kanban"
+---
+
+A pipeline view needs three reads that do not join for you: the people, their attempts at a job, and the ordered stages that job runs. Count the wrong one and a person applying to three roles becomes three people.
+
+## What you'll use
+
+**Models** - [candidate](/ats/candidate/get-candidates), [application](/ats/application/get-applications), [job interview stage](/ats/job-interview-stage/get-job-interview-stages)
+
+<Info>
+  **Before you start**
+
+  - The connector is an ATS connector. A connector token works for one API category, so an HRIS token on `/api/ats/v1/*` returns `403` - see [Authentication](/api-reference/basics/authentication).
+</Info>
+
+## Steps
+
+<Steps>
+  <Step title="Read candidates">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/ats/v1/candidates?page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    Filters: `ids`, `remote_id`, `email_addresses`, `first_name`, `last_name`, `company` and `tag`. A candidate exists once no matter how many roles they go for, and `email_addresses`, `phone_numbers`, `locations`, `urls` and `tags` are all lists.
+
+    **Result:** People, with duplicates already removed by the ATS.
+  </Step>
+
+  <Step title="Read applications">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/ats/v1/applications?job=<JOB_ID>&page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    | Filter | Matches |
+    | --- | --- |
+    | `candidate` | Every application from one person |
+    | `job` | Every application to one opening |
+    | `current_stage` | Applications sitting at a stage |
+    | `source` | Where the application came from |
+    | `credited_to` | The recruiter credited |
+    | `reject_reason` | Applications closed for a given reason |
+
+    **Result:** One record per candidate-job pair.
+  </Step>
+
+  <Step title="Count the right model for the question">
+    | Question | Read |
+    | --- | --- |
+    | How many people are in the pipeline? | Candidates |
+    | How many applications are open? | Applications |
+    | How many people applied to this role? | Applications filtered by `job` |
+    | Has this person applied before? | Applications filtered by `candidate` |
+
+    A candidate who applies to three roles is one candidate and three applications. Count applications to report pipeline headcount, and you'll overcount by however many people applied more than once - which, if a company is hiring across several similar roles, can be a lot.
+
+    **Result:** Numbers that actually mean what you think they mean.
+  </Step>
+
+  <Step title="Expand rather than fetching in a loop">
+    `expand` returns related records inline. List them with commas, no spaces.
+
+    ```
+    ?expand=candidate
+    ?expand=job,candidate
+    ```
+
+    One expanded request beats many follow-up calls, which is what burns through the per-connector rate limit on a large pipeline - see [Errors & issues](/guides/troubleshooting/errors).
+
+    **Result:** Related records inline, at the cost of a bigger response.
+  </Step>
+  <Step title="Read the stages for a job">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/ats/v1/job-interview-stages?job=<JOB_ID>&page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    Each stage carries `name`, `job` and `stage_order`. Filter by `job` - read them without one and you get every stage of every job, which isn't a pipeline.
+
+    **Result:** One job's process, in order.
+  </Step>
+
+  <Step title="Order by stage_order, never by name">
+    ```python
+    stages = sorted(job_stages, key=lambda s: s["stage_order"])
+    positions = {s["id"]: i for i, s in enumerate(stages)}
+    ```
+
+    Stage names are just the customer's own words - "Phone Screen", "Screen", "HM Screen" and "Recruiter Call" might all be the same step at different customers. Sort by name, or match names against a fixed list, and it breaks the moment a customer renames a stage.
+
+    **Result:** A sequence you can actually compare positions in.
+  </Step>
+
+  <Step title="Resolve each application's position">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/ats/v1/applications?job=<JOB_ID>&expand=current_stage&page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    Expanding `current_stage` skips a lookup per application. Join it against the ordered list from the last step to get a position instead of just a label.
+
+    **Result:** Where each application sits, in a way you can compare.
+  </Step>
+
+  <Step title="Treat rejection as separate from stage">
+    An application that's ended carries `rejected_at` and a `reject_reason`, and its `current_stage` shows wherever it stopped - not a "rejected" stage.
+
+    ```python
+    if app["rejected_at"]:
+        outcome = "rejected"          # current_stage says where, not whether
+    ```
+
+    Count applications by stage without excluding rejected ones, and every stage looks more full than it really is.
+
+    **Result:** Active pipeline kept separate from closed applications.
+  </Step>
+
+  <Step title="Detect movement rather than polling for it">
+    Subscribe to `connector_data_modified` and re-read the applications that changed - see [Choose Webhook Events](/guides/reading-writing/webhooks).
+
+    Change events carry IDs, not records - they tell you something changed, not what. To know an application *moved*, compare `current_stage` against your last stored copy.
+
+    **Result:** Real stage transitions, not just "something changed."
+  </Step>
+</Steps>
+
+
+## Frequently Asked Questions
+
+<AccordionGroup>
+  <Accordion title="Every request returns 403">
+    A connector token only works for one API category. An HRIS connector called on `/api/ats/v1/*` returns `403` even with valid credentials.
+  </Accordion>
+
+  <Accordion title="The same person appears more than once">
+    Some ATS platforms create a second candidate record instead of a second application when someone applies again, especially after a long gap or through a different source. Match on `email_addresses` to catch it - see [Record identity](/guides/reading-writing/record-identity).
+  </Accordion>
+
+  <Accordion title="Tags or reject reasons don't match the customer's words">
+    Both are free-form and specific to each customer. Map them per connector rather than assuming a standard set.
+  </Accordion>
+
+  <Accordion title="Stages from different jobs are mixed together">
+    `job-interview-stages` was read without the `job` filter. Stages belong to one job each, so an unfiltered read is every process at once.
+  </Accordion>
+
+  <Accordion title="Stage counts are higher than the number of live candidates">
+    Rejected applications are being counted. `current_stage` shows where an application stopped, not whether it's still moving - filter on `rejected_at`.
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Recruiting](/guides/data-models/recruiting) - the models and how they link
+- [Record identity](/guides/reading-writing/record-identity) - detecting duplicate candidates
+- [Pagination](/api-reference/basics/pagination) - walking a large pipeline

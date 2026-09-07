@@ -35,6 +35,11 @@ if [ "${1:-}" = "--read" ]; then
 fi
 
 SECTION="${1:-guides/troubleshooting}"
+
+# Recurse. A plain "$SECTION"/*.mdx glob matches only files directly inside the
+# folder, so nested pages - guides/reading-writing, get-started/use-cases - were
+# never inspected. Every loop below reads this list.
+MDX=$(find "$SECTION" -name '*.mdx' -not -path '*/node_modules/*' -not -path '*/_snippets/*' | sort)
 SKILLS=".claude/skills"
 fail=0
 
@@ -46,9 +51,11 @@ desc_of() { awk '/^description:/{sub(/^description: *"?/,""); sub(/"$/,""); prin
 
 # ---------------------------------------------------------------- style
 head_ "style — frontmatter"
-for f in "$SECTION"/*.mdx; do
+for f in $MDX; do
   d=$(desc_of "$f")
   b=$(basename "$f")
+  # an openapi: stub inherits title and description from spec.json - not a defect
+  grep -q '^openapi:' "$f" && continue
   [ -z "$d" ] && red "$b: no description" && continue
   [ ${#d} -gt 110 ] && red "$b: description ${#d} chars (cap 110)"
   echo "$d" | grep -qE '^(The|A|An|Where|What|How|Why) ' && red "$b: description opens on a noun phrase - lead with a verb"
@@ -61,7 +68,7 @@ done
 # Verb detection is heuristic, so an unrecognised opener is a note, not a failure.
 VERBS="Check|Find|Fix|Read|Trace|Resolve|Reconcile|Relink|Re-authorise|Create|Add|Remove|Update|Configure|Set|Send|Enable|Disable|Handle|Diagnose|Detect|Monitor|Write|Sync|Get|Inspect|Identify|Restrict|Force|Choose|Build|Connect|Migrate|Verify|Review"
 h=0
-for f in "$SECTION"/*.mdx; do
+for f in $MDX; do
   grep -q '<Steps>' "$f" || continue            # How-To pages only
   b=$(basename "$f")
   t=$(awk '/^title:/{sub(/^title: *"?/,""); sub(/"$/,""); print; exit}' "$f")
@@ -75,14 +82,50 @@ done
 # ---------------------------------------------------------- humaniser
 head_ "humaniser — prose"
 h=0
-for f in "$SECTION"/*.mdx; do
+for f in $MDX; do
   n=$(grep -o '—' "$f" | wc -l | tr -d ' ')
   [ "$n" != 0 ] && red "$(basename "$f"): $n em dash(es); house separator is ' - '" && h=1
 done
 [ $h = 0 ] && ok "no em dashes"
 
+# humaniser fingerprint 8: a semicolon welding two independent clauses.
+# Excluded, because these are correct usage rather than the tell:
+#   - inside a fenced code block
+#   - inside an alt=/caption= attribute
+#   - a serial list, which needs 2+ semicolons on the line to disambiguate commas
+#   - table rows and MDX comments
 h=0
-for f in "$SECTION"/*.mdx; do
+for f in $MDX; do
+  n=$(awk '
+    /^```/            { fence = !fence; next }
+    fence             { next }
+    /alt=|caption=/   { next }
+    /^[ \t]*\|/      { next }          # table row - a cell separates fact from instruction
+    /\{\/\*/         { next }          # MDX comment, not rendered prose
+    {
+      c = gsub(/;/, ";")
+      if (c == 1 && $0 ~ /; [a-z]/) print
+    }' "$f" | wc -l | tr -d ' ')
+  [ "$n" != 0 ] && red "$(basename "$f"): $n semicolon-joined clause(s); use two sentences" && h=1
+done
+[ $h = 0 ] && ok "no semicolon-joined clauses"
+
+# style: US English in prose. Enum values, dashboard labels quoted in alt=/bold,
+# and anything inside a code fence keep whatever the source uses.
+h=0
+for f in $MDX; do
+  n=$(awk '
+    /^```/          { fence = !fence; next }
+    fence           { next }
+    /Organisation Name/ { next }
+    { if (tolower($0) ~ /normalis|authoris|organis|prioritis|recognis|enrolment|\\benrol\\b|dependant|catalogue|labelled|modelling|behaviour|centre|licence|defence|programme|whilst|amongst|honour|favour|colour|labour|fulfil[^l]|skilful|practis/) print }
+  ' "$f" | wc -l | tr -d ' ')
+  [ "$n" != 0 ] && red "$(basename "$f"): $n line(s) with British spelling; docs are US English" && h=1
+done
+[ $h = 0 ] && ok "spelling: US English in prose"
+
+h=0
+for f in $MDX; do
   # table cells carry Usually/Often as answer *values*; only prose counts
   n=$(grep -v '^\s*|' "$f" | grep -oiE '\b(usually|often|typically|commonly|generally|almost always|nearly always)\b' | wc -l | tr -d ' ')
   [ "$n" -gt 1 ] && red "$(basename "$f"): $n prose hedges (budget 1)" && h=1
@@ -91,7 +134,7 @@ done
 
 # lexical tells (Wikipedia "Signs of AI writing")
 h=0
-for f in "$SECTION"/*.mdx; do
+for f in $MDX; do
   hits=$(grep -oiE '\b(additionally|moreover|furthermore|testament|showcas[a-z]*|delve|leverage|seamless|robust|in order to|due to the fact that|serves as|boasts|has the ability to)\b' "$f" | sort -u | tr '\n' ' ')
   [ -n "$hits" ] && red "$(basename "$f"): lexical tell(s): $hits" && h=1
 done
@@ -99,7 +142,7 @@ done
 
 # throat-clearing and back-reference lead-ins (anywhere, including inside callouts)
 h=0
-for f in "$SECTION"/*.mdx; do
+for f in $MDX; do
   n=$(grep -cE "^\s*(Before you |It's worth |Note that |In order to |This section |Let's |Everything above |Everything below |As mentioned|Now that you|At this point|So far,|With that in place)" "$f")
   [ "$n" -gt 0 ] && red "$(basename "$f"): $n throat-clearing / back-reference lead-in(s)" && h=1
 done
@@ -107,7 +150,7 @@ done
 
 # invented table headers, and routing tables that should be link lists
 h=0
-for f in "$SECTION"/*.mdx; do
+for f in $MDX; do
   b=$(basename "$f")
   hits=$(grep -oiE '^\s*\| *(What it settles|When you.re done here|Why it matters|What this means|What to know|Key takeaway)[^|]*\|' "$f" | tr -d '|' | tr -s ' ' | sort -u | tr '\n' ';')
   [ -n "$hits" ] && red "$b: invented table header(s): $hits" && h=1
@@ -118,12 +161,11 @@ done
 
 # -------------------------------------------------------- consistency
 head_ "consistency — one fact, one home"
-ov="$SECTION/overview.mdx"
-if [ -f "$ov" ]; then
+for ov in $(echo "$MDX" | grep '/overview\.mdx$' || true); do
   n=$(grep -c '<Step title=' "$ov")
-  [ "$n" != 0 ] && red "overview.mdx carries $n <Step> - orientation pages must not hold a procedure" \
-                || ok "overview.mdx carries no procedure"
-fi
+  [ "$n" != 0 ] && red "$ov carries $n <Step> - orientation pages must not hold a procedure" \
+                || ok "$ov carries no procedure"
+done
 
 # A canonical term must not appear in competing prose forms.
 # Internal markers ({/* VERIFY ... */}) are notes to writers, not prose - skip them.
@@ -136,7 +178,7 @@ done
 
 # a page carrying more than one procedure is usually more than one page
 h=0
-for f in "$SECTION"/*.mdx; do
+for f in $MDX; do
   n=$(grep -c '<Steps>' "$f")
   [ "$n" -gt 1 ] && printf '  \033[33mnote\033[0m  %s carries %s <Steps> blocks - check it is one job, not two\n' "$(basename "$f")" "$n" && h=1
 done
@@ -150,7 +192,7 @@ debt=$(grep -rln "CONTENT PASS" "$SECTION" 2>/dev/null | wc -l | tr -d ' ')
 # ------------------------------------------------------- affordances
 head_ "affordances — callouts and screenshots"
 h=0
-for f in "$SECTION"/*.mdx; do
+for f in $MDX; do
   for c in Note Warning Info Tip; do
     o=$(grep -c "<$c>" "$f"); cl=$(grep -c "</$c>" "$f")
     [ "$o" != "$cl" ] && red "$(basename "$f"): <$c> unbalanced ($o open, $cl close)" && h=1
@@ -158,13 +200,13 @@ for f in "$SECTION"/*.mdx; do
 done
 [ $h = 0 ] && ok "all callouts balanced"
 
-markers=$(grep -rc "SCREENSHOT NEEDED" "$SECTION"/*.mdx 2>/dev/null | awk -F: '{s+=$2} END {print s+0}')
+markers=$(grep -rc "SCREENSHOT NEEDED" $MDX 2>/dev/null | awk -F: '{s+=$2} END {print s+0}')
 if [ "$markers" -gt 0 ]; then
   printf '  \033[33mnote\033[0m  %s SCREENSHOT NEEDED marker(s) outstanding - strip before merge\n' "$markers"
   h=0
   while IFS= read -r line; do
     case "$line" in *"a reader should be able to see"*) ;; *) red "marker lacks a what-the-reader-sees clause: $(echo "$line" | cut -c1-70)"; h=1;; esac
-  done < <(grep -rh "SCREENSHOT NEEDED" "$SECTION"/*.mdx 2>/dev/null)
+  done < <(grep -rh "SCREENSHOT NEEDED" $MDX 2>/dev/null)
   [ $h = 0 ] && ok "every marker says what the reader should see"
 fi
 

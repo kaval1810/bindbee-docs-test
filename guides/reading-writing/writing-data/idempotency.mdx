@@ -1,0 +1,106 @@
+---
+title: "Idempotency"
+description: "Retry a write safely with X-Idempotency-Key."
+icon: "repeat"
+---
+
+A write that times out has still reached the provider. Retrying it blind creates a second record in your customer's system, and someone has to find and remove it by hand. `X-Idempotency-Key` makes the retry safe: send the same key with the same body and Bindbee returns the saved result instead of writing again.
+
+Four HRIS write endpoints accept the header:
+
+- `POST /api/hris/v1/employees`
+- `POST /api/hris/v1/employee-payroll-runs`
+- `POST /api/hris/v1/time-off`
+- `POST /api/hris/v1/timesheet-entry`
+
+[Passthrough](/guides/extending/passthrough) does not accept it, so a retried passthrough write reaches the provider as a second write.
+
+## Sending an idempotent request
+
+```bash
+curl --request POST \
+  --url 'https://api.bindbee.dev/api/hris/v1/employee-payroll-runs' \
+  --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+  --header 'X-Connector-Token: <CONNECTOR_TOKEN>' \
+  --header 'X-Idempotency-Key: <UNIQUE_KEY>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "employee": "01931edf-04b6-7391-8a5c-93ac4b395316",
+    "payroll_run": "01931edf-04c8-7649-a470-d85f6161bd1a"
+  }'
+```
+
+The header is optional. Requests without it are processed independently and carry no protection against duplicate execution.
+
+## Choosing a key
+
+Generate one opaque key per logical creation, and reuse it only when retrying that same creation.
+
+| A key should be | Because |
+| --- | --- |
+| Unique per logical creation | Two different records must not share one key |
+| Stable across retries | A new key on retry is a new creation request |
+| Different for a genuinely new record | Reusing a key with a changed body is rejected |
+| Free of credentials or customer data | The key is stored and logged |
+
+A UUID works, and so does a value derived from your own record identity:
+
+```
+X-Idempotency-Key: 7ab54bb5-6074-4b2d-a31a-0f85b25f1d63
+X-Idempotency-Key: epr_2026-08-26_employee-123_pay-run-456
+```
+
+## How Bindbee responds
+
+| You send | Bindbee does |
+| --- | --- |
+| No key | Processes every request independently |
+| A new key | Processes the creation and sends it to the provider |
+| The same key and body, after success | Returns the saved response, with no second provider write |
+| The same key while the first is still running | `409 Conflict` |
+| The same key with a different body | `409 Conflict` |
+| The same key after a failed attempt | Processes the request again |
+| The same key after five minutes | May treat it as a new request |
+
+The two conflicts are distinguishable by their `detail`:
+
+```json
+{ "detail": "Request with this idempotency key is already in progress." }
+{ "detail": "Idempotency key already exists with a different payload." }
+```
+
+On the first, wait briefly and retry the same key. On the second, check the body: use a new key only when the change represents a genuinely new record.
+
+<Note>
+A replayed response can carry a different status code from the original, so **treat any `2xx` as confirmation that the write succeeded** rather than matching on `201` or `200`.
+</Note>
+
+{/* VERIFY: spec.json declares no 409 response on any of the four write operations, so a client generating error handling from the spec will not expect either conflict. Raise upstream. */}
+
+## The five-minute window
+
+Bindbee saves a successful response for **five minutes**. Within that window the same key and body returns the saved result. After it, the key may be treated as new.
+
+Failed attempts are not saved, so the same key can be retried after a failure.
+
+<Warning>
+The key is not a permanent record of a write. Five minutes after a successful creation, sending the same key again can create a second record - store the returned ID against your own record rather than relying on the key.
+</Warning>
+
+## Retrying safely
+
+1. Generate the key before the first request, and store it with the operation you are attempting.
+2. Send the write with that key.
+3. On a network error or a `5xx`, retry the same body with the same key.
+4. On an in-progress `409`, wait briefly and retry with the same key.
+5. On a different-payload `409`, check the body before deciding whether this is a new record.
+6. Stop once you have a `2xx`.
+
+Where the outcome is uncertain, retry the same key first. Each new key is a new creation request, so cycling through keys is how duplicates get made.
+
+## Related
+
+- [Writing data](/guides/reading-writing/writing-data) - how a write reaches the source system
+- [Meta APIs](/guides/reading-writing/writing-data/meta-apis) - the request shape a connector expects
+- [Duplicate records](/guides/troubleshooting/duplicate-records) - finding duplicates a retry already created
+- [Authentication](/api-reference/basics/authentication) - the two headers every write also carries

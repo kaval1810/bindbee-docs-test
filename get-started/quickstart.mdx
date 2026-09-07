@@ -44,11 +44,11 @@ Press **+ Test Connector**, then pick a category and an integration - for exampl
 
 </Step>
 
-<Step title="Authorise the connection">
+<Step title="Authorize the connection">
 
-Follow the prompts to complete authorisation.
+Follow the prompts to complete authorization.
 
-<Frame caption="The authorisation screens your customer sees. Access is granted per data model, and which methods are offered depends on the integration.">
+<Frame caption="The authorization screens your customer sees. Access is granted per data model, and which methods are offered depends on the integration.">
   <img src="/images/quickstart/test-connector-authentication.jpg" alt="A consent screen reading 'Bindbee is requesting access to BambooHR', listing data models including Benefit, Company, Compensation, Employee, Employment and Time Off with read access ticked and an Allow and Continue button, beside a 'How do you want to Authenticate?' panel offering OAuth Authentication marked Recommended or using your own API key" />
 </Frame>
 
@@ -98,7 +98,7 @@ curl https://api.bindbee.dev/api/hris/v1/employees \
 
 Every field the response can carry, with a sample payload, is on [Get Employees](/hris/employee/get-employees).
 
-**Result:** A `200` carrying employees, normalised out of that system.
+**Result:** A `200` carrying employees, normalized out of that system.
 
 </Step>
 
@@ -108,9 +108,9 @@ Every field the response can carry, with a sample payload, is on [Get Employees]
 
 ## What just happened
 
-1. You created a **connector** - one authorised connection to one source system.
+1. You created a **connector** - one authorized connection to one source system.
 2. You **synced** it, pulling that system's data into Bindbee.
-3. You called the **Unified API** with your API key and the connector token, and got normalised data.
+3. You called the **Unified API** with your API key and the connector token, and got normalized data.
 
 In production two things change: connectors sync on a schedule rather than on manual trigger, and your end users create them through Magic Link or Embedded SDK rather than you entering credentials. See [How to connect](/get-started/how-to-connect).
 

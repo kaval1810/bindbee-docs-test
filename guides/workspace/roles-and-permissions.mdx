@@ -1,37 +1,85 @@
 ---
 title: "Roles & permissions"
-description: "The two workspace roles, and what a Member cannot do."
+description: "Find what an Admin can do that a Member cannot."
 icon: "shield-check"
 ---
 
-Everyone in your Bindbee workspace is either an **Admin** or a **Member**. There are only these two roles, and they aren't configurable.
+Everyone in your Bindbee organization is either an **Admin** or a **Member**. There are only these two roles and they are not configurable. A third set of activities sits outside the role system entirely, governed by credentials rather than by role.
 
-## What each role can do
+## The two roles
 
-| Action | Member | Admin |
-| --- | :---: | :---: |
-| Create a Development connector | ✓ | ✓ |
-| Delete a Development connector | ✓ | ✓ |
-| Regenerate the Development API key | ✓ | ✓ |
-| Create a Production connector | x | ✓ |
-| Delete a Production connector | x | ✓ |
-| Regenerate the Production API key | x | ✓ |
-| View a customer's SFTP credentials | x | ✓ |
-| Add or remove workspace users | x | ✓ |
+| Role | Governs |
+| --- | --- |
+| **Admin** | Everything a Member can do, plus user administration, the Production API key, Production connector deletion, and SFTP credentials |
+| **Member** | Day-to-day work: integrations, connectors, webhooks, custom fields, data scope and monitoring |
 
-Anything not listed here is open to both roles. The Dashboard also marks the actions a Member can't take, so check there if you're unsure.
+## Admin-only capabilities
+
+| Capability | Constraint |
+| --- | --- |
+| Invite or add an organization user | The Admin chooses whether the new user is an Admin or a Member |
+| Remove an organization user | An Admin cannot remove themselves |
+| Change another user's role | An Admin cannot change their own role, and the last Admin cannot be demoted |
+| Regenerate the Production API key | Replaces the existing key, so every service still using the old one stops working |
+| Delete a Production connector | The connector must belong to the Admin's organization |
+| View a customer's SFTP credentials | Applies to file-based integrations |
+
+Everything on that list touches a live customer or a real credential, and none of it is easy to undo. Inviting users is here because a Member who could invite people could grant themselves the rest.
+
+**Keep more than one Admin.** An Admin cannot act on their own account, so a single Admin cannot be removed or demoted by anyone.
+
+## What a Member can do
+
+Anything not listed above is open to both roles. In particular, a Member can:
+
+- **Create a Production connector**, where the organization has production access, and create Development connectors freely.
+- **Regenerate the Development API key.**
+- **Enable or disable integrations**, and change which models and fields are in scope.
+- **Operate connectors in both environments** - resync, upload files for file-based integrations, and delete Development connectors.
+- **View API logs, webhook delivery logs and response bodies**, which may contain customer data.
+- **Fully manage webhooks**, including viewing and rotating the signing secret.
+- **Fully manage custom fields and mappings**, including inspecting raw source data.
+- **View organization members and their roles**, and update branding.
+
+<Warning>
+Scope applies across every connector, integration and environment, so a Member changing it changes what syncs for all of your customers - see [Scoping](/get-started/scoping).
+</Warning>
 
 {/* VERIFY: whether a restricted control is hidden from a Member or shown disabled. Matters because it decides whether a Member has to be told about these limits in advance. */}
 
-## Why it works this way
+## Outside the role system
 
-Everything a Member can't do touches a live customer or a real credential, and none of it is easy to undo. Deleting a Production connector throws away the synced data, regenerating the Production key breaks every service still using the old one, and SFTP credentials belong to your customer. Inviting users is on the list because a Member who could invite people could give themselves the rest.
+Some activities are governed by credentials or a secure link rather than by role:
 
-## What this means for you
+- Signing in and resetting a password
+- Single sign-on
+- Completing a Magic Link flow
+- Authorizing an integration through OAuth
+- Calling the unified APIs with organization and connector credentials
 
-- **Start people as Members**, and keep more than one Admin.
-- **Do test work in Development**, where a Member has full control.
-- **These roles cover the Dashboard, not your own product** - Bindbee authenticates your service, not your end users.
+Holding an Admin or Member role does not by itself grant access to any of these.
+
+## What organization API credentials allow
+
+An API key identifies the organization and whether a request is Development or Production. Some calls also need the matching `connector_token`, so access is limited to one connection.
+
+| Capability | What it allows |
+| --- | --- |
+| Discover integrations and models | The integrations and unified models available to the organization |
+| View connectors | Connections, their tokens, status, integration, customer and sync information |
+| Read HRIS, ATS and LMS data | The unified models, where the connected system supports them |
+| Create a Magic Link flow | In the same environment as the API key. Production requires production access |
+| Start a connector resync | With the matching connector token supplied |
+| Create records in connected systems | HRIS employees, employee payroll runs, time off and timesheets; ATS candidates, attachments, jobs and activities |
+| Work with custom fields | Definitions, mappings, mapping previews and raw source data |
+| Send passthrough requests | An authorized request to a provider for anything the unified model does not carry |
+| Delete a connector | Where the key's environment matches the connector's |
+
+<Warning>
+**Treat API credentials as secrets.** Anyone holding a valid organization key and connector token can read customer data or make supported changes in a connected system, whatever their Dashboard role.
+</Warning>
+
+These roles and keys cover Bindbee, not your own product. Bindbee authenticates your service, not your end users.
 
 ## Related
 

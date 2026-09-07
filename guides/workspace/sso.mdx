@@ -10,7 +10,7 @@ With SSO enabled, your team reaches the Bindbee Dashboard through your existing 
 <Info>
   **Before you start**
 
-  - You're an Admin in your Bindbee workspace. See [Roles & permissions](/guides/workspace/roles-and-permissions).
+  - You're an Admin in your Bindbee organization. See [Roles & permissions](/guides/workspace/roles-and-permissions).
   - You have a route to whoever administers your identity provider - the setup happens in their system, not in Bindbee.
 </Info>
 
@@ -20,7 +20,7 @@ With SSO enabled, your team reaches the Bindbee Dashboard through your existing 
 
 <Steps>
   <Step title="Ask Bindbee to start the setup">
-    Email [support@bindbee.dev](mailto:support@bindbee.dev) with your organisation and the identity provider you use. Bindbee prepares the connection and sends you back a setup link.
+    Email [support@bindbee.dev](mailto:support@bindbee.dev) with your organization and the identity provider you use. Bindbee prepares the connection and sends you back a setup link.
 
     **Result:** You have a link to hand to your identity provider's administrator.
   </Step>
@@ -31,8 +31,8 @@ With SSO enabled, your team reaches the Bindbee Dashboard through your existing 
     **Result:** The connection between your provider and Bindbee is established.
   </Step>
 
-  <Step title="Add each person to the workspace">
-    SSO decides *how* someone signs in, not *whether* they have access. Every user must still exist in your Bindbee workspace with an Admin or Member role, added by an Admin.
+  <Step title="Add each person to the organization">
+    SSO decides *how* someone signs in, not *whether* they have access. Every user must still exist in your Bindbee organization with an Admin or Member role, added by an Admin.
 
     **Result:** Everyone who needs the Dashboard has an account and a role.
   </Step>
@@ -45,7 +45,7 @@ With SSO enabled, your team reaches the Bindbee Dashboard through your existing 
 </Steps>
 
 <Note>
-  The two halves stay separate for the life of the workspace. Removing someone from your identity provider stops them authenticating through it, but **remove them from the Bindbee workspace as well** - and add them there first when someone joins, or their first sign-in fails.
+  The two halves stay separate for the life of the organization. Removing someone from your identity provider stops them authenticating through it, but **remove them from the Bindbee organization as well** - and add them there first when someone joins, or their first sign-in fails.
 </Note>
 
 {/* VERIFY: whether password sign-in remains available as a fallback once SSO is established, or can be disabled on request. Matters because it decides whether IdP deprovisioning alone is sufficient. */}
@@ -54,19 +54,19 @@ With SSO enabled, your team reaches the Bindbee Dashboard through your existing 
 
 <AccordionGroup>
   <Accordion title="A user authenticates with your provider but still can't get in">
-    They haven't been added to the Bindbee workspace yet, or were added under a different email than the one their provider returns. An Admin adds them; the email must match.
+    They haven't been added to the Bindbee organization yet, or were added under a different email than the one their provider returns. An Admin adds them, and the email must match.
   </Accordion>
 
   <Accordion title="A user is in but can't do something they expect to">
-    That's their role, not SSO. Production connectors, the Production API key, SFTP credentials and invitations are Admin-only - see [Roles & permissions](/guides/workspace/roles-and-permissions).
+    That's their role, not SSO. Deleting a Production connector, the Production API key, SFTP credentials and invitations are Admin-only - see [Roles & permissions](/guides/workspace/roles-and-permissions).
   </Accordion>
 
   <Accordion title="You need to change or remove the connection">
-    Both go back through [support@bindbee.dev](mailto:support@bindbee.dev). Include your organisation name and what's changing - a new provider, a new domain, or removing SSO entirely.
+    Both go back through [support@bindbee.dev](mailto:support@bindbee.dev). Include your organization name and what's changing - a new provider, a new domain, or removing SSO entirely.
   </Accordion>
 
   <Accordion title="Sign-in fails before reaching your provider">
-    Send support the email address used and the time of the attempt. Without both, the failure is hard to place - it could be the address, the workspace, or the provider connection.
+    Send support the email address used and the time of the attempt. Without both, the failure is hard to place - it could be the address, the organization, or the provider connection.
   </Accordion>
 </AccordionGroup>
 

@@ -1,0 +1,95 @@
+---
+title: "Track Interview Feedback"
+sidebarTitle: "Track interview feedback"
+description: "Match scorecards to the interview round they came from and find the missing ones."
+icon: "clipboard-check"
+---
+
+An interview is an event and a scorecard is the feedback from it. Interviews held with no feedback submitted are what stalls a pipeline, and finding them means joining the two on the round rather than on the application.
+
+## What you'll use
+
+**Models** - [scheduled interview](/ats/scheduled-interview/get-scheduled-interviews), [scorecard](/ats/scorecard/get-scorecards)
+
+<Info>
+  **Before you start**
+
+  - The connector is an ATS connector, and scorecards are exposed by this integration.
+</Info>
+
+## Steps
+
+<Steps>
+  <Step title="Read the interviews">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/ats/v1/scheduled-interviews?application=<APPLICATION_ID>&page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    Filter by `application`, `organizer` or `job_interview_stage`. Each record carries `start_at`, `end_at`, `location`, `organizer`, `interviewers` and a `status`.
+
+    | `status` | Meaning |
+    | --- | --- |
+    | `SCHEDULED` | Booked, not yet held |
+    | `AWAITING_FEEDBACK` | Held, feedback outstanding |
+    | `COMPLETE` | Held and feedback submitted |
+
+    **Result:** The interview events, with where each one stands.
+  </Step>
+
+  <Step title="Read the scorecards">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/ats/v1/scorecards?application=<APPLICATION_ID>&page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    Filter by `application`, `interview` or `interviewer`. Each carries `application`, `interview`, `interviewer`, `submitted_at` and `overall_recommendation`.
+
+    **Result:** Whatever feedback exists.
+  </Step>
+
+  <Step title="Join on the interview, not the application">
+    A scorecard's `interview` field points at the scheduled interview it belongs to. Join on `application` alone, and you'll collapse several rounds into one, making it impossible to report per round.
+
+    ```python
+    by_interview = {s["interview"]: s for s in scorecards}
+    for iv in interviews:
+        feedback = by_interview.get(iv["id"])          # may be absent
+    ```
+
+    **Result:** Feedback matched to the round it actually came from.
+  </Step>
+
+  <Step title="Surface the missing feedback">
+    An interview marked `AWAITING_FEEDBACK` with no scorecard is an actionable state, and it is what stalls a pipeline.
+
+    ```python
+    outstanding = [
+        iv for iv in interviews
+        if iv["status"] == "AWAITING_FEEDBACK" and iv["id"] not in by_interview
+    ]
+    ```
+
+    Report it by interviewer and by age. Treat a missing scorecard as pending, not as a bad sign - absence isn't an evaluation.
+
+    **Result:** A list of people to chase, not a silent gap.
+  </Step>
+</Steps>
+
+
+## Frequently Asked Questions
+
+<AccordionGroup>
+  <Accordion title="Scorecards return nothing though interviews happened">
+    Either the feedback has not been submitted, or this integration doesn't expose scorecards. Check `raw_data` on an interview you know was scored - see [Inspect raw data](/guides/reading-writing/raw-data).
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Recruiting](/guides/data-models/recruiting) - the models and how they link
+- [Read a recruiting pipeline](/parked/read-recruiting-pipeline) - the applications these interviews belong to

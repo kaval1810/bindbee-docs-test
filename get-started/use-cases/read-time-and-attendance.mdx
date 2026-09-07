@@ -1,0 +1,102 @@
+---
+title: "Read Hours, Leave and Balances"
+sidebarTitle: "Read time & attendance"
+description: "Read hours worked, leave requested and leave remaining for an employee."
+icon: "clock-9"
+---
+
+Three separate reads answer three separate questions, and none of them joins to the others. The two that catch people out are leave, where an unfiltered read returns requests that were never taken, and balances, which are a snapshot rather than a live figure.
+
+## What you'll use
+
+**Models** - [timesheet entry](/hris/timesheet-entries/get-timesheet-entries-list), [time off](/hris/time-off/get-time-off-list), [time off balance](/hris/time-off-balance/get-time-off-balances-list)
+
+<Info>
+  **Before you start**
+
+  - The connector has synced, and the customer's time module is in scope. It is licensed separately from payroll on many platforms.
+</Info>
+
+## Steps
+
+<Steps>
+  <Step title="Read timesheet entries">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/timesheet-entry?employee_id=<EMPLOYEE_ID>&page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    Entries are bounded by time rather than date, and the filter pairs match that.
+
+    | Filter pair | Bounds |
+    | --- | --- |
+    | `start_time_from` / `start_time_to` | When the entry starts |
+    | `end_time_from` / `end_time_to` | When it ends |
+
+    **Result:** Time entries for the period you asked for.
+  </Step>
+
+  <Step title="Read leave requests, filtered by status">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/time-off?employee_id=<EMPLOYEE_ID>&status=APPROVED&page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    Filter on `status` for anything that acts on leave. Without it, declined and canceled requests arrive alongside approved ones, and treating the whole set as booked leave overstates absence.
+
+    This endpoint has no date filters. Scope by employee, then filter the `start_time` and `end_time` you get back yourself.
+
+    **Result:** Leave requests with their approval state.
+  </Step>
+
+  <Step title="Read remaining balances">
+    ```bash
+    curl --request GET \
+      --url 'https://api.bindbee.dev/api/hris/v1/time-off-balances?employee_id=<EMPLOYEE_ID>&page_size=200' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
+
+    Each record carries `balance`, `used` and `policy_type`. Read `policy_type` rather than assuming one balance per person.
+
+    **Result:** Remaining leave per policy, as of the last sync.
+  </Step>
+</Steps>
+
+## Frequently Asked Questions
+
+<AccordionGroup>
+  <Accordion title="Time off or timesheets return nothing">
+    Time and attendance is a separately licensed module on many platforms, with its own permission grant, and an empty result is the usual failure here rather than an error. See [Origin-system errors](/guides/troubleshooting/errors#origin-system-errors).
+  </Accordion>
+
+  <Accordion title="Balances don't match what the employee sees">
+    Balances are a point-in-time snapshot from the last sync, and accrual runs on the source system's own schedule. A balance stale by one sync interval is expected - see [How syncing works](/guides/reading-writing/syncing).
+  </Accordion>
+
+  <Accordion title="Leave totals are too high">
+    An unfiltered `status` is the usual cause. Declined and canceled requests are returned right alongside approved ones.
+  </Accordion>
+
+  <Accordion title="Hours don't reconcile with the pay run">
+    Expected rather than a bug. Entries can exist for a period whose run has not been processed, and approval workflows mean not every entry reaches pay. See [Payroll](/guides/data-models/payroll).
+  </Accordion>
+
+  <Accordion title="units differs between records">
+    Correct, and worth handling. The source system decides whether leave is counted in hours or days, and some platforms vary it by policy. Read `units` on each record rather than assuming one.
+  </Accordion>
+
+  <Accordion title="One shift spans several timesheet records">
+    Some platforms record time as separate punch events rather than one interval, so a break splits a shift into more than one entry. Check `raw_data` for the original shape before adding them up - see [Inspect raw data](/guides/reading-writing/raw-data).
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Time & attendance](/guides/data-models/time-and-attendance) - the three models and how they connect
+- [Create a time off request](/get-started/use-cases/create-a-time-off-request) - the write in the other direction
+- [Payroll](/guides/data-models/payroll) - why hours and pay do not reconcile

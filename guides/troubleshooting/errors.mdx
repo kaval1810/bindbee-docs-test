@@ -12,7 +12,7 @@ Expand the failed model on the run's **Sync info** screen. Its **Issue** field n
 - **Integration Partner**: The source system refused the request. The fix sits with the customer's HRIS administrator.
 - **Bindbee**: The failure is in Bindbee's sync or mapping. Report it to Bindbee.
 
-The **Message** field beside it carries the upstream response verbatim, and Bindbee flags a recognised cause above the detail - a permission refusal surfaces as **Permission issue found!**
+The **Message** field beside it carries the upstream response verbatim, and Bindbee flags a recognized cause above the detail - a permission refusal surfaces as **Permission issue found!**
 
 Where the whole run failed rather than one model, the error banner sits at the top of the run instead:
 
@@ -63,7 +63,7 @@ Bindbee reads what the connected credentials expose. Many HRIS platforms answer 
   <Step title="Read the source system's own response">
     Go to **Logs** for the connector and find the failing request. Bindbee keeps the source system's answer verbatim: the upstream status, the endpoint called, and the response body.
 
-    That body arrives in whatever format the HR system uses. Bindbee leaves it unnormalised on purpose: *"the Workday integration system user lacks Get_Workers permission on this security group"* is the sentence that tells an administrator what to change, and `PERMISSION_DENIED` would lose it.
+    That body arrives in whatever format the HR system uses. Bindbee leaves it unnormalized on purpose: *"the Workday integration system user lacks Get_Workers permission on this security group"* is the sentence that tells an administrator what to change, and `PERMISSION_DENIED` would lose it.
 
     **Result:** You know which upstream resource was refused.
 
@@ -80,19 +80,19 @@ Bindbee reads what the connected credentials expose. Many HRIS platforms answer 
     | `compensation`, `payroll_run` | Payroll module access, licensed separately on most platforms |
     | `benefit`, `dependent`, `benefit_coverage` | Benefits module access |
     | `time_off`, `timesheet_entry` | Time and attendance module access |
-    | Cost centre, department | Access to the specific field group or report definition |
+    | Cost center, department | Access to the specific field group or report definition |
 
     **Result:** A concrete ask for the administrator.
 
     <Note>
-      Sensitive fields are the single biggest cause. Date of birth and cost centre sit behind
+      Sensitive fields are the single biggest cause. Date of birth and cost center sit behind
       a grant that general employee read excludes, so the connector authenticates cleanly and
       returns those fields null.
     </Note>
   </Step>
 
   <Step title="Send the customer the setup instructions">
-    Per-system click paths live in the [setup instructions](https://help.bindbee.dev). They're white-labelled, so forward the guide for their platform straight to the administrator.
+    Per-system click paths live in the [setup instructions](https://help.bindbee.dev). They're white-labeled, so forward the guide for their platform straight to the administrator.
 
     **Result:** The administrator has instructions specific to their HRIS.
   </Step>
@@ -109,8 +109,8 @@ Bindbee reads what the connected credentials expose. Many HRIS platforms answer 
 Origin systems return their own error text, and some of it is opaque even to people who administer those systems daily. Send Bindbee the connector ID and the failing model and ask what it means.
 
 <Warning>
-  An upstream `403` means the authorising credentials lack a permission, rather than Bindbee
-  being unauthorised. The fix sits with your customer's HRIS administrator, not with your API keys.
+  An upstream `403` means the authorizing credentials lack a permission, rather than Bindbee
+  being unauthorized. The fix sits with your customer's HRIS administrator, not with your API keys.
 </Warning>
 
 ## Errors on your own API requests
@@ -156,9 +156,8 @@ On `429`, wait `Retry-After` seconds. The limit is [200 requests per minute per 
 On `5xx`, retry with exponential backoff and jitter, capped at a few attempts.
 
 <Warning>
-  Retrying a write is only safe with an idempotency key. A `5xx` can be returned after the
-  record was created upstream, so a retry without `X-Idempotency-Key` creates a duplicate in
-  the customer's HRIS.
+  Retry a write only with `X-Idempotency-Key`. A `5xx` can be returned after the record was
+  created upstream - see [Idempotency](/guides/reading-writing/writing-data/idempotency).
 </Warning>
 
 ## Alerting

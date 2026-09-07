@@ -1,16 +1,16 @@
 ---
 title: "Read Benefit Coverage"
 sidebarTitle: "Read benefit coverage"
-description: "Read what an employee is currently covered for, and who it covers, to recommend a better-fitting product."
+description: "Read what an employee is covered for and who it covers."
 icon: "shield-check"
 ---
 
 {/* CONTENT PASS: new use case, written against the HrisBenefitCoverage and HrisBenefit schemas in spec.json. Needs a real customer scenario and a worked recommendation example. */}
 
-To recommend a better product you need to know what someone already has. Enrolment alone won't tell you - two employees on the same plan can carry very different amounts and cover very different people.
+To recommend a better product you need to know what someone already has. Enrollment alone won't tell you - two employees on the same plan can carry very different amounts and cover very different people.
 
 <Warning>
-  Benefit coverage is a **BETA** model. It works, but field names and shapes aren't frozen, and fewer integrations return it than return enrolment. Check [Model availability](/get-started/model-availability) before promising it.
+  Benefit coverage is a **BETA** model. It works, but field names and shapes aren't frozen, and fewer integrations return it than return enrollment. Check [Model availability](/get-started/model-availability) before promising it.
 </Warning>
 
 ## The two models you need
@@ -20,12 +20,12 @@ To recommend a better product you need to know what someone already has. Enrolme
 | **Benefit** | What is this employee enrolled in? | `plan_name`, `provider_name`, `benefit_plan_type`, `benefit_plan_category`, `coverage_tier`, `employee_contribution`, `company_contribution` |
 | **Benefit coverage** | How much, and who does it cover? | `amount`, `currency`, `is_employee_covered`, `covered_dependents`, `benefit` |
 
-Coverage points back at an enrolment through `benefit`, so the join runs coverage → benefit → employee.
+Coverage points back at an enrollment through `benefit`, so the join runs coverage → benefit → employee.
 
 ## Steps
 
 <Steps>
-  <Step title="Read current enrolments">
+  <Step title="Read current enrollments">
     ```bash
     curl -G https://api.bindbee.dev/api/hris/v1/benefits \
       --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
@@ -33,12 +33,12 @@ Coverage points back at an enrolment through `benefit`, so the join runs coverag
       --data-urlencode 'page_size=200'
     ```
 
-    Filter to what's in force today. An `end_date` in the past means the enrolment has lapsed, and `effective_date` can be in the future - a plan picked during open enrolment isn't active yet.
+    Filter to what's in force today. An `end_date` in the past means the enrollment has lapsed, and `effective_date` can be in the future - a plan picked during open enrollment isn't active yet.
 
     **Result:** The plans this population holds today.
   </Step>
 
-  <Step title="Read the coverage behind each enrolment">
+  <Step title="Read the coverage behind each enrollment">
     ```bash
     curl -G https://api.bindbee.dev/api/hris/v1/benefit-coverages \
       --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
@@ -46,13 +46,13 @@ Coverage points back at an enrolment through `benefit`, so the join runs coverag
       --data-urlencode 'page_size=200'
     ```
 
-    Group by `benefit` to attach coverage to its enrolment. `amount` and `currency` travel together - a population across several countries returns several currencies.
+    Group by `benefit` to attach coverage to its enrollment. `amount` and `currency` travel together - a population across several countries returns several currencies.
 
     **Result:** Coverage amounts joined to plans.
   </Step>
 
   <Step title="Establish who is actually covered">
-    Two independent fields. `is_employee_covered` says whether the employee themselves is included - the enrolment existing doesn't imply it. `covered_dependents` lists who else is.
+    Two independent fields. `is_employee_covered` says whether the employee themselves is included - the enrollment existing doesn't imply it. `covered_dependents` lists who else is.
 
     Compare that against the dependents on record. **The gap between dependents who exist and dependents who are covered is the recommendation** - a family of four on employee-only coverage is the clearest signal here.
 
@@ -62,14 +62,14 @@ Coverage points back at an enrolment through `benefit`, so the join runs coverag
   <Step title="Compare against what you offer">
     With amount, tier and covered dependents in hand, the comparison is yours: under-insured relative to salary, dependents uncovered, or a tier that no longer matches household size.
 
-    `coverage_tier` is an enum, and a source system can return a value outside the documented set - handle unrecognised values, see [Enum values](/guides/reading-writing/enum-values).
+    `coverage_tier` is an enum, and a source system can return a value outside the documented set - handle unrecognized values, see [Enum values](/guides/reading-writing/enum-values).
 
     **Result:** A ranked list of employees whose coverage doesn't fit.
   </Step>
 </Steps>
 
 <Note>
-  Coverage changes at open enrolment, on qualifying life events, and whenever a dependent is added. Re-read with `modified_after` instead of refetching the population - see [modified_after](/guides/reading-writing/reading-data/modified-after).
+  Coverage changes at open enrollment, on qualifying life events, and whenever a dependent is added. Re-read with `modified_after` instead of refetching the population - see [modified_after](/guides/reading-writing/reading-data/modified-after).
 </Note>
 
 ## Frequently Asked Questions
@@ -79,12 +79,12 @@ Coverage points back at an enrolment through `benefit`, so the join runs coverag
     Most likely the integration doesn't support the model - check [Model availability](/get-started/model-availability). Then confirm the model is in scope.
   </Accordion>
 
-  <Accordion title="Coverage rows do not join to any enrolment">
+  <Accordion title="Coverage rows do not join to any enrollment">
     Join on `benefit`, not on the employee. Going via the employee produces cross-products where someone holds several plans.
   </Accordion>
 
   <Accordion title="Amounts look implausible">
-    Check `currency` before comparing. Also check you aren't reading a per-period contribution as a coverage amount - `employee_contribution` and `company_contribution` live on the enrolment, not the coverage.
+    Check `currency` before comparing. Also check you aren't reading a per-period contribution as a coverage amount - `employee_contribution` and `company_contribution` live on the enrollment, not the coverage.
   </Accordion>
 
   <Accordion title="Dependents appear covered who should not be">

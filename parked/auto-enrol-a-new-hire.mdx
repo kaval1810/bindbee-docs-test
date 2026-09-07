@@ -1,6 +1,6 @@
 ---
-title: "Auto-Enrol a New Hire"
-description: "Detect a new employee and start their benefits enrolment without acting on the entire existing workforce."
+title: "Auto-Enroll a New Hire"
+description: "Detect a new employee and start their benefits enrollment without acting on the entire existing workforce."
 ---
 
 ## What you'll use
@@ -44,7 +44,7 @@ description: "Detect a new employee and start their benefits enrolment without a
         return
     ```
 
-    **Result:** Existing employees establish baseline state instead of triggering enrolment.
+    **Result:** Existing employees establish baseline state instead of triggering enrollment.
   </Step>
 
   <Step title="Separate creations from updates">
@@ -82,16 +82,16 @@ description: "Detect a new employee and start their benefits enrolment without a
         if emp["employment_status"] == "PENDING":
             schedule_for(emp, emp["start_date"])   # don't act yet
         elif emp["employment_status"] == "ACTIVE":
-            begin_enrolment(emp)
+            begin_enrollment(emp)
     ```
 
     Treat the `PENDING` to `ACTIVE` transition as its own signal - offers are withdrawn, and a workflow started on arrival reaches people who never join.
 
-    **Result:** Enrolment starts when employment does.
+    **Result:** Enrollment starts when employment does.
   </Step>
 
   <Step title="Read the plans available to them">
-    Fetch the employer's plan catalogue, which is what the employee will be choosing from.
+    Fetch the employer's plan catalog, which is what the employee will be choosing from.
 
     ```bash
     curl --request GET \
@@ -100,7 +100,7 @@ description: "Detect a new employee and start their benefits enrolment without a
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    This is the plan definition, not anyone's enrolment - see [Reading benefits](/guides/data-models/benefits). Which of these plans a given employee is eligible for is not readable; see the constraint below.
+    This is the plan definition, not anyone's enrollment - see [Reading benefits](/guides/data-models/benefits). Which of these plans a given employee is eligible for is not readable; see the constraint below.
 
     **Result:** The plans to present, per customer.
   </Step>
@@ -108,17 +108,17 @@ description: "Detect a new employee and start their benefits enrolment without a
 
 ## Constraints specific to this combination
 
-**The first sync will look like everyone was hired at once.** When a connector is first connected, every employee is new to you. Without a guard, this triggers enrolment workflows for the entire workforce - the failure mode is a welcome email to several thousand existing employees, and it is not recoverable.
+**The first sync will look like everyone was hired at once.** When a connector is first connected, every employee is new to you. Without a guard, this triggers enrollment workflows for the entire workforce - the failure mode is a welcome email to several thousand existing employees, and it is not recoverable.
 
-Handle the initial sync as a bulk import that establishes baseline state without triggering per-employee workflows, then switch to event-driven handling. `sync.sync_name` increments per run, which is one way to recognise the first. The same applies after a [forced resync](/guides/reading-writing/syncing).
+Handle the initial sync as a bulk import that establishes baseline state without triggering per-employee workflows, then switch to event-driven handling. `sync.sync_name` increments per run, which is one way to recognize the first. The same applies after a [forced resync](/guides/reading-writing/syncing).
 
 **New in Bindbee is not the same as newly hired.** A record can appear because the employee was just hired, because they came into scope after a permission or configuration change, or because a prior sync failed to load them. Check the start date rather than treating first-appearance as a hire.
 
-**Pre-start records arrive before the person does.** Future-dated hires are commonly entered weeks in advance and carry `PENDING`. That's useful - it's the window in which enrolment paperwork should happen - but it means acting on arrival can start a workflow for someone who hasn't joined and may never join. Offers are withdrawn. Gate on start date, and handle the `PENDING` to `ACTIVE` transition as a separate signal.
+**Pre-start records arrive before the person does.** Future-dated hires are commonly entered weeks in advance and carry `PENDING`. That's useful - it's the window in which enrollment paperwork should happen - but it means acting on arrival can start a workflow for someone who hasn't joined and may never join. Offers are withdrawn. Gate on start date, and handle the `PENDING` to `ACTIVE` transition as a separate signal.
 
 **Eligibility isn't in the employee model.** Waiting periods, hours thresholds, and class-based eligibility rules live in the customer's benefits configuration, not in anything you can read. You can read the start date and employment type; you cannot read "eligible on 1 October". Agree the rules per customer and compute eligibility yourself.
 
-**The window is short and sync latency eats it.** Enrolment windows typically run 30 days from hire, and a 24-hour cadence plus your own processing interval consumes a meaningful share before you begin. Measure the gap between hire date and first contact for a real customer before assuming the schedule is adequate.
+**The window is short and sync latency eats it.** Enrollment windows typically run 30 days from hire, and a 24-hour cadence plus your own processing interval consumes a meaningful share before you begin. Measure the gap between hire date and first contact for a real customer before assuming the schedule is adequate.
 
 ## Frequently Asked Questions
 
@@ -135,7 +135,7 @@ Handle the initial sync as a bulk import that establishes baseline state without
     Backdated entries are routine for hires processed late, and `start_date` is null on some integrations. Where it is, the employment's `effective_date` is the fallback - see [Reading employees](/guides/data-models/employee-data).
   </Accordion>
 
-  <Accordion title="An enrolment started for someone who never joined">
+  <Accordion title="An enrollment started for someone who never joined">
     A `PENDING` record acted on at arrival rather than at start date. Withdrawn offers and deferred start dates both produce this.
   </Accordion>
 </AccordionGroup>

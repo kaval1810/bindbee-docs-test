@@ -7,7 +7,7 @@ Every collection endpoint is paginated the same way — 53 of them across HRIS, 
 
 ## Query parameters
 
-| Parameter | Type | Default | Range | Behaviour |
+| Parameter | Type | Default | Range | Behavior |
 | --- | --- | --- | --- | --- |
 | `page_size` | integer | `50` | `1`-`200` | Number of results per page. A value above 200 is rejected, not clamped |
 | `cursor` | string | none | - | Opaque pointer to the next page |
@@ -142,7 +142,7 @@ There is **no total count and no page number**, so a progress bar cannot be driv
   </Accordion>
 
   <Accordion title="429 partway through">
-    Honour `Retry-After` and resume from the cursor you were on — see [Rate limits](/api-reference/basics/rate-limits).
+    Honor `Retry-After` and resume from the cursor you were on — see [Rate limits](/api-reference/basics/rate-limits).
   </Accordion>
 
   <Accordion title="Pages are slow with expanded relations">

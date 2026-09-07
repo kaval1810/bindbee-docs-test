@@ -10,7 +10,7 @@ Bindbee syncs data from each connected system on a schedule, normalizes it into 
 
 ```mermaid
 flowchart LR
-    A["Customer<br/>authorises"] --> B["Initial sync<br/>reads return partial data"]
+    A["Customer<br/>authorizes"] --> B["Initial sync<br/>reads return partial data"]
     B --> C["Complete<br/>data is trustworthy"]
     C --> D["Recurring sync<br/>every 24h by default"]
     D --> C
@@ -63,7 +63,7 @@ Every webhook payload carries a `sync` object identifying the job behind it, and
 
 ## Development connectors
 
-Development connectors run the same initial sync as Production ones: it starts on authorisation and needs nothing from you. What they do not have is the **recurring** schedule that follows it. After that first run the data is frozen until you trigger a sync yourself.
+Development connectors run the same initial sync as Production ones: it starts on authorization and needs nothing from you. What they do not have is the **recurring** schedule that follows it. After that first run the data is frozen until you trigger a sync yourself.
 
 See [Environments](/get-started/environments) for everything else the two differ on.
 

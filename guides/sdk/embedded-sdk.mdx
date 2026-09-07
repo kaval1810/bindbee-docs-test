@@ -5,9 +5,9 @@ description: "Embed Bindbee's connector link flow inside your own product, with 
 icon: "code"
 ---
 
-[Magic Link](/get-started/how-to-connect) hands your customer a URL and needs no frontend code. The Embedded SDK does the same job inside your product: your user clicks a button in your UI, authorises their HR system in an overlay, and never leaves your app.
+[Magic Link](/get-started/how-to-connect) hands your customer a URL and needs no frontend code. The Embedded SDK does the same job inside your product: your user clicks a button in your UI, authorizes their HR system in an overlay, and never leaves your app.
 
-<Frame caption="The full round trip: your server creates a link token, the user authorises in the overlay, and the temporary token that comes back is exchanged — server-side again — for the connector token you store.">
+<Frame caption="The full round trip: your server creates a link token, the user authorizes in the overlay, and the temporary token that comes back is exchanged — server-side again — for the connector token you store.">
   <img src="/images/guides/sdk_workflow.webp" alt="A four-step diagram. Step 1, initiate the SDK: your server POSTs to Bindbee for a link_token, and your app's integrations page shows a Connect button on BambooHR. Step 2, authentication flow: the user approves access to each data model and enters their BambooHR subdomain. Step 3, get temporary token: a Connection Established confirmation returns a temporary_token. Step 4, get connector token: your server sends the temporary_token in a GET and receives the connector_token." />
 </Frame>
 
@@ -15,7 +15,7 @@ Steps 1 and 3 run on your server. Both use your API key, which must never reach 
 
 ## Step 1: Create a link token
 
-A link token authorises one linking session for one end user. Full reference: [Create Link Token](/sdk/create-link-token).
+A link token authorizes one linking session for one end user. Full reference: [Create Link Token](/sdk/create-link-token).
 
 ```bash
 POST /api/embedded/v1/link/create-link-token
@@ -44,7 +44,7 @@ Authorization: Bearer <BINDBEE_API_KEY>
 
 | Field | Required | Notes |
 | --- | --- | --- |
-| `end_user_data.org_name` | Yes | The customer organisation this connector belongs to. Minimum 2 characters. |
+| `end_user_data.org_name` | Yes | The customer organization this connector belongs to. Minimum 2 characters. |
 | `end_user_data.origin_id` | Yes | Your own unique identifier for the end user. This is how you match the connector back to a record in your system. |
 | `end_user_data.email` | No | Contact email for the end user. |
 | `category` | Yes | One of `HRIS`, `ATS`, `LMS`, `CUSTOM`. |
@@ -58,7 +58,7 @@ Authorization: Bearer <BINDBEE_API_KEY>
 
 ## Step 2: Open the link flow
 
-Pass the token to the SDK. Opening the flow mounts a full-screen overlay on top of your app, where the user signs in to their HR system and authorises access.
+Pass the token to the SDK. Opening the flow mounts a full-screen overlay on top of your app, where the user signs in to their HR system and authorizes access.
 
 <Tabs>
   <Tab title="React">
@@ -154,7 +154,7 @@ Store the `connector_token` against the customer record you identified with `ori
 
 This exchange uses your API key, so it belongs on your server too. Treat the returned `connector_token` as a secret: it grants access to that customer's HR data.
 
-## Behaviour worth knowing
+## Behavior worth knowing
 
 | | |
 | --- | --- |
