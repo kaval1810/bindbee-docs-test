@@ -4,6 +4,12 @@ openapi: post /api/hris/v1/time-off
 
 import { Accordion, AccordionGroup } from "@mintlify/components";
 
+
+
+import { IntegrationSupport } from "/components/integration-support.jsx";
+
+<IntegrationSupport category="HRIS" model="Time Off" direction="write" />
+
 This endpoint creates a Timeoff Entry in the connected HRIS via Bindbee's unified **Time Off** model.
 
 ## Provider-specific behavior

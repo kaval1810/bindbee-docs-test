@@ -4,6 +4,12 @@ openapi: "POST /api/hris/v1/employee-payroll-runs"
 
 import { Accordion, AccordionGroup } from "@mintlify/components";
 
+
+
+import { IntegrationSupport } from "/components/integration-support.jsx";
+
+<IntegrationSupport category="HRIS" model="Employee Payroll Run" direction="write" />
+
 This endpoint creates an Employee Payroll Run in the connected HRIS via Bindbee's unified **Employee Payroll Runs** model.
 
 ## Provider-specific behavior

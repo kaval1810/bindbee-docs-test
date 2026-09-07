@@ -53,18 +53,26 @@ export const ModelSupportMatrix = () => {
    * Expected tab layout - parsing is anchored on these column C labels rather
    * than on fixed row numbers, so inserting a row in the sheet can't break it:
    *
-   *   A       B       C                 D onward
-   *   ------------------------------------------------------
-   *                   Logo link         logo URL per provider
-   *   Write   Group   Model             provider display name
-   *                   Connection Type   A (API) or S (SFTP)
-   *   Y/N     group   model name        Y | B | N | blank
+   *   A       B       C                        D onward
+   *   -------------------------------------------------------------
+   *                   Logo link                logo URL per provider
+   *   Write   Group   Model                    provider display name
+   *                   Connection Type          A (API) or S (SFTP)
+   *                   Write per integration    Y or N
+   *   Y/N     group   model name               Y | B | N | blank
    *
    * Cells are three-state: Y supported, B supported but in beta, N/blank not.
+   *
+   * Write support is held on two axes rather than per cell: column A marks which
+   * models can be written, the "Write per integration" row marks which
+   * integrations can write at all. A write is only real where both are Y AND the
+   * integration carries the model - 9 of the 20 write-capable HRIS integrations
+   * have no Timesheet Entry, so the read cell has to gate the write.
    */
   const LOGO_ROW = "logo link";
   const HEADER_ROW = "model";
   const TYPE_ROW = "connection type";
+  const WRITE_ROW = "write per integration";
 
   /* RFC 4180: quoted fields, "" escapes, embedded commas and newlines, CRLF. */
   const parseCsv = (text) => {
@@ -123,6 +131,7 @@ export const ModelSupportMatrix = () => {
     const header = find(HEADER_ROW);
     const types = find(TYPE_ROW);
     const logos = find(LOGO_ROW);
+    const writes = find(WRITE_ROW);
     if (!header || !types) {
       throw new Error("Sheet is missing its 'Model' or 'Connection Type' row");
     }
@@ -144,6 +153,7 @@ export const ModelSupportMatrix = () => {
         col: i,
         slug: slugify(name) + (type === "SFTP" ? "_sftp" : ""),
         logo: cell(logos, i),
+        write: cell(writes, i).toUpperCase() === "Y",
       });
     }
 
@@ -178,7 +188,14 @@ export const ModelSupportMatrix = () => {
     if (!providers.length || !groups.length) {
       throw new Error("Sheet has no usable providers or models");
     }
-    return { providers, groups, cells };
+
+    /* No write data in this tab means no Read/Write control - a tab that has
+       yet to fill the write row shouldn't show a dead toggle. */
+    const hasWrites =
+      providers.some((p) => p.write) &&
+      groups.some((g) => g.models.some((m) => m.write));
+
+    return { providers, groups, cells, hasWrites };
   };
 
   const loadMatrix = async (category) => {
@@ -229,7 +246,7 @@ export const ModelSupportMatrix = () => {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    margin: 20px 0 12px;
+    margin: 20px 0 20px;
   }
   .bb-mm-bar-group {
     display: flex;
@@ -263,6 +280,93 @@ export const ModelSupportMatrix = () => {
      button's own colour - including the orange it turns when a filter is on. */
   .bb-mm-btn .icon { background-color: currentColor !important; }
   .bb-mm-chevron { margin-left: -1px; opacity: 0.6; }
+
+  /* Custom tooltip: the native title attribute has a builtin browser delay
+     (~1s) before it appears - this shows on hover/focus with no wait. */
+  /* Every rule is scoped to [data-tooltip]: the Write tab drops the attribute
+     when the category does have writes, and an unscoped rule would then pop an
+     empty black box on hover. */
+  .bb-mm-tip { position: relative; display: inline-flex; }
+  .bb-mm-tip[data-tooltip]::after,
+  .bb-mm-tip[data-tooltip]::before {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.08s ease;
+  }
+  .bb-mm-tip[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bb-text);
+    color: var(--bb-bg);
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.3;
+    white-space: nowrap;
+    padding: 5px 8px;
+    border-radius: 4px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    z-index: 50;
+  }
+  .bb-mm-tip[data-tooltip]::before {
+    content: "";
+    position: absolute;
+    bottom: calc(100% + 3px);
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: var(--bb-text);
+    z-index: 50;
+  }
+  .bb-mm-tip[data-tooltip]:hover::after, .bb-mm-tip[data-tooltip]:hover::before,
+  .bb-mm-tip[data-tooltip]:focus-within::after,
+  .bb-mm-tip[data-tooltip]:focus-within::before {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* Read/Write tabs. A recessed track with the selected tab raised out of it -
+     the segmented-control idiom, which reads as one either/or switch. A solid
+     accent fill was tried first and read as a primary action button instead. */
+  .bb-mm-seg {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    height: 34px;
+    padding: 3px;
+    background: var(--bb-bg-sub);
+    border: 1px solid var(--bb-border);
+    border-radius: 6px;
+  }
+  .bb-mm-seg-btn {
+    height: 26px;
+    padding: 0 14px;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--bb-text-dim);
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.12s ease, color 0.12s ease;
+  }
+  .bb-mm-seg-btn:hover:not(:disabled) { color: var(--bb-text); }
+  .bb-mm-seg-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .bb-mm-seg-btn[data-active="true"] {
+    background: #fff;
+    color: var(--bb-accent);
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgba(28, 27, 26, 0.10);
+  }
+  /* On the dark ground the page background is darker than the track, so the
+     raised tab has to be lifted with its own lighter fill instead. */
+  html.dark .bb-mm-seg-btn[data-active="true"] {
+    background: #262626;
+    box-shadow: none;
+  }
 
   .bb-mm-count {
     background: var(--bb-accent);
@@ -540,8 +644,6 @@ export const ModelSupportMatrix = () => {
   .bb-mm-badge[data-type="API"] { color: var(--bb-accent); background: rgba(245, 126, 33, 0.12); }
   .bb-mm-badge[data-type="SFTP"] { color: #be185d; background: rgba(219, 39, 119, 0.12); }
   html.dark .bb-mm-badge[data-type="SFTP"] { color: #f472b6; background: rgba(236, 72, 153, 0.16); }
-  .bb-mm-badge[data-write="true"] { color: #1d4ed8; background: rgba(37, 99, 235, 0.12); }
-  html.dark .bb-mm-badge[data-write="true"] { color: #7ca9f7; background: rgba(59, 130, 246, 0.16); }
   .bb-mm-badge[data-beta="true"] { color: #6d28d9; background: rgba(109, 40, 217, 0.12); }
   html.dark .bb-mm-badge[data-beta="true"] { color: #b39bf5; background: rgba(139, 92, 246, 0.16); }
 
@@ -623,6 +725,40 @@ export const ModelSupportMatrix = () => {
   @media (prefers-reduced-motion: reduce) {
     .bb-mm-spinner { animation-duration: 2.4s; }
   }
+
+  /*
+   * Phones. The sticky Model column is what makes the grid readable while you
+   * scroll sideways, so it stays - but at 240px it ate two thirds of a 375px
+   * screen and left no room to scroll into. Everything here buys that room
+   * back: a narrower anchor, tighter columns, less padding.
+   */
+  @media (max-width: 640px) {
+    .bb-mm table { font-size: 12px; }
+    .bb-mm .bb-mm-sticky {
+      width: 124px;
+      min-width: 124px;
+    }
+    .bb-mm-prov { min-width: 112px; }
+    .bb-mm-prov-name {
+      max-width: 88px;
+      font-size: 11.5px;
+    }
+    .bb-mm-prov-inner { gap: 4px; }
+    .bb-mm thead th { padding: 9px 10px; }
+    .bb-mm td.bb-mm-model { padding: 9px 10px; }
+    .bb-mm td.bb-mm-cell { padding: 9px 6px; }
+    .bb-mm tbody tr.bb-mm-group td { padding: 7px 10px; }
+    /* Long labels wrap rather than force the anchor column wider. */
+    .bb-mm-model-name { white-space: normal; }
+    .bb-mm-logo { width: 15px; height: 15px; }
+
+    /* The bar stacks; the two icon buttons stay on the row they wrap onto. */
+    .bb-mm-bar { gap: 8px; }
+    .bb-mm-bar-group { gap: 6px; }
+    .bb-mm-btn { height: 32px; padding: 0 10px; font-size: 12px; }
+    .bb-mm-seg { height: 32px; }
+    .bb-mm-seg-btn { padding: 0 11px; font-size: 12px; }
+  }
   `;
 
   /* Helpers are lowercase and called as functions - see note 2 at the top. */
@@ -695,6 +831,7 @@ export const ModelSupportMatrix = () => {
   const [search, setSearch] = useState("");
   const [modelSearch, setModelSearch] = useState("");
   const [open, setOpen] = useState(null);
+  const [direction, setDirection] = useState("read");
   const [sheet, setSheet] = useState(null);
   const [error, setError] = useState(null);
   const [cache, setCache] = useState({});
@@ -710,6 +847,7 @@ export const ModelSupportMatrix = () => {
     setProviderSel(split(q.get("providers")));
     setTypeSel(split(q.get("types")));
     setModelSel(split(q.get("models")));
+    if (q.get("direction") === "write") setDirection("write");
   }, []);
 
   useEffect(() => {
@@ -717,6 +855,7 @@ export const ModelSupportMatrix = () => {
     setError(null);
     if (cache[category]) {
       setSheet(cache[category]);
+      if (!cache[category].hasWrites) setDirection("read");
       return;
     }
     setSheet(null);
@@ -725,6 +864,8 @@ export const ModelSupportMatrix = () => {
         if (!live) return;
         setCache((c) => ({ ...c, [category]: data }));
         setSheet(data);
+        /* Don't leave the control claiming a write view a category can't show. */
+        if (!data.hasWrites) setDirection("read");
       },
       (err) => {
         if (live) setError(err.message || String(err));
@@ -752,14 +893,20 @@ export const ModelSupportMatrix = () => {
   const toggle = (list, setList, value) =>
     setList(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
 
+  const canWrite = !!(sheet && sheet.hasWrites);
+  const writeView = direction === "write" && canWrite;
+
+  /* Write view narrows both axes at once: only models that can be written, and
+     only integrations that can write. What survives is the intersection. */
   const providers = useMemo(
     () =>
       allProviders.filter(
         (p) =>
           (providerSel.length === 0 || providerSel.includes(p.slug)) &&
-          (typeSel.length === 0 || typeSel.includes(p.type))
+          (typeSel.length === 0 || typeSel.includes(p.type)) &&
+          (!writeView || p.write)
       ),
-    [allProviders, providerSel, typeSel]
+    [allProviders, providerSel, typeSel, writeView]
   );
 
   const visibleGroups = useMemo(
@@ -767,10 +914,14 @@ export const ModelSupportMatrix = () => {
       groups
         .map((g) => ({
           group: g.group,
-          models: g.models.filter((m) => modelSel.length === 0 || modelSel.includes(m.key))
+          models: g.models.filter(
+            (m) =>
+              (modelSel.length === 0 || modelSel.includes(m.key)) &&
+              (!writeView || m.write)
+          )
         }))
         .filter((g) => g.models.length > 0),
-    [groups, modelSel]
+    [groups, modelSel, writeView]
   );
 
   /* One flat row list - there is no Fragment in scope to group header + rows. */
@@ -795,6 +946,7 @@ export const ModelSupportMatrix = () => {
     if (providerSel.length) q.set("providers", providerSel.join(","));
     if (typeSel.length) q.set("types", typeSel.join(","));
     if (modelSel.length) q.set("models", modelSel.join(","));
+    if (writeView) q.set("direction", "write");
     const url = window.location.origin + window.location.pathname + "?" + q.toString();
     navigator.clipboard.writeText(url).then(() => {
       setCopied(true);
@@ -827,7 +979,12 @@ export const ModelSupportMatrix = () => {
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
     const a = document.createElement("a");
     a.href = url;
-    a.download = "bindbee-model-availability-" + category.toLowerCase() + ".csv";
+    a.download =
+      "bindbee-model-" +
+      (writeView ? "write" : "availability") +
+      "-" +
+      category.toLowerCase() +
+      ".csv";
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -859,6 +1016,68 @@ export const ModelSupportMatrix = () => {
 
       <div className="bb-mm-bar">
         <div className="bb-mm-bar-group">
+        {/* Always rendered, so the bar doesn't shift when you switch category.
+            Where a category has no writes the Write tab is disabled rather than
+            dropped - "no write support here" is worth saying out loud. */}
+        <div className="bb-mm-seg" role="group" aria-label="Direction">
+          <button
+            type="button"
+            className="bb-mm-seg-btn"
+            data-active={!writeView}
+            onClick={() => setDirection("read")}
+          >
+            Read
+          </button>
+          <span
+            className="bb-mm-tip"
+            data-tooltip={
+              canWrite ? undefined : "No write support in " + category + " yet"
+            }
+          >
+            <button
+              type="button"
+              className="bb-mm-seg-btn"
+              data-active={writeView}
+              disabled={!canWrite}
+              onClick={() => setDirection("write")}
+            >
+              Write
+            </button>
+          </span>
+        </div>
+
+        {dropdown({
+          id: "category",
+          label: (CATEGORIES.find((c) => c.key === category) || CATEGORIES[0]).label,
+          icon: "table-2",
+          open,
+          setOpen,
+          count: 0,
+          children: (
+            <>
+              {AVAILABLE.map((c) => (
+                <button
+                  type="button"
+                  className="bb-mm-opt bb-mm-opt-btn"
+                  key={c.key}
+                  data-selected={c.key === category}
+                  onClick={() => {
+                    setCategory(c.key);
+                    setProviderSel([]);
+                    setModelSel([]);
+                    setOpen(null);
+                  }}
+                >
+                  <span className="bb-mm-tick">
+                    <Icon icon="check" size={14} />
+                  </span>
+                  <span>{c.label}</span>
+                </button>
+              ))}
+            </>
+          ),
+        })}
+
         {dropdown({
           id: "provider",
           label: "Integration",
@@ -896,34 +1115,6 @@ export const ModelSupportMatrix = () => {
                   onClick={() => setProviderSel(providerOptions.map((p) => p.slug))}
                 >
                   Select all
-                </button>
-              </div>
-            </>
-          )
-        })}
-
-        {dropdown({
-          id: "type",
-          label: "Connection type",
-          icon: "cable",
-          open,
-          setOpen,
-          count: typeSel.length,
-          children: (
-            <>
-              {["API", "SFTP"].map((t) => (
-                <label className="bb-mm-opt" key={t}>
-                  <input
-                    type="checkbox"
-                    checked={typeSel.includes(t)}
-                    onChange={() => toggle(typeSel, setTypeSel, t)}
-                  />
-                  <span>{t}</span>
-                </label>
-              ))}
-              <div className="bb-mm-pop-foot">
-                <button type="button" className="bb-mm-link" onClick={() => setTypeSel([])}>
-                  Clear
                 </button>
               </div>
             </>
@@ -980,48 +1171,57 @@ export const ModelSupportMatrix = () => {
           )
         })}
 
+        {dropdown({
+          id: "type",
+          label: "Connection type",
+          icon: "cable",
+          open,
+          setOpen,
+          count: typeSel.length,
+          children: (
+            <>
+              {["API", "SFTP"].map((t) => (
+                <label className="bb-mm-opt" key={t}>
+                  <input
+                    type="checkbox"
+                    checked={typeSel.includes(t)}
+                    onChange={() => toggle(typeSel, setTypeSel, t)}
+                  />
+                  <span>{t}</span>
+                </label>
+              ))}
+              <div className="bb-mm-pop-foot">
+                <button type="button" className="bb-mm-link" onClick={() => setTypeSel([])}>
+                  Clear
+                </button>
+              </div>
+            </>
+          )
+        })}
+
         </div>
 
         <div className="bb-mm-bar-group">
-          {dropdown({
-            id: "category",
-            label: (CATEGORIES.find((c) => c.key === category) || CATEGORIES[0]).label,
-            icon: "table-2",
-            align: "right",
-            open,
-            setOpen,
-            count: 0,
-            children: (
-              <>
-                {AVAILABLE.map((c) => (
-                  <button
-                    type="button"
-                    className="bb-mm-opt bb-mm-opt-btn"
-                    key={c.key}
-                    data-selected={c.key === category}
-                    onClick={() => {
-                      setCategory(c.key);
-                      setProviderSel([]);
-                      setModelSel([]);
-                      setOpen(null);
-                    }}
-                  >
-                    <span className="bb-mm-tick">
-                      <Icon icon="check" size={14} />
-                    </span>
-                    <span>{c.label}</span>
-                  </button>
-                ))}
-              </>
-            ),
-          })}
-
-          <button type="button" className="bb-mm-btn" onClick={copyLink}>
-            <Icon icon={copied ? "check" : "link"} size={15} />
-          </button>
-          <button type="button" className="bb-mm-btn" onClick={downloadCsv}>
-            <Icon icon="download" size={15} />
-          </button>
+          <span className="bb-mm-tip" data-tooltip={copied ? "Copied!" : "Copy link"}>
+            <button
+              type="button"
+              className="bb-mm-btn"
+              onClick={copyLink}
+              aria-label={copied ? "Copied!" : "Copy link"}
+            >
+              <Icon icon={copied ? "check" : "link"} size={15} />
+            </button>
+          </span>
+          <span className="bb-mm-tip" data-tooltip="Download as CSV">
+            <button
+              type="button"
+              className="bb-mm-btn"
+              onClick={downloadCsv}
+              aria-label="Download as CSV"
+            >
+              <Icon icon="download" size={15} />
+            </button>
+          </span>
         </div>
       </div>
 
@@ -1079,11 +1279,6 @@ export const ModelSupportMatrix = () => {
                     <td className="bb-mm-sticky bb-mm-model">
                       <span className="bb-mm-model-name">
                         {row.model.label}
-                        {row.model.write ? (
-                          <span className="bb-mm-badge" data-write="true">
-                            WRITE
-                          </span>
-                        ) : null}
                       </span>
                     </td>
                     {providers.map((p) => (
