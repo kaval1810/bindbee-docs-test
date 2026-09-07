@@ -449,8 +449,7 @@ export const ModelSupportMatrix = () => {
   .bb-mm-scroll {
     border: 1px solid var(--bb-border);
     border-radius: 4px;
-    overflow: auto;
-    max-height: 70vh;
+    overflow-x: auto;
     background: var(--bb-bg);
     box-shadow: var(--bb-shadow);
   }
