@@ -5,9 +5,7 @@ description: "Explain a gap between Bindbee's record count and the customer's."
 icon: "calculator"
 ---
 
-A customer says they have 4,200 employees; you're seeing 4,417. The two numbers are counting different populations.
-
-Establish what each one counts before investigating a fault.
+A customer says they have 4,200 employees and you're seeing 4,417. The two numbers are counting different populations, so establish what each one counts before investigating a fault.
 
 <Info>
   **Before you start**
@@ -27,14 +25,8 @@ Establish what each one counts before investigating a fault.
   </Step>
 
   <Step title="Break the count down by status">
-    Count each of `ACTIVE`, `PENDING`, `INACTIVE`, `ACTIVE_EXTERNAL`, `INACTIVE_EXTERNAL`, `LEAVE`, `DECEASED`, `RETIRED`, and `-`.
+    Count each of `ACTIVE`, `PENDING`, `INACTIVE`, `ACTIVE_EXTERNAL`, `INACTIVE_EXTERNAL`, `LEAVE`, `DECEASED`, `RETIRED`, and `-`. This one breakdown resolves most gaps, because customers quote active permanent employees and an unfiltered API count includes everyone.
 
-    This one breakdown resolves most gaps. Customers quote active permanent employees; an unfiltered API count includes everyone.
-
-    **Result:** A per-status distribution to compare against.
-  </Step>
-
-  <Step title="Work through the usual differences">
     | Difference | Check |
     | --- | --- |
     | Contingent workers and contractors | `ACTIVE_EXTERNAL` and `INACTIVE_EXTERNAL` |
@@ -44,6 +36,8 @@ Establish what each one counts before investigating a fault.
     | Records with no upstream status | `-`, which any specific status filter excludes |
     | Multiple companies or legal entities | Break down by `company_id` |
     | One person, several employments | Count employees and employments separately |
+    | Test or system accounts | Present in the source system. Filter them out on a stable attribute |
+    | Records with almost no fields populated | Partially provisioned upstream, or a sync that loaded the employee but not the related models |
 
     **Result:** The gap accounted for.
   </Step>
@@ -55,9 +49,7 @@ Establish what each one counts before investigating a fault.
   </Step>
 
   <Step title="Only then treat it as a data problem">
-    A gap that survives all of the above becomes a missing-records investigation - see [Missing records](/guides/troubleshooting/missing-records).
-
-    A permission gap can hide a whole population: a legal entity the credentials exclude disappears silently, with every call succeeding.
+    A gap that survives every check above becomes a missing-records investigation - see [Missing records](/guides/troubleshooting/missing-records).
 
     **Result:** An investigation grounded in evidence.
   </Step>
@@ -67,7 +59,7 @@ Establish what each one counts before investigating a fault.
 
 Benefits gaps are usually structural.
 
-An **employer benefit** is a plan; a **benefit** is one employee's enrollment. Counting benefits to find how many plans exist gives an enrollment count instead.
+An **employer benefit** is a plan. A **benefit** is one employee's enrollment, so counting benefits to find how many plans exist gives an enrollment count instead.
 
 A **dependent** becomes a covered life only through a **dependent benefit**. Counting dependents as covered lives overstates the population, which is why an eligibility file comes out too long.
 
@@ -86,10 +78,6 @@ See [Reading benefits](/guides/data-models/benefits).
 
   <Accordion title="Bindbee returns fewer, consistently">
     Suspect permission or scope first. A withheld population looks identical to a lost one - see [Origin-system errors](/guides/troubleshooting/errors#origin-system-errors).
-  </Accordion>
-
-  <Accordion title="Counts match for employees but not employments">
-    Expected. Employments exceed employees wherever anyone has been rehired, transferred, or holds concurrent roles.
   </Accordion>
 
   <Accordion title="You need to show a customer the reconciliation">

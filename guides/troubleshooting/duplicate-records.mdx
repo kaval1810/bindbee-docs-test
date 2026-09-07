@@ -5,21 +5,19 @@ description: "Work out whether two records are a duplicate, then report it."
 icon: "copy"
 ---
 
-Bindbee identifies a record against a set of conditions, and creates a new one only when something in that set differs. **Report a duplicate that survives that and Bindbee resolves it.**
-
-Three checks come first, since they account for most reports.
+Bindbee identifies a record against a set of conditions, and creates a new one only when something in that set differs. Most reported duplicates turn out to be something else.
 
 <Info>
   **Before you start**
 
-  - You have the Bindbee `id` of each record involved. Two records with the same `id` is a different problem from two records for the same person.
+  - You have the Bindbee `id` of each record involved.
 </Info>
 
 ## Steps
 
 <Steps>
   <Step title="Check whether it's two employments">
-    An employee is a person; an employment is a job. One person legitimately has several employments: a rehire, a transfer, a promotion, or two concurrent roles.
+    An employee is a person. An employment is a job, and one person legitimately has several: a rehire, a transfer, a promotion, or two concurrent roles.
 
     Fetch employees alone and count. If the duplication disappears, the fix is selecting the right employment. See [Reading employees](/guides/data-models/employee-data).
 
@@ -35,55 +33,31 @@ Three checks come first, since they account for most reports.
   </Step>
 
   <Step title="Check whether you created it">
-    If you write to this connector, a duplicate may be yours: a retried write without a consistent idempotency key creates a second record.
+    If you write to this connector, a duplicate may be yours: a retried write without a consistent idempotency key creates a second record. Check the creation timestamps against your own write logs, and send `X-Idempotency-Key` on future writes - see [Idempotency](/guides/reading-writing/writing-data/idempotency).
 
-    Check the creation timestamps against your own write logs.
+    Key your own records on the Bindbee `id`. Source systems reissue `remote_id` and `employee_number` on rehire, transfer, or record merge, so keying on either duplicates the record in *your* system the moment the upstream ID changes.
 
     **Result:** You know whether the duplicate originated with you.
   </Step>
 
   <Step title="Report anything left to Bindbee">
-    Two records sharing a `remote_id` under one connector mean the unique-record conditions didn't hold, which is ours to fix. Send Bindbee both `id` values and the connector ID; deduplicating on your side would mask it.
+    Check both records belong to the same connector first. IDs are per connector, so one person across two connectors legitimately has two.
+
+    Within one connector, a shared `remote_id` means the unique-record conditions didn't hold, which is ours to fix. Send Bindbee both `id` values and the connector ID. Deduplicating on your side would mask it.
 
     **Result:** Bindbee resolves the duplicate at source.
   </Step>
 </Steps>
 
-## Records you didn't expect at all
-
-| Symptom | Cause |
-| --- | --- |
-| More people than the customer's headcount | Contingent workers and contractors, generally `ACTIVE_EXTERNAL` |
-| Former employees | Terminated records persist with a terminal status; filter on `employment_status` |
-| People from another business unit | The credentials cover more legal entities than expected; filter on `company_id` |
-| Records with almost no fields populated | Partially provisioned upstream, or a sync that loaded the employee but not related models |
-| Test or system accounts | Present in the source system; filter them out on a stable attribute |
-
-## Duplicates you cause yourself
-
-**Key on the Bindbee `id`.** Source systems reissue `remote_id` and `employee_number` on rehire, transfer, or record merge, so keying on either creates duplicates in *your* system the moment the upstream ID changes.
-
-**Send `X-Idempotency-Key` on writes** - see [Idempotency](/guides/reading-writing/writing-data/idempotency).
-
-**Keep the connector.** Deleting and recreating discards record identities and returns the whole dataset under new IDs, which reads as every record duplicating - see [Relinking versus deleting](/guides/troubleshooting/connector-relink#relinking-versus-deleting).
-
 ## Frequently Asked Questions
 
 <AccordionGroup>
-  <Accordion title="The same remote_id appears under two Bindbee IDs">
-    Check both records belong to the same connector first. IDs are per connector, so the same person across two connectors legitimately has two. Within one connector, report it with both IDs.
-  </Accordion>
-
   <Accordion title="Duplicates appeared after a resync">
     A resync refreshes existing records. Where one appeared anyway, the upstream identifier changed during the window and the record arrived as new. Compare `remote_id` values before and after.
   </Accordion>
 
-  <Accordion title="A rehired employee appears twice">
-    Depends on the source system. Some reuse the original record; others create a new one, in which case both are genuine upstream records and the customer's HR team owns the merge.
-  </Accordion>
-
-  <Accordion title="Duplicates only in your system, not in reads">
-    Your ingestion is creating them: keying on a mutable identifier, or reprocessing without idempotency.
+  <Accordion title="Every record appears to have duplicated at once">
+    The connector was deleted and recreated, which discards record identities and returns the whole dataset under new IDs - see [Relinking versus deleting](/guides/troubleshooting/connector-relink#relinking-versus-deleting).
   </Accordion>
 </AccordionGroup>
 

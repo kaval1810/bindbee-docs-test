@@ -37,7 +37,7 @@ Reads keep returning the last successful sync, so downstream systems treat stale
   <Step title="Generate a relink">
     A connector needing re-authorization carries a **Relink Needed** banner with the date it entered that state, and **Force Sync** is disabled. Click **Relink Connector** to produce an updated Magic Link for the same connector.
 
-    **Result:** A link the customer can open to re-enter credentials against the existing connector.
+    **Result:** A link ready to send to the customer.
 
     <Frame>
       <img src="/images/platform/connector-relink-needed.png" alt="A connector page showing a Relink Needed banner with the date since it entered that state and a Relink Connector button, a grayed-out Force Sync control, and a sync history whose most recent run is marked Failed" />
@@ -59,14 +59,14 @@ Reads keep returning the last successful sync, so downstream systems treat stale
 
     <Note>
       The `connector_token` survives a relink. Relinking updates the credentials behind the
-      connector rather than the connector itself, so everything your system has stored stays valid.
+      connector rather than the connector itself.
     </Note>
   </Step>
 </Steps>
 
 ## Relinking versus deleting
 
-Both actions look like they mean "fix it". Only one does.
+A connector in `RELINK_NEEDED` has two exits.
 
 ```mermaid
 stateDiagram-v2
@@ -75,7 +75,7 @@ stateDiagram-v2
     RELINK_NEEDED --> [*]: delete
 ```
 
-**Relinking** keeps the connector's identity, history, records and `connector_token`. Nothing you stored needs updating, and syncing resumes where it left off. This is the right response to essentially every broken connector.
+**Relinking** keeps the connector's identity, history, records and `connector_token`, and syncing resumes where it left off. This is the right response to a broken connector.
 
 **Deleting** removes the connector *and its data* - identifiers, records, sync history. Recovery means a new connector and a fresh initial sync. Every record comes back with a new Bindbee `id`, breaking any foreign key you stored.
 
@@ -83,9 +83,9 @@ Deletion earns its place when a customer churns or a connection was created in e
 
 ## Catch it earlier
 
-The expensive part is the days before anyone notices. Subscribe to the **Connector Sync Error** webhook event (`connector_sync_error`) and a stalled connector reaches you the day it breaks - see [Monitoring this programmatically](/guides/troubleshooting/sync-status#monitoring-this-programmatically).
+The expensive part is the days before anyone notices. Subscribe to `connector_sync_error` and a stalled connector reaches you the day it breaks - see [Monitoring this programmatically](/guides/troubleshooting/sync-status#monitoring-this-programmatically).
 
-Branch on `connector.connector_status` in the payload. `RELINK_NEEDED` is the one value that means your customer must act; the rest retry on the next scheduled sync.
+Branch on `connector.connector_status` in the payload. `RELINK_NEEDED` is the one value that means your customer must act. The rest retry on the next scheduled sync.
 
 <Note>
   A connector can sit at `COMPLETE` with its last sync `Failed`. Credentials are fine and data
@@ -97,10 +97,6 @@ Branch on `connector.connector_status` in the payload. `RELINK_NEEDED` is the on
 <AccordionGroup>
   <Accordion title="The relink completes but the sync fails the same way">
     The credentials are valid and lack the access the sync needs - see [Origin-system errors](/guides/troubleshooting/errors#origin-system-errors).
-  </Accordion>
-
-  <Accordion title="The customer can't complete the relink screen">
-    Some integrations need values generated in the source system first: an API token, a certificate and private key, or a reactivated integration user. The per-system guide lists the prerequisites.
   </Accordion>
 
   <Accordion title="You can't reach the customer and the connection is blocking your pipeline">

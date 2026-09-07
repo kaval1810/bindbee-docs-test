@@ -43,7 +43,7 @@ A record the customer can see in their HRIS is absent from Bindbee. The steps ru
     | Failed | The model errored - see [Errors](/guides/troubleshooting/errors) |
     | Synced | A related model failed on the same run |
 
-    **Result:** You know whether the model was loaded. The first two rows settle it here.
+    **Result:** You know whether the model was loaded. Skipped and Not Supported settle it here.
   </Step>
 
   <Step title="Check permission">
@@ -71,7 +71,7 @@ A record the customer can see in their HRIS is absent from Bindbee. The steps ru
 
 ## Records that were there and disappeared
 
-**Terminated employees** stay in the response with a terminal status on most platforms. Where they vanish entirely, the source excludes terminated records from its API.
+**Terminated employees.** They stay in the response with a terminal status on most platforms. Where they vanish entirely, the source excludes terminated records from its API.
 
 **Identifier changes.** If the source reissued the record's identifier, it may now be present under a different Bindbee `id` - see [Duplicate records](/guides/troubleshooting/duplicate-records).
 

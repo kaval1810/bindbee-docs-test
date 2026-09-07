@@ -1,0 +1,59 @@
+---
+title: "API Errors"
+sidebarTitle: "Errors"
+description: "Read a Bindbee error response and decide whether to retry it."
+---
+
+Every failed request returns a status code and a `detail` field. Bindbee serves your reads from its synced copy, so a source system failing surfaces on the sync instead of here - see [Find the source of an error](/guides/troubleshooting/errors).
+
+## Status codes
+
+| Status | Meaning | Retry? |
+| --- | --- | --- |
+| `401` | Missing, malformed, or wrong-environment API key | No |
+| `403` | Valid credentials without access to this resource | No |
+| `404` | Resource doesn't exist for this connector | No |
+| `422` | Validation failed on a query parameter or write body | No |
+| `429` | Rate limit exceeded | Yes, after `Retry-After` |
+| `5xx` | Server-side | Yes, with backoff |
+
+Retrying a `4xx` other than `429` never succeeds, and consumes the connector's rate limit while failing. For what causes a `401` or a `403` specifically, see [Authentication](/api-reference/basics/authentication).
+
+## The response body
+
+Every error carries a `detail` field, and its type depends on the status. On `401`, `403`, `404` and `429` it is a string. On `422` it is an array, one entry per rejected field:
+
+```json
+{
+  "detail": [
+    {
+      "loc": ["query", "page_size"],
+      "msg": "Input should be less than or equal to 200",
+      "type": "less_than_equal"
+    }
+  ]
+}
+```
+
+<Warning>
+  The same key holds two types. Code that treats `detail` as a string works against every
+  other status and throws on the first `422`. Branch on the status before touching `detail`.
+</Warning>
+
+## Retrying
+
+On `429`, wait the number of seconds in `Retry-After` - see [Rate limits](/api-reference/basics/rate-limits) for the limit and the headers that track it.
+
+On `5xx`, retry with exponential backoff and jitter, capped at a few attempts.
+
+<Warning>
+  Retry a write only with `X-Idempotency-Key`. A `5xx` can be returned after the record was
+  created upstream - see [Idempotency](/guides/reading-writing/writing-data/idempotency).
+</Warning>
+
+## Related
+
+- [Authentication](/api-reference/basics/authentication) - what a `401` and a `403` mean for each header
+- [Rate limits](/api-reference/basics/rate-limits) - the limit behind a `429`, and the headers that track it
+- [Idempotency](/guides/reading-writing/writing-data/idempotency) - retrying a write without duplicating it
+- [Find the source of an error](/guides/troubleshooting/errors) - when the failure is on the sync rather than your request

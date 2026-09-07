@@ -43,9 +43,11 @@ Two status fields appear here and they answer different questions:
 | Field | Values | Describes |
 | --- | --- | --- |
 | `status` | `COMPLETE`, `INCOMPLETE`, `RELINK_NEEDED` | The link status of the connector |
-| `sync_status` | `Syncing`, `Synced`, `Partial`, `Failed` | The status of the most recent sync job |
+| `sync_status` | `Syncing`, `Done`, `Failed` | The status of the most recent sync job |
 
 A connector can be `COMPLETE` and still hold no data, because the two are independent.
+
+The dashboard uses its own words for the same field. It shows **Synced** where `sync_status` is `Done`, and **Partial** for a run that loaded some models and failed others, which is not a `sync_status` value at all - see [Sync status](/guides/troubleshooting/sync-status).
 
 Rather than polling, subscribe to the `connector_synced` [webhook](/guides/reading-writing/webhooks). It fires when a sync job finishes successfully — the cleanest signal that a newly connected account is ready to use.
 

@@ -44,10 +44,10 @@ Open the connector and read what its last sync did, model by model. Most data qu
     | --- | --- |
     | Synced | Every in-scope model loaded |
     | Partial | Some models loaded, others failed |
-    | A percentage (`41%`) | Currently sync in progress |
+    | A percentage (`41%`) | A sync is running |
     | Failed | The run failed |
 
-    **Result:** You know whether the run finished, how much it loaded, and whether it was automatic or manual.
+    **Result:** You know which run to open.
 
     <Frame>
       <img src="/images/platform/connector-sync-tab.png" alt="The Sync tab of a connector, listing six runs: one in progress at 41 percent with counts reading Calculating and 2 hr 21 min left, three marked Synced with full record counts, one marked Partial with lower counts, and one marked Failed with no counts" />
@@ -55,24 +55,24 @@ Open the connector and read what its last sync did, model by model. Most data qu
 
     <Warning>
       These are the dashboard's labels. The `sync_status` field carries a narrower set -
-      `Syncing`, `Done` or `Failed`.  So, code branching on a `Partial` will never match.
+      `Syncing`, `Done` or `Failed`. Code branching on a `Partial` will never match.
     </Warning>
 
     {/* VERIFY: which sync_status value does a Partial run report - Done or Failed? Partial is confirmed as a dashboard label from the Sync tab screenshot, but JobDisplayStatus in spec.json has only Syncing, Done, Failed, so it maps onto one of them. Determines how a partial run is detected from the API. */}
   </Step>
 
   <Step title="Read the status on each model">
-    Click into a run to reach **Sync info**. The header carries the run's status and duration; every model the connector covers is listed below with its record count, timings, and status.
+    Click into a run to reach **Sync info**. The header carries the run's status and duration. Every model the connector covers is listed below with its record count, timings, and status.
 
     | Model status | Meaning | What to do |
     | --- | --- | --- |
     | Synced | The model loaded | No action |
     | Pending | Queued behind the models still running | Wait for the run to finish |
     | Skipped | The model is switched off in scoping | Enable it in [scoping](/get-started/scoping) and resync |
-    | Not Supported | Bindbee doesn't support this model for this integration yet | Reach Support if needed |
+    | Not Supported | Bindbee doesn't unify this model for this integration yet | Ask Bindbee to prioritize it, where it's in beta |
     | Failed | The model was attempted and errored | Expand the row, then see [Errors](/guides/troubleshooting/errors) |
 
-    **Result:** Either an explanation, or a confirmed failure with a next step.
+    **Result:** A status for every model. Synced, Skipped and Not Supported all end the investigation here, without reaching [Logs](/guides/troubleshooting/logs). Only Failed continues.
 
     <Frame>
       <img src="/images/platform/sync-run-models.png" alt="The Sync info screen for a run marked Partial, listing Employee and Company as Synced, Employment as Skipped with no records, Dependent as Failed with an expanded Issue and Message showing User not authorized and a Permission issue found banner, and three models still Pending" />
@@ -81,18 +81,18 @@ Open the connector and read what its last sync did, model by model. Most data qu
   </Step>
 
   <Step title="Expand a failed model">
-    A `Failed` row expands in place to name the failure:
+    A **Failed** row expands in place to name the failure:
 
     | Field | Holds |
     | --- | --- |
-    | Issue | Where the failure came from. `Integration Partner` means the source system refused |
+    | Issue | Where the failure came from. **Integration Partner** means the source system refused |
     | Message | The upstream response, verbatim |
 
     Bindbee also flags a recognized cause above the detail - a permission refusal surfaces as **Permission issue found!**
 
-    **Result:** You know whether to report it to Bindbee or take a permission back to the customer.
+    In the run above, **Dependent** failed with `User not authorized.` against **Integration Partner** - a permission gap on the customer's side. See [Origin-system errors](/guides/troubleshooting/errors#origin-system-errors).
 
-    In the run above, `Dependent` failed with `User not authorized.` against an Integration Partner - a permission gap on the customer's side. See [Origin-system errors](/guides/troubleshooting/errors#origin-system-errors).
+    **Result:** You know whether to report it to Bindbee or take a permission back to the customer.
 
     {/* VERIFY: what does Issue read when the failure is Bindbee's rather than the source system's? "Integration Partner" is confirmed for an origin-system failure; the Bindbee-side value has not been seen. This decides how the page's two-source split maps onto the field. */}
   </Step>
@@ -111,98 +111,68 @@ Open the connector and read what its last sync did, model by model. Most data qu
 
 ## Diagnose a partial sync
 
-A partial sync loaded some models and failed others. The connector is authenticated and running, so the failure is scoped to specific models.
+The connector is authenticated and running, so the failure is scoped to specific models. Note every model reporting **Failed**, then match the set against these patterns. The cause is usually shared across them.
 
-<Steps>
-  <Step title="List the failed models">
-    Note every model reporting `Failed`, and the record count on the ones that succeeded.
+| Pattern | Likely cause |
+| --- | --- |
+| One model family fails, such as all payroll | The credentials lack permission for that area - see [Origin-system errors](/guides/troubleshooting/errors#origin-system-errors) |
+| A model fails only on large populations | Upstream request size or timeout limits. Retry below |
+| Different models fail on different runs | Transient upstream errors or rate limiting. Retry below |
+| Every model fails | Treat it as a failed sync - see [Connector relink](/guides/troubleshooting/connector-relink) |
 
-    **Result:** A list of failed models. The cause is shared across them.
-  </Step>
+### Retry the sync
 
-  <Step title="Classify the failure">
-    Match the failed set against these patterns.
+For transient and size-related failures, trigger a fresh run. If the same models fail the same way afterwards, it isn't transient.
 
-    | Pattern | Likely cause |
-    | --- | --- |
-    | One model family fails, such as all payroll | The credentials lack permission for that area - see [Origin-system errors](/guides/troubleshooting/errors#origin-system-errors) |
-    | A model fails only on large populations | Upstream request size or timeout limits. Retry below |
-    | Different models fail on different runs | Transient upstream errors or rate limiting. Retry below |
-    | Every model fails | Treat it as a failed sync - see [Connector relink](/guides/troubleshooting/connector-relink) |
+<Tabs>
+  <Tab title="Dashboard">
+    Click **Force Sync** on the connector's Overview tab. It grays out while a run is in progress, and on a connector needing re-authorization.
+  </Tab>
 
-    **Result:** You know whether this needs a configuration change, a retry, or an escalation.
-  </Step>
+  <Tab title="API">
+    ```bash
+    curl --request POST \
+      --url 'https://api.bindbee.dev/api/embedded/v1/connectors/resync' \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
+    ```
 
-  <Step title="Retry the sync">
-    For transient and size-related failures, trigger a fresh run.
+    See [Force Resync a Connector](/api-reference/connectors/resync-connector).
+  </Tab>
+</Tabs>
 
-    <Tabs>
-      <Tab title="Dashboard">
-        Click **Force Sync** on the connector's Overview tab. It grays out while a run is in progress, and on a connector needing re-authorization.
-      </Tab>
-
-      <Tab title="API">
-        ```bash
-        curl --request POST \
-          --url 'https://api.bindbee.dev/api/embedded/v1/connectors/resync' \
-          --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
-          --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
-        ```
-
-        See [Force Resync a Connector](/api-reference/connectors/resync-connector).
-      </Tab>
-    </Tabs>
-
-    **Result:** A new run starts. If the same models fail the same way, it isn't transient.
-
-    <Warning>
-      Resync; do not delete and recreate. Deleting a connector discards its sync history and
-      record identities, which changes the IDs your system has stored.
-    </Warning>
-  </Step>
-</Steps>
+<Warning>
+  Resync. Do not delete and recreate. Deleting a connector discards its sync history and
+  record identities, which changes the IDs your system has stored.
+</Warning>
 
 ## Monitoring this programmatically
 
-For continuous monitoring, subscribe to webhook events instead of polling. `connector_sync_started`, `connector_synced` and `connector_sync_error` cover the states above. See [Choose Webhook Events](/guides/reading-writing/webhooks) for the catalog.
+Subscribe to webhook events instead of polling. `connector_sync_started`, `connector_synced` and `connector_sync_error` cover the states above. See [Choose Webhook Events](/guides/reading-writing/webhooks) for the catalog.
 
 <Note>
   The per-model breakdown is dashboard-only. The connector endpoint returns a single
-  `sync_status` for the whole run, so alerting on one model has to come from these events.
+  `sync_status` for the whole run, so these events are the only way to alert on one model.
 </Note>
-
-Each payload carries a `sync` object with `sync_id`, `sync_name`, and `sync_type`, where `sync_type` distinguishes `AUTOMATED` from `MANUAL`.
 
 ## Frequently Asked Questions
 
 <AccordionGroup>
-  <Accordion title="A model I need says Skipped">
-    The model is switched off in the connector's scoping. Enable it and resync - see [Restrict what syncs](/get-started/scoping).
-  </Accordion>
-
-  <Accordion title="A model says Not Supported">
-    Bindbee doesn't unify that model for this integration yet. Where it's in beta, ask Bindbee to prioritize it.
+  <Accordion title="A model reads Synced but the data isn't there">
+    Zero records, or records with empty fields. Either the model is out of scope, or the credentials lack permission for that endpoint - see [Origin-system errors](/guides/troubleshooting/errors#origin-system-errors) and [Missing records](/guides/troubleshooting/missing-records).
   </Accordion>
 
   <Accordion title="The last sync is older than the configured cadence">
-    Check whether the connector is Development, which doesn't auto-sync. On a Production connector this indicates a stall - see [Connector relink](/guides/troubleshooting/connector-relink).
-  </Accordion>
-
-  <Accordion title="The sync says Done but a model has zero records">
-    The sync succeeded and the model returned nothing. Either the model is out of scope, or the credentials lack permission for that endpoint - see [Origin-system errors](/guides/troubleshooting/errors#origin-system-errors).
+    Development connectors don't auto-sync. On a Production connector this is a stall - see [Connector relink](/guides/troubleshooting/connector-relink).
   </Accordion>
 
   <Accordion title="The sync has been running for a long time">
-    Duration scales with population size and with how many API calls the source system requires per record. Wait for the run to finish, then resync if you need the data sooner.
-  </Accordion>
-
-  <Accordion title="Records loaded but fields are empty">
-    The model loaded and the fields came back empty, which points at the permission level the credentials hold - see [Missing records](/guides/troubleshooting/missing-records).
+    Wait for it to finish. Duration scales with population size and with how many API calls the source system makes per record.
   </Accordion>
 </AccordionGroup>
 
 ## Related
 
-- [Errors](/guides/troubleshooting/errors) - the next step when a model reports `Failed`
+- [Errors](/guides/troubleshooting/errors) - the next step when a model reports **Failed**
 - [Logs](/guides/troubleshooting/logs) - the last resort, once this and Errors haven't explained it
 - [Syncing](/guides/reading-writing/syncing) - the schedule a status is measured against
