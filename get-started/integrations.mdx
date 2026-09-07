@@ -1,10 +1,18 @@
 ---
 title: "Integration & Coverage"
 description: "Look up an integration's slug and connection type."
-icon: "plug"
+icon: "git-fork"
 ---
 
 For model-level support, see the [Model Availability Matrix](/get-started/model-availability), which is searchable and filterable.
+
+import { IntegrationFilter } from "/components/integration-filter.jsx";
+
+<IntegrationFilter />
+
+{/* GENERATED:integrations START - edit the sheet, then run scripts/gen-integrations.py */}
+
+<div className="bb-int-section" data-category="HRIS">
 
 ## HRIS, Payroll & Directory
 
@@ -13,8 +21,8 @@ Base path `/api/hris/v1/` · category `HRIS`
 | System | Slug | Type |
 | --- | --- | --- |
 | 7Shifts | `seven_shifts` | API |
-| ADP Workforce Now | `adp` | API |
-| ADP Workforce Now (SFTP) | `adp_sftp` | SFTP |
+| <img src="https://images.unifyx.dev/logos/icon/hris/adp.svg" alt="" className="bb-int-logo" /> ADP Workforce Now | `adp` | API |
+| <img src="https://images.unifyx.dev/logos/icon/hris/adp.svg" alt="" className="bb-int-logo" /> ADP Workforce Now (SFTP) | `adp_sftp` | SFTP |
 | BambooHR | `bamboohr` | API |
 | BreatheHR | `breathehr` | API |
 | BSwift (SFTP) | `bswift_sftp` | SFTP |
@@ -62,11 +70,15 @@ Base path `/api/hris/v1/` · category `HRIS`
 | UKG Pro | `ukg-pro` | API |
 | UKG Ready | `ukg-ready` | API |
 | Workday | `workday` | API |
-| Workday RaaS | `workday_raas` | SFTP / file export |
+| Workday RaaS | `workday_raas` | SFTP |
 | Workline | `workline` | API |
 | Xero | `xero` | API |
 | Xero (AU) | `xero_au` | API |
 | Zoho People | `zoho-people` | API |
+
+</div>
+
+<div className="bb-int-section" data-category="ATS">
 
 ## Recruiting (ATS)
 
@@ -88,6 +100,10 @@ Base path `/api/ats/v1/` · category `ATS`
 | Workable | `workable` | API |
 | Workday | `workday` | API |
 
+</div>
+
+<div className="bb-int-section" data-category="LMS">
+
 ## Learning (LMS)
 
 Base path `/api/lms/v1/` · category `LMS`
@@ -96,6 +112,10 @@ Base path `/api/lms/v1/` · category `LMS`
 | --- | --- | --- |
 | SAP SuccessFactors | `sap_sf_lms` | API |
 | Workday | `workday` | API |
+
+</div>
+
+{/* GENERATED:integrations END */}
 
 ## One vendor, several slugs
 
