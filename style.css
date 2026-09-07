@@ -408,3 +408,139 @@ img,
 #content-area svg .relationshipLabelBox {
   fill: var(--bb-diagram-surface) !important;
 }
+
+/* ===========================================================================
+   Sequence diagrams.
+
+   The three blocks above hang off `svg.flowchart` / `svg.erDiagram` /
+   `svg.statediagram`, so a sequenceDiagram matched none of them and rendered in
+   mermaid's stock lavender next to correctly-themed flowcharts on the same page.
+
+   The hook here is `aria-roledescription` rather than a class: mermaid sets it
+   to the diagram type on the root <svg> for accessibility, which is a public
+   contract rather than an internal class name. `:has(.actor-line)` is listed
+   beside it as a fallback - the lifeline is drawn once per participant and
+   appears in no other diagram type, so it identifies a sequence diagram on its
+   own if the aria value ever changes.
+
+   Element names come from mermaid's sequence renderer. Two of them are shared
+   between a shape and its text - `.actor` is the participant box AND the label,
+   `.note` is the note box AND is adjacent to .noteText - so every rule below
+   qualifies by element (`rect.actor`, `text.actor`) rather than using the bare
+   class, which would fill the glyphs with the box colour.
+   =========================================================================== */
+
+#content-area svg[aria-roledescription="sequence"],
+#content-area svg:has(.actor-line) {
+  max-width: 640px !important;
+  width: auto !important;
+  height: auto !important;
+  display: block;
+  margin-inline: auto;
+  background-color: transparent !important;
+}
+
+#content-area :has(> svg[aria-roledescription="sequence"]),
+#content-area :has(> svg:has(.actor-line)) {
+  max-width: 640px !important;
+  margin-inline: auto !important;
+  overflow-x: auto;
+}
+
+/* --- Participants -------------------------------------------------------- */
+
+/* The participant box, and the box drawn again at the foot of the diagram. */
+#content-area svg rect.actor,
+#content-area svg .actor-top rect,
+#content-area svg .actor-bottom rect,
+#content-area svg .actor-box {
+  fill: var(--bb-diagram-node-fill) !important;
+  stroke: var(--bb-diagram-accent) !important;
+  rx: 4px;
+  ry: 4px;
+}
+
+/* The dashed lifeline dropping from each participant. Mermaid draws it at the
+   same weight as a message, which makes the two read as the same thing; the
+   tint separates the axis from the traffic on it. */
+#content-area svg .actor-line {
+  stroke: var(--bb-diagram-cluster-stroke) !important;
+}
+
+/* --- Messages ------------------------------------------------------------ */
+
+/* messageLine0 is solid (a call), messageLine1 is dashed (a return). Mermaid
+   sets the dash pattern itself, so only the colour moves. */
+#content-area svg .messageLine0,
+#content-area svg .messageLine1 {
+  stroke: var(--bb-diagram-accent) !important;
+}
+
+/* Sequence arrowheads are referenced by marker id, not by class - #arrowhead
+   for the open head, #filled-head for the solid one, #crosshead for a failed
+   message. They carry no class attribute at all, so the id is the only hook. */
+#content-area svg #arrowhead path,
+#content-area svg #filled-head,
+#content-area svg #crosshead path,
+#content-area svg [id$="arrowhead"] path,
+#content-area svg [id$="filled-head"] {
+  fill: var(--bb-diagram-accent) !important;
+  stroke: var(--bb-diagram-accent) !important;
+}
+
+/* Activation bars, the narrow rectangles on a lifeline. Mermaid alternates
+   three tones for nesting depth; one tint is enough at the depth our diagrams
+   reach, and keeps them from competing with the participant boxes. */
+#content-area svg .activation0,
+#content-area svg .activation1,
+#content-area svg .activation2 {
+  fill: var(--bb-diagram-node-fill) !important;
+  stroke: var(--bb-diagram-accent) !important;
+}
+
+/* --- Loops, alts and notes ----------------------------------------------- */
+
+#content-area svg .loopLine {
+  stroke: var(--bb-diagram-accent) !important;
+  fill: none !important;
+}
+
+/* The tab carrying the loop/alt/opt keyword. */
+#content-area svg .labelBox {
+  fill: var(--bb-diagram-node-fill) !important;
+  stroke: var(--bb-diagram-accent) !important;
+}
+
+#content-area svg .note {
+  fill: var(--bb-diagram-cluster-fill) !important;
+  stroke: var(--bb-diagram-cluster-stroke) !important;
+}
+
+/* --- Text ---------------------------------------------------------------- */
+
+/* Sequence labels are real <text>, not the foreignObject HTML the flowchart
+   uses, so they take `fill` and the HTML text rules above never reach them.
+   Each is listed with its > tspan child because mermaid's own sheet targets
+   the tspan directly on four of these and would otherwise win. */
+#content-area svg text.actor,
+#content-area svg text.actor > tspan,
+#content-area svg .messageText,
+#content-area svg .noteText,
+#content-area svg .noteText > tspan,
+#content-area svg .labelText,
+#content-area svg .labelText > tspan,
+#content-area svg .loopText,
+#content-area svg .loopText > tspan {
+  fill: var(--bb-diagram-text) !important;
+  stroke: none !important;
+}
+
+/* The numbered badge on each message, when sequence numbering is switched on.
+   It sits on the accent-coloured circle, so it takes the surface colour. */
+#content-area svg .sequenceNumber {
+  fill: var(--bb-diagram-surface) !important;
+}
+
+#content-area svg #sequencenumber {
+  fill: var(--bb-diagram-accent) !important;
+}
