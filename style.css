@@ -190,6 +190,32 @@ img,
   --bb-diagram-cluster-stroke: rgba(250, 146, 61, 0.35);
 }
 
+/* Size. Mermaid emits an inline `max-width` equal to each diagram's natural
+   width, so a wide one is scaled down to the column while a narrow one renders
+   at full size - which is why the same font came out smaller on payroll than on
+   organization. The cap holds every diagram to one maximum width; `width: auto`
+   stops a sparse one being stretched out to fill it, which spread organization's
+   four nodes across the full box. */
+#content-area svg.flowchart,
+#content-area svg.erDiagram,
+#content-area svg.statediagram {
+  max-width: 640px !important;
+  width: auto !important;
+  height: auto !important;
+  display: block;
+  margin-inline: auto;
+}
+
+/* Mermaid sizes the <svg> at runtime, so also hold the wrapper it renders into.
+   Constraining the parent works whatever the svg decides its own width is. */
+#content-area :has(> svg.flowchart),
+#content-area :has(> svg.erDiagram),
+#content-area :has(> svg.statediagram) {
+  max-width: 640px !important;
+  margin-inline: auto !important;
+  overflow-x: auto;
+}
+
 /* Mermaid writes `background-color: white` as an inline style on the <svg>
    itself. Left alone it punches a white card into the dark theme. */
 #content-area svg.flowchart,

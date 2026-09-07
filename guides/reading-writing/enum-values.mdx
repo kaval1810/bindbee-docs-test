@@ -1,110 +1,32 @@
 ---
 title: "Enum values"
-description: "How Bindbee normalizes third-party values into a fixed vocabulary, what happens to values it cannot map, and how to handle enum fields in your application."
+description: "Read an enum field that can still return an unmapped value."
 icon: "list"
 ---
 
-Every HR, payroll, ATS and LMS system describes the same concept in its own words. One marks a full-time employee as `Full-Time`, another as `FT`, another as a numeric type code. Consuming each provider directly means branching logic for every one of them.
+Every HR, payroll, ATS and LMS system describes the same concept in its own words. One marks a full-time employee as `Full-Time`, another as `FT`, another as a numeric type code. For a set of fields on the unified models, Bindbee defines a fixed vocabulary and maps each provider's value into it during sync, so your application reads `FULL_TIME` whichever connector is behind the request.
 
-An **enum value** is Bindbee's answer to that. For a set of fields on the unified models, Bindbee defines a fixed vocabulary and maps each provider's value into it during sync. Your application reads `FULL_TIME` regardless of which connector is behind the request.
+The provider's own value stays available through `include_raw_data=true` or through [custom fields](/guides/extending/custom-fields).
 
-Enum fields are the normalized layer. The provider's own value stays available through `include_raw_data=true` or through [custom fields](/guides/extending/custom-fields).
+## Enum fields are open, not closed
 
----
+When a connector returns a value Bindbee has no mapping for, **the original value is passed through unchanged**. Bindbee never drops or guesses a value it cannot classify, so an enum field can legitimately return a string that is not in the documented list. Forty-eight field descriptions in the API spec say exactly that.
 
-## How enum values are defined
 
-**38 fields** across the unified models carry a defined vocabulary, and they follow the same conventions.
+## `null`, `-`, and an unmapped value
 
-| Convention | Detail |
-| --- | --- |
-| Data type | Always a JSON string, never an integer or boolean |
-| Casing | `UPPER_SNAKE_CASE`, for example `PAID_TIME_OFF`, `SEMIMONTHLY`, `HEAD_OF_HOUSEHOLD` |
-| Nullability | Enum fields are nullable. `null` means the provider did not supply the field at all |
-| Scope | Vocabularies are defined per field, not globally. `Benefit.frequency` and `Compensation.pay_period` describe similar ideas but use different value sets |
-| Discovery | The accepted values for a field are listed under `enum` in the API reference for that model |
-
-For example, `employment_status` on the Employee model resolves to one of:
-
-```
-ACTIVE   PENDING   INACTIVE   ACTIVE_EXTERNAL   INACTIVE_EXTERNAL
-LEAVE    DECEASED  RETIRED    -
-```
-
-### Naming exceptions worth knowing
-
-Most values are underscore separated, but a few use hyphens or short forms. Match on the exact string rather than assuming the pattern:
-
-* `NON-BINARY` — `gender`
-* `THIRTEEN-MONTHLY` — `Compensation.pay_frequency` and `Benefit.frequency`
-* `APPROVAL-SENT` and `SENT-MANUALLY` — ATS `Offer.status`
-* `A`, `B`, `C`, `D`, `F`, `PASS`, `FAIL` — LMS `Completion.grade`
-
-### The `-` value
-
-Several vocabularies include `-` as a defined member — **19 fields** carry it. Treat `-` as "present but not classifiable" and `null` as "not provided at all".
+| You receive | It means | Do |
+| --- | --- | --- |
+| `null` | The provider did not supply the field at all | Treat as unknown |
+| `-` | Present, but not classifiable into the vocabulary | Render as "not specified" |
+| A string not in the list | The provider uses a term Bindbee does not map | Display it as-is, and log it |
 
 {/* VERIFY: is `-` specifically "the provider returned a value that carries no meaningful category" as distinct from "the provider returned nothing"? The spec defines the member on 19 fields but never its semantics, and the two readings imply different follow-up - a mapping gap worth reporting versus a configuration or permissions question at the customer. */}
 
----
-
-## How normalization works
-
-Enum mapping happens during sync, before the data reaches your API call.
-
-1. Bindbee fetches the raw object from the third-party system.
-2. The connector maps the provider's value onto the unified vocabulary for that field.
-3. If no mapping exists for that value, Bindbee returns the provider's original value, unchanged.
-4. If the provider did not return the field at all, Bindbee returns `null`.
-
-### Unmapped values
-
-Step 3 is the single most important behavior on this page. Bindbee never drops or guesses a value it cannot classify, so an enum field can legitimately return a string that is not in the documented list. **Forty-eight field descriptions in the API spec say so explicitly**, in the same sentence: *"If the value is not one of the defined enum values, the original value passed through will be returned."*
-
-<Warning>
-  Do not treat enum fields as a closed set. Every enum field is typed as a string in the schema precisely because unmapped values are expected. Code that throws on an unrecognized value will break the first time a connector returns a provider-specific term.
-
-  The same applies to your database: use a string column, not a hard enum constraint, or a passthrough value will fail the write.
-</Warning>
-
-```javascript
-// Handle documented values explicitly, and return anything else as-is.
-function labelForEmploymentType(value) {
-  switch (value) {
-    case "FULL_TIME":  return "Full time";
-    case "PART_TIME":  return "Part time";
-    case "CONTRACTOR": return "Contractor";
-    case "INTERN":     return "Intern";
-    case "FREELANCE":  return "Freelance";
-    case "REGULAR":    return "Regular";
-    case "FURLOUGHED": return "Furloughed";
-    case "TERMINATED": return "Terminated";
-    case "-":          return "Not specified";
-    case null:
-    case undefined:    return "Unknown";
-    default:           return value; // unmapped value from the provider
-  }
-}
-```
-
-A reasonable pattern is to store the raw string, render documented values through your own label map, and log unrecognized values so you can decide whether they need product handling.
-
-A high proportion of unmapped values on one integration usually means a mapping gap affecting every customer on that system, not just the one who reported it. Worth raising.
-
-### Inspecting the original value
-
-To see what the provider actually returned, add `include_raw_data=true` to any list or retrieve request. The `raw_data` object contains the untouched upstream payload alongside the normalized fields — see [Raw Data](/guides/reading-writing/raw-data).
-
-```bash
-curl -G https://api.bindbee.dev/api/hris/v1/employees \
-  -H "Authorization: Bearer <BINDBEE_API_KEY>" \
-  -H "X-Connector-Token: <CONNECTOR_TOKEN>" \
-  -d include_raw_data=true
-```
+To see what the provider actually sent, add `include_raw_data=true` to any list or retrieve request - see [Raw Data](/guides/reading-writing/raw-data).
 
 ```json
 {
-  "id": "018b18ef-c487-703c-afd9-0ca478ccd9d6",
   "employment_status": "ACTIVE",
   "marital_status": "SINGLE",
   "raw_data": {
@@ -114,13 +36,14 @@ curl -G https://api.bindbee.dev/api/hris/v1/employees \
 }
 ```
 
----
+## Finding the values for a field
 
+Look at the field in the API reference. The values it accepts are listed under `enum` and always matches what the API returns today.
 ## Filtering by enum values
 
-Several list endpoints accept an enum field as a query parameter, for example `employment_status` on `GET /api/hris/v1/employees`, `employment_type` on `GET /api/hris/v1/employments`, and `status` on `GET /api/hris/v1/time-off`.
+Several list endpoints accept an enum field as a query parameter, such as `employment_status` on `GET /employees`, `employment_type` on `GET /employments`, and `status` on `GET /time-off`.
 
-These filters accept the standard values **and** any connector-specific value that appears in the response. If a connector returns `Seasonal` on `employment_type`, you can filter on `Seasonal`.
+Filters accept the standard values & any connector-specific value that appears in the response. If a connector returns `Seasonal` on `employment_type`, you can filter on `Seasonal`.
 
 ```bash
 curl -G https://api.bindbee.dev/api/hris/v1/employees \
@@ -129,113 +52,22 @@ curl -G https://api.bindbee.dev/api/hris/v1/employees \
   -d employment_status=ACTIVE
 ```
 
-<Note>
-  Filter values are matched as returned, so `ACTIVE` and `Active` are not interchangeable. Use the exact string from the response payload. An unrecognized value returns an empty page rather than a validation error, so an empty result is not proof the customer has no matching data — check the spelling first.
-</Note>
-
-See [Reading data](/guides/reading-writing/reading-data) for how enum filters combine with `expand`, `modified_after` and pagination.
-
----
-
-## Which fields use enums
-
-The accepted values for each field are listed in the API reference for that endpoint, under `enum` on the field. The fields below are the ones that carry a defined vocabulary.
-
-<AccordionGroup>
-  <Accordion title="HRIS">
-    | Model | Fields |
-    | --- | --- |
-    | Employee | `employment_status`, `gender`, `ethnicity`, `marital_status` |
-    | Employment | `employment_type` |
-    | Compensation | `pay_period`, `pay_frequency`, `flsa_status` |
-    | Bank Info | `account_type` |
-    | Benefit | `benefit_plan_category`, `frequency`, `coverage_tier` |
-    | Employer Benefit | `benefit_plan_category`, `coverage_tiers` |
-    | Dependent | `relationship`, `gender` |
-    | Group | `type` |
-    | Payroll Code | `type`, `sub_type` |
-    | Payroll Run | `run_state`, `run_type` |
-    | Employee Payroll Run | `earnings[].name` |
-    | Time Off | `status`, `units`, `request_type` |
-    | Time Off Balance | `policy_type` |
-    | Document (Beta) | `type`, `data_status`, and on W4 data: `source`, `form_version`, `filing_status` |
-  </Accordion>
-
-  <Accordion title="ATS">
-    | Model | Fields |
-    | --- | --- |
-    | Activity | `activity_type`, `visibility` |
-    | Attachment | `attachment_type` |
-    | EEOC | `race`, `gender`, `veteran_status`, `disability_status` |
-    | Job | `status` |
-    | Offer | `status` |
-    | Remote User | `access_role` |
-    | Scheduled Interview | `status` |
-    | Scorecard | `overall_recommendation` |
-    | Screening Question | `type` |
-    | Candidate | `urls[].url_type` |
-  </Accordion>
-
-  <Accordion title="LMS">
-    | Model | Fields |
-    | --- | --- |
-    | User, Course, Content, Skill, Category | `status` |
-    | Course, Content | `languages` |
-    | Completion | `grade` |
-
-    `languages` is the exception to everything above: it is a list of over three hundred POSIX locale codes such as `en_GB` and `pt_BR`, not a normalized vocabulary. Match it as an opaque string.
-  </Accordion>
-
-  <Accordion title="Platform resources">
-    These vocabularies appear on platform-level resources rather than on unified data models.
-
-    | Resource | Field | Values |
-    | --- | --- | --- |
-    | Connector | `status` | `COMPLETE`, `INCOMPLETE`, `RELINK_NEEDED` |
-    | Custom Fields | `category` | `HRIS`, `ATS`, `LMS` |
-    | Custom Fields | `source` | `DASHBOARD`, `API` |
-    | Webhooks | `action` | `connector_synced`, `connector_sync_started`, `connector_data_modified`, `employee_data_changed`, `connector_sync_error` |
-
-    Webhook actions are the one place where lowercase snake case is used instead of upper case.
-  </Accordion>
-</AccordionGroup>
-
----
-
-## Enums can gain values
-
-The documented set is fixed at a point in time, not permanently. Values are added as coverage broadens and as source systems introduce concepts the model does not yet carry.
-
-A value that passes through verbatim today may become a mapped enum value later — a second reason the default branch matters, and a second reason not to store the enum as a database constraint.
-
----
-
-## Best practices
-
-* **Treat every enum field as an open string.** Match on documented values, fall back to the raw string, and never throw on an unrecognized value.
-* **Distinguish `null`, `-`, and an unmapped value.** They mean "not provided", "provided but not classifiable", and "provider specific" respectively, and they often warrant different behavior in your UI.
-* **Log unrecognized values.** They tell you which connectors are surfacing terms your product does not handle yet, and they are a good input for a custom field or a mapping request.
-* **Use `include_raw_data=true` while building.** It is the fastest way to confirm how a specific connector's values are being normalized.
-* **Do not assume shared vocabularies.** Fields that look alike, such as `pay_period` and `pay_frequency`, use different value sets.
-
----
-
 ## Related
 
 <CardGroup cols={2}>
   <Card title="Custom fields" icon="puzzle" href="/guides/extending/custom-fields">
-    Surface provider-specific values that the unified schema does not represent.
+    Surface provider-specific values the unified schema does not represent.
+  </Card>
+
+  <Card title="Raw data" icon="file-search" href="/guides/reading-writing/raw-data">
+    The untouched upstream payload beside the normalized fields.
   </Card>
 
   <Card title="Reading data" icon="funnel" href="/guides/reading-writing/reading-data">
     How enum filters combine with `expand`, `modified_after` and pagination.
   </Card>
 
-  <Card title="Platform" icon="layout-dashboard" href="/get-started/platform">
-    Connectors and logs, for inspecting a value that looks unexpected.
-  </Card>
-
-  <Card title="Sync frequency" icon="refresh-cw" href="/api-reference/basics/sync-frequency">
-    When normalized values are refreshed from the source system.
+  <Card title="Get Employees" icon="users" href="/hris/employee/get-employees">
+    A generated reference page, with the `enum` list on each field.
   </Card>
 </CardGroup>

@@ -5,16 +5,14 @@ description: "Call any endpoint on your end user's connected system directly, us
 icon: "arrow-right-left"
 ---
 
-**Unified APIs cover the data most products need. Passthrough covers the edge cases.** It forwards a raw HTTP request to the 3rd-party system a connector is linked to and returns that system's response untouched.
+Passthrough forwards a raw HTTP request to the third-party system a connector is linked to and returns that system's response untouched. **It is the way out when the unified models do not carry what you need.**
 
-## When to use it
-
-Reach for Passthrough when an endpoint you need isn't unified yet, a vendor-specific action, a one-off administrative call, or a write with no unified equivalent.
+Reach for it when an endpoint is not unified yet, when a vendor exposes an action of its own, for a one-off administrative call, or for a write with no unified equivalent.
 
 <Warning>
-  In passthrough, you directly interact with the HRIS API, not Bindbee's. Responses are **not normalized**, and `path` is vendor-specific. Consult the vendor's documentation.
-  
-  If the value you want is already in `raw_data`, Use [custom fields](/guides/extending/custom-fields).
+  In passthrough, you directly interact with the vendor API. Responses are **not normalized**, and`path`is vendor-specific. Consult the vendor's documentation.
+
+  Use [custom fields](/guides/extending/custom-fields), if the value you want is already in `raw_data`.
 </Warning>
 
 
@@ -105,7 +103,7 @@ What comes back is BambooHR's payload with no unified envelope around it:
 
 On a Workday connector, the same requirement would mean a different path, parameter style and response shape.
 
-The path uses `remote_id`, not Bindbee's `id` — vendor APIs know nothing about Bindbee's UUIDs. See [id vs remote\_id](/guides/reading-writing/record-identity).
+The path uses `remote_id`, not Bindbee's `id` - vendor APIs know nothing about Bindbee's UUIDs. See [id vs remote\_id](/guides/reading-writing/record-identity).
 
 ## Variations
 
@@ -113,11 +111,10 @@ Change the envelope, not the approach. Each row below shows only what differs fr
 
 | To do this | Set |
 | --- | --- |
-| Write instead of read | `"method": "POST"` with the vendor's payload in `data` |
+| Write| `"method": "POST"` with the vendor's payload in `data` |
 | Call a SOAP or XML endpoint | `"request_format": "XML"`, `"response_format": "XML"`, `data` as a string |
 | Download a document or export | `"response_format": "BINARY"` |
 | Upload a file | `"request_format": "MULTIPART"` |
-| Wait out a slow report | `"timeout": 300`, run from a background job |
 
 <AccordionGroup>
   <Accordion title="Write example" icon="pen">
@@ -156,7 +153,7 @@ Change the envelope, not the approach. Each row below shows only what differs fr
 
 ## Response
 
-A `200` returns the third party's response as is, parsed according to `response_format`. The shape is entirely the vendor's — their field names, their envelope, their pagination.
+A `200` returns the third party's response as is, parsed according to `response_format`. The shape is entirely the vendor's, down to their own pagination.
 
 <Note>
   A `200` confirms Bindbee reached the vendor. Many APIs return `200` alongside an error object in the body, so read the payload to confirm the call did what you wanted.

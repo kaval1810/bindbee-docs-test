@@ -1,7 +1,7 @@
 ---
 title: "Set Up Single Sign-On"
 sidebarTitle: "Single sign-on (SSO)"
-description: "Let your team sign in to the Bindbee Dashboard with your own identity provider instead of a Bindbee password."
+description: "Let your team sign in with your own identity provider."
 icon: "key-round"
 ---
 
@@ -13,8 +13,6 @@ With SSO enabled, your team reaches the Bindbee Dashboard through your existing 
   - You're an Admin in your Bindbee organization. See [Roles & permissions](/guides/workspace/roles-and-permissions).
   - You have a route to whoever administers your identity provider - the setup happens in their system, not in Bindbee.
 </Info>
-
-{/* VERIFY: which protocols and identity providers are supported (SAML 2.0, OIDC, specific IdPs), and whether SSO is gated by plan. Matters because a customer will ask before they open a ticket. */}
 
 ## Steps
 
@@ -48,8 +46,6 @@ With SSO enabled, your team reaches the Bindbee Dashboard through your existing 
   The two halves stay separate for the life of the organization. Removing someone from your identity provider stops them authenticating through it, but **remove them from the Bindbee organization as well** - and add them there first when someone joins, or their first sign-in fails.
 </Note>
 
-{/* VERIFY: whether password sign-in remains available as a fallback once SSO is established, or can be disabled on request. Matters because it decides whether IdP deprovisioning alone is sufficient. */}
-
 ## Frequently Asked Questions
 
 <AccordionGroup>
@@ -58,7 +54,7 @@ With SSO enabled, your team reaches the Bindbee Dashboard through your existing 
   </Accordion>
 
   <Accordion title="A user is in but can't do something they expect to">
-    That's their role, not SSO. Deleting a Production connector, the Production API key, SFTP credentials and invitations are Admin-only - see [Roles & permissions](/guides/workspace/roles-and-permissions).
+    That's their role, not SSO. User management, the Production API key, Production connector deletion and SFTP credentials are Admin-only - see [Roles & permissions](/guides/workspace/roles-and-permissions).
   </Accordion>
 
   <Accordion title="You need to change or remove the connection">

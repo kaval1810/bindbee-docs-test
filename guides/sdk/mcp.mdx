@@ -110,16 +110,16 @@ No API key and no account. The server is read-only and covers published document
 Agents usually chain the first two: search to find the right page, then read all of it. That matters on pages like [Create Time Off](/hris/time-off/create-time-off), where the provider-specific accordions are exactly the part a search snippet cuts off.
 
 ```bash
-ls /                                        # api-reference, hris, ats, lms, custom-fields, sdk, webhooks, openapi
-grep -rl passthrough /                      # find every page mentioning a term
-head -200 /custom-fields/api-workflow.mdx   # read a page
+ls /                                                 # the top-level structure
+grep -rl passthrough /                               # every page that mentions a term
+head -200 /api-reference/basics/authentication.mdx   # read a page in full
 ```
 
 
 ### Skill
- 
-The server also exposes a skill resource. MCP gives an agent access to the docs; the skill tells it how to use them, covering auth headers, base URLs, pagination, rate limits, and the common endpoints per category. Clients that support MCP resources load it automatically, and the file is readable at [`/skill.md`](https://docs.bindbee.dev/skill.md) for tools that do not.
- 
+
+The server also exposes a skill resource. MCP gives an agent access to the docs, and the skill tells it how to use them: covering auth headers, base URLs, pagination, rate limits, and the common endpoints per category. Clients that support MCP resources load it automatically, and the file is readable at [`/skill.md`](https://docs.bindbee.dev/skill.md) for tools that do not.
+
 The skill is generated from these docs and regenerates as they change, so it always tracks published content.
 
 ## Try it
