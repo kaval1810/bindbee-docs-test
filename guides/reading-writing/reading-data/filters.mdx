@@ -1,26 +1,24 @@
 ---
 title: "Filters"
-description: "Narrow a list endpoint's result set to the records you care about using query parameters."
+description: "Narrow a list endpoint's result set with query parameters."
 icon: "funnel"
 ---
 
-Filters are query parameters on a list endpoint. They narrow the result set to the records you care about, and combine with [`expand`](/guides/reading-writing/reading-data/expand), [`modified_after`](/guides/reading-writing/reading-data/modified-after), `cursor` and `page_size` in a single request.
+Filters are query parameters on a list endpoint. They narrow the result set, and combine with [`expand`](/guides/reading-writing/reading-data/expand), [`modified_after`](/guides/reading-writing/reading-data/modified-after), `cursor` and `page_size` in a single request.
 
 The examples here use [Get Employees](/hris/employee/get-employees), but the same behavior applies across HRIS, Payroll, ATS and LMS endpoints. The exact filter set differs per model, so check the reference page for the endpoint you are calling.
 
 ## How filters work
 
-A few rules apply everywhere:
-
 - **Multiple filters combine with AND.** `employment_status=ACTIVE&company_id=<id>` returns active employees at that company only.
 - **ID parameters accept comma-separated lists**, which behave as OR within that parameter. Do not put spaces after the commas.
-- **Name and email filters are case-insensitive.**
-- **Filters are inclusive only.** Nothing excludes — fetch the values you want rather than the ones you don't.
+- Name and email filters are case-insensitive.
+- **Filters are inclusive only.** Fetch the values you want rather than the ones you don't.
 - **Filtering happens before pagination.** Page through a filtered result set with `cursor` exactly as you would an unfiltered one.
 
-## The filters worth knowing about
+## Employee filters
 
-[Get Employees](/hris/employee/get-employees) lists every supported filter, generated from the API spec. These are the ones with behavior worth explaining:
+[Get Employees](/hris/employee/get-employees) lists every supported filter, generated from the API spec.
 
 | Parameter | Description | Example |
 |---|---|---|
@@ -30,8 +28,6 @@ A few rules apply everywhere:
 | `employment_status` | `ACTIVE`, `PENDING`, `INACTIVE`, `ACTIVE_EXTERNAL`, `INACTIVE_EXTERNAL`, `LEAVE`, `DECEASED`, `RETIRED` or `-` | `ACTIVE` |
 | `remote_id` | The third-party API ID of the matching object | `3235005483341316245` |
 | `employee_number` | The employee number shown in the third-party UI | `000000168` |
-
-The rest — `manager_id`, `work_locations`, `pay_group_id`, and the name and email filters — behave exactly as the rules above describe.
 
 Two more parameters shape the payload rather than the result set. Both default to `false`:
 
@@ -44,7 +40,7 @@ Two more parameters shape the payload rather than the result set. Both default t
 Custom fields are returned, never filtered on.
 </Note>
 
-`employment_status` is not a closed set — a connector's own status values are filterable too, and `-` marks a record the source gave no status for, so filtering for any specific status excludes those records. See [Enum values](/guides/reading-writing/enum-values).
+`-` marks a record the source gave no status for, so filtering for any specific status excludes those records. For connector-specific status values, see [Enum values](/guides/reading-writing/enum-values).
 
 ## Filters on the other HRIS endpoints
 
@@ -58,7 +54,7 @@ Custom fields are returned, never filtered on.
 | Bank info | `employee_id`, `account_type` |
 | Groups | `type`, `parent_group_id` |
 
-Employment and compensation records belong to an employee rather than the other way round, so you read them from their own endpoint and filter on `employee_id`. Reading the whole collection once and grouping by employee costs far fewer calls than looping per person - see [Rate limits](/api-reference/basics/rate-limits).
+Employment and compensation records belong to an employee, so you read them from their own endpoint and filter on `employee_id`. Reading the whole collection once and grouping by employee costs far fewer calls than looping per person - see [Rate limits](/api-reference/basics/rate-limits).
 
 ## Examples
 
@@ -86,7 +82,7 @@ curl -X GET "https://api.bindbee.dev/api/hris/v1/employees?remote_id=32350054833
   -H "X-Connector-Token: <CONNECTOR_TOKEN>"
 ```
 
-If that last one returns nothing, check the value against `raw_data` before assuming the filter is broken — what the HRIS displays on screen is often not the identifier its API returns. For which identifier to store, see [id vs remote_id](/guides/reading-writing/record-identity).
+If that last one returns nothing, check the value against `raw_data` before assuming the filter is broken. Many HRIS platforms display one identifier on screen and return another through their API. For which identifier to store, see [id vs remote_id](/guides/reading-writing/record-identity).
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "Expand"
-description: "Return related objects inline instead of just their IDs, and choose which of their fields come back."
+description: "Return a related object inline rather than its ID."
 icon: "expand"
 ---
 
@@ -57,11 +57,10 @@ curl -X GET "https://api.bindbee.dev/api/hris/v1/employees?expand=manager[first_
 }
 ```
 
-## Things to watch
+## Limits
 
-- Field selection is the difference between a manageable payload and a very large one. If you only need a manager's name to render a row, ask for the name, not the whole employee record.
+- If you only need a manager's name to render a row, ask for the name, not the whole employee record.
 - If you still need the related record's identifier after selecting fields, include `id` in the bracket list.
-- Expanding several relations at `page_size=200` produces large responses. Lower the page size if you see slow responses or timeouts.
 - A relation that is null on the record stays null when expanded.
 
 ---

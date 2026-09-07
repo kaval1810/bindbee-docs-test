@@ -11,7 +11,7 @@ A Meta endpoint returns the request body Bindbee expects for **one write operati
 
 ```mermaid
 flowchart LR
-    A["GET meta/post<br/>+ connector token"] --> B["Schema<br/>fields, types, enums"]
+    A["GET meta/post<br/>+ connector token"] --> B["Review Schema<br/>(including fields, types, enums)"]
     B --> C["Build request body"]
     C --> D["POST write endpoint"]
     D --> E["201 Created"]
@@ -32,58 +32,24 @@ flowchart LR
 
 A write operation can be live for an integration before its Meta schema exists. See [501 Not Implemented](#errors).
 
-## Authentication
+## Calling a Meta endpoint
 
-<ParamField header="Authorization" type="string" required>
-  `Bearer <BINDBEE_API_KEY>`
-</ParamField>
+Every Meta call carries your API key and the end user's connector token - see [Authentication](/api-reference/basics/authentication).
 
-<ParamField header="X-Connector-Token" type="string" required>
-  The end user's `connector_token`, found in the connector **Overview**. [More](/api-reference/basics/authentication)
-</ParamField>
-
-Base URLs: `https://api.bindbee.dev` (US), `https://api-eu.bindbee.dev` (EU).
-
-<CodeGroup>
-```bash cURL
+```bash
 curl --request GET \
   --url https://api.bindbee.dev/api/hris/v1/employees/meta/post \
   --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
   --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
 ```
 
-```javascript Node
-const schema = await fetch(
-  "https://api.bindbee.dev/api/hris/v1/employees/meta/post",
-  {
-    headers: {
-      Authorization: `Bearer ${process.env.BINDBEE_API_KEY}`,
-      "X-Connector-Token": connectorToken,
-    },
-  }
-).then((r) => r.json());
-```
+Base URLs are `https://api.bindbee.dev` for the US and `https://api-eu.bindbee.dev` for the EU.
 
-```python Python
-schema = requests.get(
-    "https://api.bindbee.dev/api/hris/v1/employees/meta/post",
-    headers={
-        "Authorization": f"Bearer {os.environ['BINDBEE_API_KEY']}",
-        "X-Connector-Token": connector_token,
-    },
-).json()
-```
-</CodeGroup>
+## Meta API response structure
 
-<Tip>
-  The response is JSON Schema compatible. Pass it to standard tooling for client side validation, or render it into an input form for your end users.
-</Tip>
+A Meta API response defines the structure of the request body for the selected write operation. Alongside standard JSON Schema keywords, the response can include Bindbee-specific metadata such as `isRequired` and `enumInformation`.
 
-## Meta API Response Structure
-
-A Meta API response defines the structure of the request body for the selected write operation. In addition to standard JSON Schema keywords, the response can include Bindbee-specific metadata such as `isRequired` and `enumInformation`.
-
-The following keywords are commonly included:
+These keywords appear most often:
 
 | Keyword | Purpose |
 | --- | --- |
@@ -97,9 +63,9 @@ The following keywords are commonly included:
 | `enum` | Lists the accepted values for a field. |
 | `enumInformation` | Provides descriptions for values listed in `enum`. |
 
-### Root Object and Field Definitions
+### Root object and field definitions
 
-A top-level `type` of `object` indicates that the write request body must be a JSON object. The `properties` object contains the available fields, while the `required` array lists the fields that must be included.
+A top-level `type` of `object` indicates that the write request body must be a JSON object. The `properties` object contains the available fields, and the `required` array lists the fields the body must carry.
 
 ```json
 {
@@ -122,9 +88,9 @@ A top-level `type` of `object` indicates that the write request body must be a J
 
 Use `isRequired` to review the requirement for an individual field. Use the `required` array to identify all mandatory fields within an object.
 
-### Nested Objects and Arrays
+### Nested objects and arrays
 
-For a field with `type: "object"`, nested fields are defined under `properties`.
+For a field with `type: "object"`, `properties` defines the nested fields.
 
 ```json
 "home_location": {
@@ -146,7 +112,7 @@ For a field with `type: "object"`, nested fields are defined under `properties`.
 }
 ```
 
-For a field with `type: "array"`, the schema for each array element is defined under `items`.
+For a field with `type: "array"`, `items` defines the schema for each element.
 
 ```json
 "earnings": {
@@ -169,19 +135,19 @@ For a field with `type: "array"`, the schema for each array element is defined u
   }
 }
 ```
----
-## Integration-Specific Fields
+
+## Integration-specific fields
 
 Meta API responses can include `integration_params` and `additional_attributes`. These fields serve different purposes.
 
 | Field | Structure | Validation | Purpose |
 | --- | --- | --- | --- |
-| `integration_params` | Defined object | Validated and potentially required | Contains parameters required by the underlying integration for the write operation. |
-| `additional_attributes` | Free-form object | Not defined by the unified schema | Contains integration-specific values that are not represented in Bindbee's unified fields. |
+| `integration_params` | Defined object | Validated, and potentially required | Carries parameters the underlying integration needs for the write operation. |
+| `additional_attributes` | Free-form object | Outside the unified schema | Carries integration-specific values Bindbee's unified fields do not hold. |
 
 ### `integration_params`
 
-`integration_params` contains fields required by the underlying integration. Its properties are explicitly defined in the Meta API response and can be required.
+`integration_params` carries fields the underlying integration needs. The Meta API response defines its properties explicitly, and can mark them required.
 
 ```json
 "integration_params": {
@@ -200,7 +166,7 @@ Meta API responses can include `integration_params` and `additional_attributes`.
 
 ### `additional_attributes`
 
-`additional_attributes` is a free-form object for fields that are supported by the underlying integration but are not represented in Bindbee's unified model.
+`additional_attributes` is a free-form object for fields the underlying integration supports but Bindbee's unified model does not carry.
 
 ```json
 "additional_attributes": {
@@ -210,13 +176,15 @@ Meta API responses can include `integration_params` and `additional_attributes`.
 }
 ```
 
-Values included in `additional_attributes` are forwarded to the underlying integration as part of the write request.
+Bindbee forwards whatever you put in `additional_attributes` to the underlying integration as part of the write request.
 
-## Accepted Values and Validation
+## Accepted values and validation
+
+Two pairs of keywords constrain what a field will accept: `enum` with `enumInformation`, and `description` with `format`.
 
 ### `enum` and `enumInformation`
 
-The `enum` keyword lists the values accepted by a field. When available, `enumInformation` provides a description for each accepted value.
+The `enum` keyword lists the values a field accepts. Where available, `enumInformation` describes each one.
 
 ```json
 "pay_statement_type_id": {
@@ -240,11 +208,11 @@ The `enum` keyword lists the values accepted by a field. When available, `enumIn
 }
 ```
 
-The request body must use one of the values listed in `enum`. The corresponding entry in `enumInformation` can be used to determine the appropriate value.
+The request body must use one of the values `enum` lists. Read the matching entry in `enumInformation` to work out which one you want.
 
 ### `description` and `format`
 
-The `description` keyword explains the purpose of a field. The `format` keyword defines an additional constraint for a string value, such as an email address or UUID.
+The `description` keyword explains what a field is for. The `format` keyword adds a constraint on a string value, such as an email address or a UUID.
 
 ```json
 "work_email": {
@@ -255,9 +223,9 @@ The `description` keyword explains the purpose of a field. The `format` keyword 
 }
 ```
 
-## Constructing the Write Request
+## Constructing the write request
 
-After reviewing the schema, construct a request body that includes all required fields and conforms to the defined types, formats, and accepted values.
+Once you have read the schema, build a request body that carries every required field and matches the types, formats, and accepted values it defines.
 
 For example, if `first_name` and `last_name` are required, the following request body is valid:
 
@@ -276,7 +244,7 @@ In this example:
 
 - `first_name` and `last_name` satisfy the required field definitions.
 - `work_email` conforms to the `email` format.
-- `employee_number` is included as an integration-specific attribute.
+- `employee_number` rides along as an integration-specific attribute.
 
 ## Best practices
 

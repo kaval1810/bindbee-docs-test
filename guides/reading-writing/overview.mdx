@@ -5,7 +5,9 @@ description: "How data gets into Bindbee, how you read it out, and what is diffe
 icon: "book-open-text"
 ---
 
-Bindbee holds a synced copy of your customer's data. **Everything you read comes from that copy, while every write goes straight to the source system** — and that asymmetry explains most of what follows.
+Reads and writes take different paths through Bindbee. Reads are served from data that has already been synced and normalized, so your app gets a fast, consistent response from any system.
+
+Writes go straight to the source system at the moment you send them. Most of what follows comes out of that difference.
 
 <CardGroup cols={2}>
   <Card title="Reading data" icon="arrow-down-to-line" href="/guides/reading-writing/reading-data">
