@@ -56,7 +56,6 @@
               "get-started/use-cases/read-benefit-coverage",
               "get-started/use-cases/create-an-employee",
               "get-started/use-cases/write-payroll-deductions",
-              "get-started/use-cases/read-time-and-attendance",
               "get-started/use-cases/create-a-time-off-request",
               "get-started/use-cases/read-payroll-data"
             ]
