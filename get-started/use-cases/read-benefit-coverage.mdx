@@ -1,70 +1,64 @@
 ---
 title: "Read Benefit Coverage"
 sidebarTitle: "Read benefit coverage"
-description: "Read what an employee is covered for and who it covers."
+description: "Find where an employee's existing cover leaves a gap."
 icon: "shield-check"
 ---
 
-{/* CONTENT PASS: new use case, written against the HrisBenefitCoverage and HrisBenefit schemas in spec.json. Needs a real customer scenario and a worked recommendation example. */}
+You guide employees through the benefits their employer already offers, and that guidance only holds if you know what each person is covered for today. Benefit coverage carries the amount someone is insured for and who that amount covers, which is what turns a gap into a specific recommendation. It hangs off an enrollment rather than replacing it, so every coverage row points back at the benefit it belongs to.
 
-To recommend a better product you need to know what someone already has. Enrollment alone won't tell you - two employees on the same plan can carry very different amounts and cover very different people.
+## What you'll use
 
-<Warning>
-  Benefit coverage is a **BETA** model. It works, but field names and shapes aren't frozen, and fewer integrations return it than return enrollment. Check [Model availability](/get-started/model-availability) before promising it.
-</Warning>
+**Models** - [benefit coverage](/hris/benefit-coverages/get-benefit-coverages), [benefit](/hris/benefits/get-benefits), [dependent](/hris/dependents/get-dependents)
 
-## The two models you need
+<Info>
+  **Before you start**
 
-| Model | Answers | Key fields |
-| --- | --- | --- |
-| **Benefit** | What is this employee enrolled in? | `plan_name`, `provider_name`, `benefit_plan_type`, `benefit_plan_category`, `coverage_tier`, `employee_contribution`, `company_contribution` |
-| **Benefit coverage** | How much, and who does it cover? | `amount`, `currency`, `is_employee_covered`, `covered_dependents`, `benefit` |
-
-Coverage points back at an enrollment through `benefit`, so the join runs coverage → benefit → employee.
+  - The connector has synced, and the customer's benefits module is in scope.
+  - The integration returns benefit coverage - see [Model availability](/get-started/model-availability).
+</Info>
 
 ## Steps
 
 <Steps>
-  <Step title="Read current enrollments">
-    ```bash
-    curl -G https://api.bindbee.dev/api/hris/v1/benefits \
-      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
-      --header 'X-Connector-Token: <CONNECTOR_TOKEN>' \
-      --data-urlencode 'page_size=200'
-    ```
-
-    Filter to what's in force today. An `end_date` in the past means the enrollment has lapsed, and `effective_date` can be in the future - a plan picked during open enrollment isn't active yet.
-
-    **Result:** The plans this population holds today.
-  </Step>
-
-  <Step title="Read the coverage behind each enrollment">
+  <Step title="Read coverage with its enrollment expanded">
     ```bash
     curl -G https://api.bindbee.dev/api/hris/v1/benefit-coverages \
       --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>' \
+      --data-urlencode 'expand=benefit' \
       --data-urlencode 'page_size=200'
     ```
 
-    Group by `benefit` to attach coverage to its enrollment. `amount` and `currency` travel together - a population across several countries returns several currencies.
+    Expanding `benefit` returns the enrollment inline, which saves a second pass over the benefits endpoint. To narrow to one enrollment, filter on `benefit_id`.
 
-    **Result:** Coverage amounts joined to plans.
+    The endpoint takes no date filters, so scope to what is in force from the expanded enrollment: drop rows whose `end_date` has passed, and rows whose `effective_date` is still ahead.
+
+    **Result:** Coverage amounts with the plan each one belongs to.
   </Step>
 
-  <Step title="Establish who is actually covered">
-    Two independent fields. `is_employee_covered` says whether the employee themselves is included - the enrollment existing doesn't imply it. `covered_dependents` lists who else is.
+  <Step title="Work out who each amount covers">
+    `amount` is the resolved coverage figure, and the members on the record define what it applies to. `is_employee_covered` says whether the employee is included, and `covered_dependents` lists the dependent IDs the amount extends to.
 
-    Compare that against the dependents on record. **The gap between dependents who exist and dependents who are covered is the recommendation** - a family of four on employee-only coverage is the clearest signal here.
+    One enrollment can produce several coverage rows. A plan insuring each member for a separate figure returns a row per member, while a plan with a single composite figure returns one row carrying the employee and every covered dependent together.
 
-    **Result:** Covered versus coverable, per employee.
+    | Row shape | `is_employee_covered` | `covered_dependents` |
+    | --- | --- | --- |
+    | Employee only | `true` | Empty |
+    | Dependents only | `false` | The covered dependent IDs |
+    | Composite | `true` | Every covered dependent ID |
+
+    **Result:** Each amount attached to the people it insures.
   </Step>
 
-  <Step title="Compare against what you offer">
-    With amount, tier and covered dependents in hand, the comparison is yours: under-insured relative to salary, dependents uncovered, or a tier that no longer matches household size.
+  <Step title="Turn the gap into a recommendation">
+    `covered_dependents` holds IDs. Read [dependents](/hris/dependents/get-dependents) for the ages and relationships behind them, then compare that against every dependent the employee has on record.
 
-    `coverage_tier` is an enum, and a source system can return a value outside the documented set - handle unrecognized values, see [Enum values](/guides/reading-writing/enum-values).
+    A household insured for less than it needs is the gap, and a family of four sitting on an employee-only row is the clearest version of it. What closes it is a supplemental option already in the employer's menu, such as critical illness, hospital indemnity or accident cover.
 
-    **Result:** A ranked list of employees whose coverage doesn't fit.
+    `coverage_tier` on the expanded enrollment is an enum, and a source system can return a value outside the documented set - see [Enum values](/guides/reading-writing/enum-values).
+
+    **Result:** Employees whose existing cover leaves a measurable gap.
   </Step>
 </Steps>
 
@@ -76,24 +70,24 @@ Coverage points back at an enrollment through `benefit`, so the join runs covera
 
 <AccordionGroup>
   <Accordion title="benefit-coverages returns an empty collection">
-    Most likely the integration doesn't support the model - check [Model availability](/get-started/model-availability). Then confirm the model is in scope.
+    Check [Model availability](/get-started/model-availability) for this integration, then confirm the model is in scope for the connector.
   </Accordion>
 
-  <Accordion title="Coverage rows do not join to any enrollment">
+  <Accordion title="A coverage row has no matching enrollment">
     Join on `benefit`, not on the employee. Going via the employee produces cross-products where someone holds several plans.
   </Accordion>
 
   <Accordion title="Amounts look implausible">
-    Check `currency` before comparing. Also check you aren't reading a per-period contribution as a coverage amount - `employee_contribution` and `company_contribution` live on the enrollment, not the coverage.
+    Check `currency` before comparing, since a population spread across countries returns several. Then check you are reading coverage rather than contribution: `employee_contribution` and `company_contribution` sit on the enrollment, `amount` sits on the coverage.
   </Accordion>
 
-  <Accordion title="Dependents appear covered who should not be">
-    `covered_dependents` reflects the source system. If a dependent has aged out but the record hasn't been updated, Bindbee returns what the source holds - see [Missing or Unexpected Records](/guides/troubleshooting/missing-records).
+  <Accordion title="A row shows nobody covered">
+    `is_employee_covered` is `false` and `covered_dependents` is empty, so no member is attached to the amount. Report it with the connector ID and the coverage `id`.
   </Accordion>
 </AccordionGroup>
 
 ## Related
 
+- [Read benefit enrollments](/get-started/use-cases/read-benefit-enrollments) - the plans and enrollments coverage hangs off
 - [Benefits](/guides/data-models/benefits) - the four benefit models and how they link
 - [Benefit Coverage endpoints](/hris/benefit-coverages/get-benefit-coverages) - the API reference
-- [Model availability](/get-started/model-availability) - which integrations return this model

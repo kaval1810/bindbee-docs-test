@@ -1,11 +1,11 @@
 ---
 title: "Read Benefit Enrollments"
-sidebarTitle: "Read benefit enrollments"
+sidebarTitle: "Read benefits"
 description: "Read which plans an employer offers and who is enrolled in them."
 icon: "clipboard-list"
 ---
 
-Three models stand between the plan catalog and who actually holds a plan: employer benefit, benefit, and dependent benefit. Reading the wrong one is quiet rather than loud - an enrollment count passes for a plan count, and a dependent list passes for a covered list.
+Employer benefits are the plans an employer offers, and benefits are the enrollments in them. A dependent is only covered when a dependent benefit says so.
 
 ## What you'll use
 
@@ -43,23 +43,21 @@ Three models stand between the plan catalog and who actually holds a plan: emplo
 
     Filter on `employee_id`, `employer_benefit_id`, `benefit_plan_category` or `coverage_tier`.
 
-    Counting these to find how many plans a customer offers gives you an enrollment count, not a plan count. Read employer benefits for that.
+    To reconcile these against a customer's own totals, see [Record counts](/guides/troubleshooting/record-counts).
 
     **Result:** Enrollment records linking employees to plans.
   </Step>
 
   <Step title="Scope the period with the right date filter">
-    Three date pairs exist on the benefits endpoint, and they bound different things.
-
     | Filter pair | Bounds |
     | --- | --- |
     | `start_date_from` / `start_date_to` | When the enrollment record starts |
     | `end_date_from` / `end_date_to` | When it ends |
     | `effective_date_from` / `effective_date_to` | When coverage takes effect |
 
-    Start date and effective date are not the same day. A plan elected during open enrollment starts on election and becomes effective at the plan year boundary, so filtering on the wrong one returns a different set.
+    A plan elected during open enrollment starts on election and becomes effective at the plan year boundary, so the two filters return different sets.
 
-    Enrollments also accumulate rather than update, so an unfiltered read returns history rather than what is true now.
+    Enrollments accumulate, so an unfiltered read returns the full history.
 
     **Result:** Records scoped to the period you mean.
   </Step>
@@ -79,9 +77,9 @@ Three models stand between the plan catalog and who actually holds a plan: emplo
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    A dependent existing does not mean they are covered. Build coverage from dependent benefits and use dependents for details like `date_of_birth` and `relationship`. Reading dependents alone and assuming coverage is the usual cause of an eligibility list with too many people on it.
+    Build coverage from dependent benefits, and use dependents for details like `date_of_birth` and `relationship`.
 
-    **Result:** Who is covered, rather than who exists.
+    **Result:** The dependents actually enrolled.
   </Step>
 </Steps>
 
@@ -100,17 +98,6 @@ Three models stand between the plan catalog and who actually holds a plan: emplo
     Either they are not enrolled, or dependent coverage is not exposed on this integration. Check `raw_data` on a dependent you know is covered - see [Inspect raw data](/guides/reading-writing/raw-data).
   </Accordion>
 
-  <Accordion title="Terminated employees still show active benefits">
-    Benefit records don't end when employment does. The source system ends coverage as a separate action, sometimes weeks later, so check the benefit's `end_date` rather than inferring from employment status.
-  </Accordion>
-
-  <Accordion title="Coverage tiers don't match the customer's naming">
-    Tier names are platform- and customer-specific. Map their values to yours per connector rather than assuming a standard set.
-  </Accordion>
-
-  <Accordion title="A plan attribute isn't in the model">
-    Contribution amounts, plan codes and carrier identifiers sit in `raw_data` on many integrations without being unified. Map them as [custom fields](/guides/extending/custom-fields).
-  </Accordion>
 </AccordionGroup>
 
 ## Related

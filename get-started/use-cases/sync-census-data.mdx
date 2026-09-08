@@ -1,40 +1,39 @@
 ---
 title: "Sync Census Data for Quoting"
 sidebarTitle: "Sync census data"
-description: "Pull a clean employee census with the demographics carriers need, without over-collecting."
+description: "Pull a census carrying the fields a quote is priced on."
 icon: "users"
 ---
 
-You assemble the census a carrier quotes from: who is eligible, how old they are, where they live, and which dependents they'd cover. Getting it wrong costs a round trip - a census missing a rating factor comes back for a second pass, and one carrying national IDs shares data the quote never needed.
+A census is the list of people you send out for quoting. You need enough on each of them to get a price: how old they are, where they live, and who they would cover. Anything past that is data you did not need to share.
 
 ## What you'll use
 
-**Models** - [employee](/hris/employee/get-employees), [employment](/hris/employments/get-employments), [dependent](/hris/dependents/get-dependents), [location](/hris/locations/get-locations), [company](/hris/companies/get-companies)
+**Models** - [employee](/hris/employee/get-employees), [dependent](/hris/dependents/get-dependents), [location](/hris/locations/get-locations)
 
 **Events** - `connector_synced`
 
 <Info>
   **Before you start**
 
-  - You have the carrier's required field list. Changing scope later means a resync.
+  - You know which fields the quote needs. Changing scope later means a resync.
   - You've agreed with the customer which employees are being quoted, including anyone on leave or retired.
+  - The connector has synced. A census read mid-sync is quietly short, so gate the extract on `connector_synced` rather than a timer - see [Triggering a job on completion](/guides/reading-writing/syncing#triggering-a-job-on-completion).
 </Info>
 
 ## Steps
 
 <Steps>
-  <Step title="Scope to what a census needs">
-    Under **Configure → Scoping**, exclude national ID, bank info and ethnicity on both employee and dependent - a quote never needs them.
+  <Step title="Confirm the scope carries every rating factor">
+    Read one employee and check that `date_of_birth`, `home_location`, `gender` and `tobacco_use` come back populated. Map `marital_status` too, as a cross-check against the dependent roster.
 
-    Keep what carriers rate on: `date_of_birth`, `home_location`, `gender` and `tobacco_use`. Keep `marital_status` too, as a cross-check against the dependent roster.
-  </Step>
+    Scope out `ssn`, bank info and `ethnicity` as well, since a quote prices on none of them. Widening scope later triggers a resync, so settle it now - see [Scoping](/get-started/scoping).
 
-  <Step title="Read only after a completed sync">
-    Gate the extract on `connector_synced`, not a timer - see [Trigger a job on completion](/guides/reading-writing/syncing). A census read mid-sync is quietly short.
+    **Result:** Every rating factor confirmed present.
   </Step>
 
   <Step title="Fetch the population">
-    Expand `home_location`. Carriers rate on where an employee lives. Work location sets your customer's situs, not the individual rate.
+    Expand `home_location`. The rate follows where someone lives, while work location sets your customer's situs.
 
     ```bash
     curl --request GET \
@@ -45,11 +44,11 @@ You assemble the census a carrier quotes from: who is eligible, how old they are
 
     Filter to the population you agreed with the customer. `employment_status=ACTIVE` on its own drops people who still belong on the census: `LEAVE` is still enrolled and still rated, `RETIRED` is often quoted as its own population, and `PENDING` covers new hires inside the waiting period.
 
-    Where your customer spans more than one legal entity, or full-time and part-time are quoted separately, `company` and `employment_type` carry those splits.
-  </Step>
+    Where your customer spans more than one legal entity, filter on `company_id`. Full-time and part-time split on `employment_type`, which sits on [employments](/hris/employments/get-employments) rather than the employee record.
 
-  <Step title="Page to the end">
-    Follow the cursor until it runs out - see [Pagination](/api-reference/basics/pagination). A census that stops at page one looks like a success.
+    Follow the cursor to the end - see [Pagination](/api-reference/basics/pagination). A census that stops at page one looks like a success.
+
+    **Result:** The population being quoted.
   </Step>
 
   <Step title="Add dependents">
@@ -63,6 +62,8 @@ You assemble the census a carrier quotes from: who is eligible, how old they are
     `relationship` is what builds the tier - employee only, employee plus spouse, employee plus children, or family. Date of birth alone cannot tell a 24-year-old spouse from a 24-year-old child. `is_student` keeps a child eligible past the plan's age limit.
 
     Send the eligible roster rather than current enrollment, or the population comes out short. `DOMESTIC_PARTNER`, `SIBLING` and `PARENT` are all valid values, and not every carrier accepts them as dependents - confirm before mapping them into a tier.
+
+    **Result:** The dependents each employee could cover.
   </Step>
 </Steps>
 
@@ -73,7 +74,7 @@ You assemble the census a carrier quotes from: who is eligible, how old they are
     Reconcile against the connector's own counts before re-reading - see [Record counts](/guides/troubleshooting/record-counts).
   </Accordion>
 
-  <Accordion title="A field the carrier asked for is missing">
+  <Accordion title="A field you need is missing">
     Either scope excluded it, or the customer's credentials cannot read it - see [Scoping](/get-started/scoping).
   </Accordion>
 </AccordionGroup>

@@ -1,17 +1,17 @@
 ---
-title: "Create an Employee Payroll Run"
-sidebarTitle: "Write payroll deductions"
-description: "Write earnings, deductions, and taxes for an employee into the customer's payroll system."
+title: "Write a Payroll Deduction"
+sidebarTitle: "Write a deduction"
+description: "Write a benefits deduction into the customer's payroll system."
 icon: "banknote"
 ---
 
-This is the write behind benefits deductions - an ICHRA allowance, an HSA contribution, a voluntary premium reaching payroll as a line item. It's also the write with the least room for error, because it changes what people are paid.
+A benefits deduction reaches payroll as a line item: an ICHRA allowance, an HSA contribution, a voluntary premium. It goes through the employee payroll run endpoint, which also carries earnings and taxes.
 
 <Info>
   **Before you start**
 
-  - You've confirmed the integration supports this write - see [Check write support](/guides/reading-writing/writing-data/meta-apis).
-  - You have the deduction or earning codes defined in the customer's payroll system.
+  - You've confirmed the integration supports this write - see [Check write support](/guides/reading-writing/writing-data/meta-apis#supported-operations).
+  - You can generate a stable idempotency key per deduction - see [Idempotency](/guides/reading-writing/writing-data/idempotency).
 </Info>
 
 ## Steps
@@ -25,42 +25,34 @@ This is the write behind benefits deductions - an ICHRA allowance, an HSA contri
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>'
     ```
 
-    Expect array fields for earnings, deductions and taxes, each with its own `required` array under `items`. Expect `integration_params` to be required too - payroll writes almost always need a platform-specific reference.
+    The response defines `deductions` as an array, with its own `required` array under `items`. It also says whether this connector expects `integration_params` - see [Integration-specific fields](/guides/reading-writing/writing-data/meta-apis#integration-specific-fields).
 
     **Result:** The contract for this integration.
   </Step>
 
-  <Step title="Source the codes from the customer's configuration">
-    Deduction and earning codes are defined per customer. A code that works for one customer on a platform won't work for another.
+  <Step title="Read the customer's payroll codes">
+    ```bash
+    curl -G https://api.bindbee.dev/api/hris/v1/payroll-codes \
+      --header 'Authorization: Bearer <BINDBEE_API_KEY>' \
+      --header 'X-Connector-Token: <CONNECTOR_TOKEN>' \
+      --data-urlencode 'page_size=200'
+    ```
 
-    <Warning>
-      There is no reliable automatic mapping from a benefit plan to a payroll deduction code. Get it wrong and you post a deduction against the wrong plan - which surfaces as a payroll discrepancy, not an API error.
+    Each code carries `code`, `name`, and a `type` of `EARNING` or `DEDUCTION`. Filter to the deduction codes and use `code` as the value the write expects.
 
-      Confirm the mapping with the customer and store it against the connector.
-    </Warning>
+    Which code belongs to which benefit plan is the customer's decision, so confirm the mapping with them and store it against the connector. An employer benefit also carries `payroll_codes` and `deduction_code`, which link a deduction line back to its plan by ID - see [Reading benefits](/guides/data-models/benefits).
 
     **Result:** Codes that exist in this customer's payroll configuration.
   </Step>
 
-  <Step title="Build the arrays">
-    ```json
-    {
-      "employee": "019f618e-c850-716d-a510-74639514abf6",
-      "earnings": [
-        { "earning_code": "REG", "amount": 4500 }
-      ],
-      "deductions": [
-        { "deduction_code": "HSA_EE", "employee_deduction": 150 }
-      ],
-      "integration_params": {
-        "pay_statement_type_id": "<PLATFORM_VALUE>"
-      }
-    }
-    ```
+  <Step title="Build the body from the schema">
+    The deduction body varies by provider. Workday takes a `type` and an `id`, ADP takes a `code`, and both take an `amount`. Build from the schema step 1 returned, and check the worked payload for the customer's platform on [Create Employee Payroll Run](/hris/employee-payroll-runs/create-employee-payroll-runs).
 
-    Use the field names from the schema, and send amounts in the currency and precision it specifies - some platforms expect minor units.
+    Provider constraints live there too. Workday accepts one deduction per request and rejects a body carrying both earnings and deductions.
 
-    **Result:** A body matching the contract.
+    Send amounts in the precision the schema specifies.
+
+    **Result:** A body matching the contract for this platform.
   </Step>
 
   <Step title="Send with an idempotency key">
@@ -71,52 +63,41 @@ This is the write behind benefits deductions - an ICHRA allowance, an HSA contri
       --header 'X-Connector-Token: <CONNECTOR_TOKEN>' \
       --header 'X-Idempotency-Key: <UNIQUE_KEY>' \
       --header 'Content-Type: application/json' \
-      --data @payroll-run.json
+      --data @deduction.json
     ```
 
-    Derive the key from the employee and the pay period - something like `payroll-{employee_id}-{period_end}`. A duplicate write doubles a deduction, and the person affected finds out on payday.
+    Derive the key from the employee and the pay period, such as `payroll-{employee_id}-{period_end}`, so a retry reproduces it - see [Idempotency](/guides/reading-writing/writing-data/idempotency).
 
-    **Result:** The payroll data is written.
+    **Result:** The deduction is written.
   </Step>
 
-  <Step title="Verify against the pay period">
-    Read the run back and confirm it landed in the period you intended - see [Get Employee Payroll Runs](/hris/employee-payroll-runs/get-employee-payroll-runs).
+  <Step title="Verify the period it landed in">
+    Read the run back and confirm the period - see [Get Employee Payroll Runs](/hris/employee-payroll-runs/get-employee-payroll-runs). The run carries `start_date`, `end_date` and `check_date`.
 
-    Payroll systems close periods. A write submitted after close may be rejected, or silently applied to the next open period, which is worse.
+    Payroll systems close periods, and a write submitted after close can be applied to the next open one. The customer's cut-off is not exposed through the API, so treat a late change as an adjustment in the following period.
 
-    **Result:** Confirmation the amounts are in the right period.
+    **Result:** Confirmation the amount sits in the period you intended.
   </Step>
 </Steps>
-
-<Note>
-  The customer's cut-off isn't visible through the API. When a change misses it, the fix is usually a catch-up adjustment in the next period, not a retroactive edit - design for that.
-</Note>
 
 ## Frequently Asked Questions
 
 <AccordionGroup>
   <Accordion title="A deduction code is rejected">
-    The code doesn't exist in this customer's configuration, or isn't valid for this employee's pay group. Check their payroll setup rather than reusing a code from another customer.
-  </Accordion>
-
-  <Accordion title="The write succeeded but the amount is wrong">
-    Check the precision the schema expects. A value sent in dollars where minor units were expected is off by 100x and still passes validation.
-  </Accordion>
-
-  <Accordion title="The write was rejected because the period is closed">
-    Expected after the customer's cut-off. Queue the change for the next open period and reconcile it as an adjustment.
+    The code is absent from this customer's configuration, or belongs to a different pay group. Read [payroll codes](/hris/payroll-codes/get-payroll-codes) for the connector and match against `code`, rather than reusing a value from another customer.
   </Accordion>
 
   <Accordion title="A deduction was applied twice">
-    A retry without a consistent idempotency key - see [Idempotency](/guides/reading-writing/writing-data/idempotency) - or the same change submitted through two paths. Correct it in the payroll system, then fix the key derivation.
+    The retry carried a different `X-Idempotency-Key`, so Bindbee read it as a new write - see [Idempotency](/guides/reading-writing/writing-data/idempotency). Correct the amount in the payroll system, then derive the key so the same deduction always produces the same value.
   </Accordion>
 
   <Accordion title="You need to map plan years to payroll periods">
-    Payroll runs carry payment dates, not plan years. Cross-reference the payment date against the benefit's coverage period - see [Reading benefits](/guides/data-models/benefits).
+    A payroll run carries `start_date`, `end_date` and `check_date`, and no plan year. Cross-reference the check date against the benefit's coverage period - see [Reading benefits](/guides/data-models/benefits).
   </Accordion>
 </AccordionGroup>
 
 ## Related
 
-- [Create Employee Payroll Run](/hris/employee-payroll-runs/create-employee-payroll-runs) - the endpoint, with worked payloads per provider
+- [Create Employee Payroll Run](/hris/employee-payroll-runs/create-employee-payroll-runs) - the endpoint, and the worked payload per provider
 - [Get Create Employee Payroll Run Meta](/hris/employee-payroll-runs/get-create-employee-payroll-run-meta) - the schema endpoint step 1 fetches
+- [Get Payroll Codes](/hris/payroll-codes/get-payroll-codes) - the customer's own earning and deduction codes
