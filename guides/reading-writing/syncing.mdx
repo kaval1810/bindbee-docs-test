@@ -10,7 +10,7 @@ Bindbee syncs data from each connected system on a schedule, normalizes it into 
 
 ```mermaid
 flowchart LR
-    A["Customer<br/>authorizes"] --> B["Initial sync<br/>reads return partial data"]
+    A["Customer<br/>authorizes"] --> B["Initial sync reads and return data"]
     B --> C["Complete<br/>data is trustworthy"]
     C --> D["Recurring sync<br/>every 24h by default"]
     D --> C
@@ -18,27 +18,9 @@ flowchart LR
 
 The initial sync starts the moment your end user completes authentication, however the connection was created — see [How to connect](/get-started/how-to-connect). Until it finishes, reads return `200` with partial data and nothing on the response says so.
 
-You can watch its progress on the connector. This endpoint scopes by a **query parameter**, not the usual header:
+You can watch its progress on the connector with [Get Connectors](/api-reference/connectors/get-connectors). That endpoint scopes by a `connector_token` **query parameter**, not the usual header.
 
-```bash
-curl -G https://api.bindbee.dev/api/hris/v1/connectors \
-  -H "Authorization: Bearer <BINDBEE_API_KEY>" \
-  -d connector_token=<CONNECTOR_TOKEN>
-```
-
-```json
-{
-  "id": "018b18ef-c487-703c-afd9-0ca478ccd9d6",
-  "integration_slug": "ukg-pro",
-  "end_user": "Acme Corp.",
-  "status": "COMPLETE",
-  "sync_status": "Syncing",
-  "last_sync_start_time": "2026-08-29T00:00:00Z",
-  "next_sync_start_time": "2026-08-30T00:00:00Z"
-}
-```
-
-Two status fields appear here and they answer different questions:
+Two status fields on the connector answer different questions:
 
 | Field | Values | Describes |
 | --- | --- | --- |
@@ -65,9 +47,7 @@ Every webhook payload carries a `sync` object identifying the job behind it, and
 
 ## Development connectors
 
-Development connectors run the same initial sync as Production ones: it starts on authorization and needs nothing from you. What they do not have is the **recurring** schedule that follows it. After that first run the data is frozen until you trigger a sync yourself.
-
-See [Environments](/get-started/environments) for everything else the two differ on.
+Development connectors run the same initial sync as Production ones: it starts on authorization and needs nothing from you. What they do **not have is the recurring schedule** that follows it. After that first run the data is frozen until you trigger a sync yourself. See [Environments](/get-started/environments) for everything else the two differ on.
 
 ## Forcing a resync
 
@@ -81,16 +61,13 @@ curl -X POST https://api.bindbee.dev/api/embedded/v1/connectors/resync \
 
 Unlike the connector list above, [this endpoint](/api-reference/connectors/resync-connector) scopes by header. To know when the data has landed, listen for `connector_synced` or poll `sync_status` until it returns to `Done`.
 
-**Reasonable moments to force one:**
+**When force sync needed:**
 
-* Your end user just changed something in their HRIS and expects to see it in your product straight away.
-* You completed a write and want the unified models to reflect it before the next scheduled run — writes reach the source system directly, so they are not readable until a sync picks them up.
-* You changed a [custom field](/guides/extending/custom-fields) mapping and want it populated against existing records.
+* Your end user changed something in their HRIS and expects to see it straight away.
+* You completed a write and go to the source system, so a sync has to pick them up before they are readable.
+* You changed a [custom field](/guides/extending/custom-fields) mapping and want existing records populated.
 * You are investigating a discrepancy for one customer.
 
-<Warning>
-  Force sync is not a substitute for a higher sync frequency. Triggering it on every page load, or on a loop, puts avoidable load on the provider's API — the exact problem the sync model exists to solve. If you consistently need fresher data, change the cadence instead.
-</Warning>
 
 ## Triggering a job on completion
 

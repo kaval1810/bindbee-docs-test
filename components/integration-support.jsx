@@ -101,6 +101,8 @@ export const IntegrationSupport = ({
         name,
         type: t === "S" ? "SFTP" : "API",
         col: i,
+        /* Two columns can name the same vendor, so name+type is not a safe key. */
+        uid: name + "#" + i,
         logo: cell(logos, i),
         write: cell(writes, i).toUpperCase() === "Y",
       });
@@ -345,7 +347,7 @@ export const IntegrationSupport = ({
       ) : (
         <div className="bb-is-chips">
           {data.supported.map((p) => (
-            <span className="bb-is-chip" key={p.name + p.type}>
+            <span className="bb-is-chip" key={p.uid}>
               {p.logo ? (
                 <img
                   className="bb-is-logo"

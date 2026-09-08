@@ -139,7 +139,6 @@
           },
           {
             "group": "Workspace & Access",
-            "icon": "shield",
             "pages": [
               "guides/workspace/roles-and-permissions",
               "guides/workspace/sso",
@@ -148,7 +147,6 @@
           },
           {
             "group": "Going Live",
-            "icon": "rocket",
             "pages": [
               "guides/ideal-workflow",
               "guides/go-live-checklist"

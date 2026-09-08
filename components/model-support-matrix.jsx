@@ -152,6 +152,12 @@ export const ModelSupportMatrix = () => {
         type,
         col: i,
         slug: slugify(name) + (type === "SFTP" ? "_sftp" : ""),
+        /* slug identifies the connector - it drives filters, share links and
+           cell lookups, so two columns naming the same vendor share one. That
+           makes it unsafe as a React key: duplicate keys drop columns while
+           colSpan still counts them, and the group band stops short. The
+           column index is the one thing guaranteed unique. */
+        uid: slugify(name) + "#" + i,
         logo: cell(logos, i),
         write: cell(writes, i).toUpperCase() === "Y",
       });
@@ -1103,7 +1109,7 @@ export const ModelSupportMatrix = () => {
                 <div className="bb-mm-opt-empty">No integrations match “{search}”.</div>
               ) : null}
               {providerOptions.map((p) => (
-                <label className="bb-mm-opt" key={p.slug}>
+                <label className="bb-mm-opt" key={p.uid}>
                   <input
                     type="checkbox"
                     checked={providerSel.includes(p.slug)}
@@ -1248,7 +1254,7 @@ export const ModelSupportMatrix = () => {
               <tr>
                 <th className="bb-mm-sticky">Model</th>
                 {providers.map((p) => (
-                  <th className="bb-mm-prov" key={p.slug}>
+                  <th className="bb-mm-prov" key={p.uid}>
                     <span className="bb-mm-prov-inner">
                       <span className="bb-mm-prov-top">
                         {p.logo ? (
@@ -1289,7 +1295,7 @@ export const ModelSupportMatrix = () => {
                       </span>
                     </td>
                     {providers.map((p) => (
-                      <td className="bb-mm-cell" key={p.slug}>
+                      <td className="bb-mm-cell" key={p.uid}>
                         {cellState(row.model.key, p.slug) === "Y" ? (
                           checkIcon()
                         ) : cellState(row.model.key, p.slug) === "B" ? (

@@ -6,9 +6,10 @@ icon: "code"
 ---
 
 The Custom Fields API exposes the same capabilities as the dashboard.
+For the concepts see the [Custom Fields overview](/guides/extending/custom-fields).
+For the visual route see [Dashboard Configuration](/guides/extending/custom-fields/dashboard).
 
-*For the concepts see the [Custom Fields overview](/guides/extending/custom-fields).*
-*For the visual route see [Dashboard Configuration](/guides/extending/custom-fields/dashboard).*
+The page walks the flow end to end with example requests and responses, using a running example: extending the `employee` model with a `guardian_mobile` field, populated from a Workday connector.
 
 
 ## Authentication
@@ -20,42 +21,9 @@ Authorization: Bearer <BINDBEE_API_KEY>
 Content-Type: application/json
 ```
 
-## Typical workflow
-
-A complete end-to-end flow when defining a new custom field via the API looks like this:
-
-<Steps>
-  <Step title="Discover">
-    Use the lookup endpoints to fetch valid `category`, `model`, and
-    `integration_slug` values that are available to use.
-  </Step>
-  <Step title="Inspect raw upstream payload">
-    Fetch a sample of the raw third-party response so you can see exactly what
-    is available to JMESPath against.
-  </Step>
-  <Step title="Validate the JMESPath (optional)">
-    Dry-run your expression against real connector data — or an inline payload —
-    without persisting anything. Recommended to avoid `INVALID_JSON_PATH` in
-    production responses.
-  </Step>
-  <Step title="Create the custom field">
-    Register the field on the target `(category, model)`.
-  </Step>
-  <Step title="Create a mapping">
-    Attach the field to either an integration (integration level) or a single
-    connector (connector level).
-  </Step>
-  <Step title="Verify the effective configuration">
-    Inspect the effective per-connector view to confirm which mapping is winning
-    and which fields are still unmapped.
-  </Step>
-</Steps>
-
-The rest of this page walks through the same flow with example requests and responses, using a running example: extending the `employee` model with a `guardian_mobile` field, populated from a Workday connector.
-
 ## Step 1: Discover models and integrations
 
-Use the lookup endpoints to fetch the slugs you'll need. These are filtered to what your organization actually has access to.
+Use the lookup endpoints, [List Models](/api-reference/custom-fields/list-models) and [List Integrations](/api-reference/custom-fields/list-integrations), to fetch the slugs you'll need. These are filtered to what your organization actually has access to.
 
 ```bash
 # Models you can extend
@@ -89,7 +57,7 @@ GET /api/v1/lookup/integrations?category=HRIS
 
 ## Step 2: Inspect the raw upstream payload
 
-Before you write a JMESPath, look at the shape of the upstream JSON. The `raw-data` endpoint returns either the connector's latest synced row or a canned sample for the integration if no connector is provided (or if it has not synced yet).
+Before you write a JMESPath, look at the shape of the upstream JSON. The [Get Raw Data](/api-reference/custom-fields/get-raw-data) endpoint returns either the connector's latest synced row or a canned sample for the integration if no connector is provided (or if it has not synced yet).
 
 ```bash
 # Using a real connector
@@ -115,7 +83,7 @@ In this example, `data.employee.guardian_mobile` is the JMESPath you'll want to 
 
 ## Step 3: Validate the JMESPath (optional but recommended)
 
-The preview endpoint evaluates a JMESPath against real connector data **without** persisting anything. Use this to catch typos and confirm the resolved value type before you save the mapping.
+The [Preview](/api-reference/custom-fields/preview) endpoint evaluates a JMESPath against real connector data **without** persisting anything. Use this to catch typos and confirm the resolved value type before you save the mapping.
 
 ```bash
 POST /api/v1/custom-fields/preview
@@ -150,7 +118,7 @@ POST /api/v1/custom-fields/preview
 
 ## Step 4: Create the custom field
 
-Once you're confident in your JMESPath, register the field itself. The field is just a typed slot on the `(category, model)` — it carries no mapping yet.
+Once you're confident in your JMESPath, register the field itself with [Create Custom Field](/api-reference/custom-fields/create-custom-field). The field is just a typed slot on the `(category, model)` — it carries no mapping yet.
 
 ```bash
 POST /api/v1/custom-fields
@@ -176,7 +144,7 @@ POST /api/v1/custom-fields
 
 ## Step 5: Create a mapping
 
-A mapping pairs the custom field with a JMESPath. What you send decides its type: `integration_slug` for an integration level mapping, `connector_token` for a connector level one. See [Type of mapping](/guides/extending/custom-fields#type-of-mapping).
+A mapping pairs the custom field with a JMESPath. Send it to [Create Mapping](/api-reference/custom-fields/create-mapping). What you send decides its type: `integration_slug` for an integration level mapping, `connector_token` for a connector level one. See [Type of mapping](/guides/extending/custom-fields#type-of-mapping).
 
 <Tabs>
   <Tab title="Integration level">
@@ -229,7 +197,7 @@ A mapping pairs the custom field with a JMESPath. What you send decides its type
 
 ## Step 6: Verify the effective configuration
 
-The configuration endpoint returns every custom field for a given `(connector, category, model)` together with the **effective** mapping in use. Connector level mappings override integration level ones, and unmapped fields are included with `json_path: null` so you can see what's still left to configure.
+The [Get Configuration](/api-reference/custom-fields/get-configuration) endpoint returns every custom field for a given `(connector, category, model)` together with the **effective** mapping in use. Connector level mappings override integration level ones, and unmapped fields are included with `json_path: null` so you can see what's still left to configure.
 
 ```bash
 GET /api/v1/custom-fields/configuration?connector_token=<CONNECTOR_TOKEN>&category=HRIS&model=employee
@@ -276,11 +244,11 @@ Each entry's `source` indicates which mapping is winning:
 
 | Action                | Endpoint                                    | Notes                                                     |
 | --------------------- | ------------------------------------------- | --------------------------------------------------------- |
-| List custom fields    | `GET /api/v1/custom-fields`                 | Supports `category`, `model`, and `source` filters.       |
-| Get one with mappings | `GET /api/v1/custom-fields/{id}`            | Returns the field plus all its mappings.                  |
-| Delete a field        | `DELETE /api/v1/custom-fields/{id}`         | Cascades — all mappings for the field are removed.        |
-| Update a mapping      | `PATCH /api/v1/custom-fields/mapping/{id}`  | Only `json_path` is mutable. Re-create to change type.    |
-| Delete a mapping      | `DELETE /api/v1/custom-fields/mapping/{id}` | Removes a single mapping; the field itself is unaffected. |
+| [List custom fields](/api-reference/custom-fields/list-custom-fields) | `GET /api/v1/custom-fields` | Supports `category`, `model`, and `source` filters.       |
+| [Get one with mappings](/api-reference/custom-fields/get-custom-field) | `GET /api/v1/custom-fields/{custom_field_id}` | Returns the field plus all its mappings.                  |
+| [Delete a field](/api-reference/custom-fields/delete-custom-field) | `DELETE /api/v1/custom-fields/{custom_field_id}` | Cascades — all mappings for the field are removed.        |
+| [Update a mapping](/api-reference/custom-fields/update-mapping) | `PATCH /api/v1/custom-fields/mapping/{custom_field_mapping_id}` | Only `json_path` is mutable. Re-create to change type.    |
+| [Delete a mapping](/api-reference/custom-fields/delete-mapping) | `DELETE /api/v1/custom-fields/mapping/{custom_field_mapping_id}` | Removes a single mapping; the field itself is unaffected. |
 
 ## Next steps
 

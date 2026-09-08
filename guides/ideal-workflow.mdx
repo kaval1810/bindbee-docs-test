@@ -29,13 +29,13 @@ This is the path a successful Bindbee setup follows. Three steps are optional; t
     **Result:** The customer authorizes, and the connector moves to `COMPLETE`. See [Connection methods](/get-started/connection-methods).
   </Step>
 
-  <Step title="(Optional) Subscribe to connector_sync_started">
+  <Step title="Subscribe to connector_sync_started (Optional)">
     Fires the moment a sync begins, which is what you need to show "importing your data…" in your UI.
 
     **Result:** Your endpoint receives an event at the start of every run. See [Webhooks](/guides/reading-writing/webhooks).
   </Step>
 
-  <Step title="(Optional) Poll the Connectors API">
+  <Step title="Poll the Connectors API (Optional)">
     Reads `status` and `sync_status` for a connector when you need to check where a connection stands.
 
     ```bash
@@ -47,14 +47,14 @@ This is the path a successful Bindbee setup follows. Three steps are optional; t
     **Result:** The current state of every connection. See [Get Connectors](/api-reference/connectors/get-connectors).
   </Step>
 
-  <Step title="(Optional) Fetch attached custom fields">
+  <Step title="Fetch attached custom fields (Optional)">
     Where you have mapped custom fields, read the mappings so you know what extra data arrives with each record.
 
     **Result:** The list of extensions on each model. See [Custom fields via API](/guides/extending/custom-fields/api-workflow).
   </Step>
 
-  <Step title="Subscribe to connector_synced">
-    **Recommended.** This is the signal that a sync has finished and the data is ready to read. Verify the signature on every request and reply within 10 seconds.
+  <Step title="Subscribe to connector_synced (Recommended)">
+    This is the signal that a sync has finished and the data is ready to read. Verify the signature on every request and reply within 10 seconds.
 
     **Result:** You learn the moment a connector's data is complete, rather than polling for it. See [Webhooks](/guides/reading-writing/webhooks).
   </Step>

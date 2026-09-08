@@ -132,7 +132,7 @@ export const IntegrationFilter = () => {
     width: 22px !important;
     height: 22px !important;
     margin: 0 5px 0 0 !important;
-    vertical-align: -3px !important;
+    vertical-align: middle !important;
     object-fit: contain;
     border-radius: 3px;
   }

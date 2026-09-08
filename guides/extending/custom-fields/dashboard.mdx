@@ -6,12 +6,11 @@ icon: "layout-dashboard"
 ---
 
 Creating a Custom Field from the dashboard is two steps: create the field, then map it to a value in the source system's raw payload.
-
-*For the concepts see the [Custom Fields overview](/guides/extending/custom-fields). For the programmatic route see [API Configuration](/guides/extending/custom-fields/api-workflow).*
+For the concepts see the [Custom Fields overview](/guides/extending/custom-fields). For the programmatic route see [API Configuration](/guides/extending/custom-fields/api-workflow).
 
 ## The Custom Fields page
 
-**Configure → Custom Fields** lists every field in your organization, with how many mappings each has, its category and model, and who last changed it.
+**[Configure → Custom Fields](https://app.bindbee.dev/custom-fields)** lists every field in your organization, with how many mappings each has, its category and model, and who last changed it.
 
 
 ## Step 1: Create the field
@@ -88,7 +87,7 @@ Select the field, then press **Map field**. Save the mapping row with the tick.
 
 ## When the value appears
 
-**The field is populated on the connector's next sync**, not immediately. To see it sooner, [force a resync](/guides/reading-writing/syncing#forcing-a-resync).
+**The field is populated on the connector's next sync**, not immediately. To see it sooner, use [force a resync](/guides/reading-writing/syncing#forcing-a-resync).
 
 Once it resolves, request it with `include_custom_fields=true` — see [Retrieve custom fields](/guides/extending/custom-fields#retrieve-custom-fields). Confirm the mapping resolves before relying on it: an incorrect path [returns `INVALID_JSON_PATH`](/guides/extending/custom-fields) rather than an error.
 

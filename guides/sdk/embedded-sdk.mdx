@@ -61,7 +61,7 @@ Authorization: Bearer <BINDBEE_API_KEY>
 Pass the token to the SDK. Opening the flow mounts a full-screen overlay on top of your app, where the user signs in to their HR system and authorizes access.
 
 <Tabs>
-  <Tab title="React">
+  <Tab title="React" icon="react" iconType="brands">
     ```bash
     npm install --save @bindbee/react-link
     ```
@@ -91,7 +91,7 @@ Pass the token to the SDK. Opening the flow mounts a full-screen overlay on top 
     The hook returns `{ open }`. Call it from a click handler.
   </Tab>
 
-  <Tab title="JavaScript">
+  <Tab title="JavaScript" icon="js" iconType="brands">
     For any frontend that is not React. Add the script, then initialize it.
 
     ```html
@@ -179,10 +179,6 @@ This exchange uses your API key, so it belongs on your server too. Treat the ret
 <CardGroup cols={2}>
   <Card title="npm package" icon="box" href="https://www.npmjs.com/package/@bindbee/react-link">
     `@bindbee/react-link` on npm.
-  </Card>
-
-  <Card title="How to connect" icon="link" href="/get-started/how-to-connect">
-    The two routes that create a connector - Magic Link, or the Embedded SDK.
   </Card>
 
   <Card title="Authentication" icon="key" href="/api-reference/basics/authentication">

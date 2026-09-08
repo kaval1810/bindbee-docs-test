@@ -2,7 +2,7 @@
 title: "Overview"
 sidebarTitle: "Overview"
 description: "Extend Bindbee's unified models with any value from the raw upstream payload, mapped through a JMESPath expression."
-icon: "book-open-text"
+icon: "book-open"
 ---
 
 A unified model has a fixed schema. An `employee` always exposes `first_name`, `email`, and so on. Custom Fields let you add your own attributes, such as `guardian_mobile`, and tell Bindbee where to read them from in the third party's raw response.
@@ -51,11 +51,11 @@ You can manage Custom Fields in two ways. Both create the same underlying config
   </Card>
 </CardGroup>
 
-Whichever route you use, what you send on the mapping decides its type. Send `integration_slug` and Bindbee maps at the integration level; send `connector_token` and it maps at the connector level. The two are mutually exclusive — provide exactly one.
+Whichever route you use, what you send on the mapping decides its type. Send `integration_slug` and Bindbee maps at the integration level; send `connector_token` and it maps at the connector level.
 
 ## Retrieve custom fields
 
-Once a field has a mapping that resolves on a connector, add `include_custom_fields=true` to any unified request.
+Once a field has a mapping that resolves on a connector, add `include_custom_fields=true` to any unified request, such as [Get Employees](/hris/employee/get-employees).
 
 <CodeGroup>
 ```http Request

@@ -480,7 +480,7 @@ Delivery logs are on the [Webhooks tab](https://app.bindbee.dev/logs/webhooks) u
  
 Three endpoints cover the same ground programmatically, which is useful for alerting on delivery failures rather than discovering them by hand.
  
-**List your webhooks** to get their IDs, names, URLs, enabled state, and when each last fired:
+**[List your webhooks](/api-reference/webhooks/list-webhooks)** to get their IDs, names, URLs, enabled state, and when each last fired:
  
 ```bash
 curl -G https://api.bindbee.dev/api/v1/webhooks \
@@ -488,7 +488,7 @@ curl -G https://api.bindbee.dev/api/v1/webhooks \
   -d is_active=true
 ```
  
-**List delivery attempts**, with filters:
+**[List delivery attempts](/api-reference/webhooks/list-webhook-logs)**, with filters:
  
 ```bash
 curl -G https://api.bindbee.dev/api/v1/webhooks/logs \
@@ -506,7 +506,7 @@ curl -G https://api.bindbee.dev/api/v1/webhooks/logs \
 | `created_at_from`, `created_at_to` | ISO 8601 bounds, interpreted as UTC when no offset is supplied |
 | `errors_only` | When `true`, only deliveries that returned `4xx` or `5xx` |
  
-**Get one delivery** by its log ID for the full request and response detail, including the status code your endpoint returned:
+**[Get one delivery](/api-reference/webhooks/get-webhook-log-detail)** by its log ID for the full request and response detail, including the status code your endpoint returned:
  
 ```bash
 curl https://api.bindbee.dev/api/v1/webhooks/logs/<LOG_ID> \

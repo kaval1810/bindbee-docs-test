@@ -57,9 +57,9 @@ There is no API for them. Anything your own monitoring acts on has to come from 
 
 They record Bindbee's attempts to reach *your* endpoint, so they answer why your handler stayed quiet. Those do have an API: [List Webhook Logs](/api-reference/webhooks/list-webhook-logs), and the dashboard keeps them on the [Webhooks tab](https://app.bindbee.dev/logs/webhooks) under Logs.
 
-<Warning>
-  **SCREENSHOT NEEDED** (review marker - strip before merge): the Webhooks tab under Logs at app.bindbee.dev/logs/webhooks - a reader should be able to see a failed delivery attempt sitting beside successful ones, with the event type, the timestamp, and the response code their endpoint returned all legible
-</Warning>
+<Frame>
+      <img src="/images/platform/webhook_logs.jpg" alt="The Sync info screen for a run marked Partial, listing Employee and Company as Synced, Employment as Skipped with no records, Dependent as Failed with an expanded Issue and Message showing User not authorized and a Permission issue found banner, and three models still Pending" />
+</Frame>
 
 ## Limits
 
