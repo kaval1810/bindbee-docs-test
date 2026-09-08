@@ -544,3 +544,42 @@ img,
 #content-area svg #sequencenumber {
   fill: var(--bb-diagram-accent) !important;
 }
+
+/* External nav tabs get an arrow, so a reader can tell the tab leaves the docs
+   before clicking it. Mintlify renders every tab as `a.nav-tabs-item` inside
+   `.nav-tabs`; internal tabs carry a relative href, so `[href^="http"]` picks
+   out only the ones pointing somewhere else. The navbar's own links (Status,
+   Website) are `.navbar-link` anchors and are not matched.
+
+   The arrow is a mask rather than a text glyph or a background image, the same
+   approach the "Related" icon above uses: it takes currentColor, so it follows
+   the tab through its hover and active states and into dark mode on its own.
+
+   The anchor is `flex items-center gap-2`, and ::after becomes the last flex
+   item - hence the negative margin, which pulls the arrow back off that 0.5rem
+   gap to sit close to the label. The tab's underline is absolutely positioned,
+   so it stays out of the flex flow and cannot land between the two. */
+#navbar .nav-tabs a.nav-tabs-item[href^="http"]::after,
+#navbar .mobile-nav-tabs-item[href^="http"]::after {
+  --bb-external-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 7h10v10'/%3E%3Cpath d='M7 17 17 7'/%3E%3C/svg%3E");
+  content: "";
+  width: 0.8em;
+  height: 0.8em;
+  margin-left: -0.3rem;
+  flex: none;
+  opacity: 0.55;
+  background-color: currentColor;
+
+  -webkit-mask-image: var(--bb-external-icon);
+  mask-image: var(--bb-external-icon);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+}
+
+#navbar .nav-tabs a.nav-tabs-item[href^="http"]:hover::after {
+  opacity: 1;
+}

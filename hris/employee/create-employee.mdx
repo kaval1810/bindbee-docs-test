@@ -8,6 +8,12 @@ import { IntegrationSupport } from "/components/integration-support.jsx";
 
 <IntegrationSupport category="HRIS" model="Employee" direction="write" />
 
+<Accordion title="Usecases">
+
+- [Create an Employee](/get-started/use-cases/create-an-employee) - add a new employee to the customer's HRIS, including the nested and integration-specific fields the platform requires
+
+</Accordion>
+
 To create an employee in HRIS, you first need to fetch the request body structure that HRIS expects. This structure varies based on the HRIS provider (e.g., BambooHR, ADP, Workday). The request body consists of three parts:
 
 - **Model Keys**: Standard attributes required for all employees.
