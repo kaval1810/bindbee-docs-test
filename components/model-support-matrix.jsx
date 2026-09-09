@@ -207,8 +207,18 @@ export const ModelSupportMatrix = () => {
   const loadMatrix = async (category) => {
     const gid = SHEET_GIDS[category];
     if (!gid) throw new Error("No sheet tab configured for " + category);
+    /* The trailing timestamp is ignored by the sheet and exists only to make the
+       URL unique per load. `cache: "no-store"` below instructs this browser and
+       nothing else - a proxy, a service worker or a CDN in between can still
+       answer from a saved copy, and a URL none of them has seen defeats all of
+       them at once. It does NOT beat Google's own snapshot, which is served with
+       `private, max-age=300`; that 5-minute floor stays whatever the URL says. */
     const url =
-      SHEET_BASE + "?gid=" + encodeURIComponent(gid) + "&single=true&output=csv";
+      SHEET_BASE +
+      "?gid=" +
+      encodeURIComponent(gid) +
+      "&single=true&output=csv&_=" +
+      Date.now();
     const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) throw new Error("Sheet fetch failed (" + res.status + ")");
     return parseSheet(await res.text());
