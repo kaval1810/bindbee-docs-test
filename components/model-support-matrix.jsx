@@ -1223,7 +1223,7 @@ export const ModelSupportMatrix = () => {
         })}
 
         </div>
-
+        {/* 
         <div className="bb-mm-bar-group">
           <span className="bb-mm-tip" data-tooltip={copied ? "Copied!" : "Copy link"}>
             <button
@@ -1235,6 +1235,9 @@ export const ModelSupportMatrix = () => {
               <Icon icon={copied ? "check" : "link"} size={15} />
             </button>
           </span>
+          {/* Download hidden for now - not offering the table as a file yet.
+              The downloadCsv handler above is left in place; restoring this
+              block is all that's needed to turn it back on.
           <span className="bb-mm-tip" data-tooltip="Download as CSV">
             <button
               type="button"
@@ -1246,8 +1249,9 @@ export const ModelSupportMatrix = () => {
             </button>
           </span>
         </div>
+        */}
       </div>
-
+      
       <div className="bb-mm-scroll not-prose">
         {error ? (
           <div className="bb-mm-empty">No data to show.</div>
