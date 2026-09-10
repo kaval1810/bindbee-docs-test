@@ -30,15 +30,18 @@ export const ModelSupportMatrix = () => {
    * sheet stays restricted; only this read-only snapshot is fetchable.
    *
    * Each tab has its own gid, visible in the sheet's URL (#gid=...) when that
-   * tab is selected. A category with no gid simply doesn't appear in the picker.
+   * tab is selected. Read and write live in separate tabs - "HRIS (read)" and
+   * "HRIS (write)" - so a category maps to one gid per direction. A category
+   * with no read gid doesn't appear in the picker; one with no write gid shows
+   * the Write control disabled rather than absent.
    */
   const SHEET_BASE =
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vTx0G0yItXlZKO4Zep8wstZuvvO7bgOxFXBVK_1vvQnxpG8H2hP9n9M8kmZMfIoo7ZO4e7_utrz3_XB/pub";
 
   const SHEET_GIDS = {
-    HRIS: "0",
-    ATS: "1962490874",
-    LMS: "1106223511",
+    HRIS: { read: "0", write: "1626747715" },
+    ATS: { read: "1962490874" },
+    LMS: { read: "1106223511" },
   };
 
   const CATEGORIES = [
@@ -47,27 +50,31 @@ export const ModelSupportMatrix = () => {
     { key: "LMS", label: "Learning (LMS)" },
   ];
 
-  const AVAILABLE = CATEGORIES.filter((c) => SHEET_GIDS[c.key]);
+  const AVAILABLE = CATEGORIES.filter(
+    (c) => SHEET_GIDS[c.key] && SHEET_GIDS[c.key].read
+  );
 
   /*
-   * Expected tab layout - parsing is anchored on these column C labels rather
-   * than on fixed row numbers, so inserting a row in the sheet can't break it:
+   * Expected tab layout. The two directions are shaped differently - the read
+   * tab carries a leading Write column that the write tab has no use for - so
+   * parsing anchors on the "Model" cell and positions everything relative to
+   * it. Neither a new row nor that shifted column can break the parse:
    *
-   *   A       B       C                        D onward
-   *   -------------------------------------------------------------
-   *                   Logo link                logo URL per provider
-   *   Write   Group   Model                    provider display name
-   *                   Connection Type          A (API) or S (SFTP)
-   *                   Write per integration    Y or N
-   *   Y/N     group   model name               Y | B | N | blank
+   *   read tab    A       B       C                      D onward
+   *   write tab           A       B                      C onward
+   *   ---------------------------------------------------------------------
+   *                               Logo link              logo URL per provider
+   *               Write   Group   Model                  provider display name
+   *                               Connection Type        A (API) or S (SFTP)
+   *                               Write per integration  Y or N
+   *               Y/N     group   model name             Y | B | N | blank
    *
    * Cells are three-state: Y supported, B supported but in beta, N/blank not.
    *
-   * Write support is held on two axes rather than per cell: column A marks which
-   * models can be written, the "Write per integration" row marks which
-   * integrations can write at all. A write is only real where both are Y AND the
-   * integration carries the model - 9 of the 20 write-capable HRIS integrations
-   * have no Timesheet Entry, so the read cell has to gate the write.
+   * The read tab's own write axes - column A and the "Write per integration"
+   * row - are left from when write support was derived from the read tab rather
+   * than held in its own. Both are ignored here: the write tab is the authority,
+   * and it answers per cell rather than per axis.
    */
   const LOGO_ROW = "logo link";
   const HEADER_ROW = "model";
@@ -126,15 +133,34 @@ export const ModelSupportMatrix = () => {
 
   const parseSheet = (csv) => {
     const rows = parseCsv(csv);
-    const find = (label) => rows.find((r) => cell(r, 2).toLowerCase() === label);
 
-    const header = find(HEADER_ROW);
-    const types = find(TYPE_ROW);
-    const logos = find(LOGO_ROW);
-    const writes = find(WRITE_ROW);
+    /* The "Model" cell is the anchor: its row is the header row and its column
+       is where every label lives. Finding it rather than assuming column C is
+       what lets one parser read both tab shapes. Bounded to the top-left of the
+       sheet so a model named "Model" further down can't be mistaken for it. */
+    let header = null;
+    let labelCol = -1;
+    rows.slice(0, 12).forEach((r) => {
+      if (header) return;
+      for (let i = 0; i < Math.min(r.length, 6); i++) {
+        if (cell(r, i).toLowerCase() === HEADER_ROW) {
+          header = r;
+          labelCol = i;
+          return;
+        }
+      }
+    });
+
+    const find = (label) =>
+      rows.find((r) => cell(r, labelCol).toLowerCase() === label);
+    const types = header ? find(TYPE_ROW) : null;
+    const logos = header ? find(LOGO_ROW) : null;
     if (!header || !types) {
       throw new Error("Sheet is missing its 'Model' or 'Connection Type' row");
     }
+
+    /* Group sits one column left of the labels, providers start one right. */
+    const groupCol = labelCol - 1;
 
     /*
      * A column counts as a provider only when it has both a name and a
@@ -142,7 +168,7 @@ export const ModelSupportMatrix = () => {
      * skipped - filling in A or S is what makes a column appear.
      */
     const providers = [];
-    for (let i = 3; i < header.length; i++) {
+    for (let i = labelCol + 1; i < header.length; i++) {
       const name = cell(header, i);
       const t = cell(types, i).toUpperCase();
       if (!name || (t !== "A" && t !== "S")) continue;
@@ -159,11 +185,10 @@ export const ModelSupportMatrix = () => {
            column index is the one thing guaranteed unique. */
         uid: slugify(name) + "#" + i,
         logo: cell(logos, i),
-        write: cell(writes, i).toUpperCase() === "Y",
       });
     }
 
-    /* Groups come from column B in first-appearance order. */
+    /* Groups come from the column left of the labels, first-appearance order. */
     const groups = [];
     const byName = {};
     const cells = {};
@@ -171,18 +196,19 @@ export const ModelSupportMatrix = () => {
 
     rows.forEach((r, idx) => {
       if (idx <= headerRowIndex) return;
-      const label = cell(r, 2);
-      const groupName = cell(r, 1);
-      if (!label || !groupName || label.toLowerCase() === TYPE_ROW) return;
+      const label = cell(r, labelCol);
+      const groupName = cell(r, groupCol);
+      const lower = label.toLowerCase();
+      /* The read tab's leftover write row is skipped by name, not by relying on
+         its group cell being empty. */
+      if (!label || !groupName || lower === TYPE_ROW || lower === WRITE_ROW) return;
 
       const key = slugify(label);
       if (!byName[groupName]) {
         byName[groupName] = { group: groupName, models: [] };
         groups.push(byName[groupName]);
       }
-      const model = { key, label };
-      if (cell(r, 0).toUpperCase() === "Y") model.write = true;
-      byName[groupName].models.push(model);
+      byName[groupName].models.push({ key, label });
 
       cells[key] = {};
       providers.forEach((p) => {
@@ -195,18 +221,17 @@ export const ModelSupportMatrix = () => {
       throw new Error("Sheet has no usable providers or models");
     }
 
-    /* No write data in this tab means no Read/Write control - a tab that has
-       yet to fill the write row shouldn't show a dead toggle. */
-    const hasWrites =
-      providers.some((p) => p.write) &&
-      groups.some((g) => g.models.some((m) => m.write));
-
-    return { providers, groups, cells, hasWrites };
+    return { providers, groups, cells };
   };
 
-  const loadMatrix = async (category) => {
-    const gid = SHEET_GIDS[category];
-    if (!gid) throw new Error("No sheet tab configured for " + category);
+  const loadMatrix = async (category, direction) => {
+    const tabs = SHEET_GIDS[category] || {};
+    const gid = tabs[direction];
+    if (!gid) {
+      throw new Error(
+        "No " + direction + " tab configured for " + category
+      );
+    }
     /* The trailing timestamp is ignored by the sheet and exists only to make the
        URL unique per load. `cache: "no-store"` below instructs this browser and
        nothing else - a proxy, a service worker or a CDN in between can still
@@ -866,22 +891,24 @@ export const ModelSupportMatrix = () => {
     if (q.get("direction") === "write") setDirection("write");
   }, []);
 
+  /* Read and write are separate sheet tabs, so they are separate fetches and
+     separate cache entries - switching direction loads a different matrix. */
   useEffect(() => {
     let live = true;
     setError(null);
-    if (cache[category]) {
-      setSheet(cache[category]);
-      if (!cache[category].hasWrites) setDirection("read");
+    const tabs = SHEET_GIDS[category] || {};
+    const dir = tabs[direction] ? direction : "read";
+    const key = category + "|" + dir;
+    if (cache[key]) {
+      setSheet(cache[key]);
       return;
     }
     setSheet(null);
-    loadMatrix(category).then(
+    loadMatrix(category, dir).then(
       (data) => {
         if (!live) return;
-        setCache((c) => ({ ...c, [category]: data }));
+        setCache((c) => ({ ...c, [key]: data }));
         setSheet(data);
-        /* Don't leave the control claiming a write view a category can't show. */
-        if (!data.hasWrites) setDirection("read");
       },
       (err) => {
         if (live) setError(err.message || String(err));
@@ -890,7 +917,14 @@ export const ModelSupportMatrix = () => {
     return () => {
       live = false;
     };
-  }, [category, cache]);
+  }, [category, direction, cache]);
+
+  /* A category with no write tab can't sit in the write view - reachable from
+     a shared ?direction=write link, or by switching category while in it. */
+  useEffect(() => {
+    const tabs = SHEET_GIDS[category] || {};
+    if (direction === "write" && !tabs.write) setDirection("read");
+  }, [category, direction]);
 
   /* A click anywhere outside an open dropdown closes it. */
   useEffect(() => {
@@ -909,20 +943,21 @@ export const ModelSupportMatrix = () => {
   const toggle = (list, setList, value) =>
     setList(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
 
-  const canWrite = !!(sheet && sheet.hasWrites);
+  /* Whether a write view exists is a property of the sheet's tabs, so it is
+     known before the fetch - the control doesn't flicker while data loads. */
+  const canWrite = !!(SHEET_GIDS[category] && SHEET_GIDS[category].write);
   const writeView = direction === "write" && canWrite;
 
-  /* Write view narrows both axes at once: only models that can be written, and
-     only integrations that can write. What survives is the intersection. */
+  /* No axis filtering by direction any more: whichever tab is loaded already
+     holds exactly the integrations and models that direction supports. */
   const providers = useMemo(
     () =>
       allProviders.filter(
         (p) =>
           (providerSel.length === 0 || providerSel.includes(p.slug)) &&
-          (typeSel.length === 0 || typeSel.includes(p.type)) &&
-          (!writeView || p.write)
+          (typeSel.length === 0 || typeSel.includes(p.type))
       ),
-    [allProviders, providerSel, typeSel, writeView]
+    [allProviders, providerSel, typeSel]
   );
 
   const visibleGroups = useMemo(
@@ -931,13 +966,11 @@ export const ModelSupportMatrix = () => {
         .map((g) => ({
           group: g.group,
           models: g.models.filter(
-            (m) =>
-              (modelSel.length === 0 || modelSel.includes(m.key)) &&
-              (!writeView || m.write)
+            (m) => modelSel.length === 0 || modelSel.includes(m.key)
           )
         }))
         .filter((g) => g.models.length > 0),
-    [groups, modelSel, writeView]
+    [groups, modelSel]
   );
 
   /* One flat row list - there is no Fragment in scope to group header + rows. */

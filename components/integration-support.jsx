@@ -14,9 +14,12 @@
  *   2. Capitalised JSX tags resolve from MDX scope - helpers stay lowercase.
  *   3. Hooks are pre-injected by Mintlify.
  *
- * Renders nothing when the model has no row in that sheet tab, so a page can
- * carry the tag before the sheet does. direction="write" renders nothing until
- * the model is marked writable in column A, for the same reason.
+ * Read and write are separate tabs in the sheet - "HRIS (read)" and
+ * "HRIS (write)" - so direction picks the tab rather than reinterpreting one.
+ *
+ * Renders nothing when the model has no row in the tab for that direction, so a
+ * page can carry the tag before the sheet does: a model absent from the write
+ * tab is unassessed, which is not the same answer as "nothing writes it".
  */
 
 export const IntegrationSupport = ({
@@ -28,15 +31,14 @@ export const IntegrationSupport = ({
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vTx0G0yItXlZKO4Zep8wstZuvvO7bgOxFXBVK_1vvQnxpG8H2hP9n9M8kmZMfIoo7ZO4e7_utrz3_XB/pub";
 
   const SHEET_GIDS = {
-    HRIS: "0",
-    ATS: "1962490874",
-    LMS: "1106223511",
+    HRIS: { read: "0", write: "1626747715" },
+    ATS: { read: "1962490874" },
+    LMS: { read: "1106223511" },
   };
 
   const LOGO_ROW = "logo link";
   const HEADER_ROW = "model";
   const TYPE_ROW = "connection type";
-  const WRITE_ROW = "write per integration";
 
   /* RFC 4180: quoted fields, "" escapes, embedded commas and newlines, CRLF. */
   const parseCsv = (text) => {
@@ -83,17 +85,32 @@ export const IntegrationSupport = ({
 
   const parseSheet = (csv, wanted) => {
     const rows = parseCsv(csv);
-    const find = (label) => rows.find((r) => cell(r, 2).toLowerCase() === label);
 
-    const header = find(HEADER_ROW);
-    const types = find(TYPE_ROW);
-    const logos = find(LOGO_ROW);
-    const writes = find(WRITE_ROW);
+    /* The "Model" cell anchors both the header row and the label column: the
+       read tab carries a leading Write column and the write tab does not, so
+       the labels sit in a different column in each. Matches the matrix. */
+    let header = null;
+    let labelCol = -1;
+    rows.slice(0, 12).forEach((r) => {
+      if (header) return;
+      for (let i = 0; i < Math.min(r.length, 6); i++) {
+        if (cell(r, i).toLowerCase() === HEADER_ROW) {
+          header = r;
+          labelCol = i;
+          return;
+        }
+      }
+    });
+
+    const find = (label) =>
+      rows.find((r) => cell(r, labelCol).toLowerCase() === label);
+    const types = header ? find(TYPE_ROW) : null;
+    const logos = header ? find(LOGO_ROW) : null;
     if (!header || !types) return null;
 
     /* A column is a provider only once it has both a name and A or S. */
     const providers = [];
-    for (let i = 3; i < header.length; i++) {
+    for (let i = labelCol + 1; i < header.length; i++) {
       const name = cell(header, i);
       const t = cell(types, i).toUpperCase();
       if (!name || (t !== "A" && t !== "S")) continue;
@@ -104,35 +121,22 @@ export const IntegrationSupport = ({
         /* Two columns can name the same vendor, so name+type is not a safe key. */
         uid: name + "#" + i,
         logo: cell(logos, i),
-        write: cell(writes, i).toUpperCase() === "Y",
       });
     }
 
     const target = String(wanted || "").toLowerCase();
-    const row = rows.find((r) => cell(r, 2).toLowerCase() === target);
+    const row = rows.find((r) => cell(r, labelCol).toLowerCase() === target);
+    /*
+     * No row for this model in this tab means unassessed, and silence is the
+     * only safe answer - "nobody writes this" and "nobody has checked" look
+     * identical on the page but only one of them is true. A model that is
+     * genuinely read-only simply has no row in the write tab.
+     */
     if (!providers.length || !row) return null;
 
-    const wantWrite = direction === "write";
-
-    /*
-     * Column A is three-state on purpose, because "we don't write this" and
-     * "nobody has checked yet" are different answers and only one of them is
-     * safe to publish:
-     *   Y      - writable, list the integrations
-     *   N      - decided: not writable, say so and invite a request
-     *   blank  - not assessed, stay silent rather than claim anything
-     */
-    if (wantWrite) {
-      const flag = cell(row, 0).toUpperCase();
-      if (!flag) return null;
-      if (flag !== "Y") return { none: true };
-    }
-
     /* Sheet column order is kept so this list reads in the same order as the
-       matrix page's columns. A write needs the integration's write flag AND the
-       model itself - an integration that can write but doesn't carry the model
-       cannot write it. */
-    const pool = wantWrite ? providers.filter((p) => p.write) : providers;
+       matrix page's columns. */
+    const pool = providers;
     const supported = [];
     pool.forEach((p) => {
       const v = cell(row, p.col).toUpperCase();
@@ -287,10 +291,22 @@ export const IntegrationSupport = ({
 
   useEffect(() => {
     let live = true;
-    const gid = SHEET_GIDS[category];
+    /* direction picks the tab. A category with no tab for it renders nothing,
+       the same silence as a model the sheet hasn't reached yet. */
+    const tabs = SHEET_GIDS[category] || {};
+    const gid = tabs[direction];
     if (!gid) return;
+    /* The trailing timestamp makes the URL unique per load. `cache: "no-store"`
+       instructs this browser only - a proxy or CDN in between can still answer
+       from a saved copy, and an unseen URL defeats all of them. Google's own
+       snapshot is served with `private, max-age=300`; that 5-minute floor
+       stays whatever the URL says. */
     const url =
-      SHEET_BASE + "?gid=" + encodeURIComponent(gid) + "&single=true&output=csv";
+      SHEET_BASE +
+      "?gid=" +
+      encodeURIComponent(gid) +
+      "&single=true&output=csv&_=" +
+      Date.now();
     fetch(url, { cache: "no-store" })
       .then((res) => (res.ok ? res.text() : Promise.reject(res.status)))
       .then((text) => {
