@@ -18,6 +18,37 @@
   width: 15rem !important;
 }
 
+/* The navbar and #body-content both cap out at Tailwind's max-w-8xl
+   (92rem/1472px), centered with mx-auto - too narrow on a large monitor,
+   where it left a big dead margin either side. But tying the cap to the
+   viewport (a fluid `calc(100% - Xrem)`) over-corrected: past a comfortable
+   reading width the content itself kept stretching wider on very large
+   displays instead of just gaining more centered margin. 120rem (1920px) is
+   the ceiling - past that viewport width, only the margin grows.
+
+   content-area's own width is computed relative to this container
+   (`calc(100% - 28rem)`), so widening the cap is what gives it more room.
+
+   #body-content applies the utility through a `peer-[.is-not-custom]:`
+   variant, so its compiled class isn't the plain `.max-w-8xl` the navbar
+   uses - the id selector sidesteps that and reaches both.
+
+   #content-container (the <main> holding content-area and the right-hand
+   API/TOC panel) carries its own independent cap, max-w-6xl (72rem/1152px).
+   It never needs to be the bottleneck - it only has to stay within whatever
+   room #body-content already allows - so it's uncapped outright rather than
+   given a matching fixed width of its own. */
+@media (min-width: 1600px) {
+  .max-w-8xl,
+  #body-content {
+    max-width: 120rem !important;
+  }
+
+  /* #content-container {
+    max-width: none !important;
+  } */
+}
+
 
 
 #page-title {

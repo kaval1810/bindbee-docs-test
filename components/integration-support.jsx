@@ -209,6 +209,49 @@ export const IntegrationSupport = ({
     gap: 6px;
     padding: 12px 14px;
   }
+  /* Collapsed by default: one row of chips, the next row fading out under a
+     gradient so it reads as "there is more" rather than as a hard crop. The
+     wrapper does the clipping so the chips keep their own padding. */
+  .bb-is-chips-wrap { position: relative; }
+  .bb-is-chips-wrap[data-open="false"] .bb-is-chips {
+    max-height: 47px;
+    overflow: hidden;
+  }
+  .bb-is-fade {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 28px;
+    pointer-events: none;
+    background: linear-gradient(to bottom, rgba(252, 252, 251, 0), var(--bb-bg));
+  }
+  html.dark .bb-is-fade {
+    background: linear-gradient(to bottom, rgba(9, 9, 9, 0), var(--bb-bg));
+  }
+  .bb-is-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border: 1px solid var(--bb-border-strong);
+    border-radius: 999px;
+    background: var(--bb-bg);
+    color: var(--bb-text-dim);
+    font-size: 12.5px;
+    font-weight: 500;
+    line-height: 1.5;
+    cursor: pointer;
+  }
+  .bb-is-toggle:hover {
+    color: var(--bb-text);
+    border-color: var(--bb-text-dim);
+  }
+  .bb-is-headright {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
   .bb-is-chip {
     display: inline-flex;
     align-items: center;
@@ -288,6 +331,9 @@ export const IntegrationSupport = ({
   `;
 
   const [data, setData] = useState(null);
+  /* Collapsed on every page load, by design: these pages are read by
+     developers who want the endpoint, not the vendor list. */
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     let live = true;
@@ -333,6 +379,9 @@ export const IntegrationSupport = ({
 
   const betaCount = data && !none ? data.supported.filter((p) => p.beta).length : 0;
   const liveCount = data && !none ? data.supported.length - betaCount : 0;
+  /* A handful of chips already fits on one row, so collapsing them would only
+     add a control that hides nothing. */
+  const collapsible = !!(data && !none && data.supported.length > 4);
 
   return (
     <div className="bb-is not-prose">
@@ -343,9 +392,21 @@ export const IntegrationSupport = ({
           Supported integrations
         </span>
         {data && !none ? (
-          <span className="bb-is-count">
-            {liveCount} {category}
-            {betaCount ? " + " + betaCount + " BETA" : ""}
+          <span className="bb-is-headright">
+            <span className="bb-is-count">
+              {liveCount} {category}
+              {betaCount ? " + " + betaCount + " BETA" : ""}
+            </span>
+            {collapsible ? (
+              <button
+                type="button"
+                className="bb-is-toggle"
+                aria-expanded={open}
+                onClick={() => setOpen(!open)}
+              >
+                {open ? "Show less" : "Show all"}
+              </button>
+            ) : null}
           </span>
         ) : null}
       </div>
@@ -361,33 +422,36 @@ export const IntegrationSupport = ({
           <a href={mailto}>Tell us which one you need</a>
         </div>
       ) : (
-        <div className="bb-is-chips">
-          {data.supported.map((p) => (
-            <span className="bb-is-chip" key={p.uid}>
-              {p.logo ? (
-                <img
-                  className="bb-is-logo"
-                  src={p.logo}
-                  alt=""
-                  loading="lazy"
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                  }}
-                />
-              ) : null}
-              <span>{p.name}</span>
-              {p.type === "SFTP" ? (
-                <span className="bb-is-badge" data-type="SFTP">
-                  SFTP
-                </span>
-              ) : null}
-              {p.beta ? (
-                <span className="bb-is-badge" data-beta="true">
-                  BETA
-                </span>
-              ) : null}
-            </span>
-          ))}
+        <div className="bb-is-chips-wrap" data-open={collapsible ? open : true}>
+          <div className="bb-is-chips">
+            {data.supported.map((p) => (
+              <span className="bb-is-chip" key={p.uid}>
+                {p.logo ? (
+                  <img
+                    className="bb-is-logo"
+                    src={p.logo}
+                    alt=""
+                    loading="lazy"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                ) : null}
+                <span>{p.name}</span>
+                {p.type === "SFTP" ? (
+                  <span className="bb-is-badge" data-type="SFTP">
+                    SFTP
+                  </span>
+                ) : null}
+                {p.beta ? (
+                  <span className="bb-is-badge" data-beta="true">
+                    BETA
+                  </span>
+                ) : null}
+              </span>
+            ))}
+          </div>
+          {collapsible && !open ? <span className="bb-is-fade" /> : null}
         </div>
       )}
 
