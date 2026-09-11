@@ -10,9 +10,9 @@ Everything under `https://api.bindbee.dev/api/lms/v1/`. Seven models answering t
 
 | Group | Models | What it answers |
 | --- | --- | --- |
-| **People** | Users | Who the learners are |
-| **Content** | Courses, Contents, Skills, Categories | What training exists |
-| **Progress** | Completions, Enrollments | Who was assigned it, and who finished |
+| **People** | [Users](/lms/users/get-users) | Who the learners are |
+| **Content** | [Courses](/lms/courses/get-courses), [Contents](/lms/contents/get-contents), [Skills](/lms/skills/get-skills), [Categories](/lms/categories/get-categories) | What training exists |
+| **Progress** | [Completions](/lms/completions/get-completions), [Enrollments](/lms/enrollments/get-enrollments) | Who was assigned it, and who finished |
 
 <Warning>
   **An enrollment is not a completion.** An enrollment means the training was assigned, which is exactly what someone out of compliance also has. Mandatory training reporting needs completions, and the gap between the two is the report - see [LMS models](/guides/data-models/learning).

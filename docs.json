@@ -180,6 +180,7 @@
             "group": "API Basics",
             "icon": "braces",
             "pages": [
+              "api-reference/introduction",
               "api-reference/basics/authentication",
               "api-reference/basics/pagination",
               "api-reference/basics/sync-frequency",
@@ -190,6 +191,7 @@
             "group": "Platform",
             "icon": "boxes",
             "pages": [
+              "api-reference/overview",
               {
                 "group": "Integrations",
                 "pages": [

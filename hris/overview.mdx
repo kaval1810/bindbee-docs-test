@@ -12,11 +12,11 @@ Every collection endpoint is paginated and takes the same filters for `ids`, `re
 
 | Group | Models | What it answers |
 | --- | --- | --- |
-| **Employee** | Employee, Employment, Compensation, Dependents, Bank Info, Documents | Who the person is and what is true of them |
-| **Organization** | Company, Group, Location | The structures they sit in |
-| **Payroll** | Payroll Run, Employee Payroll Run, Payroll Run Calendar, Pay Group, Payroll Codes | What was paid, when, and on what schedule |
-| **Benefits** | Employer Benefit, Benefit, Dependent Benefit, Benefit Coverage | What is offered, who enrolled, and for how much |
-| **Time & Attendance** | Time Off, Time Off Balance, Timesheet Entry | Hours worked and leave taken |
+| **Employee** | [Employee](/hris/employee/get-employees), [Employment](/hris/employments/get-employments), [Compensation](/hris/compensation/get-compensations), [Dependents](/hris/dependents/get-dependents), [Bank Info](/hris/bank-info/get-bank-info-list), [Documents](/hris/documents/get-documents) | Who the person is and what is true of them |
+| **Organization** | [Company](/hris/companies/get-companies), [Group](/hris/groups/get-groups), [Location](/hris/locations/get-locations) | The structures they sit in |
+| **Payroll** | [Payroll Run](/hris/payroll-runs/get-payroll-runs), [Employee Payroll Run](/hris/employee-payroll-runs/get-employee-payroll-runs), [Payroll Run Calendar](/hris/payroll-run-calendar/get-payroll-run-calendars), [Pay Group](/hris/pay-groups/get-pay-groups), [Payroll Codes](/hris/payroll-codes/get-payroll-codes) | What was paid, when, and on what schedule |
+| **Benefits** | [Employer Benefit](/hris/employer-benefits/get-employer-benefits), [Benefit](/hris/benefits/get-benefits), [Dependent Benefit](/hris/dependent-benefits/get-dependent-benefits), [Benefit Coverage](/hris/benefit-coverages/get-benefit-coverages) | What is offered, who enrolled, and for how much |
+| **Time & Attendance** | [Time Off](/hris/time-off/get-time-off-list), [Time Off Balance](/hris/time-off-balance/get-time-off-balances-list), [Timesheet Entry](/hris/timesheet-entries/get-timesheet-entries-list) | Hours worked and leave taken |
 
 <Info>
   The split that catches people most often is **Employee versus Employment**. An employee is a person; an employment is one period of work. One person routinely has several - see [Employee & org models](/guides/data-models/employee-data).

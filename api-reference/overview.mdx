@@ -1,0 +1,39 @@
+---
+title: "Platform"
+sidebarTitle: "Overview"
+description: "Connectors, webhooks, custom fields and passthrough - the account-level plumbing every integration sits on."
+---
+
+Platform is not a data model like HRIS, ATS or LMS. It is the account-level surface every connector runs on, whatever category it belongs to - listing which integrations are available, managing one customer's connection, extending a unified model, and reaching a vendor directly when the unified models do not cover something.
+
+## The areas
+
+| Area | What it does | Start here |
+| --- | --- | --- |
+| **Integrations** | The connectors available for a category | [Get Integrations](/api-reference/integrations/get-integrations) |
+| **Connectors** | List, resync and delete one customer's connection | [Get Connectors](/api-reference/connectors/get-connectors) |
+| **Webhooks** | Push notifications for sync and data events, instead of polling | [List Webhooks](/api-reference/webhooks/list-webhooks) |
+| **Custom Fields** | Add a raw upstream value to a unified model that does not expose it | [List Custom Fields](/api-reference/custom-fields/list-custom-fields) |
+| **Passthrough** | Call the third-party system directly, for what unified models do not cover | [Make Passthrough Request](/api-reference/passthrough/make-passthrough-request) |
+| **Embedded SDK** | Run the connector link flow inside your own product instead of Magic Link | [Create Link Token](/sdk/create-link-token) |
+
+<Info>
+  Every Platform endpoint takes the API key alone. The connector token is only required where a request names one customer - see [Authentication](/api-reference/basics/authentication).
+</Info>
+
+## Where to start
+
+<CardGroup cols={2}>
+  <Card title="Webhooks" icon="webhook" href="/guides/reading-writing/webhooks">
+    Get notified when a connector syncs, instead of polling.
+  </Card>
+  <Card title="Embedded SDK" icon="code" href="/guides/sdk/embedded-sdk">
+    Run the connector flow inside your own product.
+  </Card>
+  <Card title="Custom Fields" icon="book-open" href="/guides/extending/custom-fields">
+    Map a raw upstream value onto a unified model.
+  </Card>
+  <Card title="Passthrough" icon="arrow-right-left" href="/guides/extending/passthrough">
+    Reach a vendor's own API when the unified model falls short.
+  </Card>
+</CardGroup>
