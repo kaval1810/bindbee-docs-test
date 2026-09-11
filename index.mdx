@@ -26,7 +26,7 @@ export const LinkCard = ({ title, icon, href, links }) => (
         >
           <a
             href={link.href}
-            className="flex items-center justify-between gap-3 px-5 py-3.5 text-sm text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-900 transition-colors"
+            className="flex items-center justify-between gap-3 px-5 py-3.5 text-sm text-gray-800 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-900 transition-colors"
           >
             {link.label}
             <Icon icon="chevron-right" size={16} className="bg-gray-300 dark:bg-zinc-600 shrink-0" />
@@ -94,15 +94,12 @@ export const LinkCard = ({ title, icon, href, links }) => (
   />
 </div>
 
-<div className="max-w-6xl mx-auto px-4 pb-16">
+<div className="max-w-xl mx-auto px-4 pb-16">
   <div className="relative isolate rounded border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300 dark:hover:border-zinc-700 px-5 py-5 sm:px-6 transition-colors before:content-[''] before:absolute before:-inset-4 before:-z-10 before:bg-gradient-to-r before:from-primary/35 before:via-primary/10 before:to-transparent before:blur-2xl dark:before:from-primary-light/25 dark:before:via-primary-light/10">
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-      <div className="flex items-center gap-3">
-        <Icon icon="sparkles" size={20} className="bg-primary dark:bg-primary-light shrink-0" />
-        <div>
-          <h4 className="font-medium text-gray-900 dark:text-zinc-50">Fast-track your integration with Docs MCP</h4>
-          <p className="mt-1 text-sm text-gray-500 dark:text-zinc-400">Point Claude, Cursor, or Codex at the live docs so they build against real pages instead of guessing.</p>
-        </div>
+      <div className="flex items-start sm:items-center gap-3">
+        <Icon icon="sparkles" size={20} className="mt-0.5 sm:mt-0 bg-primary dark:bg-primary-light shrink-0" />
+        <h4 className="font-medium text-gray-900 dark:text-zinc-50">Bindbee Docs MCP</h4>
       </div>
       <a
         href="/guides/sdk/mcp"
