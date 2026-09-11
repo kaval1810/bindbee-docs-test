@@ -1,0 +1,134 @@
+---
+title: "Documentation"
+description: "Everything you need to integrate with Bindbee."
+mode: "custom"
+---
+
+export const LinkCard = ({ title, icon, href, links }) => (
+  <div className="rounded border border-gray-200 dark:border-zinc-800 bg-background-light dark:bg-background-dark overflow-hidden">
+    <div className="bg-gray-50 dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800">
+      <a
+        href={href}
+        className="flex items-center justify-between gap-3 px-5 py-4 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+      >
+        <div className="flex items-center gap-2.5">
+          <Icon icon={icon} size={18} className="text-gray-400 dark:text-zinc-500" />
+          <h4 className="font-medium text-gray-900 dark:text-zinc-50">{title}</h4>
+        </div>
+        <Icon icon="chevron-right" size={16} className="bg-gray-300 dark:bg-zinc-600 shrink-0" />
+      </a>
+    </div>
+    <div>
+      {links.map((link, i) => (
+        <div
+          key={link.href}
+          className={i !== links.length - 1 ? "border-b border-gray-100 dark:border-zinc-800" : ""}
+        >
+          <a
+            href={link.href}
+            className="flex items-center justify-between gap-3 px-5 py-3.5 text-sm text-gray-600 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-900 transition-colors"
+          >
+            {link.label}
+            <Icon icon="chevron-right" size={16} className="bg-gray-300 dark:bg-zinc-600 shrink-0" />
+          </a>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+<div className="px-4 pt-8 lg:pt-16 pb-10 max-w-3xl mx-auto text-center">
+  <h1 className="text-3xl sm:text-4xl font-medium text-gray-900 dark:text-zinc-50 tracking-tight">
+    Bindbee Documentation
+  </h1>
+  <p className="mt-2 text-lg text-gray-500 dark:text-zinc-300 max-w-2xl mx-auto">
+    Bindbee is a unified API for HRIS, payroll, ATS, and benefits integrations.
+  </p>
+</div>
+
+
+<div className="max-w-6xl mx-auto px-4 pb-8 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6">
+  <LinkCard
+    icon="compass"
+    title="Get Started"
+    href="/get-started/what-is-bindbee"
+    links={[
+      { label: "What is Bindbee?", href: "/get-started/what-is-bindbee" },
+      { label: "Quickstart", href: "/get-started/quickstart" },
+      { label: "Core Concepts", href: "/get-started/core-concepts" },
+      { label: "Integration & Coverage", href: "/get-started/integrations" },
+    ]}
+  />
+  <LinkCard
+    icon="book-open"
+    title="Guide"
+    href="/guides/reading-writing/overview"
+    links={[
+      { label: "Reading & Writing Data", href: "/guides/reading-writing/overview" },
+      { label: "Extending the Model", href: "/guides/extending/custom-fields" },
+      { label: "Embedded SDK", href: "/guides/sdk/embedded-sdk" },
+      { label: "Troubleshooting", href: "/guides/troubleshooting/overview" },
+    ]}
+  />
+  <LinkCard
+    icon="terminal"
+    title="API Reference"
+    href="/api-reference/introduction"
+    links={[
+      { label: "Platform", href: "/api-reference/overview" },
+      { label: "HRIS", href: "/hris/overview" },
+      { label: "ATS", href: "/ats/overview" },
+      { label: "LMS", href: "/lms/overview" },
+    ]}
+  />
+  <LinkCard
+    icon="layout-grid"
+    title="Others"
+    href="/guides/troubleshooting/overview"
+    links={[
+      { label: "Troubleshooting", href: "/guides/troubleshooting/overview" },
+      { label: "Use Cases", href: "/get-started/use-cases/sync-census-data" },
+      { label: "Help Center", href: "https://help.bindbee.dev/" },
+      { label: "Status", href: "https://status.bindbee.dev" },
+    ]}
+  />
+</div>
+
+<div className="max-w-6xl mx-auto px-4 pb-16">
+  <div className="relative isolate rounded border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300 dark:hover:border-zinc-700 px-5 py-5 sm:px-6 transition-colors before:content-[''] before:absolute before:-inset-4 before:-z-10 before:bg-gradient-to-r before:from-primary/35 before:via-primary/10 before:to-transparent before:blur-2xl dark:before:from-primary-light/25 dark:before:via-primary-light/10">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex items-center gap-3">
+        <Icon icon="sparkles" size={20} className="bg-primary dark:bg-primary-light shrink-0" />
+        <div>
+          <h4 className="font-medium text-gray-900 dark:text-zinc-50">Fast-track your integration with Docs MCP</h4>
+          <p className="mt-1 text-sm text-gray-500 dark:text-zinc-400">Point Claude, Cursor, or Codex at the live docs so they build against real pages instead of guessing.</p>
+        </div>
+      </div>
+      <a
+        href="/guides/sdk/mcp"
+        className="flex items-center gap-1 text-sm font-medium text-primary dark:text-primary-light shrink-0 hover:underline"
+      >
+        View guide
+        <Icon icon="chevron-right" size={16} className="bg-primary dark:bg-primary-light" />
+      </a>
+    </div>
+    <div className="mt-4 flex items-center gap-2 rounded-md border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-950 px-3 py-2 sm:px-4 sm:py-2.5">
+      <span className="min-w-0 flex-1 truncate font-mono text-sm text-gray-700 dark:text-zinc-300">docs.bindbee.dev/mcp</span>
+      <button
+        type="button"
+        onClick={(e) => {
+          navigator.clipboard.writeText("docs.bindbee.dev/mcp");
+          const btn = e.currentTarget;
+          const original = btn.textContent;
+          btn.textContent = "Copied!";
+          setTimeout(() => {
+            btn.textContent = original;
+          }, 1500);
+        }}
+        className="shrink-0 rounded border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-1 text-xs font-medium text-gray-600 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+      >
+        Copy
+      </button>
+    </div>
+  </div>
+</div>

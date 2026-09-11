@@ -37,11 +37,22 @@
    API/TOC panel) carries its own independent cap, max-w-6xl (72rem/1152px).
    It never needs to be the bottleneck - it only has to stay within whatever
    room #body-content already allows - so it's uncapped outright rather than
-   given a matching fixed width of its own. */
+   given a matching fixed width of its own.
+
+   The explicit margin here only matters on a `mode: "custom"` page. A normal
+   page's #body-content already carries Mintlify's own `peer-[.is-not-custom]:
+   mx-auto`, so this is a no-op there; custom-mode pages compile to
+   `max-w-none` with no auto-margin at all, since Mintlify leaves centering to
+   the page's own content. Capping the width here without also centering it
+   left a custom page's content flush against the left edge on any monitor
+   wider than 1920px, with the rest of the viewport as dead space on the
+   right. */
 @media (min-width: 1600px) {
   .max-w-8xl,
   #body-content {
     max-width: 120rem !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
   }
 
   /* #content-container {
@@ -613,4 +624,30 @@ img,
 
 #navbar .nav-tabs a.nav-tabs-item[href^="http"]:hover::after {
   opacity: 1;
+}
+
+/* The landing page ("/") sits in its own hidden tab, so nothing in the
+   visible nav bar corresponds to it. When the current path matches no
+   visible tab, Mintlify falls back to marking the first one - "Get Started"
+   - as active (data-active + an orange underline), which misleadingly reads
+   as "you are inside Get Started" on the standalone home page. custom.js
+   sets data-on-landing on <body> based on the route; this neutralises that
+   tab back to the same resting appearance as a genuinely inactive one
+   (text-gray-800 / dark:text-gray-200, matched exactly from the other tabs'
+   own classes) and drops the underline, which is the persistent tell -
+   :hover is included because the active tab's own class also swaps in
+   hover:text-primary, and the icon needs no separate rule since it reads
+   currentColor from the anchor via `bg-current`. */
+body[data-on-landing="true"] #navbar .nav-tabs-item[data-active],
+body[data-on-landing="true"] #navbar .nav-tabs-item[data-active]:hover {
+  color: rgb(31 41 55) !important;
+}
+
+.dark body[data-on-landing="true"] #navbar .nav-tabs-item[data-active],
+.dark body[data-on-landing="true"] #navbar .nav-tabs-item[data-active]:hover {
+  color: rgb(229 231 235) !important;
+}
+
+body[data-on-landing="true"] #navbar .nav-tabs-item[data-active] > div:last-child {
+  display: none !important;
 }
